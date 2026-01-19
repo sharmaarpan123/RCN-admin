@@ -422,8 +422,69 @@ const Dashboard: React.FC = () => {
             </div>
             
             {showSenderInbox ? (
-              <div className="overflow-auto mt-2.5">
-                <table className="w-full border-separate border-spacing-0 overflow-hidden rounded-2xl border border-rcn-border">
+              <>
+                {/* Sender Filters */}
+                <div className="flex flex-wrap gap-3 items-end mt-3 mb-3 p-3 bg-[#f6fbf7] border border-rcn-border rounded-xl">
+                  <div className="flex flex-col gap-1.5 min-w-[140px]">
+                    <label className="text-xs text-rcn-muted font-semibold">ID</label>
+                    <input 
+                      id="senderF_id" 
+                      className={inputClass}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5 min-w-[140px]">
+                    <label className="text-xs text-rcn-muted font-semibold">ID</label>
+                    <input 
+                      id="senderF_id" 
+                      placeholder="e.g., ref_1001" 
+                      className={inputClass}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5 min-w-[140px]">
+                    <label className="text-xs text-rcn-muted font-semibold">ID</label>
+                    <input 
+                      id="senderF_id" 
+                      placeholder="e.g., ref_1001" 
+                      className={inputClass}
+                    />
+                  </div>  
+                  <div className="flex flex-col gap-1.5 min-w-[200px] flex-1">
+                    <label className="text-xs text-rcn-muted font-semibold">Patient Name</label>
+                    <input 
+                      id="senderF_patient" 
+                      placeholder="Last or First" 
+                      className={inputClass}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5 min-w-[280px]">
+                    <label className="text-xs text-rcn-muted font-semibold">Status</label>
+                    <div className="flex flex-wrap gap-2">
+                      <label className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs border border-rcn-border bg-white cursor-pointer hover:border-[#b9d7c5]">
+                        <input type="checkbox" id="senderF_st_pending" defaultChecked className="w-3.5 h-3.5" />
+                        Pending
+                      </label>
+                      <label className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs border border-rcn-border bg-white cursor-pointer hover:border-[#b9d7c5]">
+                        <input type="checkbox" id="senderF_st_accepted" defaultChecked className="w-3.5 h-3.5" />
+                        Accepted
+                      </label>
+                      <label className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs border border-rcn-border bg-white cursor-pointer hover:border-[#b9d7c5]">
+                        <input type="checkbox" id="senderF_st_rejected" defaultChecked className="w-3.5 h-3.5" />
+                        Rejected
+                      </label>
+                    </div>
+                  </div>
+                  <div>
+                    <button 
+                      className="border border-rcn-border bg-white px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-rcn-text text-sm hover:border-[#c9ddd0] transition-colors"
+                      onClick={() => showToast('Export CSV functionality coming soon')}
+                    >
+                      Export CSV
+                    </button>
+                  </div>
+                </div>
+
+                <div className="overflow-auto">
+                  <table className="w-full border-separate border-spacing-0 overflow-hidden rounded-2xl border border-rcn-border">
                   <thead>
                     <tr>
                       <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">ID</th>
@@ -473,7 +534,8 @@ const Dashboard: React.FC = () => {
                     )}
                   </tbody>
                 </table>
-              </div>
+                </div>
+              </>
             ) : (
               <div className="text-xs text-rcn-muted mt-2.5 p-2.5 border border-dashed border-rcn-border rounded-xl">
                 Select a Sender organization and click <b>Apply Sender Inbox</b>.
@@ -491,8 +553,54 @@ const Dashboard: React.FC = () => {
             </div>
             
             {showReceiverInbox ? (
-              <div className="overflow-auto mt-2.5">
-                <table className="w-full border-separate border-spacing-0 overflow-hidden rounded-2xl border border-rcn-border">
+              <>
+                {/* Receiver Filters */}
+                <div className="flex flex-wrap gap-3 items-end mt-3 mb-3 p-3 bg-[#f6fbf7] border border-rcn-border rounded-xl">
+                  <div className="flex flex-col gap-1.5 min-w-[140px]">
+                    <label className="text-xs text-rcn-muted font-semibold">ID</label>
+                    <input 
+                      id="receiverF_id" 
+                      placeholder="e.g., ref_1001" 
+                      className={inputClass}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5 min-w-[200px] flex-1">
+                    <label className="text-xs text-rcn-muted font-semibold">Patient Name</label>
+                    <input 
+                      id="receiverF_patient" 
+                      placeholder="Last or First" 
+                      className={inputClass}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5 min-w-[280px]">
+                    <label className="text-xs text-rcn-muted font-semibold">Status</label>
+                    <div className="flex flex-wrap gap-2">
+                      <label className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs border border-rcn-border bg-white cursor-pointer hover:border-[#b9d7c5]">
+                        <input type="checkbox" id="receiverF_st_pending" defaultChecked className="w-3.5 h-3.5" />
+                        Pending
+                      </label>
+                      <label className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs border border-rcn-border bg-white cursor-pointer hover:border-[#b9d7c5]">
+                        <input type="checkbox" id="receiverF_st_accepted" defaultChecked className="w-3.5 h-3.5" />
+                        Accepted
+                      </label>
+                      <label className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs border border-rcn-border bg-white cursor-pointer hover:border-[#b9d7c5]">
+                        <input type="checkbox" id="receiverF_st_rejected" defaultChecked className="w-3.5 h-3.5" />
+                        Rejected
+                      </label>
+                    </div>
+                  </div>
+                  <div>
+                    <button 
+                      className="border border-rcn-border bg-white px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-rcn-text text-sm hover:border-[#c9ddd0] transition-colors"
+                      onClick={() => showToast('Export CSV functionality coming soon')}
+                    >
+                      Export CSV
+                    </button>
+                  </div>
+                </div>
+
+                <div className="overflow-auto">
+                  <table className="w-full border-separate border-spacing-0 overflow-hidden rounded-2xl border border-rcn-border">
                   <thead>
                     <tr>
                       <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">ID</th>
@@ -542,7 +650,8 @@ const Dashboard: React.FC = () => {
                     )}
                   </tbody>
                 </table>
-              </div>
+                </div>
+              </>
             ) : (
               <div className="text-xs text-rcn-muted mt-2.5 p-2.5 border border-dashed border-rcn-border rounded-xl">
                 Select a Receiver organization and click <b>Apply Receiver Inbox</b>.
