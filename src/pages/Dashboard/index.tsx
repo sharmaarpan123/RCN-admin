@@ -25,6 +25,11 @@ const Dashboard: React.FC = () => {
 
   const [showSenderInbox, setShowSenderInbox] = useState(false);
   const [showReceiverInbox, setShowReceiverInbox] = useState(false);
+  // Filter update trigger forces component re-render when filters change
+  const [filterUpdateTrigger, setFilterUpdateTrigger] = useState(0);
+  
+  // Function to trigger filter update
+  const triggerFilterUpdate = () => setFilterUpdateTrigger(prev => prev + 1);
 
   // KPIs
   const totalOrgs = db.orgs.length;
@@ -61,15 +66,117 @@ const Dashboard: React.FC = () => {
 
   const getSenderReferrals = () => {
     if (!senderOrgId) return [];
+    
+    // Trigger re-render when filters change
+    void filterUpdateTrigger;
+    
+    // Get filter values from inputs
+    const idFilter = safeLower((document.getElementById('senderF_id') as HTMLInputElement)?.value || '');
+    const fromFilter = (document.getElementById('senderF_from') as HTMLInputElement)?.value || '';
+    const toFilter = (document.getElementById('senderF_to') as HTMLInputElement)?.value || '';
+    const patientFilter = safeLower((document.getElementById('senderF_patient') as HTMLInputElement)?.value || '');
+    const dobFilter = (document.getElementById('senderF_dob') as HTMLInputElement)?.value || '';
+    
+    const pendingChecked = (document.getElementById('senderF_st_pending') as HTMLInputElement)?.checked;
+    const acceptedChecked = (document.getElementById('senderF_st_accepted') as HTMLInputElement)?.checked;
+    const rejectedChecked = (document.getElementById('senderF_st_rejected') as HTMLInputElement)?.checked;
+    
     return db.referrals
-      .filter((r: any) => r.senderOrgId === senderOrgId)
+      .filter((r: any) => {
+        // Organization filter
+        if (r.senderOrgId !== senderOrgId) return false;
+        
+        // ID filter
+        if (idFilter && !safeLower(r.id).includes(idFilter)) return false;
+        
+        // Date range filter
+        const refDate = new Date(r.createdAt);
+        if (fromFilter) {
+          const fromDate = new Date(fromFilter + 'T00:00:00');
+          if (refDate < fromDate) return false;
+        }
+        if (toFilter) {
+          const toDate = new Date(toFilter + 'T23:59:59');
+          if (refDate > toDate) return false;
+        }
+        
+        // Patient name filter
+        if (patientFilter) {
+          const fullName = safeLower(`${r.patient?.first || ''} ${r.patient?.last || ''}`);
+          const reverseName = safeLower(`${r.patient?.last || ''} ${r.patient?.first || ''}`);
+          if (!fullName.includes(patientFilter) && !reverseName.includes(patientFilter)) return false;
+        }
+        
+        // DOB filter
+        if (dobFilter && r.patient?.dob !== dobFilter) return false;
+        
+        // Status filter
+        const statusMatches = 
+          (r.status === 'Pending' && pendingChecked) ||
+          (r.status === 'Accepted' && acceptedChecked) ||
+          (r.status === 'Rejected' && rejectedChecked);
+        if (!statusMatches) return false;
+        
+        return true;
+      })
       .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   };
 
   const getReceiverReferrals = () => {
     if (!receiverOrgId) return [];
+    
+    // Trigger re-render when filters change
+    void filterUpdateTrigger;
+    
+    // Get filter values from inputs
+    const idFilter = safeLower((document.getElementById('receiverF_id') as HTMLInputElement)?.value || '');
+    const fromFilter = (document.getElementById('receiverF_from') as HTMLInputElement)?.value || '';
+    const toFilter = (document.getElementById('receiverF_to') as HTMLInputElement)?.value || '';
+    const patientFilter = safeLower((document.getElementById('receiverF_patient') as HTMLInputElement)?.value || '');
+    const dobFilter = (document.getElementById('receiverF_dob') as HTMLInputElement)?.value || '';
+    
+    const pendingChecked = (document.getElementById('receiverF_st_pending') as HTMLInputElement)?.checked;
+    const acceptedChecked = (document.getElementById('receiverF_st_accepted') as HTMLInputElement)?.checked;
+    const rejectedChecked = (document.getElementById('receiverF_st_rejected') as HTMLInputElement)?.checked;
+    
     return db.referrals
-      .filter((r: any) => r.receiverOrgId === receiverOrgId)
+      .filter((r: any) => {
+        // Organization filter
+        if (r.receiverOrgId !== receiverOrgId) return false;
+        
+        // ID filter
+        if (idFilter && !safeLower(r.id).includes(idFilter)) return false;
+        
+        // Date range filter
+        const refDate = new Date(r.createdAt);
+        if (fromFilter) {
+          const fromDate = new Date(fromFilter + 'T00:00:00');
+          if (refDate < fromDate) return false;
+        }
+        if (toFilter) {
+          const toDate = new Date(toFilter + 'T23:59:59');
+          if (refDate > toDate) return false;
+        }
+        
+        // Patient name filter
+        if (patientFilter) {
+          const fullName = safeLower(`${r.patient?.first || ''} ${r.patient?.last || ''}`);
+          const reverseName = safeLower(`${r.patient?.last || ''} ${r.patient?.first || ''}`);
+          if (!fullName.includes(patientFilter) && !reverseName.includes(patientFilter)) return false;
+        }
+        
+        // DOB filter
+        if (dobFilter && r.patient?.dob !== dobFilter) return false;
+        
+        // Status filter
+        const statusMatches = 
+          (r.status === 'Pending' && pendingChecked) ||
+          (r.status === 'Accepted' && acceptedChecked) ||
+          (r.status === 'Rejected' && rejectedChecked);
+        if (!statusMatches) return false;
+        
+        return true;
+      })
       .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   };
 
@@ -149,9 +256,10 @@ const Dashboard: React.FC = () => {
         <div className="mb-4">
           <div className="text-xs text-rcn-muted mb-1">Patient Information</div>
           <div className="text-sm">
-            <strong>Name:</strong> {ref.patientName || "—"}<br />
-            <strong>DOB:</strong> {ref.patientDOB || "—"}<br />
-            <strong>Insurance:</strong> {ref.insurance || "—"}
+            <strong>Name:</strong> {ref.patient?.last || "—"}, {ref.patient?.first || "—"}<br />
+            <strong>DOB:</strong> {ref.patient?.dob || "—"}<br />
+            <strong>Gender:</strong> {ref.patient?.gender || "—"}<br />
+            <strong>Insurance:</strong> {ref.insurance?.primary?.payer || "—"} ({ref.insurance?.primary?.policy || "—"})
           </div>
         </div>
 
@@ -165,9 +273,16 @@ const Dashboard: React.FC = () => {
         </div>
 
         <div className="mb-4">
+          <div className="text-xs text-rcn-muted mb-1">Services Requested</div>
+          <div className="text-sm bg-[#f6fbf7] border border-rcn-border rounded-xl p-3">
+            {ref.services || ref.servicesData?.requested?.join('; ') || "—"}
+          </div>
+        </div>
+
+        <div className="mb-4">
           <div className="text-xs text-rcn-muted mb-1">Notes</div>
           <div className="text-sm bg-[#f6fbf7] border border-rcn-border rounded-xl p-3">
-            {ref.notes || "No notes provided."}
+            {ref.notes || ref.servicesData?.otherInformation || "No notes provided."}
           </div>
         </div>
 
@@ -177,13 +292,13 @@ const Dashboard: React.FC = () => {
         <div className="grid grid-cols-2 gap-2 mb-4">
           <div className="bg-[#f6fbf7] border border-rcn-border rounded-lg p-2 text-xs">
             <div className="font-semibold mb-1">Sender</div>
-            <div>Send charged: {ref.billing.senderSendCharged ? "✅ Yes" : "❌ No"}</div>
-            <div>Credit used: {ref.billing.senderUsedCredit ? "✅ Yes" : "❌ No"}</div>
+            <div>Send charged: {ref.billing?.senderSendCharged ? "✅ Yes" : "❌ No"}</div>
+            <div>Credit used: {ref.billing?.senderUsedCredit ? "✅ Yes" : "❌ No"}</div>
           </div>
           <div className="bg-[#f6fbf7] border border-rcn-border rounded-lg p-2 text-xs">
             <div className="font-semibold mb-1">Receiver</div>
-            <div>Open charged: {ref.billing.receiverOpenCharged ? "✅ Yes" : "❌ No"}</div>
-            <div>Credit used: {ref.billing.receiverUsedCredit ? "✅ Yes" : "❌ No"}</div>
+            <div>Open charged: {ref.billing?.receiverOpenCharged ? "✅ Yes" : "❌ No"}</div>
+            <div>Credit used: {ref.billing?.receiverUsedCredit ? "✅ Yes" : "❌ No"}</div>
           </div>
         </div>
 
@@ -425,50 +540,64 @@ const Dashboard: React.FC = () => {
               <>
                 {/* Sender Filters */}
                 <div className="flex flex-wrap gap-3 items-end mt-3 mb-3 p-3 bg-[#f6fbf7] border border-rcn-border rounded-xl">
-                  <div className="flex flex-col gap-1.5 min-w-[140px]">
-                    <label className="text-xs text-rcn-muted font-semibold">ID</label>
-                    <input 
-                      id="senderF_id" 
-                      className={inputClass}
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1.5 min-w-[140px]">
+                  <div className="flex flex-col gap-1.5 min-w-[120px]">
                     <label className="text-xs text-rcn-muted font-semibold">ID</label>
                     <input 
                       id="senderF_id" 
                       placeholder="e.g., ref_1001" 
                       className={inputClass}
+                      onInput={triggerFilterUpdate}
                     />
                   </div>
                   <div className="flex flex-col gap-1.5 min-w-[140px]">
-                    <label className="text-xs text-rcn-muted font-semibold">ID</label>
+                    <label className="text-xs text-rcn-muted font-semibold">Date From</label>
                     <input 
-                      id="senderF_id" 
-                      placeholder="e.g., ref_1001" 
+                      id="senderF_from"
+                      type="date"
                       className={inputClass}
+                      onChange={triggerFilterUpdate}
                     />
-                  </div>  
+                  </div>
+                  <div className="flex flex-col gap-1.5 min-w-[140px]">
+                    <label className="text-xs text-rcn-muted font-semibold">Date To</label>
+                    <input 
+                      id="senderF_to"
+                      type="date"
+                      className={inputClass}
+                      onChange={triggerFilterUpdate}
+                    />
+                  </div>
                   <div className="flex flex-col gap-1.5 min-w-[200px] flex-1">
                     <label className="text-xs text-rcn-muted font-semibold">Patient Name</label>
                     <input 
                       id="senderF_patient" 
                       placeholder="Last or First" 
                       className={inputClass}
+                      onInput={triggerFilterUpdate}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5 min-w-[140px]">
+                    <label className="text-xs text-rcn-muted font-semibold">DOB</label>
+                    <input 
+                      id="senderF_dob"
+                      type="date"
+                      className={inputClass}
+                      onChange={triggerFilterUpdate}
                     />
                   </div>
                   <div className="flex flex-col gap-1.5 min-w-[280px]">
                     <label className="text-xs text-rcn-muted font-semibold">Status</label>
                     <div className="flex flex-wrap gap-2">
                       <label className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs border border-rcn-border bg-white cursor-pointer hover:border-[#b9d7c5]">
-                        <input type="checkbox" id="senderF_st_pending" defaultChecked className="w-3.5 h-3.5" />
+                        <input type="checkbox" id="senderF_st_pending" defaultChecked className="w-3.5 h-3.5" onChange={triggerFilterUpdate} />
                         Pending
                       </label>
                       <label className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs border border-rcn-border bg-white cursor-pointer hover:border-[#b9d7c5]">
-                        <input type="checkbox" id="senderF_st_accepted" defaultChecked className="w-3.5 h-3.5" />
+                        <input type="checkbox" id="senderF_st_accepted" defaultChecked className="w-3.5 h-3.5" onChange={triggerFilterUpdate} />
                         Accepted
                       </label>
                       <label className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs border border-rcn-border bg-white cursor-pointer hover:border-[#b9d7c5]">
-                        <input type="checkbox" id="senderF_st_rejected" defaultChecked className="w-3.5 h-3.5" />
+                        <input type="checkbox" id="senderF_st_rejected" defaultChecked className="w-3.5 h-3.5" onChange={triggerFilterUpdate} />
                         Rejected
                       </label>
                     </div>
@@ -503,11 +632,11 @@ const Dashboard: React.FC = () => {
                         const receiver = db.orgs.find((o: any) => o.id === ref.receiverOrgId);
                         return (
                           <tr key={ref.id}>
-                            <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono">{ref.id.substring(0, 12)}...</td>
+                            <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono">{ref.id}</td>
                             <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">{fmtDate(ref.createdAt)}</td>
                             <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                              {ref.patientName || "—"}
-                              <div className="text-rcn-muted">{ref.patientDOB || "—"}</div>
+                              {ref.patient?.last || "—"}, {ref.patient?.first || "—"}
+                              <div className="text-rcn-muted">{ref.patient?.dob || "—"} • {ref.patient?.gender || "—"}</div>
                             </td>
                             <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
                               {receiver?.name || '—'}
@@ -556,12 +685,31 @@ const Dashboard: React.FC = () => {
               <>
                 {/* Receiver Filters */}
                 <div className="flex flex-wrap gap-3 items-end mt-3 mb-3 p-3 bg-[#f6fbf7] border border-rcn-border rounded-xl">
-                  <div className="flex flex-col gap-1.5 min-w-[140px]">
+                  <div className="flex flex-col gap-1.5 min-w-[120px]">
                     <label className="text-xs text-rcn-muted font-semibold">ID</label>
                     <input 
                       id="receiverF_id" 
-                      placeholder="e.g., ref_1001" 
+                      placeholder="e.g., ref_1004" 
                       className={inputClass}
+                      onInput={triggerFilterUpdate}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5 min-w-[140px]">
+                    <label className="text-xs text-rcn-muted font-semibold">Date From</label>
+                    <input 
+                      id="receiverF_from"
+                      type="date"
+                      className={inputClass}
+                      onChange={triggerFilterUpdate}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5 min-w-[140px]">
+                    <label className="text-xs text-rcn-muted font-semibold">Date To</label>
+                    <input 
+                      id="receiverF_to"
+                      type="date"
+                      className={inputClass}
+                      onChange={triggerFilterUpdate}
                     />
                   </div>
                   <div className="flex flex-col gap-1.5 min-w-[200px] flex-1">
@@ -570,21 +718,31 @@ const Dashboard: React.FC = () => {
                       id="receiverF_patient" 
                       placeholder="Last or First" 
                       className={inputClass}
+                      onInput={triggerFilterUpdate}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5 min-w-[140px]">
+                    <label className="text-xs text-rcn-muted font-semibold">DOB</label>
+                    <input 
+                      id="receiverF_dob"
+                      type="date"
+                      className={inputClass}
+                      onChange={triggerFilterUpdate}
                     />
                   </div>
                   <div className="flex flex-col gap-1.5 min-w-[280px]">
                     <label className="text-xs text-rcn-muted font-semibold">Status</label>
                     <div className="flex flex-wrap gap-2">
                       <label className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs border border-rcn-border bg-white cursor-pointer hover:border-[#b9d7c5]">
-                        <input type="checkbox" id="receiverF_st_pending" defaultChecked className="w-3.5 h-3.5" />
+                        <input type="checkbox" id="receiverF_st_pending" defaultChecked className="w-3.5 h-3.5" onChange={triggerFilterUpdate} />
                         Pending
                       </label>
                       <label className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs border border-rcn-border bg-white cursor-pointer hover:border-[#b9d7c5]">
-                        <input type="checkbox" id="receiverF_st_accepted" defaultChecked className="w-3.5 h-3.5" />
+                        <input type="checkbox" id="receiverF_st_accepted" defaultChecked className="w-3.5 h-3.5" onChange={triggerFilterUpdate} />
                         Accepted
                       </label>
                       <label className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs border border-rcn-border bg-white cursor-pointer hover:border-[#b9d7c5]">
-                        <input type="checkbox" id="receiverF_st_rejected" defaultChecked className="w-3.5 h-3.5" />
+                        <input type="checkbox" id="receiverF_st_rejected" defaultChecked className="w-3.5 h-3.5" onChange={triggerFilterUpdate} />
                         Rejected
                       </label>
                     </div>
@@ -619,11 +777,11 @@ const Dashboard: React.FC = () => {
                         const sender = db.orgs.find((o: any) => o.id === ref.senderOrgId);
                         return (
                           <tr key={ref.id}>
-                            <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono">{ref.id.substring(0, 12)}...</td>
+                            <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono">{ref.id}</td>
                             <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">{fmtDate(ref.createdAt)}</td>
                             <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                              {ref.patientName || "—"}
-                              <div className="text-rcn-muted">{ref.patientDOB || "—"}</div>
+                              {ref.patient?.last || "—"}, {ref.patient?.first || "—"}
+                              <div className="text-rcn-muted">{ref.patient?.dob || "—"} • {ref.patient?.gender || "—"}</div>
                             </td>
                             <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
                               {sender?.name || '—'}
@@ -641,7 +799,7 @@ const Dashboard: React.FC = () => {
                                 onClick={() => handleViewReferral(ref.id, true)}
                                 className="logo-gradient text-white border-0 px-2 py-1.5 rounded-lg cursor-pointer font-semibold text-xs hover:opacity-90 transition-opacity"
                               >
-                                {ref.billing.receiverOpenCharged ? 'View' : 'Open'}
+                                {ref.billing?.receiverOpenCharged ? 'View' : 'Open'}
                               </button>
                             </td>
                           </tr>
