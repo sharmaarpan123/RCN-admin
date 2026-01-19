@@ -6,20 +6,11 @@ import { safeLower } from '../utils/database';
 const Banners: React.FC = () => {
   const { db, showToast } = useApp();
   const [search, setSearch] = useState('');
-  const [placementFilter, setPlacementFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [scopeFilter, setScopeFilter] = useState('');
 
   const filtered = (db.banners || []).filter((b: any) => {
     const searchLower = safeLower(search);
-    const hay = safeLower((b.name || '') + ' ' + (b.linkUrl || '') + ' ' + (b.imageUrl || ''));
-    
-    return (
-      (!search || hay.includes(searchLower)) &&
-      (!placementFilter || b.placement === placementFilter) &&
-      (!statusFilter || (statusFilter === 'active' ? b.active : !b.active)) &&
-      (!scopeFilter || b.scope === scopeFilter)
-    );
+    const hay = safeLower((b.name || '') + ' ' + (b.linkUrl || ''));
+    return !search || hay.includes(searchLower);
   });
 
   return (
@@ -29,144 +20,74 @@ const Banners: React.FC = () => {
         subtitle="Create and manage advertising banners used across the portal." 
       />
 
-      <div className="card">
-        <div className="split">
+      <div className="bg-white border border-rcn-border rounded-rcn-lg shadow-rcn p-4">
+        <div className="flex justify-between items-start flex-wrap gap-3">
           <div>
-            <h3>Banner Management</h3>
-            <p className="hint">
+            <h3 className="text-sm font-semibold m-0 mb-1">Banner Management</h3>
+            <p className="text-xs text-rcn-muted m-0">
               Create and manage advertising banners. Banners can be Global (all organizations) or scoped to a specific organization.
             </p>
           </div>
-          <button className="btn primary" onClick={() => showToast('Banner creation not implemented in this demo')}>
+          <button 
+            className="bg-rcn-accent border-rcn-accent text-white px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-sm hover:bg-rcn-accent-dark transition-colors"
+            onClick={() => showToast('Banner creation not implemented in this demo')}
+          >
             + New Banner
           </button>
         </div>
 
-        <div className="grid3" style={{ marginTop: '12px' }}>
-          <div className="field">
-            <label>Search (Name / Link)</label>
-            <input
-              placeholder="Search..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <div className="field">
-            <label>Placement</label>
-            <select value={placementFilter} onChange={(e) => setPlacementFilter(e.target.value)}>
-              <option value="">All Placements</option>
-              <option value="RIGHT_SIDEBAR">Right Sidebar</option>
-              <option value="HEADER_STRIP">Header Strip</option>
-              <option value="LOGIN_RIGHT">Login Right</option>
-            </select>
-          </div>
-          <div className="field">
-            <label>Status</label>
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-              <option value="">All</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-          </div>
+        <div className="flex flex-col gap-1.5 mt-3 max-w-md">
+          <label className="text-xs text-rcn-muted">Search (Name / Link)</label>
+          <input
+            placeholder="Search..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white text-sm outline-none focus:border-[#b9d7c5] focus:shadow-[0_0_0_3px_rgba(31,122,75,0.12)]"
+          />
         </div>
 
-        <div className="grid2" style={{ marginTop: '10px' }}>
-          <div className="field">
-            <label>Scope</label>
-            <select value={scopeFilter} onChange={(e) => setScopeFilter(e.target.value)}>
-              <option value="">All Scopes</option>
-              <option value="GLOBAL">Global</option>
-              <option value="ORG">Organization-specific</option>
-            </select>
-          </div>
-          <div className="field">
-            <label>Organization (if scoped)</label>
-            <select>
-              <option value="">All Organizations</option>
-              {db.orgs.map((o: any) => (
-                <option key={o.id} value={o.id}>{o.name}</option>
-              ))}
-            </select>
-          </div>
-        </div>
+        <div className="h-px bg-rcn-border my-3.5"></div>
 
-        <div className="hr"></div>
-
-        <div style={{ overflow: 'auto' }}>
-          <table className="table">
+        <div className="overflow-auto">
+          <table className="w-full border-separate border-spacing-0 overflow-hidden rounded-2xl border border-rcn-border">
             <thead>
               <tr>
-                <th>Name / Link</th>
-                <th>Placement</th>
-                <th>Scope</th>
-                <th>Status</th>
-                <th>Date Range</th>
-                <th className="right">Actions</th>
+                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Name / Link</th>
+                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Placement</th>
+                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Scope</th>
+                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Status</th>
+                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-right align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan={6} className="muted">No banners found.</td></tr>
+                <tr><td colSpan={5} className="px-2.5 py-2.5 text-xs text-rcn-muted">No banners found.</td></tr>
               ) : (
                 filtered.map((b: any) => (
                   <tr key={b.id}>
-                    <td>
+                    <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
                       <div><strong>{b.name}</strong></div>
-                      <div className="muted" style={{ fontSize: '12px', overflowWrap: 'anywhere' }}>
-                        {b.linkUrl || '—'}
-                      </div>
+                      <div className="text-rcn-muted text-xs break-all">{b.linkUrl || '—'}</div>
                     </td>
-                    <td>{b.placement || '—'}</td>
-                    <td>{b.scope || 'GLOBAL'}</td>
-                    <td>
+                    <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">{b.placement || '—'}</td>
+                    <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">{b.scope || 'GLOBAL'}</td>
+                    <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
                       {b.active ? (
-                        <span className="pill ok">Active</span>
+                        <span className="inline-block text-[11px] px-2 py-0.5 rounded-full bg-white/15 text-rcn-dark-text border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">Active</span>
                       ) : (
-                        <span className="pill warn">Inactive</span>
+                        <span className="inline-block text-[11px] px-2 py-0.5 rounded-full bg-white/15 text-rcn-dark-text border-[#f3d9a1] bg-[#fff8e6] text-[#7a4a00]">Inactive</span>
                       )}
                     </td>
-                    <td>
-                      {b.startAt ? b.startAt.slice(0, 10) : '—'} → {b.endAt ? b.endAt.slice(0, 10) : '—'}
-                    </td>
-                    <td className="right">
-                      <button className="btn small">Preview</button>
-                      <button className="btn small">Edit</button>
-                      <button className="btn danger small">Delete</button>
+                    <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top text-right">
+                      <div className="flex gap-1 justify-end">
+                        <button className="border border-rcn-border bg-white px-2.5 py-2 rounded-xl text-xs font-semibold hover:border-[#c9ddd0]">Edit</button>
+                      </div>
                     </td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
-        </div>
-      </div>
-
-      <div className="grid2" style={{ marginTop: '14px' }}>
-        <div className="card">
-          <h3>Live Preview</h3>
-          <p className="hint">Preview uses the selected Organization filter (if any) and the placement buttons.</p>
-          <div className="pillRow" style={{ marginTop: '8px' }}>
-            <button className="btn">Right Sidebar</button>
-            <button className="btn">Header Strip</button>
-            <button className="btn">Login Right</button>
-          </div>
-          <div className="hr"></div>
-          <div style={{ minHeight: '160px' }}>
-            <div className="muted">No preview available</div>
-          </div>
-        </div>
-        <div className="card">
-          <h3>Notes</h3>
-          <p className="hint">
-            Banners are stored in the same local database as referrals and organizations, 
-            so they can be used across the portal automatically.
-          </p>
-          <div className="hr"></div>
-          <ul style={{ margin: 0, paddingLeft: '18px' }}>
-            <li><strong>Global</strong> banners apply to all organizations.</li>
-            <li><strong>Organization-specific</strong> banners apply only to that organization.</li>
-            <li>Start/End dates are optional; active banners outside the date range will not render.</li>
-          </ul>
         </div>
       </div>
     </>

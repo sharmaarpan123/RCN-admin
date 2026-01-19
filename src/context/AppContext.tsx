@@ -117,22 +117,24 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       {children}
       
       {/* Toast notification */}
-      <div className={`toast ${showToastFlag ? 'show' : ''}`}>
+      <div className={`fixed right-4 bottom-4 z-[60] bg-rcn-dark-bg text-rcn-dark-text border border-white/15 px-3 py-2.5 rounded-2xl shadow-rcn max-w-[360px] text-sm transition-all duration-300 ${
+        showToastFlag ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'
+      }`}>
         {toastMessage}
       </div>
 
       {/* Modal */}
       {modalContent && (
         <div 
-          className="modalBack show" 
+          className="fixed inset-0 bg-black/55 flex items-center justify-center p-5 z-50" 
           onClick={(e) => {
-            if ((e.target as HTMLElement).classList.contains('modalBack')) {
+            if ((e.target as HTMLElement).classList.contains('bg-black/55')) {
               closeModal();
             }
           }}
         >
-          <div className="modal">
-            <div className="card">
+          <div className="max-w-[900px] w-full">
+            <div className="bg-white border border-rcn-border rounded-rcn-lg shadow-rcn p-4 max-h-[80vh] overflow-auto">
               {modalContent}
             </div>
           </div>

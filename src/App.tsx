@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AppProvider, useApp } from './context/AppContext';
+import { AppProvider as AppContextProvider, useApp } from './context/AppContext';
 import Login from './components/Login';
 import Sidebar from './components/Sidebar';
 import Dashboard from './views/Dashboard';
@@ -12,7 +12,6 @@ import Financials from './views/Financials';
 import Reports from './views/Reports';
 import Audit from './views/Audit';
 import Settings from './views/Settings';
-import './App.css';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { session } = useApp();
@@ -27,9 +26,9 @@ const AppRoutes: React.FC = () => {
   }
 
   return (
-    <div className="app">
+    <div className="min-h-screen flex">
       <Sidebar />
-      <main className="content">
+      <main className="flex-1 p-6 pb-10 overflow-auto">
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" />} />
           <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
@@ -51,9 +50,9 @@ const AppRoutes: React.FC = () => {
 const App: React.FC = () => {
   return (
     <BrowserRouter>
-      <AppProvider>
+      <AppContextProvider>
         <AppRoutes />
-      </AppProvider>
+      </AppContextProvider>
     </BrowserRouter>
   );
 };

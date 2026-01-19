@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+@theme {
+  /* Custom RCN Colors */
+  --color-rcn-bg: #F4FBF6;
+  --color-rcn-card: #ffffff;
+  --color-rcn-text: #0f172a;
+  --color-rcn-muted: #475569;
+  --color-rcn-border: #d8e6dd;
+  --color-rcn-accent: #1f7a4b;
+  --color-rcn-accent-dark: #0f5f38;
+  --color-rcn-warn: #b45309;
+  --color-rcn-danger: #b91c1c;
+  --color-rcn-dark-bg: #0b3b24;
+  --color-rcn-dark-text: #e7f5ec;
+
+  /* Custom shadows */
+  --shadow-rcn: 0 10px 30px rgba(2, 6, 23, 0.08);
+
+  /* Custom border radius */
+  --radius-rcn: 16px;
+  --radius-rcn-lg: 22px;
+}
+
+@layer base {
+  body {
+    margin: 0;
+    background-color: var(--color-rcn-bg);
+    color: var(--color-rcn-text);
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  }
+  
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+}
+
+@layer components {
+  /* Custom utility for the gradient logo */
+  .logo-gradient {
+    background: linear-gradient(135deg, #1f7a4b, #33a06a);
+  }
+  
+  /* Custom gradient for login hero */
+  .login-hero-gradient {
+    background: linear-gradient(135deg, #0b3b24, #1f7a4b);
+  }
+  
+  /* Banner gradient */
+  .banner-gradient {
+    background: linear-gradient(135deg, rgba(31, 122, 75, 0.12), rgba(51, 160, 106, 0.10));
+  }
+  
+  /* Login background gradients */
+  .login-bg {
+    background: 
+      radial-gradient(900px 600px at 30% 10%, rgba(31, 122, 75, 0.18), transparent 55%),
+      radial-gradient(800px 600px at 80% 40%, rgba(51, 160, 106, 0.16), transparent 55%),
+      #F4FBF6;
+  }
+}
+
+@layer utilities {
+  /* Monospace font utility */
+  .font-mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  }
+}

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import TopBar from '../components/TopBar';
 import { useApp } from '../context/AppContext';
-import { US_STATES, safeLower, escapeHtml } from '../utils/database';
+import { US_STATES, safeLower } from '../utils/database';
 
 const Organizations: React.FC = () => {
-  const { db, refreshDB } = useApp();
+  const { db } = useApp();
   const [search, setSearch] = useState('');
   const [stateFilter, setStateFilter] = useState('');
   const [zipFilter, setZipFilter] = useState('');
@@ -23,6 +23,10 @@ const Organizations: React.FC = () => {
     );
   });
 
+  const inputClass = "w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white text-sm outline-none focus:border-[#b9d7c5] focus:shadow-[0_0_0_3px_rgba(31,122,75,0.12)]";
+  const btnClass = "border border-rcn-border bg-white px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-rcn-text text-sm hover:border-[#c9ddd0] transition-colors";
+  const btnPrimaryClass = "bg-rcn-accent border-rcn-accent text-white px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-sm hover:bg-rcn-accent-dark transition-colors";
+
   return (
     <>
       <TopBar 
@@ -30,78 +34,80 @@ const Organizations: React.FC = () => {
         subtitle="Create and manage organizations and their internal modules." 
       />
 
-      <div className="card">
-        <div className="flex space">
+      <div className="bg-white border border-rcn-border rounded-rcn-lg shadow-rcn p-4">
+        <div className="flex justify-between items-start flex-wrap gap-3">
           <div>
-            <h3 style={{ margin: 0 }}>Organizations</h3>
-            <p className="hint">Manage organizations and their address info (state + zip included).</p>
+            <h3 className="m-0 text-sm font-semibold">Organizations</h3>
+            <p className="text-xs text-rcn-muted mt-1 mb-0">Manage organizations and their address info (state + zip included).</p>
           </div>
-          <button className="btn primary">+ New Organization</button>
+          <button className={btnPrimaryClass}>+ New Organization</button>
         </div>
 
-        <div className="toolbar" style={{ marginTop: '12px' }}>
-          <div className="field" style={{ minWidth: '260px' }}>
-            <label>Search (Name or Location)</label>
+        <div className="flex flex-wrap gap-2.5 items-end mt-3">
+          <div className="flex flex-col gap-1.5 min-w-[260px] flex-1">
+            <label className="text-xs text-rcn-muted">Search (Name or Location)</label>
             <input
               placeholder="Name, street, city, state, zip"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              className={inputClass}
             />
           </div>
-          <div className="field small">
-            <label>State</label>
-            <select value={stateFilter} onChange={(e) => setStateFilter(e.target.value)}>
+          <div className="flex flex-col gap-1.5 min-w-[120px]">
+            <label className="text-xs text-rcn-muted">State</label>
+            <select value={stateFilter} onChange={(e) => setStateFilter(e.target.value)} className={inputClass}>
               {US_STATES.map(s => <option key={s} value={s}>{s === '' ? 'All' : s}</option>)}
             </select>
           </div>
-          <div className="field small">
-            <label>Zip</label>
+          <div className="flex flex-col gap-1.5 min-w-[120px]">
+            <label className="text-xs text-rcn-muted">Zip</label>
             <input
               placeholder="Zip"
               value={zipFilter}
               onChange={(e) => setZipFilter(e.target.value)}
+              className={inputClass}
             />
           </div>
         </div>
 
-        <div style={{ overflow: 'auto', marginTop: '12px' }}>
-          <table className="table">
+        <div className="overflow-auto mt-3">
+          <table className="w-full border-separate border-spacing-0 overflow-hidden rounded-2xl border border-rcn-border">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>State</th>
-                <th>Zip</th>
-                <th>City</th>
-                <th>Street</th>
-                <th>Enabled</th>
-                <th>Actions</th>
+                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Name</th>
+                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">State</th>
+                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Zip</th>
+                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">City</th>
+                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Street</th>
+                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Enabled</th>
+                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredOrgs.length === 0 ? (
-                <tr><td colSpan={7} className="muted">No organizations found.</td></tr>
+                <tr><td colSpan={7} className="px-2.5 py-2.5 text-xs text-rcn-muted">No organizations found.</td></tr>
               ) : (
                 filteredOrgs.map((o: any) => (
                   <tr key={o.id}>
-                    <td>
+                    <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
                       <b>{o.name}</b>
-                      <div className="muted">{o.email}</div>
+                      <div className="text-rcn-muted">{o.email}</div>
                     </td>
-                    <td>{o.address.state}</td>
-                    <td className="mono">{o.address.zip}</td>
-                    <td>{o.address.city}</td>
-                    <td>{o.address.street}</td>
-                    <td>
+                    <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">{o.address.state}</td>
+                    <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono">{o.address.zip}</td>
+                    <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">{o.address.city}</td>
+                    <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">{o.address.street}</td>
+                    <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
                       {o.enabled ? (
-                        <span className="tag ok">Enabled</span>
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">Enabled</span>
                       ) : (
-                        <span className="tag bad">Disabled</span>
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#f3b8b8] bg-[#fff1f2] text-[#991b1b]">Disabled</span>
                       )}
                     </td>
-                    <td>
-                      <div className="flex" style={{ gap: '8px' }}>
-                        <button className="btn small">Manage</button>
-                        <button className="btn small">Edit</button>
+                    <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
+                      <div className="flex gap-2">
+                        <button className="border border-rcn-border bg-white px-2.5 py-2 rounded-xl text-xs font-semibold hover:border-[#c9ddd0]">Manage</button>
+                        <button className="border border-rcn-border bg-white px-2.5 py-2 rounded-xl text-xs font-semibold hover:border-[#c9ddd0]">Edit</button>
                       </div>
                     </td>
                   </tr>
@@ -109,43 +115,6 @@ const Organizations: React.FC = () => {
               )}
             </tbody>
           </table>
-        </div>
-      </div>
-
-      <div className="card" style={{ marginTop: '14px' }}>
-        <div className="flex space" style={{ alignItems: 'flex-end' }}>
-          <div>
-            <h3 style={{ margin: 0 }}>Organization Modules</h3>
-            <p className="hint">Branches, Departments, and Users are managed inside the selected Organization.</p>
-          </div>
-          <div className="field" style={{ minWidth: '360px', margin: 0 }}>
-            <label>Select Organization</label>
-            <select>
-              <option value="">— Select Organization —</option>
-              {db.orgs.map((o: any) => (
-                <option key={o.id} value={o.id}>{o.name}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className="hr"></div>
-
-        <div className="muted" style={{ fontSize: '12px' }}>
-          Select an organization to manage branches, departments, and users.
-        </div>
-
-        <div className="subtabs" style={{ marginTop: '12px' }}>
-          <button className="active">Organization</button>
-          <button>Branches</button>
-          <button>Departments</button>
-          <button>Users</button>
-        </div>
-
-        <div className="subtabPanel active">
-          <div className="muted" style={{ padding: '20px', textAlign: 'center' }}>
-            Select an organization above to view details.
-          </div>
         </div>
       </div>
     </>

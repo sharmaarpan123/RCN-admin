@@ -33,15 +33,21 @@ const Reports: React.FC = () => {
         subtitle="Quick counts and export options (demo)." 
       />
 
-      <div className="card">
-        <h3>Reports</h3>
-        <p className="hint">Quick counts and export options (demo).</p>
-        <div className="hr"></div>
-        <div className="row">
-          <button className="btn" onClick={exportJSON}>
+      <div className="bg-white border border-rcn-border rounded-rcn-lg shadow-rcn p-4">
+        <h3 className="text-sm font-semibold m-0 mb-2.5">Reports</h3>
+        <p className="text-xs text-rcn-muted m-0 mb-3.5">Quick counts and export options (demo).</p>
+        <div className="h-px bg-rcn-border"></div>
+        <div className="flex flex-wrap gap-2.5 mt-3.5">
+          <button 
+            className="border border-rcn-border bg-white px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-rcn-text text-sm hover:border-[#c9ddd0] transition-colors"
+            onClick={exportJSON}
+          >
             Export JSON
           </button>
-          <button className="btn" onClick={downloadAuditCSV}>
+          <button 
+            className="border border-rcn-border bg-white px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-rcn-text text-sm hover:border-[#c9ddd0] transition-colors"
+            onClick={downloadAuditCSV}
+          >
             Export Audit CSV
           </button>
         </div>

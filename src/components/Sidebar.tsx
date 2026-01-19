@@ -32,37 +32,43 @@ const Sidebar: React.FC = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <aside className="sidebar">
-      <div className="brand">
-        <div className="logo" aria-hidden="true"></div>
+    <aside className="w-[280px] bg-rcn-dark-bg text-rcn-dark-text p-4 border-r border-white/10 sticky top-0 h-screen overflow-auto">
+      <div className="flex gap-2.5 items-center px-2.5 py-3 border-b border-white/10 mb-3">
+        <div className="w-10 h-10 rounded-xl logo-gradient shadow-[0_8px_18px_rgba(0,0,0,0.25)]" aria-hidden="true"></div>
         <div>
-          <h1>RCN Admin</h1>
-          <div className="sub">
+          <h1 className="text-sm font-semibold m-0 leading-tight">RCN Admin</h1>
+          <div className="text-xs text-rcn-dark-text/80">
             {currentUser ? `${currentUser.name} • ${roleLabel(currentUser.role)}` : 'Signed in'}
           </div>
         </div>
       </div>
 
-      <div className="navsec">
-        <div className="label">Core</div>
-        <nav className="nav">
+      <div className="mt-3">
+        <div className="text-[11px] uppercase tracking-wider text-rcn-dark-text/65 px-2.5 py-2.5">Core</div>
+        <nav className="space-y-1">
           {canAccessView('dashboard') && (
             <a
-              className={isActive('/dashboard') ? 'active' : ''}
+              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl no-underline text-inherit mx-1.5 transition-all cursor-pointer ${
+                isActive('/dashboard') ? 'bg-white/15' : 'hover:bg-white/10'
+              }`}
               onClick={() => handleNavClick('/dashboard', 'dashboard')}
             >
               Referral Dashboard
             </a>
           )}
           <a
-            className={isActive('/orgs') ? 'active' : ''}
+            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl no-underline text-inherit mx-1.5 transition-all cursor-pointer ${
+              isActive('/orgs') ? 'bg-white/15' : 'hover:bg-white/10'
+            }`}
             onClick={() => handleNavClick('/orgs', 'orgs')}
           >
             Organizations
           </a>
           {canAccessView('userpanel') && (
             <a
-              className={isActive('/userpanel') ? 'active' : ''}
+              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl no-underline text-inherit mx-1.5 transition-all cursor-pointer ${
+                isActive('/userpanel') ? 'bg-white/15' : 'hover:bg-white/10'
+              }`}
               onClick={() => handleNavClick('/userpanel', 'userpanel')}
             >
               User Panel
@@ -71,12 +77,14 @@ const Sidebar: React.FC = () => {
         </nav>
       </div>
 
-      <div className="navsec">
-        <div className="label">Operations</div>
-        <nav className="nav">
+      <div className="mt-3">
+        <div className="text-[11px] uppercase tracking-wider text-rcn-dark-text/65 px-2.5 py-2.5">Operations</div>
+        <nav className="space-y-1">
           {canAccessView('payments') && (
             <a
-              className={isActive('/payments') ? 'active' : ''}
+              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl no-underline text-inherit mx-1.5 transition-all cursor-pointer ${
+                isActive('/payments') ? 'bg-white/15' : 'hover:bg-white/10'
+              }`}
               onClick={() => handleNavClick('/payments', 'payments')}
             >
               Payment Adjustment Settings
@@ -84,7 +92,9 @@ const Sidebar: React.FC = () => {
           )}
           {canAccessView('banners') && (
             <a
-              className={isActive('/banners') ? 'active' : ''}
+              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl no-underline text-inherit mx-1.5 transition-all cursor-pointer ${
+                isActive('/banners') ? 'bg-white/15' : 'hover:bg-white/10'
+              }`}
               onClick={() => handleNavClick('/banners', 'banners')}
             >
               Banner Management
@@ -92,7 +102,9 @@ const Sidebar: React.FC = () => {
           )}
           {canAccessView('financials') && (
             <a
-              className={isActive('/financials') ? 'active' : ''}
+              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl no-underline text-inherit mx-1.5 transition-all cursor-pointer ${
+                isActive('/financials') ? 'bg-white/15' : 'hover:bg-white/10'
+              }`}
               onClick={() => handleNavClick('/financials', 'financials')}
             >
               Financials
@@ -100,7 +112,9 @@ const Sidebar: React.FC = () => {
           )}
           {canAccessView('reports') && (
             <a
-              className={isActive('/reports') ? 'active' : ''}
+              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl no-underline text-inherit mx-1.5 transition-all cursor-pointer ${
+                isActive('/reports') ? 'bg-white/15' : 'hover:bg-white/10'
+              }`}
               onClick={() => handleNavClick('/reports', 'reports')}
             >
               Reports
@@ -108,7 +122,9 @@ const Sidebar: React.FC = () => {
           )}
           {canAccessView('audit') && (
             <a
-              className={isActive('/audit') ? 'active' : ''}
+              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl no-underline text-inherit mx-1.5 transition-all cursor-pointer ${
+                isActive('/audit') ? 'bg-white/15' : 'hover:bg-white/10'
+              }`}
               onClick={() => handleNavClick('/audit', 'audit')}
             >
               Audit Log
@@ -117,18 +133,25 @@ const Sidebar: React.FC = () => {
         </nav>
       </div>
 
-      <div className="navsec">
-        <div className="label">System</div>
-        <nav className="nav">
+      <div className="mt-3">
+        <div className="text-[11px] uppercase tracking-wider text-rcn-dark-text/65 px-2.5 py-2.5">System</div>
+        <nav className="space-y-1">
           {canAccessView('settings') && (
             <a
-              className={isActive('/settings') ? 'active' : ''}
+              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl no-underline text-inherit mx-1.5 transition-all cursor-pointer ${
+                isActive('/settings') ? 'bg-white/15' : 'hover:bg-white/10'
+              }`}
               onClick={() => handleNavClick('/settings', 'settings')}
             >
               Settings
             </a>
           )}
-          <a onClick={logout}>Logout</a>
+          <a 
+            className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl no-underline text-inherit mx-1.5 transition-all cursor-pointer hover:bg-white/10"
+            onClick={logout}
+          >
+            Logout
+          </a>
         </nav>
       </div>
     </aside>
