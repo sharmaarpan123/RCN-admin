@@ -3,15 +3,15 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider as AppContextProvider, useApp } from './context/AppContext';
 import Login from './components/Login';
 import Sidebar from './components/Sidebar';
-import Dashboard from './views/Dashboard';
-import Organizations from './views/Organizations';
-import UserPanel from './views/UserPanel';
-import PaymentSettings from './views/PaymentSettings';
-import Banners from './views/Banners';
-import Financials from './views/Financials';
-import Reports from './views/Reports';
-import Audit from './views/Audit';
-import Settings from './views/Settings';
+import Dashboard from './pages/Dashboard';
+import Organizations from './pages/Organizations';
+import UserPanel from './pages/SystemAcess';
+import PaymentSettings from './pages/PaymentSettings';
+import Banners from './pages/Banners';
+import Financials from './pages/Financials';
+import Reports from './pages/Reports';
+import Audit from './pages/Audit';
+import Settings from './pages/Settings';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { session } = useApp();

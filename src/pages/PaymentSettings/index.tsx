@@ -1,6 +1,6 @@
 import React from 'react';
-import TopBar from '../components/TopBar';
-import { useApp } from '../context/AppContext';
+import TopBar from '../../components/TopBar';
+import { useApp } from '../../context/AppContext';
 
 const PaymentSettings: React.FC = () => {
   const { showToast } = useApp();

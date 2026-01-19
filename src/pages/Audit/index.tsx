@@ -1,7 +1,7 @@
 import React from 'react';
-import TopBar from '../components/TopBar';
-import { useApp } from '../context/AppContext';
-import { fmtDate, escapeHtml, saveDB } from '../utils/database';
+import TopBar from '../../components/TopBar';
+import { useApp } from '../../context/AppContext';
+import { fmtDate, escapeHtml, saveDB } from '../../utils/database';
 
 const Audit: React.FC = () => {
   const { db, refreshDB, showToast } = useApp();

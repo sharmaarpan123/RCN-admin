@@ -1,7 +1,7 @@
 import React from 'react';
-import TopBar from '../components/TopBar';
-import { useApp } from '../context/AppContext';
-import { seedDemo, downloadFile, saveDB } from '../utils/database';
+import TopBar from '../../components/TopBar';
+import { useApp } from '../../context/AppContext';
+import { seedDemo, downloadFile, saveDB } from '../../utils/database';
 
 const Settings: React.FC = () => {
   const { db, refreshDB, showToast } = useApp();

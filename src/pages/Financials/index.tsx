@@ -1,7 +1,7 @@
 import React from 'react';
-import TopBar from '../components/TopBar';
-import { useApp } from '../context/AppContext';
-import { centsToMoney } from '../utils/database';
+import TopBar from '../../components/TopBar';
+import { useApp } from '../../context/AppContext';
+import { centsToMoney } from '../../utils/database';
 
 const Financials: React.FC = () => {
   const { db } = useApp();

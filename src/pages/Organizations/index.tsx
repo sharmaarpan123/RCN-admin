@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import TopBar from '../components/TopBar';
-import { useApp } from '../context/AppContext';
-import { US_STATES, safeLower } from '../utils/database';
+import TopBar from '../../components/TopBar';
+import { useApp } from '../../context/AppContext';
+import { US_STATES, safeLower } from '../../utils/database';
 
 const Organizations: React.FC = () => {
   const { db } = useApp();

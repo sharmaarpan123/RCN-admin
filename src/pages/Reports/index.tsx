@@ -1,7 +1,7 @@
 import React from 'react';
-import TopBar from '../components/TopBar';
-import { useApp } from '../context/AppContext';
-import { downloadFile, audit } from '../utils/database';
+import TopBar from '../../components/TopBar';
+import { useApp } from '../../context/AppContext';
+import { downloadFile, audit } from '../../utils/database';
 
 const Reports: React.FC = () => {
   const { db, showToast } = useApp();
