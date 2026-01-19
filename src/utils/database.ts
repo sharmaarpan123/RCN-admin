@@ -497,6 +497,22 @@ export const normalizeDB = (db: any) => {
     }
   });
 
+  // Normalize finance structure
+  if (!db.finance || typeof db.finance !== "object") {
+    db.finance = { ledger: [], pairCounts: {}, invoices: [], invoiceSeq: 1000 };
+    changed = true;
+  }
+  if (!Array.isArray(db.finance.ledger)) { db.finance.ledger = []; changed = true; }
+  if (!db.finance.pairCounts || typeof db.finance.pairCounts !== "object") { db.finance.pairCounts = {}; changed = true; }
+  if (!Array.isArray(db.finance.invoices)) { db.finance.invoices = []; changed = true; }
+  if (typeof db.finance.invoiceSeq !== "number") { db.finance.invoiceSeq = 1000; changed = true; }
+
+  // Normalize organization money fields
+  (db.orgs || []).forEach((org: any) => {
+    if (typeof org.walletCents !== "number") { org.walletCents = 0; changed = true; }
+    if (typeof org.referralCredits !== "number") { org.referralCredits = 0; changed = true; }
+  });
+
   if (changed) saveDB(db);
   return db;
 };
@@ -548,4 +564,301 @@ export const downloadFile = (filename: string, content: string, mime: string) =>
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
+};
+
+// ============================================================================
+// FINANCIAL SYSTEM UTILITIES
+// ============================================================================
+
+// Payment Methods
+export const payMethodLabel = (key: string) => {
+  const m = PAY_METHODS.find(x => x.key === key);
+  return m ? m.label : (key || "—");
+};
+
+export const enabledMethods = (ps: any) => {
+  const m = ps?.methods || {};
+  return PAY_METHODS.filter(x => !!m[x.key]).map(x => x.key);
+};
+
+export const getProcessingFee = (ps: any, methodKey: string) => {
+  const by = ps?.fees?.processingByMethod || {};
+  if (typeof by[methodKey] === "number") return by[methodKey];
+  if (typeof ps?.fees?.processingFee === "number") return ps.fees.processingFee;
+  return 0;
+};
+
+export const calcProcessingFeeAmount = (amount: number, ps: any, methodKey: string) => {
+  const pct = Math.max(0, parseFloat(String(getProcessingFee(ps, methodKey) || 0)) || 0);
+  return Math.max(0, amount) * (pct / 100);
+};
+
+export const actionFeeCents = (db: any, methodKey: string) => {
+  const ps = db?.paymentSettings || defaultPaymentSettings();
+  const key = methodKey || "creditCard";
+  const base = Math.max(0, ps.fees?.serviceFee || 0);
+  const proc = calcProcessingFeeAmount(base, ps, key);
+  const total = base + proc;
+  return moneyToCents(total);
+};
+
+// Pair tracking (sender ↔ receiver)
+export const pairKey = (senderId: string, receiverId: string) => {
+  return `${senderId || ""}__${receiverId || ""}`;
+};
+
+export const getPairLiveCount = (db: any, senderId: string, receiverId: string) => {
+  return db.finance?.pairCounts?.[pairKey(senderId, receiverId)] || 0;
+};
+
+// Finance structure initialization
+export const ensureFinance = (db: any) => {
+  if (!db.finance) {
+    db.finance = { ledger: [], pairCounts: {}, invoices: [], invoiceSeq: 1000 };
+  }
+  if (!Array.isArray(db.finance.ledger)) db.finance.ledger = [];
+  if (!db.finance.pairCounts || typeof db.finance.pairCounts !== "object") db.finance.pairCounts = {};
+  if (!Array.isArray(db.finance.invoices)) db.finance.invoices = [];
+  if (typeof db.finance.invoiceSeq !== "number") db.finance.invoiceSeq = 1000;
+};
+
+export const ensureOrgMoney = (org: any) => {
+  if (typeof org.walletCents !== "number") org.walletCents = 0;
+  if (typeof org.referralCredits !== "number") org.referralCredits = 0;
+};
+
+// Ledger operations
+export const postLedger = (db: any, entry: any) => {
+  ensureFinance(db);
+  db.finance.ledger.unshift(entry);
+};
+
+export const adjustWallet = (db: any, orgId: string, deltaCents: number, meta: any = {}) => {
+  const org = db.orgs.find((o: any) => o.id === orgId);
+  if (!org) return;
+  ensureOrgMoney(org);
+  org.walletCents += Math.round(deltaCents || 0);
+  postLedger(db, { 
+    id: uid("ldg"), 
+    at: nowISO(), 
+    orgId, 
+    deltaCents: Math.round(deltaCents || 0), 
+    ...meta 
+  });
+};
+
+export const consumeCredit = (db: any, orgId: string, refId: string, reason: string) => {
+  const org = db.orgs.find((o: any) => o.id === orgId);
+  if (!org) return false;
+  ensureOrgMoney(org);
+  if (org.referralCredits > 0) {
+    org.referralCredits -= 1;
+    postLedger(db, { 
+      id: uid("ldg"), 
+      at: nowISO(), 
+      orgId, 
+      deltaCents: 0, 
+      type: "credit_used", 
+      refId, 
+      note: reason || "Used 1 credit" 
+    });
+    return true;
+  }
+  return false;
+};
+
+export const awardSenderPerReceiverPaid = (db: any, senderOrgId: string, receiverOrgId: string, refId: string | null = null) => {
+  ensureFinance(db);
+  const ps = db.paymentSettings || defaultPaymentSettings();
+  const bonusCents = moneyToCents(ps.bonus?.senderPerReceiverPaid ?? 0.10);
+  if (bonusCents <= 0) return 0;
+  if (ps.bonus && ps.bonus.applyToAllSenders === false) return 0;
+  
+  adjustWallet(db, senderOrgId, bonusCents, {
+    type: "sender_bonus",
+    otherOrgId: receiverOrgId,
+    refId: refId || null,
+    note: `Sender bonus: 1 × $${centsToMoney(bonusCents)} (receiver paid)`
+  });
+  return bonusCents;
+};
+
+// Invoice system
+export const nextInvoiceNumber = (db: any) => {
+  ensureFinance(db);
+  db.finance.invoiceSeq = Math.round(db.finance.invoiceSeq || 1000) + 1;
+  return "INV-" + String(db.finance.invoiceSeq).padStart(6, "0");
+};
+
+export const createInvoice = (db: any, opts: any) => {
+  ensureFinance(db);
+  const org = db.orgs.find((o: any) => o.id === opts.orgId) || null;
+  const inv = {
+    id: uid("inv"),
+    number: nextInvoiceNumber(db),
+    createdAt: nowISO(),
+    orgId: opts.orgId,
+    orgName: org?.name || "",
+    orgEmail: org?.email || "",
+    orgState: org?.address?.state || "",
+    orgZip: org?.address?.zip || "",
+    kind: opts.kind || "CREDIT_PURCHASE",
+    status: "CREATED",
+    emailStatus: "PENDING",
+    emailedAt: null,
+    lines: Array.isArray(opts.lines) ? opts.lines : [],
+    subtotalCents: Math.round(opts.subtotalCents || 0),
+    discountCents: Math.round(opts.discountCents || 0),
+    totalCents: Math.round(opts.totalCents || 0),
+    meta: opts.meta || {}
+  };
+  db.finance.invoices.unshift(inv);
+  audit("invoice_created", { 
+    invoiceId: inv.id, 
+    number: inv.number, 
+    orgId: inv.orgId, 
+    total: centsToMoney(inv.totalCents), 
+    kind: inv.kind 
+  });
+  return inv;
+};
+
+export const invoiceToEmail = (inv: any) => {
+  const orgLine = inv.orgName ? `${inv.orgName}` : `Organization`;
+  const subject = `Invoice ${inv.number} - Referral Coordination Network`;
+  let body = `Hello ${orgLine},\n\nThank you for your purchase.\n\n`;
+  body += `Invoice: ${inv.number}\nDate: ${fmtDate(inv.createdAt)}\n`;
+  body += `Type: ${inv.kind === "CREDIT_PURCHASE" ? "Referral Credits Purchase" : inv.kind}\n\n`;
+  body += `Items:\n`;
+  (inv.lines || []).forEach((li: any) => {
+    body += `- ${li.desc} (${li.qty} × $${centsToMoney(li.unitCents)}) = $${centsToMoney(li.amountCents)}\n`;
+  });
+  body += `\nSubtotal: $${centsToMoney(inv.subtotalCents)}\n`;
+  if (inv.discountCents > 0) body += `Discount: -$${centsToMoney(inv.discountCents)}\n`;
+  body += `Total: $${centsToMoney(inv.totalCents)}\n\n`;
+  body += `Regards,\nReferral Coordination Network\n`;
+  return { to: (inv.orgEmail || ""), subject, body };
+};
+
+export const downloadTextFile = (filename: string, content: string) => {
+  downloadFile(filename, content, "text/plain");
+};
+
+// ============================================================================
+// REFERRAL WORKFLOW WITH CHARGING
+// ============================================================================
+
+export const createReferral = (db: any, data: any) => {
+  const ref = {
+    id: uid("ref"),
+    createdAt: nowISO(),
+    senderOrgId: data.senderOrgId,
+    senderBranchId: data.senderBranchId || null,
+    senderDeptId: data.senderDeptId || null,
+    receiverOrgId: data.receiverOrgId,
+    receiverBranchId: data.receiverBranchId || null,
+    receiverDeptId: data.receiverDeptId || null,
+    patientName: data.patientName || "",
+    patientDOB: data.patientDOB || "",
+    insurance: data.insurance || "",
+    status: "Pending",
+    notes: data.notes || "",
+    billing: {
+      senderSendCharged: false,
+      receiverOpenCharged: false,
+      senderUsedCredit: false,
+      receiverUsedCredit: false
+    }
+  };
+  db.referrals.unshift(ref);
+  return ref;
+};
+
+export const chargeOnSend = (db: any, refId: string, methodKey: string) => {
+  const ref = db.referrals.find((r: any) => r.id === refId);
+  if (!ref || ref.billing.senderSendCharged) return false;
+  
+  const senderOrg = db.orgs.find((o: any) => o.id === ref.senderOrgId);
+  if (!senderOrg) return false;
+  
+  ensureOrgMoney(senderOrg);
+  
+  // Try to consume a credit first
+  if (senderOrg.referralCredits > 0) {
+    if (consumeCredit(db, ref.senderOrgId, refId, "Sender send charge (credit)")) {
+      ref.billing.senderSendCharged = true;
+      ref.billing.senderUsedCredit = true;
+      return true;
+    }
+  }
+  
+  // Otherwise, charge from wallet
+  const feeCents = actionFeeCents(db, methodKey);
+  if (senderOrg.walletCents >= feeCents) {
+    adjustWallet(db, ref.senderOrgId, -feeCents, {
+      type: "charge",
+      chargeType: "sender_send",
+      refId,
+      methodKey,
+      note: `Sender send charge: $${centsToMoney(feeCents)}`
+    });
+    ref.billing.senderSendCharged = true;
+    ref.billing.senderUsedCredit = false;
+    return true;
+  }
+  
+  return false; // Insufficient funds
+};
+
+export const chargeOnOpen = (db: any, refId: string, methodKey: string) => {
+  const ref = db.referrals.find((r: any) => r.id === refId);
+  if (!ref || ref.billing.receiverOpenCharged) return false;
+  
+  const receiverOrg = db.orgs.find((o: any) => o.id === ref.receiverOrgId);
+  if (!receiverOrg) return false;
+  
+  ensureOrgMoney(receiverOrg);
+  ensureFinance(db);
+  
+  // Try to consume a credit first
+  if (receiverOrg.referralCredits > 0) {
+    if (consumeCredit(db, ref.receiverOrgId, refId, "Receiver open charge (credit)")) {
+      ref.billing.receiverOpenCharged = true;
+      ref.billing.receiverUsedCredit = true;
+      
+      // Award sender bonus
+      awardSenderPerReceiverPaid(db, ref.senderOrgId, ref.receiverOrgId, refId);
+      
+      // Update pair count
+      const pk = pairKey(ref.senderOrgId, ref.receiverOrgId);
+      db.finance.pairCounts[pk] = (db.finance.pairCounts[pk] || 0) + 1;
+      
+      return true;
+    }
+  }
+  
+  // Otherwise, charge from wallet
+  const feeCents = actionFeeCents(db, methodKey);
+  if (receiverOrg.walletCents >= feeCents) {
+    adjustWallet(db, ref.receiverOrgId, -feeCents, {
+      type: "charge",
+      chargeType: "receiver_open",
+      refId,
+      methodKey,
+      note: `Receiver open charge: $${centsToMoney(feeCents)}`
+    });
+    ref.billing.receiverOpenCharged = true;
+    ref.billing.receiverUsedCredit = false;
+    
+    // Award sender bonus
+    awardSenderPerReceiverPaid(db, ref.senderOrgId, ref.receiverOrgId, refId);
+    
+    // Update pair count
+    const pk = pairKey(ref.senderOrgId, ref.receiverOrgId);
+    db.finance.pairCounts[pk] = (db.finance.pairCounts[pk] || 0) + 1;
+    
+    return true;
+  }
+  
+  return false; // Insufficient funds
 };

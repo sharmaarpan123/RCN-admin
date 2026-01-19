@@ -1,10 +1,18 @@
 import React, { useState } from 'react';
 import TopBar from '../../components/TopBar';
 import { useApp } from '../../context/AppContext';
-import { US_STATES, fmtDate, safeLower } from '../../utils/database';
+import { 
+  US_STATES, 
+  fmtDate, 
+  safeLower, 
+  chargeOnOpen,
+  saveDB,
+  audit,
+  centsToMoney
+} from '../../utils/database';
 
 const Dashboard: React.FC = () => {
-  const { db } = useApp();
+  const { db, refreshDB, showToast, openModal, closeModal } = useApp();
   const [senderFilterName, setSenderFilterName] = useState('');
   const [senderFilterState, setSenderFilterState] = useState('');
   const [senderFilterZip, setSenderFilterZip] = useState('');
@@ -70,6 +78,150 @@ const Dashboard: React.FC = () => {
     if (status === 'Rejected') return 'border-[#f3b8b8] bg-[#fff1f2] text-[#991b1b]';
     if (status === 'Pending') return 'border-[#f3d9a1] bg-[#fff8e6] text-[#7a4a00]';
     return '';
+  };
+
+  // Handlers
+  const handleViewReferral = (refId: string, isReceiver: boolean) => {
+    const ref = db.referrals.find((r: any) => r.id === refId);
+    if (!ref) return;
+
+    // Charge receiver on first open (if enabled)
+    if (isReceiver && !ref.billing.receiverOpenCharged) {
+      const ps = db.paymentSettings || {};
+      if (ps.fees?.serviceFee > 0) {
+        const charged = chargeOnOpen(db, refId, "creditCard");
+        if (charged) {
+          saveDB(db);
+          refreshDB();
+          const creditUsed = ref.billing.receiverUsedCredit;
+          audit("receiver_charged", { refId, method: creditUsed ? "credit" : "wallet" });
+          showToast(`Charged ${creditUsed ? "1 credit" : "$" + centsToMoney(ps.fees.serviceFee || 0)} for opening referral.`);
+        } else {
+          showToast("Insufficient funds/credits to open referral.");
+          return;
+        }
+      }
+    }
+
+    const sender = db.orgs.find((o: any) => o.id === ref.senderOrgId);
+    const receiver = db.orgs.find((o: any) => o.id === ref.receiverOrgId);
+
+    openModal(
+      <div>
+        <h3 className="m-0 mb-3 text-lg font-semibold">Referral Details</h3>
+        
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div>
+            <div className="text-xs text-rcn-muted mb-1">Referral ID</div>
+            <div className="text-sm font-mono">{ref.id}</div>
+          </div>
+          <div>
+            <div className="text-xs text-rcn-muted mb-1">Date</div>
+            <div className="text-sm">{fmtDate(ref.createdAt)}</div>
+          </div>
+        </div>
+
+        <div className="h-px bg-rcn-border my-3"></div>
+
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div>
+            <div className="text-xs text-rcn-muted mb-1">Sender Organization</div>
+            <div className="text-sm font-semibold">{sender?.name || "—"}</div>
+            {sender && (
+              <div className="text-xs text-rcn-muted">
+                {sender.address.city}, {sender.address.state} {sender.address.zip}
+              </div>
+            )}
+          </div>
+          <div>
+            <div className="text-xs text-rcn-muted mb-1">Receiver Organization</div>
+            <div className="text-sm font-semibold">{receiver?.name || "—"}</div>
+            {receiver && (
+              <div className="text-xs text-rcn-muted">
+                {receiver.address.city}, {receiver.address.state} {receiver.address.zip}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="h-px bg-rcn-border my-3"></div>
+
+        <div className="mb-4">
+          <div className="text-xs text-rcn-muted mb-1">Patient Information</div>
+          <div className="text-sm">
+            <strong>Name:</strong> {ref.patientName || "—"}<br />
+            <strong>DOB:</strong> {ref.patientDOB || "—"}<br />
+            <strong>Insurance:</strong> {ref.insurance || "—"}
+          </div>
+        </div>
+
+        <div className="h-px bg-rcn-border my-3"></div>
+
+        <div className="mb-4">
+          <div className="text-xs text-rcn-muted mb-1">Status</div>
+          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border ${getStatusClass(ref.status)}`}>
+            {ref.status}
+          </span>
+        </div>
+
+        <div className="mb-4">
+          <div className="text-xs text-rcn-muted mb-1">Notes</div>
+          <div className="text-sm bg-[#f6fbf7] border border-rcn-border rounded-xl p-3">
+            {ref.notes || "No notes provided."}
+          </div>
+        </div>
+
+        <div className="h-px bg-rcn-border my-3"></div>
+
+        <div className="text-xs text-rcn-muted mb-2">Billing Status</div>
+        <div className="grid grid-cols-2 gap-2 mb-4">
+          <div className="bg-[#f6fbf7] border border-rcn-border rounded-lg p-2 text-xs">
+            <div className="font-semibold mb-1">Sender</div>
+            <div>Send charged: {ref.billing.senderSendCharged ? "✅ Yes" : "❌ No"}</div>
+            <div>Credit used: {ref.billing.senderUsedCredit ? "✅ Yes" : "❌ No"}</div>
+          </div>
+          <div className="bg-[#f6fbf7] border border-rcn-border rounded-lg p-2 text-xs">
+            <div className="font-semibold mb-1">Receiver</div>
+            <div>Open charged: {ref.billing.receiverOpenCharged ? "✅ Yes" : "❌ No"}</div>
+            <div>Credit used: {ref.billing.receiverUsedCredit ? "✅ Yes" : "❌ No"}</div>
+          </div>
+        </div>
+
+        {isReceiver && ref.status === "Pending" && (
+          <>
+            <div className="h-px bg-rcn-border my-3"></div>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => {
+                  ref.status = "Accepted";
+                  saveDB(db);
+                  refreshDB();
+                  audit("referral_accepted", { refId });
+                  showToast("Referral accepted.");
+                  closeModal();
+                }}
+                className="logo-gradient text-white border-0 px-4 py-2.5 rounded-xl cursor-pointer font-semibold text-sm hover:opacity-90 transition-opacity"
+              >
+                Accept Referral
+              </button>
+              <button 
+                onClick={() => {
+                  ref.status = "Rejected";
+                  saveDB(db);
+                  refreshDB();
+                  audit("referral_rejected", { refId });
+                  showToast("Referral rejected.");
+                  closeModal();
+                }}
+                className="border border-rcn-danger bg-white px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-rcn-danger text-sm hover:bg-rcn-danger hover:text-white transition-colors"
+              >
+                Reject Referral
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    );
   };
 
   const inputClass = "w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white text-sm outline-none focus:border-[#b9d7c5] focus:shadow-[0_0_0_3px_rgba(31,122,75,0.12)]";
@@ -278,8 +430,8 @@ const Dashboard: React.FC = () => {
                       <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Date</th>
                       <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Patient</th>
                       <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Receiver</th>
-                      <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Services</th>
                       <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Status</th>
+                      <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -290,23 +442,30 @@ const Dashboard: React.FC = () => {
                         const receiver = db.orgs.find((o: any) => o.id === ref.receiverOrgId);
                         return (
                           <tr key={ref.id}>
-                            <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono">{ref.id}</td>
+                            <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono">{ref.id.substring(0, 12)}...</td>
                             <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">{fmtDate(ref.createdAt)}</td>
                             <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                              {ref.patient.last}, {ref.patient.first}
-                              <div className="text-rcn-muted">{ref.patient.dob} • {ref.patient.gender}</div>
+                              {ref.patientName || "—"}
+                              <div className="text-rcn-muted">{ref.patientDOB || "—"}</div>
                             </td>
                             <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
                               {receiver?.name || '—'}
                               <div className="text-rcn-muted">
-                                {receiver ? `${receiver.address.city}, ${receiver.address.state} ${receiver.address.zip}` : ''}
+                                {receiver ? `${receiver.address.city}, ${receiver.address.state}` : ''}
                               </div>
                             </td>
-                            <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">{ref.services}</td>
                             <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
                               <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border ${getStatusClass(ref.status)}`}>
                                 {ref.status}
                               </span>
+                            </td>
+                            <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
+                              <button 
+                                onClick={() => handleViewReferral(ref.id, false)}
+                                className="border border-rcn-border bg-white px-2 py-1.5 rounded-lg cursor-pointer font-semibold text-rcn-text text-xs hover:border-[#c9ddd0] transition-colors"
+                              >
+                                View
+                              </button>
                             </td>
                           </tr>
                         );
@@ -340,8 +499,8 @@ const Dashboard: React.FC = () => {
                       <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Date</th>
                       <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Patient</th>
                       <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Sender</th>
-                      <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Services</th>
                       <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Status</th>
+                      <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -352,23 +511,30 @@ const Dashboard: React.FC = () => {
                         const sender = db.orgs.find((o: any) => o.id === ref.senderOrgId);
                         return (
                           <tr key={ref.id}>
-                            <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono">{ref.id}</td>
+                            <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono">{ref.id.substring(0, 12)}...</td>
                             <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">{fmtDate(ref.createdAt)}</td>
                             <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                              {ref.patient.last}, {ref.patient.first}
-                              <div className="text-rcn-muted">{ref.patient.dob} • {ref.patient.gender}</div>
+                              {ref.patientName || "—"}
+                              <div className="text-rcn-muted">{ref.patientDOB || "—"}</div>
                             </td>
                             <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
                               {sender?.name || '—'}
                               <div className="text-rcn-muted">
-                                {sender ? `${sender.address.city}, ${sender.address.state} ${sender.address.zip}` : ''}
+                                {sender ? `${sender.address.city}, ${sender.address.state}` : ''}
                               </div>
                             </td>
-                            <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">{ref.services}</td>
                             <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
                               <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border ${getStatusClass(ref.status)}`}>
                                 {ref.status}
                               </span>
+                            </td>
+                            <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
+                              <button 
+                                onClick={() => handleViewReferral(ref.id, true)}
+                                className="logo-gradient text-white border-0 px-2 py-1.5 rounded-lg cursor-pointer font-semibold text-xs hover:opacity-90 transition-opacity"
+                              >
+                                {ref.billing.receiverOpenCharged ? 'View' : 'Open'}
+                              </button>
                             </td>
                           </tr>
                         );

@@ -1,6 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { getDB, getSession, setSession, clearSession, audit, saveDB } from '../utils/database';
 
+interface ModalOptions {
+  locked?: boolean;
+  maxWidth?: string;
+}
+
 interface AppContextType {
   db: any;
   session: any;
@@ -8,7 +13,7 @@ interface AppContextType {
   login: (email: string, password: string) => boolean;
   logout: () => void;
   showToast: (message: string) => void;
-  openModal: (content: ReactNode, options?: any) => void;
+  openModal: (content: ReactNode, options?: ModalOptions) => void;
   closeModal: () => void;
   currentUser: any;
 }
