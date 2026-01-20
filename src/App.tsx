@@ -12,7 +12,7 @@ import Financials from './pages/Financials';
 import Reports from './pages/Reports';
 import Audit from './pages/Audit';
 import Settings from './pages/Settings';
-import TopBar from './components/TopBar';
+import Header from './components/Header';
 
 // Root component that provides context to all routes
 const RootLayout: React.FC = () => {
@@ -44,20 +44,12 @@ const PrivateRoute: React.FC = () => {
         onClose={() => setIsMobileMenuOpen(false)}
       />
       <main className="flex-1 p-6 pb-10 overflow-auto">
-        {/* Mobile Menu Toggle Button */}
-        <button
-          className="md:hidden fixed top-4 left-4 z-30 p-2 rounded-lg bg-rcn-accent text-white shadow-lg hover:bg-rcn-accent-dark transition-colors"
-          onClick={() => setIsMobileMenuOpen(true)}
-          aria-label="Open menu"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
+
 
         {/* Main Content */}
         <div className="md:ml-0 ml-0">
-          <TopBar
+          <Header
+            setIsMobileMenuOpen={setIsMobileMenuOpen}
             title={title}
             subtitle={subtitle}
           />
@@ -97,7 +89,7 @@ const router = createBrowserRouter([
       },
       {
         path: '/',
-        element: <PrivateRoute  />,
+        element: <PrivateRoute />,
         children: [
           {
             index: true,
@@ -164,7 +156,7 @@ const router = createBrowserRouter([
             element: <Audit />,
             handle: {
               title: 'Audit Log',
-              subtitle: 'Track  system activities and user actions.'
+              subtitle: 'Track system activities and user actions.'
             }
           },
           {

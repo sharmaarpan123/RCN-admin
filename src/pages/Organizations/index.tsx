@@ -4,16 +4,16 @@ import { US_STATES, safeLower } from '../../utils/database';
 
 const Organizations: React.FC = () => {
   const { db, refreshDB, showToast, openModal, closeModal } = useApp();
-  
+
   // Organization table filters
   const [search, setSearch] = useState('');
   const [stateFilter, setStateFilter] = useState('');
   const [zipFilter, setZipFilter] = useState('');
-  
+
   // Organization modules state
   const [selectedOrgId, setSelectedOrgId] = useState('');
   const [activeTab, setActiveTab] = useState<'profile' | 'branches' | 'depts' | 'users'>('profile');
-  
+
   // Module search filters
   const [branchSearch, setBranchSearch] = useState('');
   const [deptSearch, setDeptSearch] = useState('');
@@ -30,7 +30,7 @@ const Organizations: React.FC = () => {
       o.name, o.phone, o.email,
       o.address?.street, o.address?.suite, o.address?.city, o.address?.state, o.address?.zip
     ].map(safeLower).join(' ');
-    
+
     return (
       (!search || hay.includes(searchLower)) &&
       (!stateFilter || o.address?.state === stateFilter) &&
@@ -97,8 +97,8 @@ const Organizations: React.FC = () => {
 
         <div className="h-px bg-rcn-border my-4"></div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
+        <div className="grid grid-cols-1 md:grid-cols-2  gap-4">
+          <div className="col-span-1">
             <div className="mb-4">
               <label className="text-xs text-rcn-muted block mb-1.5">Organization Name</label>
               <input id="org_name" defaultValue={org?.name || ''} className={inputClass} />
@@ -128,7 +128,7 @@ const Organizations: React.FC = () => {
             </div>
           </div>
 
-          <div>
+          <div className="col-span-1">
             <div className="bg-white border border-rcn-border rounded-2xl p-4 mb-4">
               <h3 className="text-sm font-semibold m-0 mb-3">Organization Address</h3>
 
@@ -202,7 +202,7 @@ const Organizations: React.FC = () => {
           </div>
           <div className="flex gap-2">
             {org && (
-              <button 
+              <button
                 onClick={() => deleteOrg(org.id)}
                 className="border border-rcn-danger bg-white px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-rcn-danger text-sm hover:bg-rcn-danger hover:text-white transition-colors"
               >
@@ -270,13 +270,13 @@ const Organizations: React.FC = () => {
 
   const deleteOrg = (orgId: string) => {
     if (!confirm('Delete this organization? (Demo: this removes it immediately)')) return;
-    
+
     db.orgs = db.orgs.filter((o: any) => o.id !== orgId);
     db.branches = db.branches.filter((b: any) => b.orgId !== orgId);
     db.depts = db.depts.filter((d: any) => d.orgId !== orgId);
     db.users = db.users.filter((u: any) => u.orgId !== orgId);
     db.referrals = db.referrals.filter((r: any) => r.senderOrgId !== orgId && r.receiverOrgId !== orgId);
-    
+
     saveToLocalStorage(db);
     closeModal();
     setSelectedOrgId('');
@@ -315,7 +315,7 @@ const Organizations: React.FC = () => {
 
         <div className="flex justify-end gap-2">
           {branch && (
-            <button 
+            <button
               onClick={() => deleteBranch(branch.id)}
               className="border border-rcn-danger bg-white px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-rcn-danger text-sm hover:bg-rcn-danger hover:text-white transition-colors"
             >
@@ -357,10 +357,10 @@ const Organizations: React.FC = () => {
 
   const deleteBranch = (branchId: string) => {
     if (!confirm('Delete this branch?')) return;
-    
+
     db.branches = db.branches.filter((b: any) => b.id !== branchId);
     db.depts = db.depts.filter((d: any) => d.branchId !== branchId);
-    
+
     saveToLocalStorage(db);
     closeModal();
     showToast('Branch deleted.');
@@ -391,16 +391,16 @@ const Organizations: React.FC = () => {
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
             <label className="text-xs text-rcn-muted block mb-1.5">Organization</label>
-            <select 
-              id="dp_org" 
-              defaultValue={targetOrgId} 
+            <select
+              id="dp_org"
+              defaultValue={targetOrgId}
               className={inputClass}
               disabled={!!presetOrgId}
               onChange={(e) => {
                 const dpBranchSelect = document.getElementById('dp_branch') as HTMLSelectElement;
                 if (dpBranchSelect) {
                   const orgBranches = db.branches.filter((b: any) => b.orgId === e.target.value);
-                  dpBranchSelect.innerHTML = orgBranches.map((b: any) => 
+                  dpBranchSelect.innerHTML = orgBranches.map((b: any) =>
                     `<option value="${b.id}">${b.name}</option>`
                   ).join('');
                 }
@@ -431,7 +431,7 @@ const Organizations: React.FC = () => {
 
         <div className="flex justify-end gap-2">
           {dept && (
-            <button 
+            <button
               onClick={() => deleteDept(dept.id)}
               className="border border-rcn-danger bg-white px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-rcn-danger text-sm hover:bg-rcn-danger hover:text-white transition-colors"
             >
@@ -475,9 +475,9 @@ const Organizations: React.FC = () => {
 
   const deleteDept = (deptId: string) => {
     if (!confirm('Delete this department?')) return;
-    
+
     db.depts = db.depts.filter((d: any) => d.id !== deptId);
-    
+
     saveToLocalStorage(db);
     closeModal();
     showToast('Department deleted.');
@@ -590,7 +590,7 @@ const Organizations: React.FC = () => {
           <div className="text-xs text-rcn-muted">Changes apply immediately.</div>
           <div className="flex gap-2">
             {user && (
-              <button 
+              <button
                 onClick={() => deleteUser(user.id)}
                 className="border border-rcn-danger bg-white px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-rcn-danger text-sm hover:bg-rcn-danger hover:text-white transition-colors"
               >
@@ -675,9 +675,9 @@ const Organizations: React.FC = () => {
 
   const deleteUser = (userId: string) => {
     if (!confirm('Delete this user?')) return;
-    
+
     db.users = db.users.filter((u: any) => u.id !== userId);
-    
+
     saveToLocalStorage(db);
     closeModal();
     showToast('User deleted.');
@@ -758,7 +758,7 @@ const Organizations: React.FC = () => {
                     </td>
                     <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
                       <div className="flex gap-2">
-                        <button 
+                        <button
                           onClick={() => {
                             setSelectedOrgId(o.id);
                             setActiveTab('branches');
@@ -790,9 +790,9 @@ const Organizations: React.FC = () => {
           </div>
           <div className="flex flex-col gap-1.5 min-w-[360px]">
             <label className="text-xs text-rcn-muted">Select Organization</label>
-            <select 
-              value={selectedOrgId} 
-              onChange={(e) => setSelectedOrgId(e.target.value)} 
+            <select
+              value={selectedOrgId}
+              onChange={(e) => setSelectedOrgId(e.target.value)}
               className={inputClass}
             >
               <option value="">— Select Organization —</option>
@@ -826,43 +826,39 @@ const Organizations: React.FC = () => {
 
             {/* Tabs */}
             <div className="flex gap-2 flex-wrap mb-3">
-              <button 
+              <button
                 onClick={() => setActiveTab('profile')}
-                className={`px-3 py-2 rounded-full text-xs font-bold border transition-colors ${
-                  activeTab === 'profile' 
-                    ? 'bg-rcn-accent border-rcn-accent text-white' 
-                    : 'bg-[#f6fbf7] border-rcn-border hover:border-[#b9d7c5]'
-                }`}
+                className={`px-3 py-2 rounded-full text-xs font-bold border transition-colors ${activeTab === 'profile'
+                  ? 'bg-rcn-accent border-rcn-accent text-white'
+                  : 'bg-[#f6fbf7] border-rcn-border hover:border-[#b9d7c5]'
+                  }`}
               >
                 Organization
               </button>
-              <button 
+              <button
                 onClick={() => setActiveTab('branches')}
-                className={`px-3 py-2 rounded-full text-xs font-bold border transition-colors ${
-                  activeTab === 'branches' 
-                    ? 'bg-rcn-accent border-rcn-accent text-white' 
-                    : 'bg-[#f6fbf7] border-rcn-border hover:border-[#b9d7c5]'
-                }`}
+                className={`px-3 py-2 rounded-full text-xs font-bold border transition-colors ${activeTab === 'branches'
+                  ? 'bg-rcn-accent border-rcn-accent text-white'
+                  : 'bg-[#f6fbf7] border-rcn-border hover:border-[#b9d7c5]'
+                  }`}
               >
                 Branches
               </button>
-              <button 
+              <button
                 onClick={() => setActiveTab('depts')}
-                className={`px-3 py-2 rounded-full text-xs font-bold border transition-colors ${
-                  activeTab === 'depts' 
-                    ? 'bg-rcn-accent border-rcn-accent text-white' 
-                    : 'bg-[#f6fbf7] border-rcn-border hover:border-[#b9d7c5]'
-                }`}
+                className={`px-3 py-2 rounded-full text-xs font-bold border transition-colors ${activeTab === 'depts'
+                  ? 'bg-rcn-accent border-rcn-accent text-white'
+                  : 'bg-[#f6fbf7] border-rcn-border hover:border-[#b9d7c5]'
+                  }`}
               >
                 Departments
               </button>
-              <button 
+              <button
                 onClick={() => setActiveTab('users')}
-                className={`px-3 py-2 rounded-full text-xs font-bold border transition-colors ${
-                  activeTab === 'users' 
-                    ? 'bg-rcn-accent border-rcn-accent text-white' 
-                    : 'bg-[#f6fbf7] border-rcn-border hover:border-[#b9d7c5]'
-                }`}
+                className={`px-3 py-2 rounded-full text-xs font-bold border transition-colors ${activeTab === 'users'
+                  ? 'bg-rcn-accent border-rcn-accent text-white'
+                  : 'bg-[#f6fbf7] border-rcn-border hover:border-[#b9d7c5]'
+                  }`}
               >
                 Users
               </button>
