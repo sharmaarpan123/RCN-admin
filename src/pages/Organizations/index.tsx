@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import TopBar from '../../components/TopBar';
 import { useApp } from '../../context/AppContext';
 import { US_STATES, safeLower } from '../../utils/database';
 
@@ -686,11 +685,6 @@ const Organizations: React.FC = () => {
 
   return (
     <>
-      <TopBar 
-        title="Organizations" 
-        subtitle="Create and manage organizations and their internal modules." 
-      />
-
       {/* Organizations Table */}
       <div className="bg-white border border-rcn-border rounded-rcn-lg shadow-rcn p-4 mb-4">
         <div className="flex justify-between items-start flex-wrap gap-3">

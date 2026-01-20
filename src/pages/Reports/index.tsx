@@ -1,5 +1,4 @@
 import React from 'react';
-import TopBar from '../../components/TopBar';
 import { useApp } from '../../context/AppContext';
 import { downloadFile, audit } from '../../utils/database';
 
@@ -28,11 +27,6 @@ const Reports: React.FC = () => {
 
   return (
     <>
-      <TopBar 
-        title="Reports" 
-        subtitle="Quick counts and export options (demo)." 
-      />
-
       <div className="bg-white border border-rcn-border rounded-rcn-lg shadow-rcn p-4">
         <h3 className="text-sm font-semibold m-0 mb-2.5">Reports</h3>
         <p className="text-xs text-rcn-muted m-0 mb-3.5">Quick counts and export options (demo).</p>

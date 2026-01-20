@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import TopBar from '../../components/TopBar';
 import { useApp } from '../../context/AppContext';
 import { saveDB, audit } from '../../utils/database';
 
@@ -176,11 +175,6 @@ const PaymentSettings: React.FC = () => {
 
   return (
     <>
-      <TopBar 
-        title="Payment Adjustment Settings" 
-        subtitle="Configure payment methods, fees, and referral bonus rules." 
-      />
-
       <div className="bg-white border border-rcn-border rounded-rcn-lg shadow-rcn p-4">
         <div className="flex justify-between items-start flex-wrap gap-3">
           <div>

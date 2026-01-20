@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import TopBar from '../../components/TopBar';
 import { useApp } from '../../context/AppContext';
 import { roleLabel, safeLower, saveDB, audit, uid } from '../../utils/database';
 
@@ -359,11 +358,6 @@ const UserPanel: React.FC = () => {
 
   return (
     <>
-      <TopBar 
-        title="Master Admin Users" 
-        subtitle="Users who can access the Master Admin Panel (no organization affiliation)." 
-      />
-
       <div className="bg-white border border-rcn-border rounded-rcn-lg shadow-rcn p-4">
         <div className="flex justify-between items-start flex-wrap gap-3">
           <div>

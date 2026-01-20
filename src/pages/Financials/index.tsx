@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import TopBar from '../../components/TopBar';
 import { useApp } from '../../context/AppContext';
 import { safeLower } from '../../utils/database';
 
@@ -181,11 +180,6 @@ const Financials: React.FC = () => {
 
   return (
     <>
-      <TopBar 
-        title="Financials" 
-        subtitle="Totals for referrals and income across the network (demo)." 
-      />
-
       <div className="bg-white border border-rcn-border rounded-rcn-lg shadow-rcn p-4 mb-3.5">
         {/* Time Frame Filter */}
         <div className="bg-white border border-rcn-border rounded-xl p-3 mb-4">

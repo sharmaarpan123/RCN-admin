@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import TopBar from '../../components/TopBar';
 import { useApp } from '../../context/AppContext';
 import { safeLower } from '../../utils/database';
 
@@ -72,11 +71,6 @@ const Banners: React.FC = () => {
 
   return (
     <>
-      <TopBar 
-        title="Banner Management" 
-        subtitle="Create and manage advertising banners used across the portal." 
-      />
-
       <div className="bg-white border border-rcn-border rounded-rcn-lg shadow-rcn p-4">
         <div className="flex justify-between items-start flex-wrap gap-3">
           <div>

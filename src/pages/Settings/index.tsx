@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import TopBar from '../../components/TopBar';
 import { useApp } from '../../context/AppContext';
 import { seedDemo, downloadFile, saveDB, audit, nowISO } from '../../utils/database';
 
@@ -128,11 +127,6 @@ const Settings: React.FC = () => {
 
   return (
     <>
-      <TopBar 
-        title="Settings" 
-        subtitle="Manage your profile, password, and system data." 
-      />
-
       {/* <div className="bg-white border border-rcn-border rounded-rcn-lg shadow-rcn p-4 mb-3.5">
         <h3 className="text-sm font-semibold m-0 mb-2.5">Data Management</h3>
         <p className="text-xs text-rcn-muted m-0 mb-3.5">Import/export data or reset the demo.</p>

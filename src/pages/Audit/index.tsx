@@ -1,5 +1,4 @@
 import React from 'react';
-import TopBar from '../../components/TopBar';
 import { useApp } from '../../context/AppContext';
 import { fmtDate, escapeHtml, saveDB } from '../../utils/database';
 
@@ -17,11 +16,6 @@ const Audit: React.FC = () => {
 
   return (
     <>
-      <TopBar 
-        title="Audit Log" 
-        subtitle="Review actions performed in this demo." 
-      />
-
       <div className="bg-white border border-rcn-border rounded-rcn-lg shadow-rcn p-4">
         <div className="flex justify-between items-start flex-wrap gap-3">
           <div>

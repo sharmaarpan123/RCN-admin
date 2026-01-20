@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import TopBar from '../../components/TopBar';
 import { useApp } from '../../context/AppContext';
 import { 
   US_STATES, 
