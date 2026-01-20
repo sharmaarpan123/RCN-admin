@@ -3,7 +3,12 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { roleLabel, MODULE_PERMS } from '../utils/database';
 
-const Sidebar: React.FC = () => {
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { currentUser, logout } = useApp();
@@ -27,20 +32,52 @@ const Sidebar: React.FC = () => {
       return;
     }
     navigate(path);
+    // Close mobile menu after navigation
+    if (onClose) {
+      onClose();
+    }
   };
 
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <aside className="w-[280px] bg-rcn-dark-bg text-rcn-dark-text p-4 border-r border-white/10 sticky top-0 h-screen overflow-auto">
+    <>
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`
+        w-[280px] bg-rcn-dark-bg text-rcn-dark-text p-4 border-r border-white/10 
+        h-screen overflow-auto
+        md:sticky md:top-0
+        fixed top-0 left-0 z-50
+        transition-transform duration-300 ease-in-out
+        ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+      `}>
       <div className="flex gap-2.5 items-center px-2.5 py-3 border-b border-white/10 mb-3">
         <div className="w-10 h-10 rounded-xl logo-gradient shadow-[0_8px_18px_rgba(0,0,0,0.25)]" aria-hidden="true"></div>
-        <div>
+        <div className="flex-1">
           <h1 className="text-sm font-semibold m-0 leading-tight">RCN Admin</h1>
           <div className="text-xs text-rcn-dark-text/80">
             {currentUser ? `${currentUser.name} • ${roleLabel(currentUser.role)}` : 'Signed in'}
           </div>
         </div>
+        {/* Mobile Close Button */}
+        <button
+          className="md:hidden p-2 rounded-lg hover:bg-white/10 transition-colors"
+          onClick={onClose}
+          aria-label="Close menu"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
 
       <div className="mt-3">
@@ -155,6 +192,7 @@ const Sidebar: React.FC = () => {
         </nav>
       </div>
     </aside>
+    </>
   );
 };
 

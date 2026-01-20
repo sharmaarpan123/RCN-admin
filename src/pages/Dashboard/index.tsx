@@ -345,10 +345,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <>
-      <TopBar 
-        title="Referral Dashboard" 
-        subtitle="Portal Selector and real-time inbox view." 
-      />
+      
 
       <div className="flex flex-wrap gap-3.5">
         <div className="bg-white border border-rcn-border rounded-rcn-lg shadow-rcn p-4 flex-1 min-w-[180px]">
