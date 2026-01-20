@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { 
-  US_STATES, 
-  fmtDate, 
-  safeLower, 
+import {
+  US_STATES,
+  fmtDate,
+  safeLower,
   chargeOnOpen,
   saveDB,
   audit,
   centsToMoney
 } from '../../utils/database';
+import { Button } from '../../components';
 
 const Dashboard: React.FC = () => {
   const { db, refreshDB, showToast, openModal, closeModal } = useApp();
@@ -16,7 +17,7 @@ const Dashboard: React.FC = () => {
   const [senderFilterState, setSenderFilterState] = useState('');
   const [senderFilterZip, setSenderFilterZip] = useState('');
   const [senderOrgId, setSenderOrgId] = useState('');
-  
+
   const [receiverFilterName, setReceiverFilterName] = useState('');
   const [receiverFilterState, setReceiverFilterState] = useState('');
   const [receiverFilterZip, setReceiverFilterZip] = useState('');
@@ -26,7 +27,7 @@ const Dashboard: React.FC = () => {
   const [showReceiverInbox, setShowReceiverInbox] = useState(false);
   // Filter update trigger forces component re-render when filters change
   const [filterUpdateTrigger, setFilterUpdateTrigger] = useState(0);
-  
+
   // Function to trigger filter update
   const triggerFilterUpdate = () => setFilterUpdateTrigger(prev => prev + 1);
 
@@ -65,29 +66,29 @@ const Dashboard: React.FC = () => {
 
   const getSenderReferrals = () => {
     if (!senderOrgId) return [];
-    
+
     // Trigger re-render when filters change
     void filterUpdateTrigger;
-    
+
     // Get filter values from inputs
     const idFilter = safeLower((document.getElementById('senderF_id') as HTMLInputElement)?.value || '');
     const fromFilter = (document.getElementById('senderF_from') as HTMLInputElement)?.value || '';
     const toFilter = (document.getElementById('senderF_to') as HTMLInputElement)?.value || '';
     const patientFilter = safeLower((document.getElementById('senderF_patient') as HTMLInputElement)?.value || '');
     const dobFilter = (document.getElementById('senderF_dob') as HTMLInputElement)?.value || '';
-    
+
     const pendingChecked = (document.getElementById('senderF_st_pending') as HTMLInputElement)?.checked;
     const acceptedChecked = (document.getElementById('senderF_st_accepted') as HTMLInputElement)?.checked;
     const rejectedChecked = (document.getElementById('senderF_st_rejected') as HTMLInputElement)?.checked;
-    
+
     return db.referrals
       .filter((r: any) => {
         // Organization filter
         if (r.senderOrgId !== senderOrgId) return false;
-        
+
         // ID filter
         if (idFilter && !safeLower(r.id).includes(idFilter)) return false;
-        
+
         // Date range filter
         const refDate = new Date(r.createdAt);
         if (fromFilter) {
@@ -98,24 +99,24 @@ const Dashboard: React.FC = () => {
           const toDate = new Date(toFilter + 'T23:59:59');
           if (refDate > toDate) return false;
         }
-        
+
         // Patient name filter
         if (patientFilter) {
           const fullName = safeLower(`${r.patient?.first || ''} ${r.patient?.last || ''}`);
           const reverseName = safeLower(`${r.patient?.last || ''} ${r.patient?.first || ''}`);
           if (!fullName.includes(patientFilter) && !reverseName.includes(patientFilter)) return false;
         }
-        
+
         // DOB filter
         if (dobFilter && r.patient?.dob !== dobFilter) return false;
-        
+
         // Status filter
-        const statusMatches = 
+        const statusMatches =
           (r.status === 'Pending' && pendingChecked) ||
           (r.status === 'Accepted' && acceptedChecked) ||
           (r.status === 'Rejected' && rejectedChecked);
         if (!statusMatches) return false;
-        
+
         return true;
       })
       .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -123,29 +124,29 @@ const Dashboard: React.FC = () => {
 
   const getReceiverReferrals = () => {
     if (!receiverOrgId) return [];
-    
+
     // Trigger re-render when filters change
     void filterUpdateTrigger;
-    
+
     // Get filter values from inputs
     const idFilter = safeLower((document.getElementById('receiverF_id') as HTMLInputElement)?.value || '');
     const fromFilter = (document.getElementById('receiverF_from') as HTMLInputElement)?.value || '';
     const toFilter = (document.getElementById('receiverF_to') as HTMLInputElement)?.value || '';
     const patientFilter = safeLower((document.getElementById('receiverF_patient') as HTMLInputElement)?.value || '');
     const dobFilter = (document.getElementById('receiverF_dob') as HTMLInputElement)?.value || '';
-    
+
     const pendingChecked = (document.getElementById('receiverF_st_pending') as HTMLInputElement)?.checked;
     const acceptedChecked = (document.getElementById('receiverF_st_accepted') as HTMLInputElement)?.checked;
     const rejectedChecked = (document.getElementById('receiverF_st_rejected') as HTMLInputElement)?.checked;
-    
+
     return db.referrals
       .filter((r: any) => {
         // Organization filter
         if (r.receiverOrgId !== receiverOrgId) return false;
-        
+
         // ID filter
         if (idFilter && !safeLower(r.id).includes(idFilter)) return false;
-        
+
         // Date range filter
         const refDate = new Date(r.createdAt);
         if (fromFilter) {
@@ -156,24 +157,24 @@ const Dashboard: React.FC = () => {
           const toDate = new Date(toFilter + 'T23:59:59');
           if (refDate > toDate) return false;
         }
-        
+
         // Patient name filter
         if (patientFilter) {
           const fullName = safeLower(`${r.patient?.first || ''} ${r.patient?.last || ''}`);
           const reverseName = safeLower(`${r.patient?.last || ''} ${r.patient?.first || ''}`);
           if (!fullName.includes(patientFilter) && !reverseName.includes(patientFilter)) return false;
         }
-        
+
         // DOB filter
         if (dobFilter && r.patient?.dob !== dobFilter) return false;
-        
+
         // Status filter
-        const statusMatches = 
+        const statusMatches =
           (r.status === 'Pending' && pendingChecked) ||
           (r.status === 'Accepted' && acceptedChecked) ||
           (r.status === 'Rejected' && rejectedChecked);
         if (!statusMatches) return false;
-        
+
         return true;
       })
       .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -215,7 +216,7 @@ const Dashboard: React.FC = () => {
     openModal(
       <div>
         <h3 className="m-0 mb-3 text-lg font-semibold">Referral Details</h3>
-        
+
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div>
             <div className="text-xs text-rcn-muted mb-1">Referral ID</div>
@@ -305,7 +306,8 @@ const Dashboard: React.FC = () => {
           <>
             <div className="h-px bg-rcn-border my-3"></div>
             <div className="flex gap-2">
-              <button 
+              <Button
+                variant="primary"
                 onClick={() => {
                   ref.status = "Accepted";
                   saveDB(db);
@@ -317,8 +319,9 @@ const Dashboard: React.FC = () => {
                 className="logo-gradient text-white border-0 px-4 py-2.5 rounded-xl cursor-pointer font-semibold text-sm hover:opacity-90 transition-opacity"
               >
                 Accept Referral
-              </button>
-              <button 
+              </Button>
+              <Button
+                variant="danger"
                 onClick={() => {
                   ref.status = "Rejected";
                   saveDB(db);
@@ -327,10 +330,9 @@ const Dashboard: React.FC = () => {
                   showToast("Referral rejected.");
                   closeModal();
                 }}
-                className="border border-rcn-danger bg-white px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-rcn-danger text-sm hover:bg-rcn-danger hover:text-white transition-colors"
               >
                 Reject Referral
-              </button>
+              </Button>
             </div>
           </>
         )}
@@ -344,7 +346,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <>
-      
+
 
       <div className="flex flex-wrap gap-3.5">
         <div className="bg-white border border-rcn-border rounded-rcn-lg shadow-rcn p-4 flex-1 min-w-[180px]">
@@ -371,13 +373,13 @@ const Dashboard: React.FC = () => {
         <div>
           <strong className="text-rcn-dark-bg">Admin: Portal Selector</strong>
           <div className="text-xs text-rcn-muted mt-1">
-            Select Sender and/or Receiver organizations using Name + State + Zip filters. 
+            Select Sender and/or Receiver organizations using Name + State + Zip filters.
             Use the separate Apply buttons to generate each inbox.
           </div>
         </div>
         <div className="flex gap-2.5">
-          <button 
-            className={btnClass}
+          <Button
+            variant="secondary"
             onClick={() => {
               setSenderOrgId('');
               setReceiverOrgId('');
@@ -386,7 +388,7 @@ const Dashboard: React.FC = () => {
             }}
           >
             Clear selection
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -399,7 +401,7 @@ const Dashboard: React.FC = () => {
             <h3 className="m-0 text-sm font-semibold">Find Sender Organization</h3>
             {senderOrgId && <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">Selected</span>}
           </div>
-          
+
           <div className="flex flex-wrap gap-2.5 items-end mt-2.5">
             <div className="flex flex-col gap-1.5 flex-1 min-w-[160px]">
               <label className="text-xs text-rcn-muted">Name</label>
@@ -440,9 +442,9 @@ const Dashboard: React.FC = () => {
           </div>
 
           <div className="flex justify-end mt-2.5">
-            <button 
-              className={btnPrimaryClass}
-              onClick={() => {
+            <Button
+
+              variant='primary' onClick={() => {
                 if (!senderOrgId) {
                   alert('Please select a Sender organization.');
                   return;
@@ -451,7 +453,7 @@ const Dashboard: React.FC = () => {
               }}
             >
               Apply Sender Inbox
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -461,7 +463,7 @@ const Dashboard: React.FC = () => {
             <h3 className="m-0 text-sm font-semibold">Find Receiver Organization</h3>
             {receiverOrgId && <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">Selected</span>}
           </div>
-          
+
           <div className="flex flex-wrap gap-2.5 items-end mt-2.5">
             <div className="flex flex-col gap-1.5 flex-1 min-w-[160px]">
               <label className="text-xs text-rcn-muted">Name</label>
@@ -502,8 +504,8 @@ const Dashboard: React.FC = () => {
           </div>
 
           <div className="flex justify-end mt-2.5">
-            <button 
-              className={btnPrimaryClass}
+            <Button
+              variant='primary'
               onClick={() => {
                 if (!receiverOrgId) {
                   alert('Please select a Receiver organization.');
@@ -513,7 +515,7 @@ const Dashboard: React.FC = () => {
               }}
             >
               Apply Receiver Inbox
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -531,23 +533,23 @@ const Dashboard: React.FC = () => {
                 {db.orgs.find((o: any) => o.id === senderOrgId)?.name || 'Sender'}
               </span>
             </div>
-            
+
             {showSenderInbox ? (
               <>
                 {/* Sender Filters */}
                 <div className="flex flex-wrap gap-3 items-end mt-3 mb-3 p-3 bg-[#f6fbf7] border border-rcn-border rounded-xl">
                   <div className="flex flex-col gap-1.5 min-w-[120px]">
                     <label className="text-xs text-rcn-muted font-semibold">ID</label>
-                    <input 
-                      id="senderF_id" 
-                      placeholder="e.g., ref_1001" 
+                    <input
+                      id="senderF_id"
+                      placeholder="e.g., ref_1001"
                       className={inputClass}
                       onInput={triggerFilterUpdate}
                     />
                   </div>
                   <div className="flex flex-col gap-1.5 min-w-[140px]">
                     <label className="text-xs text-rcn-muted font-semibold">Date From</label>
-                    <input 
+                    <input
                       id="senderF_from"
                       type="date"
                       className={inputClass}
@@ -556,7 +558,7 @@ const Dashboard: React.FC = () => {
                   </div>
                   <div className="flex flex-col gap-1.5 min-w-[140px]">
                     <label className="text-xs text-rcn-muted font-semibold">Date To</label>
-                    <input 
+                    <input
                       id="senderF_to"
                       type="date"
                       className={inputClass}
@@ -565,16 +567,16 @@ const Dashboard: React.FC = () => {
                   </div>
                   <div className="flex flex-col gap-1.5 min-w-[200px] flex-1">
                     <label className="text-xs text-rcn-muted font-semibold">Patient Name</label>
-                    <input 
-                      id="senderF_patient" 
-                      placeholder="Last or First" 
+                    <input
+                      id="senderF_patient"
+                      placeholder="Last or First"
                       className={inputClass}
                       onInput={triggerFilterUpdate}
                     />
                   </div>
                   <div className="flex flex-col gap-1.5 min-w-[140px]">
                     <label className="text-xs text-rcn-muted font-semibold">DOB</label>
-                    <input 
+                    <input
                       id="senderF_dob"
                       type="date"
                       className={inputClass}
@@ -599,66 +601,66 @@ const Dashboard: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <button 
+                    <Button
                       className="border border-rcn-border bg-white px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-rcn-text text-sm hover:border-[#c9ddd0] transition-colors"
                       onClick={() => showToast('Export CSV functionality coming soon')}
                     >
                       Export CSV
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
                 <div className="overflow-auto">
                   <table className="w-full border-separate border-spacing-0 overflow-hidden rounded-2xl border border-rcn-border">
-                  <thead>
-                    <tr>
-                      <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">ID</th>
-                      <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Date</th>
-                      <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Patient</th>
-                      <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Receiver</th>
-                      <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Status</th>
-                      <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {getSenderReferrals().length === 0 ? (
-                      <tr><td colSpan={6} className="px-2.5 py-2.5 text-xs text-rcn-muted">No referrals found.</td></tr>
-                    ) : (
-                      getSenderReferrals().map((ref: any) => {
-                        const receiver = db.orgs.find((o: any) => o.id === ref.receiverOrgId);
-                        return (
-                          <tr key={ref.id}>
-                            <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono">{ref.id}</td>
-                            <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">{fmtDate(ref.createdAt)}</td>
-                            <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                              {ref.patient?.last || "—"}, {ref.patient?.first || "—"}
-                              <div className="text-rcn-muted">{ref.patient?.dob || "—"} • {ref.patient?.gender || "—"}</div>
-                            </td>
-                            <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                              {receiver?.name || '—'}
-                              <div className="text-rcn-muted">
-                                {receiver ? `${receiver.address.city}, ${receiver.address.state}` : ''}
-                              </div>
-                            </td>
-                            <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                              <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border ${getStatusClass(ref.status)}`}>
-                                {ref.status}
-                              </span>
-                            </td>
-                            <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                              <button 
-                                onClick={() => handleViewReferral(ref.id, false)}
-                                className="border border-rcn-border bg-white px-2 py-1.5 rounded-lg cursor-pointer font-semibold text-rcn-text text-xs hover:border-[#c9ddd0] transition-colors"
-                              >
-                                View
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
+                    <thead>
+                      <tr>
+                        <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">ID</th>
+                        <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Date</th>
+                        <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Patient</th>
+                        <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Receiver</th>
+                        <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Status</th>
+                        <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {getSenderReferrals().length === 0 ? (
+                        <tr><td colSpan={6} className="px-2.5 py-2.5 text-xs text-rcn-muted">No referrals found.</td></tr>
+                      ) : (
+                        getSenderReferrals().map((ref: any) => {
+                          const receiver = db.orgs.find((o: any) => o.id === ref.receiverOrgId);
+                          return (
+                            <tr key={ref.id}>
+                              <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono">{ref.id}</td>
+                              <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">{fmtDate(ref.createdAt)}</td>
+                              <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
+                                {ref.patient?.last || "—"}, {ref.patient?.first || "—"}
+                                <div className="text-rcn-muted">{ref.patient?.dob || "—"} • {ref.patient?.gender || "—"}</div>
+                              </td>
+                              <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
+                                {receiver?.name || '—'}
+                                <div className="text-rcn-muted">
+                                  {receiver ? `${receiver.address.city}, ${receiver.address.state}` : ''}
+                                </div>
+                              </td>
+                              <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
+                                <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border ${getStatusClass(ref.status)}`}>
+                                  {ref.status}
+                                </span>
+                              </td>
+                              <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
+                                <button
+                                  onClick={() => handleViewReferral(ref.id, false)}
+                                  className="border border-rcn-border bg-white px-2 py-1.5 rounded-lg cursor-pointer font-semibold text-rcn-text text-xs hover:border-[#c9ddd0] transition-colors"
+                                >
+                                  View
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </>
             ) : (
@@ -676,23 +678,23 @@ const Dashboard: React.FC = () => {
                 {db.orgs.find((o: any) => o.id === receiverOrgId)?.name || 'Receiver'}
               </span>
             </div>
-            
+
             {showReceiverInbox ? (
               <>
                 {/* Receiver Filters */}
                 <div className="flex flex-wrap gap-3 items-end mt-3 mb-3 p-3 bg-[#f6fbf7] border border-rcn-border rounded-xl">
                   <div className="flex flex-col gap-1.5 min-w-[120px]">
                     <label className="text-xs text-rcn-muted font-semibold">ID</label>
-                    <input 
-                      id="receiverF_id" 
-                      placeholder="e.g., ref_1004" 
+                    <input
+                      id="receiverF_id"
+                      placeholder="e.g., ref_1004"
                       className={inputClass}
                       onInput={triggerFilterUpdate}
                     />
                   </div>
                   <div className="flex flex-col gap-1.5 min-w-[140px]">
                     <label className="text-xs text-rcn-muted font-semibold">Date From</label>
-                    <input 
+                    <input
                       id="receiverF_from"
                       type="date"
                       className={inputClass}
@@ -701,7 +703,7 @@ const Dashboard: React.FC = () => {
                   </div>
                   <div className="flex flex-col gap-1.5 min-w-[140px]">
                     <label className="text-xs text-rcn-muted font-semibold">Date To</label>
-                    <input 
+                    <input
                       id="receiverF_to"
                       type="date"
                       className={inputClass}
@@ -710,16 +712,16 @@ const Dashboard: React.FC = () => {
                   </div>
                   <div className="flex flex-col gap-1.5 min-w-[200px] flex-1">
                     <label className="text-xs text-rcn-muted font-semibold">Patient Name</label>
-                    <input 
-                      id="receiverF_patient" 
-                      placeholder="Last or First" 
+                    <input
+                      id="receiverF_patient"
+                      placeholder="Last or First"
                       className={inputClass}
                       onInput={triggerFilterUpdate}
                     />
                   </div>
                   <div className="flex flex-col gap-1.5 min-w-[140px]">
                     <label className="text-xs text-rcn-muted font-semibold">DOB</label>
-                    <input 
+                    <input
                       id="receiverF_dob"
                       type="date"
                       className={inputClass}
@@ -744,7 +746,7 @@ const Dashboard: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <button 
+                    <button
                       className="border border-rcn-border bg-white px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-rcn-text text-sm hover:border-[#c9ddd0] transition-colors"
                       onClick={() => showToast('Export CSV functionality coming soon')}
                     >
@@ -755,55 +757,55 @@ const Dashboard: React.FC = () => {
 
                 <div className="overflow-auto">
                   <table className="w-full border-separate border-spacing-0 overflow-hidden rounded-2xl border border-rcn-border">
-                  <thead>
-                    <tr>
-                      <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">ID</th>
-                      <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Date</th>
-                      <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Patient</th>
-                      <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Sender</th>
-                      <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Status</th>
-                      <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {getReceiverReferrals().length === 0 ? (
-                      <tr><td colSpan={6} className="px-2.5 py-2.5 text-xs text-rcn-muted">No referrals found.</td></tr>
-                    ) : (
-                      getReceiverReferrals().map((ref: any) => {
-                        const sender = db.orgs.find((o: any) => o.id === ref.senderOrgId);
-                        return (
-                          <tr key={ref.id}>
-                            <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono">{ref.id}</td>
-                            <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">{fmtDate(ref.createdAt)}</td>
-                            <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                              {ref.patient?.last || "—"}, {ref.patient?.first || "—"}
-                              <div className="text-rcn-muted">{ref.patient?.dob || "—"} • {ref.patient?.gender || "—"}</div>
-                            </td>
-                            <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                              {sender?.name || '—'}
-                              <div className="text-rcn-muted">
-                                {sender ? `${sender.address.city}, ${sender.address.state}` : ''}
-                              </div>
-                            </td>
-                            <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                              <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border ${getStatusClass(ref.status)}`}>
-                                {ref.status}
-                              </span>
-                            </td>
-                            <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                              <button 
-                                onClick={() => handleViewReferral(ref.id, true)}
-                                className="logo-gradient text-white border-0 px-2 py-1.5 rounded-lg cursor-pointer font-semibold text-xs hover:opacity-90 transition-opacity"
-                              >
-                                {ref.billing?.receiverOpenCharged ? 'View' : 'Open'}
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
+                    <thead>
+                      <tr>
+                        <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">ID</th>
+                        <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Date</th>
+                        <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Patient</th>
+                        <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Sender</th>
+                        <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Status</th>
+                        <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {getReceiverReferrals().length === 0 ? (
+                        <tr><td colSpan={6} className="px-2.5 py-2.5 text-xs text-rcn-muted">No referrals found.</td></tr>
+                      ) : (
+                        getReceiverReferrals().map((ref: any) => {
+                          const sender = db.orgs.find((o: any) => o.id === ref.senderOrgId);
+                          return (
+                            <tr key={ref.id}>
+                              <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono">{ref.id}</td>
+                              <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">{fmtDate(ref.createdAt)}</td>
+                              <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
+                                {ref.patient?.last || "—"}, {ref.patient?.first || "—"}
+                                <div className="text-rcn-muted">{ref.patient?.dob || "—"} • {ref.patient?.gender || "—"}</div>
+                              </td>
+                              <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
+                                {sender?.name || '—'}
+                                <div className="text-rcn-muted">
+                                  {sender ? `${sender.address.city}, ${sender.address.state}` : ''}
+                                </div>
+                              </td>
+                              <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
+                                <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border ${getStatusClass(ref.status)}`}>
+                                  {ref.status}
+                                </span>
+                              </td>
+                              <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
+                                <button
+                                  onClick={() => handleViewReferral(ref.id, true)}
+                                  className="logo-gradient text-white border-0 px-2 py-1.5 rounded-lg cursor-pointer font-semibold text-xs hover:opacity-90 transition-opacity"
+                                >
+                                  {ref.billing?.receiverOpenCharged ? 'View' : 'Open'}
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </>
             ) : (

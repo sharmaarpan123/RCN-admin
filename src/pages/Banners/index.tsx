@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { safeLower } from '../../utils/database';
+import { Button } from '../../components';
 
 const Banners: React.FC = () => {
   const { db, showToast } = useApp();
-  
+
   // Filter states
   const [search, setSearch] = useState('');
   const [placementFilter, setPlacementFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [scopeFilter, setScopeFilter] = useState('');
   const [orgFilter, setOrgFilter] = useState('');
-  
+
   // Preview state
   const [previewPlacement, setPreviewPlacement] = useState('RIGHT_SIDEBAR');
 
@@ -45,7 +46,7 @@ const Banners: React.FC = () => {
     const searchLower = safeLower(search);
     const hay = safeLower((b.name || '') + ' ' + (b.linkUrl || ''));
     if (search && !hay.includes(searchLower)) return false;
-    
+
     if (placementFilter && b.placement !== placementFilter) return false;
     if (statusFilter === 'active' && !b.active) return false;
     if (statusFilter === 'inactive' && b.active) return false;
@@ -54,7 +55,7 @@ const Banners: React.FC = () => {
       if (b.scope !== 'ORG') return false;
       if (b.orgId !== orgFilter) return false;
     }
-    
+
     return true;
   });
 
@@ -62,10 +63,10 @@ const Banners: React.FC = () => {
     if (!b.active) return false;
     if (!isInDateRange(b)) return false;
     if (b.placement !== previewPlacement) return false;
-    
+
     if (b.scope === 'GLOBAL') return true;
     if (b.scope === 'ORG' && orgFilter && b.orgId === orgFilter) return true;
-    
+
     return false;
   });
 
@@ -79,12 +80,12 @@ const Banners: React.FC = () => {
               Create and manage advertising banners. Banners can be Global (all organizations) or scoped to a specific organization.
             </p>
           </div>
-          <button 
-            className={btnPrimaryClass}
+          <Button
+            variant="primary"
             onClick={() => showToast('Banner creation not implemented in this demo')}
           >
             + New Banner
-          </button>
+          </Button>
         </div>
 
         {/* Filters */}
@@ -198,24 +199,24 @@ const Banners: React.FC = () => {
                       </td>
                       <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top text-right">
                         <div className="flex gap-1 justify-end">
-                          <button 
+                          <Button
                             onClick={() => showToast('Preview functionality not implemented')}
-                            className="border border-rcn-border bg-white px-2.5 py-2 rounded-xl text-xs font-semibold hover:border-[#c9ddd0]"
+                            variant="secondary"
                           >
                             Preview
-                          </button>
-                          <button 
+                          </Button>
+                          <Button
                             onClick={() => showToast('Edit functionality not implemented')}
-                            className="border border-rcn-border bg-white px-2.5 py-2 rounded-xl text-xs font-semibold hover:border-[#c9ddd0]"
+                            variant="secondary"
                           >
                             Edit
-                          </button>
-                          <button 
+                          </Button>
+                          <Button
                             onClick={() => showToast('Delete functionality not implemented')}
-                            className="bg-white border border-[#f0c0c0] text-rcn-danger px-2.5 py-2 rounded-xl text-xs font-semibold hover:bg-[#fff1f2]"
+                            variant="danger"
                           >
                             Delete
-                          </button>
+                          </Button>
                         </div>
                       </td>
                     </tr>
@@ -237,24 +238,27 @@ const Banners: React.FC = () => {
           </p>
 
           <div className="flex flex-wrap gap-2 mb-3">
-            <button 
+            <Button
+              variant="tab"
+              active={previewPlacement === 'RIGHT_SIDEBAR'}
               onClick={() => setPreviewPlacement('RIGHT_SIDEBAR')}
-              className={previewPlacement === 'RIGHT_SIDEBAR' ? btnPrimaryClass : btnClass}
             >
               Right Sidebar
-            </button>
-            <button 
+            </Button>
+            <Button
+              variant="tab"
+              active={previewPlacement === 'HEADER_STRIP'}
               onClick={() => setPreviewPlacement('HEADER_STRIP')}
-              className={previewPlacement === 'HEADER_STRIP' ? btnPrimaryClass : btnClass}
             >
               Header Strip
-            </button>
-            <button 
+            </Button>
+            <Button
+              variant="tab"
+              active={previewPlacement === 'LOGIN_RIGHT'}
               onClick={() => setPreviewPlacement('LOGIN_RIGHT')}
-              className={previewPlacement === 'LOGIN_RIGHT' ? btnPrimaryClass : btnClass}
             >
               Login Right
-            </button>
+            </Button>
           </div>
 
           <div className="h-px bg-rcn-border my-3"></div>
@@ -272,15 +276,15 @@ const Banners: React.FC = () => {
                         {b.name} • {b.scope === 'GLOBAL' ? 'Global' : `${org?.name || 'Organization'}`}
                       </div>
                       {b.imageData || b.imageUrl ? (
-                        <a 
-                          href={b.linkUrl || '#'} 
-                          target="_blank" 
+                        <a
+                          href={b.linkUrl || '#'}
+                          target="_blank"
                           rel="noopener noreferrer"
                           className="block"
                         >
-                          <img 
-                            src={b.imageData || b.imageUrl} 
-                            alt={b.alt || b.name} 
+                          <img
+                            src={b.imageData || b.imageUrl}
+                            alt={b.alt || b.name}
                             className="w-full rounded-xl"
                             style={{ maxWidth: previewPlacement === 'RIGHT_SIDEBAR' ? '320px' : '100%' }}
                           />

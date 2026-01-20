@@ -1,6 +1,7 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { fmtDate, escapeHtml, saveDB } from '../../utils/database';
+import Button from '../../components/Button';
 
 const Audit: React.FC = () => {
   const { db, refreshDB, showToast } = useApp();
@@ -22,12 +23,12 @@ const Audit: React.FC = () => {
             <h3 className="m-0 text-sm font-semibold">Audit Log</h3>
             <p className="text-xs text-rcn-muted mt-1 mb-0">Tracks demo actions locally.</p>
           </div>
-          <button 
-            className="border border-rcn-border bg-white px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-rcn-text text-sm hover:border-[#c9ddd0] transition-colors"
+          <Button 
+            variant="secondary"
             onClick={clearLog}
           >
             Clear log
-          </button>
+          </Button>
         </div>
         <div className="overflow-auto mt-3">
           <table className="w-full border-separate border-spacing-0 overflow-hidden rounded-2xl border border-rcn-border">

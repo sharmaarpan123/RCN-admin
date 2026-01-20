@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { seedDemo } from '../utils/database';
+import Button from './Button';
 
 const Login: React.FC = () => {
   const { login, showToast, refreshDB } = useApp();
@@ -85,25 +86,24 @@ const Login: React.FC = () => {
               </div>
 
               <div className="flex flex-wrap gap-3 mt-3 justify-between items-center">
-                <button 
-                  type="button" 
-                  className="border border-rcn-border bg-white px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-rcn-text hover:border-[#c9ddd0] transition-colors"
+                <Button
+                  variant="secondary"
                   onClick={handleResetDemo}
                 >
                   Reset demo data
-                </button>
-                <button 
-                  type="submit" 
-                  className="bg-rcn-accent border border-rcn-accent text-white px-3 py-2.5 rounded-xl cursor-pointer font-semibold hover:bg-rcn-accent-dark hover:border-rcn-accent-dark transition-colors"
+                </Button>
+                <Button
+                  variant="primary"
+                  type="submit"
                 >
                   Login
-                </button>
+                </Button>
               </div>
             </form>
 
             <div className="h-px bg-rcn-border my-4"></div>
 
-            <div className="bg-white shadow-none rounded-2xl border border-dashed border-rcn-border p-4" style={{background: '#fbfefc'}}>
+            <div className="bg-white shadow-none rounded-2xl border border-dashed border-rcn-border p-4" style={{ background: '#fbfefc' }}>
               <h3 className="text-sm font-semibold m-0 mb-2">Demo users</h3>
               <div className="grid gap-2 text-xs">
                 <div>

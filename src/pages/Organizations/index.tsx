@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { US_STATES, safeLower } from '../../utils/database';
+import Button from '../../components/Button';
 
 const Organizations: React.FC = () => {
   const { db, refreshDB, showToast, openModal, closeModal } = useApp();
@@ -13,7 +14,7 @@ const Organizations: React.FC = () => {
   // Organization modules state
   const [selectedOrgId, setSelectedOrgId] = useState('');
   const [activeTab, setActiveTab] = useState<'profile' | 'branches' | 'depts' | 'users'>('profile');
-
+  
   // Module search filters
   const [branchSearch, setBranchSearch] = useState('');
   const [deptSearch, setDeptSearch] = useState('');
@@ -92,7 +93,7 @@ const Organizations: React.FC = () => {
           <div>
             <h3 className="text-lg font-semibold m-0">{org ? 'Edit' : 'New'} Organization</h3>
           </div>
-          <button onClick={closeModal} className={btnClass}>Close</button>
+          <Button variant="secondary" onClick={closeModal}>Close</Button>
         </div>
 
         <div className="h-px bg-rcn-border my-4"></div>
@@ -202,14 +203,11 @@ const Organizations: React.FC = () => {
           </div>
           <div className="flex gap-2">
             {org && (
-              <button
-                onClick={() => deleteOrg(org.id)}
-                className="border border-rcn-danger bg-white px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-rcn-danger text-sm hover:bg-rcn-danger hover:text-white transition-colors"
-              >
+              <Button variant="danger" onClick={() => deleteOrg(org.id)}>
                 Delete
-              </button>
+              </Button>
             )}
-            <button onClick={() => saveOrg(orgId)} className={btnPrimaryClass}>Save</button>
+            <Button variant="primary" onClick={() => saveOrg(orgId)}>Save</Button>
           </div>
         </div>
       </div>
@@ -826,42 +824,38 @@ const Organizations: React.FC = () => {
 
             {/* Tabs */}
             <div className="flex gap-2 flex-wrap mb-3">
-              <button
+              <Button
+                variant="tab"
+                size="sm"
+                active={activeTab === 'profile'}
                 onClick={() => setActiveTab('profile')}
-                className={`px-3 py-2 rounded-full text-xs font-bold border transition-colors ${activeTab === 'profile'
-                  ? 'bg-rcn-accent border-rcn-accent text-white'
-                  : 'bg-[#f6fbf7] border-rcn-border hover:border-[#b9d7c5]'
-                  }`}
               >
                 Organization
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="tab"
+                size="sm"
+                active={activeTab === 'branches'}
                 onClick={() => setActiveTab('branches')}
-                className={`px-3 py-2 rounded-full text-xs font-bold border transition-colors ${activeTab === 'branches'
-                  ? 'bg-rcn-accent border-rcn-accent text-white'
-                  : 'bg-[#f6fbf7] border-rcn-border hover:border-[#b9d7c5]'
-                  }`}
               >
                 Branches
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="tab"
+                size="sm"
+                active={activeTab === 'depts'}
                 onClick={() => setActiveTab('depts')}
-                className={`px-3 py-2 rounded-full text-xs font-bold border transition-colors ${activeTab === 'depts'
-                  ? 'bg-rcn-accent border-rcn-accent text-white'
-                  : 'bg-[#f6fbf7] border-rcn-border hover:border-[#b9d7c5]'
-                  }`}
               >
                 Departments
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="tab"
+                size="sm"
+                active={activeTab === 'users'}
                 onClick={() => setActiveTab('users')}
-                className={`px-3 py-2 rounded-full text-xs font-bold border transition-colors ${activeTab === 'users'
-                  ? 'bg-rcn-accent border-rcn-accent text-white'
-                  : 'bg-[#f6fbf7] border-rcn-border hover:border-[#b9d7c5]'
-                  }`}
               >
                 Users
-              </button>
+              </Button>
             </div>
 
             {/* Profile Tab */}
@@ -1052,7 +1046,7 @@ const Organizations: React.FC = () => {
                       className={inputClass}
                     />
                   </div>
-                  <button onClick={() => setUserSearch('')} className={btnClass}>Clear</button>
+                  <Button variant="secondary" onClick={() => setUserSearch('')}>Clear</Button>
                 </div>
 
                 <div className="overflow-auto">

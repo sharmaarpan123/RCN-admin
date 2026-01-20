@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { roleLabel, MODULE_PERMS } from '../utils/database';
+import Button from './Button';
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -69,15 +70,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
           </div>
         </div>
         {/* Mobile Close Button */}
-        <button
-          className="md:hidden p-2 rounded-lg hover:bg-white/10 transition-colors"
+        <Button
+          variant="secondary"
           onClick={onClose}
+          className='md:hidden'
           aria-label="Close menu"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
-        </button>
+        </Button>
       </div>
 
       <div className="mt-3">
