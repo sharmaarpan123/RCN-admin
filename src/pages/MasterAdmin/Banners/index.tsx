@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { useApp } from '../../context/AppContext';
-import { safeLower } from '../../utils/database';
-import { Button } from '../../components';
+import { useApp } from '../../../context/AppContext';
+import { safeLower } from '../../../utils/database';
+import { Button } from '../../../components';
 
 const Banners: React.FC = () => {
   const { db, showToast } = useApp();

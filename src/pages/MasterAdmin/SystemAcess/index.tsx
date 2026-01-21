@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useApp } from '../../context/AppContext';
-import { roleLabel, safeLower, saveDB, audit, uid } from '../../utils/database';
+import { useApp } from '../../../context/AppContext';
+import { roleLabel, safeLower, saveDB, audit, uid } from '../../../utils/database';
 
 const UserPanel: React.FC = () => {
   const { db, refreshDB, showToast, openModal, closeModal } = useApp();

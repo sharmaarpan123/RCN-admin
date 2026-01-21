@@ -1,6 +1,6 @@
 import React from 'react';
-import { useApp } from '../../context/AppContext';
-import { downloadFile, audit } from '../../utils/database';
+import { useApp } from '../../../context/AppContext';
+import { downloadFile, audit } from '../../../utils/database';
 
 const Reports: React.FC = () => {
   const { db, showToast } = useApp();

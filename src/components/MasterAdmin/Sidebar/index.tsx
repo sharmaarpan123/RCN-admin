@@ -1,8 +1,8 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useApp } from '../context/AppContext';
-import { roleLabel, MODULE_PERMS } from '../utils/database';
-import Button from './Button';
+import { useApp } from '../../../context/AppContext';
+import { roleLabel, MODULE_PERMS } from '../../../utils/database';
+import Button from '../../Button';
 
 interface SidebarProps {
   isOpen?: boolean;

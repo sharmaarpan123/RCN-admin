@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useApp } from '../../context/AppContext';
-import { safeLower } from '../../utils/database';
+import { useApp } from '../../../context/AppContext';
+import { safeLower } from '../../../utils/database';
 
 const Financials: React.FC = () => {
   const { db, refreshDB, showToast } = useApp();

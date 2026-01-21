@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../../context/AppContext';
 import {
   US_STATES,
   fmtDate,
@@ -8,8 +8,8 @@ import {
   saveDB,
   audit,
   centsToMoney
-} from '../../utils/database';
-import { Button } from '../../components';
+} from '../../../utils/database';
+import { Button } from '../../../components';
 
 const Dashboard: React.FC = () => {
   const { db, refreshDB, showToast, openModal, closeModal } = useApp();

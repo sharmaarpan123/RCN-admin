@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useApp } from '../../context/AppContext';
-import { seedDemo, downloadFile, saveDB, audit, nowISO } from '../../utils/database';
+import { useApp } from '../../../context/AppContext';
+import { seedDemo, downloadFile, saveDB, audit, nowISO } from '../../../utils/database';
 
 const Settings: React.FC = () => {
   const { db, refreshDB, showToast, currentUser, session } = useApp();

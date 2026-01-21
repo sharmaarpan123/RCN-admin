@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { useApp } from '../../context/AppContext';
-import { US_STATES, safeLower } from '../../utils/database';
-import Button from '../../components/Button';
+import { useApp } from '../../../context/AppContext';
+import { US_STATES, safeLower } from '../../../utils/database';
+import Button from '../../../components/Button';
 
 const Organizations: React.FC = () => {
   const { db, refreshDB, showToast, openModal, closeModal } = useApp();

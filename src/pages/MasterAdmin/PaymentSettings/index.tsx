@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useApp } from '../../context/AppContext';
-import { saveDB, audit } from '../../utils/database';
+import { useApp } from '../../../context/AppContext';
+import { saveDB, audit } from '../../../utils/database';
 
 const PaymentSettings: React.FC = () => {
   const { db, refreshDB, showToast } = useApp();
