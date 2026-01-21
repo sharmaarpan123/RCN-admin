@@ -45,7 +45,6 @@ const PrivateRoute: React.FC = () => {
       />
       <main className="flex-1 p-6 pb-10 overflow-auto">
 
-
         {/* Main Content */}
         <div className="md:ml-0 ml-0">
           <Header
@@ -115,7 +114,7 @@ const router = createBrowserRouter([
             path: 'userpanel',
             element: <UserPanel />,
             handle: {
-              title: 'User Panel',
+              title: 'Master Admin Users',
               subtitle: 'Manage system administrators and access control.'
             }
           },

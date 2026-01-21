@@ -110,7 +110,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
               }`}
               onClick={() => handleNavClick('/userpanel', 'userpanel')}
             >
-              User Panel
+             Master Admin Users
             </a>
           )}
         </nav>
