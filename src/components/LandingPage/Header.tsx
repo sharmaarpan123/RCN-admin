@@ -80,7 +80,7 @@ export default function Header() {
                 User Login
               </CustomNextLink>
               
-              <CustomNextLink href="/company-register" variant="primary" className="hidden md:inline-flex">
+              <CustomNextLink href="/org-signup" variant="primary" className="hidden md:inline-flex">
                 Register Company
               </CustomNextLink>
             {/* </div> */}
@@ -121,7 +121,7 @@ export default function Header() {
                   User Login
                 </CustomNextLink>
                
-                <CustomNextLink href="/company-register" variant="primary">
+                <CustomNextLink href="/org-signup" variant="primary">
                   Register Company
                 </CustomNextLink>
               </div>

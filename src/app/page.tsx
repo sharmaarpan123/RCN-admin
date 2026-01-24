@@ -39,7 +39,7 @@ export default function Home() {
               </p>
 
               <div id="get-started" className="flex gap-2.5 flex-wrap mt-2.5">
-                <Link href="/company-register" variant="primary">
+                <Link href="/org-signup" variant="primary">
                   Register a Company (Send & Receive)
                 </Link>
                 <Link href="/login" variant="secondary">
@@ -95,7 +95,7 @@ export default function Home() {
                   <b className="text-rcn-text">New organization?</b>
                   {' '}Register your company once, then invite users and start coordinating referrals.
                   <div className="mt-2">
-                    <Link href="/company-register" variant="text">Register a company</Link>
+                    <Link href="/org-signup" variant="text">Register a company</Link>
                     {' • '}
                     <Link href="/user-register" variant="text">Create a user</Link>
                     {' • '}
@@ -252,7 +252,7 @@ export default function Home() {
               </p>
             </div>
             <div className="flex gap-2.5 flex-wrap">
-              <Link href="/company-register" variant="primary">
+              <Link href="/org-signup" variant="primary">
                 Register Company
               </Link>
              
@@ -377,7 +377,7 @@ export default function Home() {
                 Register your organization to start sending and receiving referrals through the network.
               </p>
               <div className="flex gap-2.5 flex-wrap mt-2.5">
-                <Link href="/company-register" variant="primary">
+                <Link href="/org-signup" variant="primary">
                   Register Company
                 </Link>
                 
@@ -410,7 +410,7 @@ export default function Home() {
 
             <div>
               <h4 className="m-0 mb-2 text-sm">Get Started</h4>
-              <Link href="/company-register" variant="text" className="block py-1.5">
+              <Link href="/org-signup" variant="text" className="block py-1.5">
                 Register Company
               </Link>
              
