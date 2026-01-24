@@ -74,6 +74,8 @@ export default function Header() {
             </nav>
 
             <div className="flex gap-2.5 items-center">
+            {/* <div className="hidden md:inline-flex gap-2.5 items-center"> */}
+
               <CustomNextLink href="/login" variant="secondary" className="hidden md:inline-flex">
                 User Login
               </CustomNextLink>
@@ -81,6 +83,7 @@ export default function Header() {
               <CustomNextLink href="/company-register" variant="primary" className="hidden md:inline-flex">
                 Register Company
               </CustomNextLink>
+            {/* </div> */}
 
               <button
                 className="md:hidden w-11 h-11 rounded-xl border border-rcn-border-light bg-[rgba(255,255,255,0.88)] cursor-pointer flex items-center justify-center"
