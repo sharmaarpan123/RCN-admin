@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+"use client"
 // Database utilities for localStorage management
 const LS_KEY = "rcn_demo_v6";
 const SESSION_KEY = "rcn_session_v6";
@@ -120,26 +122,31 @@ export const defaultBannerSvgData = () => {
 
 // LocalStorage functions
 export const loadDB = () => {
+  if (typeof window === 'undefined') return null;
   const raw = localStorage.getItem(LS_KEY);
   if (!raw) return null;
   try { return JSON.parse(raw); } catch { return null; }
 };
 
 export const saveDB = (db: any) => {
+  if (typeof window === 'undefined') return;
   localStorage.setItem(LS_KEY, JSON.stringify(db));
 };
 
 export const getSession = () => {
+  if (typeof window === 'undefined') return null;
   const raw = localStorage.getItem(SESSION_KEY);
   if (!raw) return null;
   try { return JSON.parse(raw); } catch { return null; }
 };
 
 export const setSession = (sess: any) => {
+  if (typeof window === 'undefined') return;
   localStorage.setItem(SESSION_KEY, JSON.stringify(sess));
 };
 
 export const clearSession = () => {
+  if (typeof window === 'undefined') return;
   localStorage.removeItem(SESSION_KEY);
 };
 

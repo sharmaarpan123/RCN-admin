@@ -1,5 +1,9 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { getDB, getSession, setSession, clearSession, audit, saveDB } from '../utils/database';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
+
+import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { getDB, getSession, setSession, clearSession, audit } from '../utils/database';
+import { useRouter } from 'next/navigation';
 
 interface ModalOptions {
   locked?: boolean;
@@ -34,6 +38,7 @@ interface AppProviderProps {
 
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [db, setDb] = useState<any>(getDB());
+  const router = useRouter();
   const [session, setSessionState] = useState<any>(getSession());
   const [toastMessage, setToastMessage] = useState<string>('');
   const [showToastFlag, setShowToastFlag] = useState(false);
@@ -74,6 +79,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     setSessionState(newSession);
     audit("login", { email: user.email, role: user.role });
     refreshDB();
+    router.push('/master-admin/dashboard');
     return true;
   };
 
@@ -81,6 +87,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     audit("logout", {});
     clearSession();
     setSessionState(null);
+    router.push('/login');
   };
 
   const showToast = (message: string) => {

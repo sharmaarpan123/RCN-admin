@@ -1,5 +1,6 @@
+"use client"
 import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useRouter, usePathname } from 'next/navigation';
 import { useApp } from '../../../context/AppContext';
 import { roleLabel, MODULE_PERMS } from '../../../utils/database';
 import Button from '../../Button';
@@ -10,8 +11,8 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const router = useRouter();
+  const pathname = usePathname();
   const { currentUser, logout } = useApp();
 
   const canAccessView = (view: string): boolean => {
@@ -32,14 +33,86 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
     if (!canAccessView(view)) {
       return;
     }
-    navigate(path);
+    router.push(path);
     // Close mobile menu after navigation
     if (onClose) {
       onClose();
     }
   };
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => pathname === path;
+
+  const navSections = [
+    {
+      title: 'Core',
+      items: [
+        {
+          path: '/master-admin/dashboard',
+          label: 'Referral Dashboard',
+          view: 'dashboard',
+          requiresPermission: true
+        },
+        {
+          path: '/master-admin/organizations',
+          label: 'Organizations',
+          view: 'orgs',
+          requiresPermission: false
+        },
+        {
+          path: '/master-admin/system-access',
+          label: 'Master Admin Users',
+          view: 'userpanel',
+          requiresPermission: true
+        }
+      ]
+    },
+    {
+      title: 'Operations',
+      items: [
+        {
+          path: '/master-admin/payment-settings',
+          label: 'Payment Adjustment Settings',
+          view: 'payments',
+          requiresPermission: true
+        },
+        {
+          path: '/master-admin/banners',
+          label: 'Banner Management',
+          view: 'banners',
+          requiresPermission: true
+        },
+        {
+          path: '/master-admin/financial',
+          label: 'Financials',
+          view: 'financials',
+          requiresPermission: true
+        },
+        {
+          path: '/master-admin/reports',
+          label: 'Reports',
+          view: 'reports',
+          requiresPermission: true
+        },
+        {
+          path: '/master-admin/audit',
+          label: 'Audit Log',
+          view: 'audit',
+          requiresPermission: true
+        }
+      ]
+    },
+    {
+      title: 'System',
+      items: [
+        {
+          path: '/master-admin/Settings',
+          label: 'Settings',
+          view: 'settings',
+          requiresPermission: true
+        }
+      ]
+    }
+  ];
 
   return (
     <>
@@ -82,117 +155,39 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
         </Button>
       </div>
 
-      <div className="mt-3">
-        <div className="text-[11px] uppercase tracking-wider text-rcn-dark-text/65 px-2.5 py-2.5">Core</div>
-        <nav className="space-y-1">
-          {canAccessView('dashboard') && (
-            <a
-              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl no-underline text-inherit mx-1.5 transition-all cursor-pointer ${
-                isActive('/dashboard') ? 'bg-white/15' : 'hover:bg-white/10'
-              }`}
-              onClick={() => handleNavClick('/dashboard', 'dashboard')}
-            >
-              Referral Dashboard
-            </a>
-          )}
-          <a
-            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl no-underline text-inherit mx-1.5 transition-all cursor-pointer ${
-              isActive('/orgs') ? 'bg-white/15' : 'hover:bg-white/10'
-            }`}
-            onClick={() => handleNavClick('/orgs', 'orgs')}
-          >
-            Organizations
-          </a>
-          {canAccessView('userpanel') && (
-            <a
-              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl no-underline text-inherit mx-1.5 transition-all cursor-pointer ${
-                isActive('/userpanel') ? 'bg-white/15' : 'hover:bg-white/10'
-              }`}
-              onClick={() => handleNavClick('/userpanel', 'userpanel')}
-            >
-             Master Admin Users
-            </a>
-          )}
-        </nav>
-      </div>
-
-      <div className="mt-3">
-        <div className="text-[11px] uppercase tracking-wider text-rcn-dark-text/65 px-2.5 py-2.5">Operations</div>
-        <nav className="space-y-1">
-          {canAccessView('payments') && (
-            <a
-              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl no-underline text-inherit mx-1.5 transition-all cursor-pointer ${
-                isActive('/payments') ? 'bg-white/15' : 'hover:bg-white/10'
-              }`}
-              onClick={() => handleNavClick('/payments', 'payments')}
-            >
-              Payment Adjustment Settings
-            </a>
-          )}
-          {canAccessView('banners') && (
-            <a
-              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl no-underline text-inherit mx-1.5 transition-all cursor-pointer ${
-                isActive('/banners') ? 'bg-white/15' : 'hover:bg-white/10'
-              }`}
-              onClick={() => handleNavClick('/banners', 'banners')}
-            >
-              Banner Management
-            </a>
-          )}
-          {canAccessView('financials') && (
-            <a
-              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl no-underline text-inherit mx-1.5 transition-all cursor-pointer ${
-                isActive('/financials') ? 'bg-white/15' : 'hover:bg-white/10'
-              }`}
-              onClick={() => handleNavClick('/financials', 'financials')}
-            >
-              Financials
-            </a>
-          )}
-          {canAccessView('reports') && (
-            <a
-              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl no-underline text-inherit mx-1.5 transition-all cursor-pointer ${
-                isActive('/reports') ? 'bg-white/15' : 'hover:bg-white/10'
-              }`}
-              onClick={() => handleNavClick('/reports', 'reports')}
-            >
-              Reports
-            </a>
-          )}
-          {canAccessView('audit') && (
-            <a
-              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl no-underline text-inherit mx-1.5 transition-all cursor-pointer ${
-                isActive('/audit') ? 'bg-white/15' : 'hover:bg-white/10'
-              }`}
-              onClick={() => handleNavClick('/audit', 'audit')}
-            >
-              Audit Log
-            </a>
-          )}
-        </nav>
-      </div>
-
-      <div className="mt-3">
-        <div className="text-[11px] uppercase tracking-wider text-rcn-dark-text/65 px-2.5 py-2.5">System</div>
-        <nav className="space-y-1">
-          {canAccessView('settings') && (
-            <a
-              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl no-underline text-inherit mx-1.5 transition-all cursor-pointer ${
-                isActive('/settings') ? 'bg-white/15' : 'hover:bg-white/10'
-              }`}
-              onClick={() => handleNavClick('/settings', 'settings')}
-            >
-              Settings
-            </a>
-          )}
-          <a 
-            className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl no-underline text-inherit mx-1.5 transition-all cursor-pointer hover:bg-white/10"
-            onClick={logout}
-          >
-            Logout
-          </a>
-        </nav>
-      </div>
+      {navSections.map((section) => (
+        <div key={section.title} className="mt-3">
+          <div className="text-[11px] uppercase tracking-wider text-rcn-dark-text/65 px-2.5 py-2.5">
+            {section.title}
+          </div>
+          <nav className="space-y-1">
+            {section.items.map((item) => {
+              if (item.requiresPermission && !canAccessView(item.view)) {
+                return null;
+              }
+              return (
+                <a
+                  key={item.path}
+                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl no-underline text-inherit mx-1.5 transition-all cursor-pointer ${
+                    isActive(item.path) ? 'bg-white/15' : 'hover:bg-white/10'
+                  }`}
+                  onClick={() => handleNavClick(item.path, item.view)}
+                >
+                  {item.label}
+                </a>
+              );
+            })}
+            {section.title === 'System' && (
+              <a 
+                className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl no-underline text-inherit mx-1.5 transition-all cursor-pointer hover:bg-white/10"
+                onClick={logout}
+              >
+                Logout
+              </a>
+            )}
+          </nav>
+        </div>
+      ))}
     </aside>
     </>
   );

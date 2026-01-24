@@ -1,13 +1,70 @@
 import React from 'react';
 import Button from '../../Button';
+import { usePathname } from 'next/navigation';
 
 interface HeaderProps {
-  title: string;
-  subtitle: string;
   setIsMobileMenuOpen: (isOpen: boolean) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ title, subtitle, setIsMobileMenuOpen }) => {
+const titleMap = {
+  dashboard: {
+    title: 'Referral Dashboard',
+    subtitle: 'Portal Selector and real-time inbox view.'
+  },
+  organizations: {
+    title: 'Organizations',
+    subtitle: 'Manage organizations, branches, departments, and users.'
+  },
+  systemAccess: {
+    title: 'Master Admin Users',
+    subtitle: 'Manage system administrators and access control.'
+  },
+  paymentSettings: {
+    title: 'Payment Settings',
+    subtitle: 'Configure payment methods, fees, and bonuses.'
+  },
+  banners: {
+    title: 'Banner Management',
+    subtitle: 'Create and manage promotional banners across the platform.'
+  },
+  financial: {
+    title: 'Financial',
+    subtitle: 'View financial reports, invoices, and transactions.'
+  },
+  reports: {
+    title: 'Reports',
+    subtitle: 'Generate and export system reports.'
+  },
+  audit: {
+    title: 'Audit Log',
+    subtitle: 'Track system activities and user actions.'
+  },
+  settings: {
+    title: 'Settings',
+    subtitle: 'Manage your profile and system preferences.'
+  }
+}
+
+const pages =
+{
+  dashboard: '/master-admin/dashboard',
+  organizations: '/master-admin/organizations',
+  systemAccess: '/master-admin/system-access',
+  paymentSettings: '/master-admin/payment-settings',
+  banners: '/master-admin/banners',
+  financial: '/master-admin/financial',
+  reports: '/master-admin/reports',
+  audit: '/master-admin/audit',
+  settings: '/master-admin/settings',
+};
+
+const Header: React.FC<HeaderProps> = ({ setIsMobileMenuOpen }) => {
+  const pathname = usePathname();
+  const page = Object.keys(pages).find(page => pathname?.startsWith(pages[page as keyof typeof pages]));
+  const title = titleMap[page as keyof typeof titleMap]?.title || 'Admin Dashboard';
+  const subtitle = titleMap[page as keyof typeof titleMap]?.subtitle || "";
+
+
   return (
     <div className="flex gap-3 items-center justify-between mb-4">
       {/* Mobile Menu Toggle Button */}
