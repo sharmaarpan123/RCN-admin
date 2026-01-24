@@ -9,7 +9,8 @@ const Audit: React.FC = () => {
 
   const clearLog = () => {
     if (window.confirm('Clear audit log?')) {
-      db.audit = [];
+      const newDb = { ...db };
+      newDb.audit = [];
       saveDB(db);
       refreshDB();
       showToast('Audit log cleared.');
@@ -45,6 +46,7 @@ const Audit: React.FC = () => {
               {(!db.audit || db.audit.length === 0) ? (
                 <tr><td colSpan={4} className="px-2.5 py-2.5 text-xs text-rcn-muted">No audit entries yet.</td></tr>
               ) : (
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 db.audit.slice(0, 200).map((a: any) => (
                   <tr key={a.id}>
                     <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
