@@ -1,6 +1,6 @@
 "use client";
 
-import Link from 'next/link';
+import CustomNextLink from '@/components/CustomNextLink';
 import { useEffect, useState } from 'react';
 
 interface Ad {
@@ -113,18 +113,22 @@ export default function AdBanner() {
           </p>
 
           <div className="flex gap-2.5 flex-wrap mt-3">
-            <Link
+            <CustomNextLink
               href={currentAd.primaryHref}
-              className="inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-full border border-[rgba(255,255,255,0.25)] bg-linear-to-br from-rcn-brand to-rcn-brand-light no-underline font-[850] text-[13px] text-white shadow-[0_10px_18px_rgba(2,44,22,0.06)] cursor-pointer select-none hover:-translate-y-px"
+              variant="primary"
+              size="sm"
+              className="rounded-full"
             >
               {currentAd.primaryText}
-            </Link>
-            <Link
+            </CustomNextLink>
+            <CustomNextLink
               href={currentAd.secondaryHref}
-              className="inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-full border border-rcn-border-light bg-[rgba(255,255,255,0.88)] no-underline font-[850] text-[13px] text-rcn-text shadow-[0_10px_18px_rgba(2,44,22,0.06)] cursor-pointer select-none hover:-translate-y-px"
+              variant="secondary"
+              size="sm"
+              className="rounded-full"
             >
               {currentAd.secondaryText}
-            </Link>
+            </CustomNextLink>
           </div>
         </div>
 

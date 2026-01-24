@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
+import CustomNextLink from '@/components/CustomNextLink';
+import NextLink from 'next/link';
+import { useEffect, useState } from 'react';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -34,9 +35,9 @@ export default function Header() {
         <div className="max-w-[1120px] mx-auto px-[18px] flex items-center justify-between py-2.5 gap-3 text-[13px] text-rcn-muted">
           <div>Streamline referrals across clinics, hospitals, imaging centers, and specialty practices—without delays.</div>
           <div>
-            <a href="#get-started" className="text-rcn-brand font-bold no-underline hover:underline">
+            <CustomNextLink href="#get-started" variant="text" size="sm">
               Get started
-            </a>
+            </CustomNextLink>
           </div>
         </div>
       </div>
@@ -44,7 +45,7 @@ export default function Header() {
       <header className="sticky top-0 z-50 bg-[rgba(244,251,246,0.76)] backdrop-blur-[10px] border-b border-[rgba(220,239,227,0.85)]">
         <div className="max-w-[1120px] mx-auto px-[18px]">
           <div className="flex items-center justify-between py-3 gap-3.5">
-            <Link href="#top" className="flex items-center gap-3 no-underline">
+            <NextLink href="#top" className="flex items-center gap-3 no-underline">
               <div className="w-[42px] h-[42px] rounded-[14px] bg-linear-to-br from-rcn-brand to-rcn-brand-light shadow-[0_10px_22px_rgba(15,107,58,0.18)] relative shrink-0">
                 <div className="absolute inset-[10px] rounded-xl border-2 border-[rgba(255,255,255,0.75)] opacity-90" />
               </div>
@@ -52,7 +53,7 @@ export default function Header() {
                 <strong className="block text-sm tracking-wide">Referral Coordination Network</strong>
                 <span className="block text-xs text-rcn-muted">Send & Receive Referrals • Track • Secure Documents</span>
               </div>
-            </Link>
+            </NextLink>
 
             <nav className="hidden md:flex items-center gap-4.5" aria-label="Site">
               <a href="#features" className="no-underline text-rcn-muted text-sm font-[650] px-2 py-2.5 rounded-[10px] hover:text-rcn-text hover:bg-[rgba(255,255,255,0.75)]">
@@ -73,15 +74,13 @@ export default function Header() {
             </nav>
 
             <div className="flex gap-2.5 items-center">
-              <Link href="/login" className="hidden md:inline-flex items-center justify-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-rcn-border-light bg-[rgba(255,255,255,0.88)] no-underline font-[750] text-sm text-rcn-text shadow-[0_10px_18px_rgba(2,44,22,0.06)] cursor-pointer select-none hover:-translate-y-px">
+              <CustomNextLink href="/login" variant="secondary" className="hidden md:inline-flex">
                 User Login
-              </Link>
-              <Link href="/user-register" className="hidden md:inline-flex items-center justify-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-rcn-border-light bg-[rgba(255,255,255,0.88)] no-underline font-[750] text-sm text-rcn-text shadow-[0_10px_18px_rgba(2,44,22,0.06)] cursor-pointer select-none hover:-translate-y-px">
-                Register New User
-              </Link>
-              <Link href="/company-register" className="hidden md:inline-flex items-center justify-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-[rgba(255,255,255,0.25)] bg-linear-to-br from-rcn-brand to-rcn-brand-light no-underline font-[750] text-sm text-white shadow-[0_10px_18px_rgba(2,44,22,0.06)] cursor-pointer select-none hover:brightness-[1.02]">
+              </CustomNextLink>
+              
+              <CustomNextLink href="/company-register" variant="primary" className="hidden md:inline-flex">
                 Register Company
-              </Link>
+              </CustomNextLink>
 
               <button
                 className="md:hidden w-11 h-11 rounded-xl border border-rcn-border-light bg-[rgba(255,255,255,0.88)] cursor-pointer flex items-center justify-center"
@@ -115,15 +114,13 @@ export default function Header() {
                 Contact
               </a>
               <div className="flex gap-2.5 flex-wrap px-2.5 pt-1.5">
-                <Link href="/login" className="inline-flex items-center justify-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-rcn-border-light bg-transparent no-underline font-[750] text-sm text-rcn-text cursor-pointer select-none hover:-translate-y-px">
+                <CustomNextLink href="/login" variant="ghost">
                   User Login
-                </Link>
-                <Link href="/user-register" className="inline-flex items-center justify-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-rcn-border-light bg-[rgba(255,255,255,0.88)] no-underline font-[750] text-sm text-rcn-text shadow-[0_10px_18px_rgba(2,44,22,0.06)] cursor-pointer select-none hover:-translate-y-px">
-                  Register New User
-                </Link>
-                <Link href="/company-register" className="inline-flex items-center justify-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-[rgba(255,255,255,0.25)] bg-linear-to-br from-rcn-brand to-rcn-brand-light no-underline font-[750] text-sm text-white shadow-[0_10px_18px_rgba(2,44,22,0.06)] cursor-pointer select-none hover:brightness-[1.02]">
+                </CustomNextLink>
+               
+                <CustomNextLink href="/company-register" variant="primary">
                   Register Company
-                </Link>
+                </CustomNextLink>
               </div>
             </div>
           )}

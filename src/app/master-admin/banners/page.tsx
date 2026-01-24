@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useApp } from '../../../context/AppContext';
 import { safeLower } from '../../../utils/database';
 import { Button } from '../../../components';
+import Image from 'next/image';
 
 const Banners: React.FC = () => {
   const { db, showToast } = useApp();
@@ -284,7 +285,9 @@ const Banners: React.FC = () => {
                           rel="noopener noreferrer"
                           className="block"
                         >
-                          <img
+                          <Image
+                            width={320}
+                            height={180}
                             src={b.imageData || b.imageUrl}
                             alt={b.alt || b.name}
                             className="w-full rounded-xl"

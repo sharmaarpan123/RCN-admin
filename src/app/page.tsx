@@ -1,6 +1,7 @@
 import Header from '@/components/LandingPage/Header';
 import AdBanner from '@/components/LandingPage/AdBanner';
-import Link from 'next/link';
+import NextLink from 'next/link';
+import Link from '@/components/CustomNextLink';
 
 export const metadata = {
   title: 'Referral Coordination Network (RCN) | Send & Receive Referrals Securely',
@@ -38,15 +39,13 @@ export default function Home() {
               </p>
 
               <div id="get-started" className="flex gap-2.5 flex-wrap mt-2.5">
-                <Link href="/company-register" className="inline-flex items-center justify-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-[rgba(255,255,255,0.25)] bg-linear-to-br from-rcn-brand to-rcn-brand-light no-underline font-[750] text-sm text-white shadow-[0_10px_18px_rgba(2,44,22,0.06)] cursor-pointer select-none hover:brightness-[1.02]">
+                <Link href="/company-register" variant="primary">
                   Register a Company (Send & Receive)
                 </Link>
-                <Link href="/login" className="inline-flex items-center justify-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-rcn-border-light bg-[rgba(255,255,255,0.88)] no-underline font-[750] text-sm text-rcn-text shadow-[0_10px_18px_rgba(2,44,22,0.06)] cursor-pointer select-none hover:-translate-y-px">
+                <Link href="/login" variant="secondary">
                   User Login
                 </Link>
-                <Link href="/user-register" className="inline-flex items-center justify-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-rcn-border-light bg-[rgba(255,255,255,0.88)] no-underline font-[750] text-sm text-rcn-text shadow-[0_10px_18px_rgba(2,44,22,0.06)] cursor-pointer select-none hover:-translate-y-px">
-                  Register as a New User
-                </Link>
+                
               </div>
 
               <div className="flex gap-3.5 flex-wrap mt-4 text-rcn-muted text-[13px]" role="list" aria-label="Highlights">
@@ -96,11 +95,11 @@ export default function Home() {
                   <b className="text-rcn-text">New organization?</b>
                   {' '}Register your company once, then invite users and start coordinating referrals.
                   <div className="mt-2">
-                    <Link href="/company-register" className="text-rcn-brand font-black no-underline hover:underline">Register a company</Link>
+                    <Link href="/company-register" variant="text">Register a company</Link>
                     {' • '}
-                    <Link href="/user-register" className="text-rcn-brand font-black no-underline hover:underline">Create a user</Link>
+                    <Link href="/user-register" variant="text">Create a user</Link>
                     {' • '}
-                    <Link href="/login" className="text-rcn-brand font-black no-underline hover:underline">Sign in</Link>
+                    <Link href="/login" variant="text">Sign in</Link>
                   </div>
                 </div>
               </div>
@@ -253,13 +252,11 @@ export default function Home() {
               </p>
             </div>
             <div className="flex gap-2.5 flex-wrap">
-              <Link href="/company-register" className="inline-flex items-center justify-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-[rgba(255,255,255,0.25)] bg-linear-to-br from-rcn-brand to-rcn-brand-light no-underline font-[750] text-sm text-white shadow-[0_10px_18px_rgba(2,44,22,0.06)] cursor-pointer select-none hover:brightness-[1.02]">
+              <Link href="/company-register" variant="primary">
                 Register Company
               </Link>
-              <Link href="/user-register" className="inline-flex items-center justify-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-rcn-border-light bg-[rgba(255,255,255,0.88)] no-underline font-[750] text-sm text-rcn-text shadow-[0_10px_18px_rgba(2,44,22,0.06)] cursor-pointer select-none hover:-translate-y-px">
-                Register New User
-              </Link>
-              <Link href="/login" className="inline-flex items-center justify-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-rcn-border-light bg-transparent no-underline font-[750] text-sm text-rcn-text cursor-pointer select-none hover:-translate-y-px">
+             
+              <Link href="/login" variant="ghost">
                 User Login
               </Link>
             </div>
@@ -365,9 +362,9 @@ export default function Home() {
                 If you need help, contact support.
               </p>
               <ul className="my-2.5 ml-4.5 pl-0 text-rcn-muted text-sm list-disc">
-                <li className="my-1.75"><Link href="/support" className="text-rcn-brand hover:underline">Support Center</Link></li>
-                <li className="my-1.75"><Link href="/contact" className="text-rcn-brand hover:underline">Contact Form</Link></li>
-                <li className="my-1.75"><Link href="/status" className="text-rcn-brand hover:underline">System Status</Link></li>
+                <li className="my-1.75"><Link href="/support" variant="text">Support Center</Link></li>
+                <li className="my-1.75"><Link href="/contact" variant="text">Contact Form</Link></li>
+                <li className="my-1.75"><Link href="/status" variant="text">System Status</Link></li>
               </ul>
             </div>
 
@@ -380,13 +377,11 @@ export default function Home() {
                 Register your organization to start sending and receiving referrals through the network.
               </p>
               <div className="flex gap-2.5 flex-wrap mt-2.5">
-                <Link href="/company-register" className="inline-flex items-center justify-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-[rgba(255,255,255,0.25)] bg-linear-to-br from-rcn-brand to-rcn-brand-light no-underline font-[750] text-sm text-white shadow-[0_10px_18px_rgba(2,44,22,0.06)] cursor-pointer select-none hover:brightness-[1.02]">
+                <Link href="/company-register" variant="primary">
                   Register Company
                 </Link>
-                <Link href="/user-register" className="inline-flex items-center justify-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-rcn-border-light bg-[rgba(255,255,255,0.88)] no-underline font-[750] text-sm text-rcn-text shadow-[0_10px_18px_rgba(2,44,22,0.06)] cursor-pointer select-none hover:-translate-y-px">
-                  Register New User
-                </Link>
-                <Link href="/login" className="inline-flex items-center justify-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-rcn-border-light bg-transparent no-underline font-[750] text-sm text-rcn-text cursor-pointer select-none hover:-translate-y-px">
+                
+                <Link href="/login" variant="ghost">
                   User Login
                 </Link>
               </div>
@@ -399,7 +394,7 @@ export default function Home() {
         <div className="max-w-[1120px] mx-auto px-[18px]">
           <div className="grid grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr] gap-4 max-md:grid-cols-2 max-[520px]:grid-cols-1">
             <div>
-              <Link href="#top" className="flex items-center gap-2.5 no-underline">
+              <NextLink href="#top" className="flex items-center gap-2.5 no-underline">
                 <div className="w-9 h-9 rounded-[14px] bg-linear-to-br from-rcn-brand to-rcn-brand-light shadow-[0_10px_22px_rgba(15,107,58,0.18)] relative shrink-0">
                   <div className="absolute inset-[10px] rounded-xl border-2 border-[rgba(255,255,255,0.75)] opacity-90" />
                 </div>
@@ -407,7 +402,7 @@ export default function Home() {
                   <strong className="block text-sm">Referral Coordination Network</strong>
                   <span className="block text-xs text-rcn-muted">Built for speed, clarity, and secure coordination</span>
                 </div>
-              </Link>
+              </NextLink>
               <p className="text-rcn-muted text-sm my-2.5 mt-2.5 mb-0 max-w-[52ch]">
                 One place for organizations to send and receive referrals, share documents, and track progress—helping patients get care without delay.
               </p>
@@ -415,45 +410,43 @@ export default function Home() {
 
             <div>
               <h4 className="m-0 mb-2 text-sm">Get Started</h4>
-              <Link href="/company-register" className="block no-underline text-rcn-muted py-1.5 text-sm hover:text-rcn-text">
+              <Link href="/company-register" variant="text" className="block py-1.5">
                 Register Company
               </Link>
-              <Link href="/user-register" className="block no-underline text-rcn-muted py-1.5 text-sm hover:text-rcn-text">
-                Register New User
-              </Link>
-              <Link href="/login" className="block no-underline text-rcn-muted py-1.5 text-sm hover:text-rcn-text">
+             
+              <Link href="/login" variant="text" className="block py-1.5">
                 User Login
               </Link>
             </div>
 
             <div>
               <h4 className="m-0 mb-2 text-sm">Resources</h4>
-              <Link href="/about" className="block no-underline text-rcn-muted py-1.5 text-sm hover:text-rcn-text">
+              <Link href="/about" variant="text" className="block py-1.5">
                 About
               </Link>
-              <Link href="/faq" className="block no-underline text-rcn-muted py-1.5 text-sm hover:text-rcn-text">
+              <Link href="/faq" variant="text" className="block py-1.5">
                 FAQ
               </Link>
-              <Link href="/support" className="block no-underline text-rcn-muted py-1.5 text-sm hover:text-rcn-text">
+              <Link href="/support" variant="text" className="block py-1.5">
                 Support
               </Link>
-              <Link href="/contact" className="block no-underline text-rcn-muted py-1.5 text-sm hover:text-rcn-text">
+              <Link href="/contact" variant="text" className="block py-1.5">
                 Contact
               </Link>
             </div>
 
             <div>
               <h4 className="m-0 mb-2 text-sm">Legal</h4>
-              <Link href="/privacy" className="block no-underline text-rcn-muted py-1.5 text-sm hover:text-rcn-text">
+              <Link href="/privacy" variant="text" className="block py-1.5">
                 Privacy Policy
               </Link>
-              <Link href="/terms" className="block no-underline text-rcn-muted py-1.5 text-sm hover:text-rcn-text">
+              <Link href="/terms" variant="text" className="block py-1.5">
                 Terms of Use
               </Link>
-              <Link href="/security" className="block no-underline text-rcn-muted py-1.5 text-sm hover:text-rcn-text">
+              <Link href="/security" variant="text" className="block py-1.5">
                 Security
               </Link>
-              <Link href="/accessibility" className="block no-underline text-rcn-muted py-1.5 text-sm hover:text-rcn-text">
+              <Link href="/accessibility" variant="text" className="block py-1.5">
                 Accessibility
               </Link>
             </div>
@@ -463,7 +456,7 @@ export default function Home() {
             <div>© {currentYear} Referral Coordination Network. All rights reserved.</div>
             <div className="flex gap-2.5 items-center flex-wrap">
               <span className="text-rcn-muted">Need help?</span>
-              <Link href="/support" className="inline-flex items-center justify-center gap-2.5 px-3 py-2 rounded-full border border-rcn-border-light bg-[rgba(255,255,255,0.88)] no-underline font-[750] text-sm text-rcn-text shadow-[0_10px_18px_rgba(2,44,22,0.06)] cursor-pointer select-none hover:-translate-y-px">
+              <Link href="/support" variant="secondary" size="sm" className="rounded-full">
                 Support Center
               </Link>
             </div>
