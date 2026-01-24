@@ -33,23 +33,7 @@ function OrgPortalSidebar() {
         </div>
       </div>
 
-      <div className="mb-4">
-        <label htmlFor="org-portal-org-name" className="block text-[11px] uppercase tracking-wider text-rcn-dark-text/65 mb-1.5">
-          Organization Name
-        </label>
-        <input
-          id="org-portal-org-name"
-          type="text"
-          value={orgNameInput}
-          onChange={(e) => setOrgNameInput(e.target.value)}
-          className="w-full px-2.5 py-2 text-sm rounded-xl border border-white/20 bg-white/10 text-rcn-dark-text placeholder-rcn-dark-text/50 focus:outline-none focus:ring-2 focus:ring-rcn-accent/50"
-        />
-        <div className="mt-2">
-          <Button variant="primary" size="sm" onClick={() => saveOrgName(orgNameInput)} className="w-full">
-            Save
-          </Button>
-        </div>
-      </div>
+     
 
       <nav className="space-y-1">
         {NAV.map(({ href, label }) => (
