@@ -105,7 +105,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
       title: 'System',
       items: [
         {
-          path: '/master-admin/Settings',
+          path: '/master-admin/settings',
           label: 'Settings',
           view: 'settings',
           requiresPermission: true
