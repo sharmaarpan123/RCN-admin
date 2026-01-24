@@ -79,7 +79,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     setSessionState(newSession);
     audit("login", { email: user.email, role: user.role });
     refreshDB();
-    router.push('/master-admin/dashboard');
+    // Org users (ORG_ADMIN, STAFF, or any user with orgId) → org-portal; System Admin → master-admin
+    if (user.role === 'SYSTEM_ADMIN' || !user.orgId) {
+      router.push('/master-admin/dashboard');
+    } else {
+      router.push('/org-portal');
+    }
     return true;
   };
 
