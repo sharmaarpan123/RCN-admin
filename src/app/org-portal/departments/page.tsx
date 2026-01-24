@@ -43,18 +43,18 @@ export default function OrgPortalDepartmentsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
-        <div>
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+        <div className="min-w-0">
           <h1 className="text-xl font-bold m-0">Department</h1>
           <p className="text-sm text-rcn-muted m-0 mt-0.5">Create and manage departments under a branch.</p>
         </div>
         <div className="flex gap-2 items-center flex-wrap">
-          <div>
+          <div className="w-full sm:w-auto min-w-0">
             <label className="block text-xs text-rcn-muted mb-1">Branch</label>
             <select
               value={branchId}
               onChange={(e) => setBranchFilter(e.target.value)}
-              className="px-2.5 py-2 text-sm rounded-xl border border-rcn-border bg-white focus:outline-none focus:ring-2 focus:ring-rcn-accent/30"
+              className="w-full sm:w-auto min-w-0 px-2.5 py-2 text-sm rounded-xl border border-rcn-border bg-white focus:outline-none focus:ring-2 focus:ring-rcn-accent/30"
             >
               {brs.map((b) => (
                 <option key={b.id} value={b.id}>{b.name}</option>
@@ -67,31 +67,31 @@ export default function OrgPortalDepartmentsPage() {
 
       <div className="bg-rcn-card border border-rcn-border rounded-2xl shadow-rcn overflow-hidden">
         <div className="p-4">
-          <div className="border border-rcn-border rounded-xl overflow-hidden">
-            <table className="w-full border-collapse text-sm">
+          <div className="border border-rcn-border rounded-xl overflow-x-auto">
+            <table className="w-full border-collapse text-sm min-w-[260px]">
               <thead>
                 <tr className="bg-rcn-bg/90">
-                  <th className="px-3 py-2.5 text-left text-xs uppercase tracking-wide text-rcn-muted font-semibold">Name</th>
-                  <th className="px-3 py-2.5 text-left text-xs uppercase tracking-wide text-rcn-muted font-semibold">Branch</th>
-                  <th className="px-3 py-2.5 text-right text-xs uppercase tracking-wide text-rcn-muted font-semibold">Actions</th>
+                  <th className="px-2 py-2 sm:px-3 sm:py-2.5 text-left text-xs uppercase tracking-wide text-rcn-muted font-semibold">Name</th>
+                  <th className="px-2 py-2 sm:px-3 sm:py-2.5 text-left text-xs uppercase tracking-wide text-rcn-muted font-semibold">Branch</th>
+                  <th className="px-2 py-2 sm:px-3 sm:py-2.5 text-right text-xs uppercase tracking-wide text-rcn-muted font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {!br && (
                   <tr>
-                    <td colSpan={3} className="px-3 py-6 text-rcn-muted text-xs text-center">No branches yet. Create a branch first.</td>
+                    <td colSpan={3} className="px-2 py-6 sm:px-3 text-rcn-muted text-xs text-center">No branches yet. Create a branch first.</td>
                   </tr>
                 )}
                 {br && !depts.length && (
                   <tr>
-                    <td colSpan={3} className="px-3 py-6 text-rcn-muted text-xs text-center">No departments in this branch. Click &quot;+ Add Department&quot; to create one.</td>
+                    <td colSpan={3} className="px-2 py-6 sm:px-3 text-rcn-muted text-xs text-center">No departments in this branch. Click &quot;+ Add Department&quot; to create one.</td>
                   </tr>
                 )}
                 {depts.map((dp) => (
                   <tr key={dp.id} className="border-t border-rcn-border/60 hover:bg-rcn-accent/5">
-                    <td className="px-3 py-2.5 font-medium">{dp.name}</td>
-                    <td className="px-3 py-2.5 text-rcn-muted">{br?.name}</td>
-                    <td className="px-3 py-2.5 text-right">
+                    <td className="px-2 py-2 sm:px-3 sm:py-2.5 font-medium">{dp.name}</td>
+                    <td className="px-2 py-2 sm:px-3 sm:py-2.5 text-rcn-muted">{br?.name}</td>
+                    <td className="px-2 py-2 sm:px-3 sm:py-2.5 text-right">
                       <Button variant="secondary" size="sm" onClick={() => openEdit(br!.id, dp.id, dp.name)}>Edit</Button>
                     </td>
                   </tr>

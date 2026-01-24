@@ -34,12 +34,12 @@ export default function OrgPortalOrganizationSettingsPage() {
       </div>
 
       <div className="bg-rcn-card border border-rcn-border rounded-2xl shadow-rcn overflow-hidden">
-        <div className="px-4 py-3 border-b border-rcn-border flex justify-between items-center">
-          <div>
+        <div className="px-4 py-3 border-b border-rcn-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="min-w-0">
             <h3 className="font-bold text-sm m-0">Organization Profile</h3>
             <p className="text-xs text-rcn-muted m-0 mt-0.5">Update required organization profile details and optional contacts.</p>
           </div>
-          <Button variant="primary" size="sm" onClick={handleSave}>Save Organization</Button>
+          <Button variant="primary" size="sm" onClick={handleSave} className="w-full sm:w-auto shrink-0">Save Organization</Button>
         </div>
         <div className="p-4 space-y-4">
           <div className="rounded-xl border border-dashed border-rcn-accent/50 bg-rcn-accent/5 px-3 py-2 text-xs text-rcn-accent">

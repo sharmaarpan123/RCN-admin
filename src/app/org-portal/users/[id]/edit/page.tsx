@@ -106,7 +106,7 @@ export default function OrgPortalUserEditPage() {
         <CustomNextLink href={`/org-portal/users/${user.id}`} variant="ghost" size="sm">View</CustomNextLink>
       </div>
       <div className="bg-rcn-card border border-rcn-border rounded-2xl shadow-rcn overflow-hidden">
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           <h1 className="text-xl font-bold m-0">Edit User</h1>
           <p className="text-sm text-rcn-muted m-0 mt-1">{ctxDisplayName(user)}</p>
 
@@ -208,13 +208,13 @@ export default function OrgPortalUserEditPage() {
             )}
           </div>
 
-          <div className="flex flex-wrap gap-2 mt-6 pt-6 border-t border-rcn-border justify-between">
-            <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-2 mt-6 pt-6 border-t border-rcn-border justify-between">
+            <div className="flex flex-wrap gap-2">
               <Button variant="secondary" size="sm" onClick={() => toggleUserActive(user)}>{user.isActive ? "Deactivate" : "Activate"}</Button>
               <Button variant="danger" size="sm" onClick={() => removeUserFromOrg(user)} disabled={!user.orgAssigned}>Remove from Org</Button>
               <Button variant="danger" size="sm" onClick={handleDelete}>Delete</Button>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button variant="primary" size="sm" onClick={handleSave}>Save</Button>
               <CustomNextLink href="/org-portal/users" variant="secondary" size="sm">Cancel</CustomNextLink>
               <CustomNextLink href={`/org-portal/users/${user.id}`} variant="ghost" size="sm">View</CustomNextLink>

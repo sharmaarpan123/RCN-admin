@@ -4,7 +4,6 @@ import { OrgPortalProvider, useOrgPortal } from "@/context/OrgPortalContext";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Button } from "@/components";
 
 const NAV = [
   { href: "/org-portal/users", label: "User Manage" },
@@ -14,18 +13,36 @@ const NAV = [
   { href: "/org-portal/referral-dashboard", label: "Referral Dashboard" },
 ] as const;
 
-function OrgPortalSidebar() {
+function OrgPortalSidebar({
+  sidebarOpen,
+  setSidebarOpen,
+}: {
+  sidebarOpen: boolean;
+  setSidebarOpen: (v: boolean) => void;
+}) {
   const pathname = usePathname();
-  const { org, saveOrgName } = useOrgPortal();
-  const [orgNameInput, setOrgNameInput] = useState(org.name);
-
-  useEffect(() => {
-    setOrgNameInput(org.name);
-  }, [org.name]);
 
   return (
-    <aside className="w-[280px] bg-rcn-dark-bg text-rcn-dark-text p-4 border-r border-white/10 h-screen overflow-auto shrink-0 sticky top-0">
-      <div className="flex flex-col gap-2.5 px-2.5 py-3 border-b border-white/10 mb-3">
+    <aside
+      className={`
+        fixed lg:relative inset-y-0 left-0 z-50 lg:z-auto
+        w-[280px] shrink-0 h-screen overflow-auto
+        bg-rcn-dark-bg text-rcn-dark-text p-4 border-r border-white/10
+        transition-transform duration-200 ease-out
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+        lg:sticky lg:top-0
+      `}
+      aria-label="Organization portal navigation"
+    >
+      <div className="relative flex flex-col gap-2.5 px-2.5 py-3 border-b border-white/10 mb-3">
+        <button
+          type="button"
+          onClick={() => setSidebarOpen(false)}
+          aria-label="Close menu"
+          className="lg:hidden absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-lg text-rcn-dark-text/80 hover:bg-white/10"
+        >
+          ✕
+        </button>
         <div className="w-10 h-10 rounded-xl logo-gradient shadow-[0_8px_18px_rgba(0,0,0,0.25)]" aria-hidden="true" />
         <div>
           <h1 className="text-sm font-semibold m-0 leading-tight">Referral Coordination Network</h1>
@@ -33,13 +50,12 @@ function OrgPortalSidebar() {
         </div>
       </div>
 
-     
-
       <nav className="space-y-1">
         {NAV.map(({ href, label }) => (
           <Link
             key={href}
             href={href}
+            onClick={() => setSidebarOpen(false)}
             className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl no-underline text-inherit mx-1.5 transition-all ${
               pathname === href ? "bg-white/15" : "hover:bg-white/10"
             }`}
@@ -69,7 +85,7 @@ function OrgPortalToast() {
 
   return (
     <div
-      className={`fixed right-4 bottom-4 z-50 min-w-[280px] max-w-[440px] bg-rcn-dark-bg text-white rounded-2xl px-4 py-3 shadow-rcn border border-white/10 transition-all duration-200 ${
+      className={`fixed left-4 right-4 sm:left-auto sm:right-4 bottom-4 z-50 min-w-0 max-w-[min(440px,calc(100vw-2rem))] bg-rcn-dark-bg text-white rounded-2xl px-4 py-3 shadow-rcn border border-white/10 transition-all duration-200 ${
         state.show ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
       }`}
       role="status"
@@ -83,10 +99,40 @@ function OrgPortalToast() {
 }
 
 function OrgPortalLayoutInner({ children }: { children: React.ReactNode }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    if (sidebarOpen) document.body.style.overflow = "hidden";
+    else document.body.style.overflow = "";
+    return () => { document.body.style.overflow = ""; };
+  }, [sidebarOpen]);
+
   return (
     <div className="flex min-h-screen">
-      <OrgPortalSidebar />
-      <main className="flex-1 overflow-auto p-6">{children}</main>
+      {sidebarOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+      <header className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-rcn-dark-bg text-rcn-dark-text border-b border-white/10 flex items-center gap-3 px-4 z-30">
+        <button
+          type="button"
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Open menu"
+          className="w-10 h-10 flex items-center justify-center rounded-xl text-rcn-dark-text hover:bg-white/10"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
+        <span className="font-semibold text-sm">Organization Portal</span>
+      </header>
+      <OrgPortalSidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+      <main className="flex-1 overflow-auto p-4 pt-14 lg:p-6 lg:pt-6">{children}</main>
       <OrgPortalToast />
     </div>
   );

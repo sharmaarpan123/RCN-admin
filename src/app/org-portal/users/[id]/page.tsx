@@ -85,7 +85,7 @@ export default function OrgPortalUserViewPage() {
         <CustomNextLink href="/org-portal/users" variant="ghost" size="sm">← User list</CustomNextLink>
       </div>
       <div className="bg-rcn-card border border-rcn-border rounded-2xl shadow-rcn overflow-hidden">
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <h1 className="text-xl font-bold m-0">View User</h1>
@@ -178,12 +178,12 @@ export default function OrgPortalUserViewPage() {
           </div>
 
           <div className="flex flex-wrap gap-2 mt-6 pt-6 border-t border-rcn-border justify-between">
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button variant="secondary" size="sm" onClick={() => toggleUserActive(user)}>{user.isActive ? "Deactivate" : "Activate"}</Button>
               <Button variant="danger" size="sm" onClick={() => removeUserFromOrg(user)} disabled={!user.orgAssigned}>Remove from Org</Button>
               <Button variant="danger" size="sm" onClick={handleDelete}>Delete</Button>
             </div>
-            <CustomNextLink href="/org-portal/users" variant="secondary" size="sm">Back to list</CustomNextLink>
+            <CustomNextLink href="/org-portal/users" variant="secondary" size="sm" className="shrink-0">Back to list</CustomNextLink>
           </div>
         </div>
       </div>

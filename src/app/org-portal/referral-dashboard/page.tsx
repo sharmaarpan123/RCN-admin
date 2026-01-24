@@ -60,8 +60,8 @@ export default function OrgPortalReferralDashboardPage() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center justify-between gap-4 mb-4">
+        <div className="min-w-0">
           <h1 className="text-xl font-bold m-0">Referral Dashboard</h1>
           <p className="text-sm text-rcn-muted m-0 mt-0.5">View organization-wide Sender and Receiver inboxes.</p>
         </div>
@@ -81,14 +81,14 @@ export default function OrgPortalReferralDashboardPage() {
             <button
               type="button"
               onClick={() => setInboxRefMode("sent")}
-              className={`px-3 py-2 rounded-xl border text-sm font-bold transition-all ${inboxRefMode === "sent" ? "border-rcn-accent/60 bg-rcn-accent/10 text-rcn-accent" : "border-rcn-border bg-white hover:border-rcn-accent/40"}`}
+              className={`flex-1 min-w-0 sm:flex-initial px-3 py-2 rounded-xl border text-sm font-bold transition-all ${inboxRefMode === "sent" ? "border-rcn-accent/60 bg-rcn-accent/10 text-rcn-accent" : "border-rcn-border bg-white hover:border-rcn-accent/40"}`}
             >
               Sender Inbox <small className="text-rcn-muted font-semibold">Referrals Sent</small>
             </button>
             <button
               type="button"
               onClick={() => setInboxRefMode("received")}
-              className={`px-3 py-2 rounded-xl border text-sm font-bold transition-all ${inboxRefMode === "received" ? "border-rcn-accent/60 bg-rcn-accent/10 text-rcn-accent" : "border-rcn-border bg-white hover:border-rcn-accent/40"}`}
+              className={`flex-1 min-w-0 sm:flex-initial px-3 py-2 rounded-xl border text-sm font-bold transition-all ${inboxRefMode === "received" ? "border-rcn-accent/60 bg-rcn-accent/10 text-rcn-accent" : "border-rcn-border bg-white hover:border-rcn-accent/40"}`}
             >
               Receiver Inbox <small className="text-rcn-muted font-semibold">Referrals Received</small>
             </button>
@@ -113,19 +113,19 @@ export default function OrgPortalReferralDashboardPage() {
               <Button variant="secondary" size="sm" onClick={() => { setSearch(""); setStatusFilter(""); }}>Clear Filters</Button>
             </div>
           </div>
-          <div className="overflow-auto rounded-2xl border border-rcn-border">
-            <table className="w-full border-collapse text-sm">
+          <div className="overflow-x-auto rounded-2xl border border-rcn-border">
+            <table className="w-full border-collapse text-sm min-w-[520px]">
               <thead>
                 <tr className="bg-rcn-bg/90">
                   {cols.map((c) => (
-                    <th key={c.k} className="px-3 py-2.5 text-left text-xs uppercase tracking-wide text-rcn-muted font-semibold">{c.t}</th>
+                    <th key={c.k} className="px-2 py-2 sm:px-3 sm:py-2.5 text-left text-xs uppercase tracking-wide text-rcn-muted font-semibold">{c.t}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {!filtered.length && (
                   <tr>
-                    <td colSpan={cols.length} className="px-3 py-4 text-rcn-muted text-xs">No referrals found. Use &quot;Load Demo Referrals&quot; to add demo data.</td>
+                    <td colSpan={cols.length} className="px-2 py-4 sm:px-3 text-rcn-muted text-xs">No referrals found. Use &quot;Load Demo Referrals&quot; to add demo data.</td>
                   </tr>
                 )}
                 {filtered.map((r) => (
@@ -135,7 +135,7 @@ export default function OrgPortalReferralDashboardPage() {
                     onClick={() => setModal({ mode: inboxRefMode, r })}
                   >
                     {cols.map((c) => (
-                      <td key={c.k} className="px-3 py-2.5">
+                      <td key={c.k} className="px-2 py-2 sm:px-3 sm:py-2.5">
                         {c.k === "date" ? fmtDate(r.date) : (r[c.k] ?? "—")}
                       </td>
                     ))}

@@ -48,7 +48,7 @@ export default function OrgPortalUserAddPage() {
         <CustomNextLink href="/org-portal/users" variant="ghost" size="sm">← User list</CustomNextLink>
       </div>
       <div className="bg-rcn-card border border-rcn-border rounded-2xl shadow-rcn overflow-hidden">
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           <h1 className="text-xl font-bold m-0">Add User</h1>
           <p className="text-sm text-rcn-muted m-0 mt-1">Create a new user and assign branches & departments.</p>
 
