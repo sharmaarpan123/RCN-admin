@@ -1,6 +1,5 @@
 "use client";
-import { Sidebar } from "@/components";
-import Header from "@/components/MasterAdmin/Header";
+import { Sidebar, MasterAdminHeader } from "@/components/MasterAdmin";
 import { useState } from "react";
 
 const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -15,7 +14,7 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             />
             <main className="flex-1 p-6 pb-10 overflow-auto">
                 <div className="md:ml-0 ml-0">
-                    <Header
+                    <MasterAdminHeader
                         setIsMobileMenuOpen={setIsMobileMenuOpen}
                     />
                     {children}

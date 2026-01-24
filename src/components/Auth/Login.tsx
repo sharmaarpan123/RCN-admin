@@ -1,8 +1,9 @@
 "use client";
 import React, { useState } from 'react';
-import { useApp } from '../context/AppContext';
-import { seedDemo } from '../utils/database';
-import Button from './Button';
+import { useApp } from '../../context/AppContext';
+import { seedDemo } from '../../utils/database';
+import Button from '../Button';
+import CustomNextLink from '../CustomNextLink';
 
 const Login: React.FC = () => {
   const { login, showToast, refreshDB } = useApp();
@@ -101,6 +102,17 @@ const Login: React.FC = () => {
                 </Button>
               </div>
             </form>
+
+            <div className="h-px bg-rcn-border my-4"></div>
+
+            <div className="mb-4">
+              <p className="text-xs text-rcn-muted m-0 mb-3">
+                Don&apos;t have an organization account?
+              </p>
+              <CustomNextLink href="/org-signup" variant="primary" size="sm" className="w-full justify-center">
+                Register Your Organization
+              </CustomNextLink>
+            </div>
 
             <div className="h-px bg-rcn-border my-4"></div>
 
