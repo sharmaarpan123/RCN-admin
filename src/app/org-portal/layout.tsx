@@ -57,6 +57,8 @@ function OrgPortalSidebar({
         </div>
       </div>
 
+      <div className="bg-[rgba(255,255,255,.10)] rounded-xl p-2.5 border border-white/10">
+
       <nav className="space-y-1 flex-1">
         {NAV.map(({ href, label }) => (
           <Link
@@ -71,6 +73,8 @@ function OrgPortalSidebar({
           </Link>
         ))}
       </nav>
+      </div>
+
 
       <div className="border-t border-white/10 pt-3 mt-2">
         <button

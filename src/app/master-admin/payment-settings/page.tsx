@@ -2,12 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../../context/AppContext';
 import { saveDB, audit } from '../../../utils/database';
+import { Button } from '@/components';
 
 const PaymentSettings: React.FC = () => {
   const { db, refreshDB, showToast } = useApp();
-  
+
   // Payment Settings State
-  const [methods, setMethods] = useState({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [methods, setMethods] = useState<any>({
     creditCard: true,
     debitCard: true,
     applePay: true,
@@ -19,7 +21,7 @@ const PaymentSettings: React.FC = () => {
 
   const [serviceFee, setServiceFee] = useState(5.00);
   const [previewMethod, setPreviewMethod] = useState('creditCard');
-  
+
   const [processingFees, setProcessingFees] = useState({
     creditCard: 0.00,
     debitCard: 0.00,
@@ -36,10 +38,8 @@ const PaymentSettings: React.FC = () => {
   const [bulkDiscount, setBulkDiscount] = useState(10);
   const [autoEmail, setAutoEmail] = useState(true);
 
-  // Bulk Purchase Calculator State
-  const [bulkBuyer, setBulkBuyer] = useState('');
+
   const [bulkQty, setBulkQty] = useState(0);
-  const [bulkPayMethod, setBulkPayMethod] = useState('creditCard');
   const [bulkUnitPrice, setBulkUnitPrice] = useState(5.00);
 
   // Pair Bonus Calculator State
@@ -126,7 +126,7 @@ const PaymentSettings: React.FC = () => {
       },
     };
 
-    db.paymentSettings = paymentSettings;
+    // db.paymentSettings = paymentSettings;
     saveDB(db);
     audit('payment_settings_save', {});
     refreshDB();
@@ -135,7 +135,7 @@ const PaymentSettings: React.FC = () => {
 
   const handleReset = () => {
     if (!window.confirm('Reset payment settings to defaults?')) return;
-    
+
     setMethods({
       creditCard: true,
       debitCard: true,
@@ -160,7 +160,7 @@ const PaymentSettings: React.FC = () => {
     setBulkThreshold(10);
     setBulkDiscount(10);
     setAutoEmail(true);
-    
+
     showToast('Settings reset to defaults.');
   };
 
@@ -200,31 +200,31 @@ const PaymentSettings: React.FC = () => {
 
             <div className="flex flex-wrap gap-2 mt-2.5">
               <label className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border border-rcn-border bg-[#f8fcf9] cursor-pointer hover:border-[#b9d7c5]">
-                <input type="checkbox" checked={methods.creditCard} onChange={(e) => setMethods({...methods, creditCard: e.target.checked})} />
+                <input type="checkbox" checked={methods.creditCard} onChange={(e) => setMethods({ ...methods, creditCard: e.target.checked })} />
                 Credit Card
               </label>
               <label className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border border-rcn-border bg-[#f8fcf9] cursor-pointer hover:border-[#b9d7c5]">
-                <input type="checkbox" checked={methods.debitCard} onChange={(e) => setMethods({...methods, debitCard: e.target.checked})} />
+                <input type="checkbox" checked={methods.debitCard} onChange={(e) => setMethods({ ...methods, debitCard: e.target.checked })} />
                 Debit Card
               </label>
               <label className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border border-rcn-border bg-[#f8fcf9] cursor-pointer hover:border-[#b9d7c5]">
-                <input type="checkbox" checked={methods.applePay} onChange={(e) => setMethods({...methods, applePay: e.target.checked})} />
+                <input type="checkbox" checked={methods.applePay} onChange={(e) => setMethods({ ...methods, applePay: e.target.checked })} />
                 Apple Pay
               </label>
               <label className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border border-rcn-border bg-[#f8fcf9] cursor-pointer hover:border-[#b9d7c5]">
-                <input type="checkbox" checked={methods.paypal} onChange={(e) => setMethods({...methods, paypal: e.target.checked})} />
+                <input type="checkbox" checked={methods.paypal} onChange={(e) => setMethods({ ...methods, paypal: e.target.checked })} />
                 PayPal
               </label>
               <label className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border border-rcn-border bg-[#f8fcf9] cursor-pointer hover:border-[#b9d7c5]">
-                <input type="checkbox" checked={methods.googlePay} onChange={(e) => setMethods({...methods, googlePay: e.target.checked})} />
+                <input type="checkbox" checked={methods.googlePay} onChange={(e) => setMethods({ ...methods, googlePay: e.target.checked })} />
                 Google Pay
               </label>
               <label className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border border-rcn-border bg-[#f8fcf9] cursor-pointer hover:border-[#b9d7c5]">
-                <input type="checkbox" checked={methods.bankTransfer} onChange={(e) => setMethods({...methods, bankTransfer: e.target.checked})} />
+                <input type="checkbox" checked={methods.bankTransfer} onChange={(e) => setMethods({ ...methods, bankTransfer: e.target.checked })} />
                 Bank Transfer
               </label>
               <label className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border border-rcn-border bg-[#f8fcf9] cursor-pointer hover:border-[#b9d7c5]">
-                <input type="checkbox" checked={methods.ach} onChange={(e) => setMethods({...methods, ach: e.target.checked})} />
+                <input type="checkbox" checked={methods.ach} onChange={(e) => setMethods({ ...methods, ach: e.target.checked })} />
                 ACH
               </label>
             </div>
@@ -235,31 +235,31 @@ const PaymentSettings: React.FC = () => {
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs text-rcn-muted">Credit Card</label>
-                <input type="number" step="0.01" min="0" max="100" value={processingFees.creditCard} onChange={(e) => setProcessingFees({...processingFees, creditCard: parseFloat(e.target.value) || 0})} className={inputClass} />
+                <input type="number" step="0.01" min="0" max="100" value={processingFees.creditCard} onChange={(e) => setProcessingFees({ ...processingFees, creditCard: parseFloat(e.target.value) || 0 })} className={inputClass} />
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs text-rcn-muted">Debit Card</label>
-                <input type="number" step="0.01" min="0" max="100" value={processingFees.debitCard} onChange={(e) => setProcessingFees({...processingFees, debitCard: parseFloat(e.target.value) || 0})} className={inputClass} />
+                <input type="number" step="0.01" min="0" max="100" value={processingFees.debitCard} onChange={(e) => setProcessingFees({ ...processingFees, debitCard: parseFloat(e.target.value) || 0 })} className={inputClass} />
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs text-rcn-muted">Apple Pay</label>
-                <input type="number" step="0.01" min="0" max="100" value={processingFees.applePay} onChange={(e) => setProcessingFees({...processingFees, applePay: parseFloat(e.target.value) || 0})} className={inputClass} />
+                <input type="number" step="0.01" min="0" max="100" value={processingFees.applePay} onChange={(e) => setProcessingFees({ ...processingFees, applePay: parseFloat(e.target.value) || 0 })} className={inputClass} />
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs text-rcn-muted">PayPal</label>
-                <input type="number" step="0.01" min="0" max="100" value={processingFees.paypal} onChange={(e) => setProcessingFees({...processingFees, paypal: parseFloat(e.target.value) || 0})} className={inputClass} />
+                <input type="number" step="0.01" min="0" max="100" value={processingFees.paypal} onChange={(e) => setProcessingFees({ ...processingFees, paypal: parseFloat(e.target.value) || 0 })} className={inputClass} />
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs text-rcn-muted">Google Pay</label>
-                <input type="number" step="0.01" min="0" max="100" value={processingFees.googlePay} onChange={(e) => setProcessingFees({...processingFees, googlePay: parseFloat(e.target.value) || 0})} className={inputClass} />
+                <input type="number" step="0.01" min="0" max="100" value={processingFees.googlePay} onChange={(e) => setProcessingFees({ ...processingFees, googlePay: parseFloat(e.target.value) || 0 })} className={inputClass} />
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs text-rcn-muted">Bank Transfer</label>
-                <input type="number" step="0.01" min="0" max="100" value={processingFees.bankTransfer} onChange={(e) => setProcessingFees({...processingFees, bankTransfer: parseFloat(e.target.value) || 0})} className={inputClass} />
+                <input type="number" step="0.01" min="0" max="100" value={processingFees.bankTransfer} onChange={(e) => setProcessingFees({ ...processingFees, bankTransfer: parseFloat(e.target.value) || 0 })} className={inputClass} />
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs text-rcn-muted">ACH</label>
-                <input type="number" step="0.01" min="0" max="100" value={processingFees.ach} onChange={(e) => setProcessingFees({...processingFees, ach: parseFloat(e.target.value) || 0})} className={inputClass} />
+                <input type="number" step="0.01" min="0" max="100" value={processingFees.ach} onChange={(e) => setProcessingFees({ ...processingFees, ach: parseFloat(e.target.value) || 0 })} className={inputClass} />
               </div>
             </div>
 
@@ -273,7 +273,7 @@ const PaymentSettings: React.FC = () => {
           <div className="bg-white border border-rcn-border rounded-2xl shadow-none p-4">
             <h3 className="text-sm font-semibold m-0 mb-2.5">Total Charge</h3>
             <p className="text-xs text-rcn-muted m-0 mb-2.5">Total = Service Fee + (Service Fee × Processing Fee %) — varies by payment method</p>
-            
+
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs text-rcn-muted">Service Fee ($)</label>
@@ -338,64 +338,88 @@ const PaymentSettings: React.FC = () => {
         <div className="h-px bg-rcn-border my-3.5"></div>
 
         {/* Referral & Purchase Bonus */}
-        <div className="bg-white border border-rcn-border rounded-2xl shadow-none p-4">
-          <h3 className="text-sm font-semibold m-0 mb-2.5">Referral &amp; Purchase Bonus</h3>
-          <p className="text-xs text-rcn-muted m-0 mb-3">
-            Rules: To <strong>send</strong> a referral or <strong>open</strong> a referral costs <strong>${serviceFee.toFixed(2)}</strong> (default).
-            In this demo, the charge per action is <strong>${serviceFee.toFixed(2)}</strong> + processing fee ({payMethodLabel(previewMethod)}) <strong>{processingFees[previewMethod as keyof typeof processingFees].toFixed(2)}%</strong> (<strong>${calculateProcessingFee(previewMethod).toFixed(2)}</strong>) = <strong>${calculateTotal(previewMethod).toFixed(2)}</strong>.
-            <br />
-            Sender bonus (Per Sender ↔ Receiver): (Applies to all referral senders by default.) Each time a <strong>receiver pays</strong> for a referral (tracked when the receiver opens it),
-            the sender earns <strong>${senderBonus.toFixed(2)}</strong> by default.
-            <br />
-            Bulk purchase: A <strong>{bulkDiscount}% discount</strong> applies automatically for any organization when purchasing <strong>more than {bulkThreshold}</strong> referral credits.
-          </p>
+        <div className='grid grid-cols-1 lg:grid-cols-2 gap-3.5'>
+          <div className="bg-white border border-rcn-border rounded-2xl shadow-none p-4">
+            <h3 className="text-sm font-semibold m-0 mb-2.5">Referral &amp; Purchase Bonus</h3>
+            <p className="text-xs text-rcn-muted m-0 mb-3">
+              Bulk purchase: A <strong>{bulkDiscount}% discount</strong> applies automatically for any organization when purchasing <strong>more than {bulkThreshold}</strong> referral credits.
+            </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs text-rcn-muted font-semibold">Sender Bonus per Receiver Paid Referral ($)</label>
-              <input type="number" step="0.01" min="0" value={senderBonus} onChange={(e) => setSenderBonus(parseFloat(e.target.value) || 0)} className={inputClass} />
-              <label className="inline-flex items-center gap-2 mt-1 text-xs text-rcn-muted cursor-pointer">
-                <input type="checkbox" checked={applyToAll} onChange={(e) => setApplyToAll(e.target.checked)} />
-                Apply sender bonus to all referral senders (default)
-              </label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs text-rcn-muted font-semibold">Bulk Discount Threshold (credits)</label>
+                <input type="number" step="1" min="0" value={bulkThreshold} onChange={(e) => setBulkThreshold(parseInt(e.target.value) || 0)} className={inputClass} />
+                <p className="text-xs text-rcn-muted mt-1 mb-0">Discount applies when quantity &gt; threshold.</p>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs text-rcn-muted font-semibold">Bulk Discount (%)</label>
+                <input type="number" step="0.1" min="0" max="100" value={bulkDiscount} onChange={(e) => setBulkDiscount(parseFloat(e.target.value) || 0)} className={inputClass} />
+              </div>
             </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs text-rcn-muted font-semibold">Bulk Discount Threshold (credits)</label>
-              <input type="number" step="1" min="0" value={bulkThreshold} onChange={(e) => setBulkThreshold(parseInt(e.target.value) || 0)} className={inputClass} />
-              <p className="text-xs text-rcn-muted mt-1 mb-0">Discount applies when quantity &gt; threshold.</p>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs text-rcn-muted font-semibold">Bulk Discount (%)</label>
-              <input type="number" step="0.1" min="0" max="100" value={bulkDiscount} onChange={(e) => setBulkDiscount(parseFloat(e.target.value) || 0)} className={inputClass} />
-            </div>
+
+            <div className="h-px bg-rcn-border my-3.5"></div>
+
+
+
+            {/* Invoice Automation */}
+
           </div>
 
-          <div className="h-px bg-rcn-border my-3.5"></div>
+          <div className="bg-white border border-rcn-border rounded-2xl shadow-none p-4">
+            <h3 className="text-sm font-semibold m-0 mb-2.5">Top Up Organization Balance</h3>
+            <p className="text-xs text-rcn-muted m-0 mb-3">
 
-        
+              Top up organization balance
+            </p>
 
-          {/* Invoice Automation */}
-          {/* <div className="bg-white border border-rcn-border rounded-xl mt-3 p-3" style={{background: 'rgba(255,255,255,.55)'}}>
-            <div className="flex justify-between items-center">
-              <div>
-                <strong className="text-sm">Invoice Automation</strong>
-                <div className="text-xs text-rcn-muted mt-1">
-                  Invoices are created automatically when an organization purchases credits. This demo can open an email draft addressed to the organization email (mailto).
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs text-rcn-muted font-semibold">Organization</label>
+                <select className={inputClass}>
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                  {db.orgs.map((org: any) => (
+                    <option key={org.id} value={org.id}>{org.name} - {org.address?.state} {org.address?.zip}</option>
+                  ))}
+                </select>
               </div>
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border border-rcn-border bg-[#f8fcf9]">Auto</span>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs text-rcn-muted">Top Up credit amount</label>
+                <input type="number" step="0.01" min="0" className={inputClass} />
+              </div>
             </div>
-            <div className="h-px bg-rcn-border my-2"></div>
-            <label className="inline-flex items-start gap-2.5 cursor-pointer">
-              <input type="checkbox" checked={autoEmail} onChange={(e) => setAutoEmail(e.target.checked)} className="mt-0.5" />
-              <div>
-                <div className="text-sm font-bold">Auto-open email draft after invoice creation</div>
-                <div className="text-xs text-rcn-muted mt-0.5">
-                  If your browser blocks popups, you can send later from Financials → Invoices.
-                </div>
+
+            <Button variant="primary" className="w-full mt-3">Top Up</Button>
+
+
+
+
+            {/* Invoice Automation */}
+
+          </div>
+
+        </div>
+        <div className="bg-white border border-rcn-border rounded-xl mt-3 p-3" style={{ background: 'rgba(255,255,255,.55)' }}>
+          <div className="flex justify-between items-center">
+            <div>
+              <strong className="text-sm">Invoice Automation</strong>
+              <div className="text-xs text-rcn-muted mt-1">
+                Invoices are created automatically when an organization purchases credits. This demo can open an email draft addressed to the organization email (mailto).
               </div>
-            </label>
-          </div> */}
+            </div>
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border border-rcn-border bg-[#f8fcf9]">Auto</span>
+          </div>
+          <div className="h-px bg-rcn-border my-2"></div>
+          <label className="inline-flex items-start gap-2.5 cursor-pointer">
+            <input type="checkbox" checked={autoEmail} onChange={(e) => setAutoEmail(e.target.checked)} className="mt-0.5" />
+            <div>
+              <div className="text-sm font-bold">Auto-open email draft after invoice creation</div>
+              <div className="text-xs text-rcn-muted mt-0.5">
+                If your browser blocks popups, you can send later from Financials → Invoices.
+              </div>
+            </div>
+          </label>
         </div>
       </div>
     </>

@@ -111,10 +111,7 @@ export default function OrgPortalUserViewPage() {
               <label className="block text-xs text-rcn-muted mb-1">Phone</label>
               <input value={user.phone || ""} readOnly className="w-full px-2.5 py-2 text-sm rounded-xl border border-rcn-border bg-rcn-bg/50 read-only:bg-rcn-bg/50" />
             </div>
-            <div>
-              <label className="block text-xs text-rcn-muted mb-1">Role</label>
-              <input value={user.isAdmin ? "Admin" : (user.role || "User")} readOnly className="w-full px-2.5 py-2 text-sm rounded-xl border border-rcn-border bg-rcn-bg/50 read-only:bg-rcn-bg/50" />
-            </div>
+          
             <div className="sm:col-span-2">
               <label className="block text-xs text-rcn-muted mb-1">Notes</label>
               <textarea value={user.notes || ""} readOnly rows={2} className="w-full px-2.5 py-2 text-sm rounded-xl border border-rcn-border bg-rcn-bg/50 read-only:bg-rcn-bg/50 resize-y" />
