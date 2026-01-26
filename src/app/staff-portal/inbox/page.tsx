@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import type { Company } from "./types";
 import { DEMO_REFERRALS, DEMO_COMPANIES } from "./demo-data";
 import { SenderInbox, ReceiverInbox } from "@/components/staffComponents";
@@ -49,9 +50,9 @@ export default function StaffInboxPage() {
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap justify-end">
-          <button type="button" onClick={() => alert("Demo: route to Referral Form (Sender).")} className="border border-rcn-brand/25 bg-rcn-brand/10 text-rcn-accent-dark px-3 py-2.5 rounded-xl font-extrabold text-xs shadow-[0_10px_22px_rgba(2,6,23,.06)] whitespace-nowrap">
+          <Link href="/staff-portal/new-referral" className="border border-rcn-brand/25 bg-rcn-brand/10 text-rcn-accent-dark px-3 py-2.5 rounded-xl font-extrabold text-xs shadow-[0_10px_22px_rgba(2,6,23,.06)] whitespace-nowrap no-underline">
             + New Referral
-          </button>
+          </Link>
           {role === "SENDER" && (
             <button type="button" onClick={() => alert("Demo: open Add Referral Receiver form.")} className="border border-rcn-brand/30 bg-rcn-brand/10 text-rcn-accent-dark px-3 py-2.5 rounded-xl font-extrabold text-xs shadow-[0_10px_22px_rgba(2,6,23,.06)] whitespace-nowrap">
               Add Referral Receiver (if not listed)
