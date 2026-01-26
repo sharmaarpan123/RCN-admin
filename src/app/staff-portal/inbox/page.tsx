@@ -10,11 +10,9 @@ export default function StaffInboxPage() {
   const [referrals, setReferrals] = useState(() => JSON.parse(JSON.stringify(DEMO_REFERRALS)));
   const [companyDirectory, setCompanyDirectory] = useState<Company[]>(() => [...DEMO_COMPANIES]);
   const [role, setRole] = useState<"SENDER" | "RECEIVER">("SENDER");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [dateFilterDays, setDateFilterDays] = useState(30);
   const [query, setQuery] = useState("");
-  const [chatReceiverSelection, setChatReceiverSelection] = useState<Record<string, string>>({});
 
   return (
     <div className="max-w-[1280px] mx-auto p-[18px]">
@@ -33,7 +31,7 @@ export default function StaffInboxPage() {
             type="button"
             role="tab"
             aria-selected={role === "SENDER"}
-            onClick={() => { setRole("SENDER"); setSelectedId(null); }}
+            onClick={() => setRole("SENDER")}
             className={`border-0 bg-transparent px-3 py-2 rounded-full cursor-pointer font-extrabold text-xs ${role === "SENDER" ? "bg-rcn-brand/10 text-rcn-text border border-rcn-brand/20" : "text-rcn-muted"}`}
           >
             Sender Inbox
@@ -42,7 +40,7 @@ export default function StaffInboxPage() {
             type="button"
             role="tab"
             aria-selected={role === "RECEIVER"}
-            onClick={() => { setRole("RECEIVER"); setSelectedId(null); }}
+            onClick={() => setRole("RECEIVER")}
             className={`border-0 bg-transparent px-3 py-2 rounded-full cursor-pointer font-extrabold text-xs ${role === "RECEIVER" ? "bg-rcn-brand/10 text-rcn-text border border-rcn-brand/20" : "text-rcn-muted"}`}
           >
             Receiver Inbox
@@ -67,23 +65,17 @@ export default function StaffInboxPage() {
           setReferrals={setReferrals}
           companyDirectory={companyDirectory}
           setCompanyDirectory={setCompanyDirectory}
-          selectedId={selectedId}
-          setSelectedId={setSelectedId}
           statusFilter={statusFilter}
           setStatusFilter={setStatusFilter}
           dateFilterDays={dateFilterDays}
           setDateFilterDays={setDateFilterDays}
           query={query}
           setQuery={setQuery}
-          chatReceiverSelection={chatReceiverSelection}
-          setChatReceiverSelection={setChatReceiverSelection}
         />
       ) : (
         <ReceiverInbox
           referrals={referrals}
           setReferrals={setReferrals}
-          selectedId={selectedId}
-          setSelectedId={setSelectedId}
           statusFilter={statusFilter}
           setStatusFilter={setStatusFilter}
           dateFilterDays={dateFilterDays}
