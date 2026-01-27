@@ -453,7 +453,7 @@ export default function NewReferralPage() {
     <div className="max-w-[1280px] mx-auto  ">
       {/* Horizontal Sticky Navigation */}
       <nav className="md:sticky top-[5px] z-20 mb-3.5">
-        <div className="bg-gradient-to-b  from-rcn-brand   border border-slate-200/60 rounded-2xl shadow-sm p-3">
+        <div className="bg-gradient-to-b  from-rcn-brand  to-rcn-brand-light border border-slate-200/60 rounded-2xl shadow-sm p-3">
           <div className="flex items-center gap-2.5 flex-wrap overflow-x-auto">
             {[
               { id: "sender-form", label: "Patient Referral Form (Sender)" },
