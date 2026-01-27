@@ -2,6 +2,7 @@
 
 import CustomNextLink from '@/components/CustomNextLink';
 import NextLink from 'next/link';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 
 export default function Header() {
@@ -46,8 +47,8 @@ export default function Header() {
         <div className="max-w-[1120px] mx-auto px-[18px]">
           <div className="flex items-center justify-between py-3 gap-3.5">
             <NextLink href="#top" className="flex items-center gap-3 no-underline">
-              <div className="w-[42px] h-[42px] rounded-[14px] bg-linear-to-br from-rcn-brand to-rcn-brand-light shadow-[0_10px_22px_rgba(15,107,58,0.18)] relative shrink-0">
-                <div className="absolute inset-[10px] rounded-xl border-2 border-[rgba(255,255,255,0.75)] opacity-90" />
+              <div className="w-[42px] h-[42px] rounded-[14px] relative shrink-0 overflow-hidden shadow-[0_10px_22px_rgba(15,107,58,0.18)]">
+                <Image src="/logo.jpeg" alt="RCN Logo" fill className="object-cover" />
               </div>
               <div>
                 <strong className="block text-sm tracking-wide">Referral Coordination Network</strong>

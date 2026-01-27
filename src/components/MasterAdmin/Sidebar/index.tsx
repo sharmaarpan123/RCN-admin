@@ -1,5 +1,6 @@
 "use client"
 import React from 'react';
+import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { useApp } from '../../../context/AppContext';
 import { roleLabel, MODULE_PERMS } from '../../../utils/database';
@@ -135,7 +136,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
         ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
       <div className="flex gap-2.5 items-center px-2.5 py-3 border-b border-white/10 mb-3">
-        <div className="w-10 h-10 rounded-xl logo-gradient shadow-[0_8px_18px_rgba(0,0,0,0.25)]" aria-hidden="true"></div>
+        <div className="w-10 h-10 rounded-xl relative shrink-0 overflow-hidden shadow-[0_8px_18px_rgba(0,0,0,0.25)]">
+          <Image src="/logo.jpeg" alt="RCN Logo" fill className="object-cover" />
+        </div>
         <div className="flex-1">
           <h1 className="text-sm font-semibold m-0 leading-tight">RCN Admin</h1>
           <div className="text-xs text-rcn-dark-text/80">

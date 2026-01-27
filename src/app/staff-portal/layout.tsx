@@ -1,6 +1,7 @@
 "use client";
 
 import { useApp } from "@/context/AppContext";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -49,7 +50,9 @@ function StaffPortalSidebar({
         >
           ✕
         </button>
-        <div className="w-10 h-10 rounded-xl logo-gradient shadow-[0_8px_18px_rgba(0,0,0,0.25)]" aria-hidden="true" />
+        <div className="w-10 h-10 rounded-xl relative shrink-0 overflow-hidden shadow-[0_8px_18px_rgba(0,0,0,0.25)]">
+          <Image src="/logo.jpeg" alt="RCN Logo" fill className="object-cover" />
+        </div>
         <div>
           <h1 className="text-sm font-semibold m-0 leading-tight">Referral Coordination Network</h1>
           <p className="text-xs text-rcn-dark-text/80 m-0">Staff Portal</p>

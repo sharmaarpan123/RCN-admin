@@ -82,7 +82,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     // Org users (ORG_ADMIN, STAFF, or any user with orgId) → org-portal; System Admin → master-admin
     if (user.role === 'SYSTEM_ADMIN' || !user.orgId) {
       router.push('/master-admin/dashboard');
-    } else {
+    } else if(user.role === 'STAFF') {
+      router.push('/staff-portal');
+    } else if(user.role === 'ORG_ADMIN') {
       router.push('/org-portal');
     }
     return true;

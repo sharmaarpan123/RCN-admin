@@ -546,6 +546,12 @@ export const defaultPermissionsForUser = (role: string, adminCap: boolean) => {
       financials: false, reports: true, auditLog: !!adminCap, settings: false
     };
   }
+  if (role === "STAFF") {
+    return {
+      referralDashboard:true, userPanel:false, paymentAdjustmentSettings:false, 
+      bannerManagement:false, financials:false, reports:false, auditLog:false, settings:false
+    };
+  }
   return {
     referralDashboard:true, userPanel:false, paymentAdjustmentSettings:false, 
     bannerManagement:false, financials:false, reports:false, auditLog:false, settings:false

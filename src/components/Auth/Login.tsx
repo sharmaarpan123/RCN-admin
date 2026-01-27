@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { useApp } from '../../context/AppContext';
 import { seedDemo } from '../../utils/database';
 import Button from '../Button';
@@ -31,7 +32,9 @@ const Login: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-[1.1fr_0.9fr] gap-4">
           <div className="rounded-rcn-lg p-5 login-hero-gradient text-rcn-dark-text shadow-rcn min-h-[280px]">
             <div className="flex gap-3 items-center">
-              <div className="w-10 h-10 rounded-xl logo-gradient shadow-[0_8px_18px_rgba(0,0,0,0.25)]" aria-hidden="true"></div>
+              <div className="w-10 h-10 rounded-xl relative shrink-0 overflow-hidden shadow-[0_8px_18px_rgba(0,0,0,0.25)]">
+                <Image src="/logo.jpeg" alt="RCN Logo" fill className="object-cover" />
+              </div>
               <div>
                 <h2 className="text-lg font-semibold m-0 mb-2">Referral Coordination Network</h2>
                 <p className="text-rcn-dark-text/85 text-sm m-0">
