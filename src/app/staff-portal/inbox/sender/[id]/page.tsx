@@ -317,7 +317,7 @@ export default function SenderDetailPage() {
                 <div className="flex gap-2.5 items-center justify-between p-2.5 bg-rcn-brand/10 border-b border-rcn-brand/20">
                   <span className="text-rcn-muted text-xs font-black">Thread</span>
                   {selected.receivers.length > 1 ? (
-                    <select value={chatReceiverId || ""} onChange={(e) => setChatReceiverSelection((s) => ({ ...s, [selected.id]: e.target.value }))} className="min-w-[220px] border border-slate-200 bg-white rounded-xl py-2 px-2.5 text-xs font-[850] outline-none" aria-label="Select receiver chat thread">
+                    <select value={chatReceiverId || ""} onChange={(e) => setChatReceiverSelection((s) => ({ ...s, [selected.id]: e.target.value }))} className="min-w-[220px] border border-slate-200 bg-white rounded-xl py-2 px-2.5 text-xs font-normal outline-none" aria-label="Select receiver chat thread">
                       {selected.receivers.map((rx) => (
                         <option key={rx.receiverId} value={rx.receiverId}>{rx.name}</option>
                       ))}

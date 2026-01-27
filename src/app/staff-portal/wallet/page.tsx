@@ -273,7 +273,7 @@ export default function WalletPage() {
               }}
               placeholder="Enter number of credits"
               min="1"
-              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-[850] text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
+              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-normal text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
             />
             <p className="text-xs text-rcn-muted mt-1.5">Price: $2.00 per credit (5 credits = $10.00)</p>
           </div>
@@ -285,7 +285,7 @@ export default function WalletPage() {
               <select
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-[850] text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
+                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-normal text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
               >
                 <option value="creditCard">Credit Card</option>
                 <option value="debitCard">Debit Card</option>
@@ -387,7 +387,7 @@ export default function WalletPage() {
                     onChange={handleCardNumberChange}
                     placeholder="1234 5678 9012 3456"
                     maxLength={19}
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-[850] text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
+                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-normal text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
                     required
                   />
                 </div>
@@ -402,7 +402,7 @@ export default function WalletPage() {
                     value={cardDetails.nameOnCard}
                     onChange={(e) => setCardDetails((prev) => ({ ...prev, nameOnCard: e.target.value }))}
                     placeholder="John Doe"
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-[850] text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
+                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-normal text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
                     required
                   />
                 </div>
@@ -417,7 +417,7 @@ export default function WalletPage() {
                       <select
                         value={cardDetails.expiryMonth}
                         onChange={(e) => setCardDetails((prev) => ({ ...prev, expiryMonth: e.target.value }))}
-                        className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-[850] text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
+                        className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-normal text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
                         required
                       >
                         <option value="">Month</option>
@@ -430,7 +430,7 @@ export default function WalletPage() {
                       <select
                         value={cardDetails.expiryYear}
                         onChange={(e) => setCardDetails((prev) => ({ ...prev, expiryYear: e.target.value }))}
-                        className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-[850] text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
+                        className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-normal text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
                         required
                       >
                         <option value="">Year</option>
@@ -455,7 +455,7 @@ export default function WalletPage() {
                       }}
                       placeholder="123"
                       maxLength={4}
-                      className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-[850] text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
+                      className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-normal text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
                       required
                     />
                   </div>
@@ -475,7 +475,7 @@ export default function WalletPage() {
                     }}
                     placeholder="12345"
                     maxLength={10}
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-[850] text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
+                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-normal text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
                     required
                   />
                 </div>

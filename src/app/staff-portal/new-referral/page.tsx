@@ -206,7 +206,7 @@ function AddReceiverModal({
               value={company}
               onChange={(e) => setCompany(e.target.value)}
               placeholder="Company name"
-              className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-[850] focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+              className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
             />
           </div>
           <div>
@@ -216,7 +216,7 @@ function AddReceiverModal({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="email@example.com"
-              className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-[850] focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+              className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
             />
           </div>
           <div>
@@ -226,7 +226,7 @@ function AddReceiverModal({
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="(xxx) xxx-xxxx"
-              className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-[850] focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+              className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
             />
           </div>
           <div>
@@ -236,7 +236,7 @@ function AddReceiverModal({
               value={fax}
               onChange={(e) => setFax(e.target.value)}
               placeholder="(xxx) xxx-xxxx"
-              className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-[850] focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+              className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
             />
           </div>
           <div className="md:col-span-2">
@@ -246,7 +246,7 @@ function AddReceiverModal({
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               placeholder="Street, City, State, ZIP"
-              className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-[850] focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+              className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
             />
           </div>
           <div>
@@ -256,7 +256,7 @@ function AddReceiverModal({
             <select
               value={state}
               onChange={(e) => setState(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-[850] focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+              className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
             >
               <option value="" disabled>Select state</option>
               {US_STATES.filter((s) => s.value !== "ALL").map((s) => (
@@ -272,7 +272,7 @@ function AddReceiverModal({
               value={services}
               onChange={(e) => setServices(e.target.value)}
               placeholder="List services offered (e.g., Home Health, Hospice, DME, etc.)"
-              className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-[850] min-h-[95px] resize-y focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+              className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal min-h-[95px] resize-y focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
             />
           </div>
         </div>
@@ -505,7 +505,7 @@ export default function NewReferralPage() {
               <select
                 value={stateFilter}
                 onChange={(e) => setStateFilter(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-[850] focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
               >
                 {US_STATES.map((s) => (
                   <option key={s.value} value={s.value}>
@@ -524,7 +524,7 @@ export default function NewReferralPage() {
                   }
                   e.target.value = "";
                 }}
-                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-[850] focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
               >
                 <option value="" disabled selected>
                   Select a receiver
@@ -543,7 +543,7 @@ export default function NewReferralPage() {
                 value={receiverSearch}
                 onChange={(e) => setReceiverSearch(e.target.value)}
                 placeholder="Type to search Available Receivers..."
-                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-[850] focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
               />
             </div>
           </div>
@@ -654,7 +654,7 @@ export default function NewReferralPage() {
               value={otherServices}
               onChange={(e) => setOtherServices(e.target.value)}
               placeholder="Type any additional services needed..."
-              className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-[850] min-h-[95px] resize-y focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+              className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal min-h-[95px] resize-y focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
             />
           </div>
 
@@ -664,7 +664,7 @@ export default function NewReferralPage() {
               value={additionalNotes}
               onChange={(e) => setAdditionalNotes(e.target.value)}
               placeholder="Any additional referral notes..."
-              className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-[850] min-h-[95px] resize-y focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+              className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal min-h-[95px] resize-y focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
             />
           </div>
         </section>
@@ -692,7 +692,7 @@ export default function NewReferralPage() {
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 required
-                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-[850] focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
               />
             </div>
             <div>
@@ -704,7 +704,7 @@ export default function NewReferralPage() {
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 required
-                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-[850] focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
               />
             </div>
             <div>
@@ -716,7 +716,7 @@ export default function NewReferralPage() {
                 value={dob}
                 onChange={(e) => setDob(e.target.value)}
                 required
-                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-[850] focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
               />
             </div>
             <div>
@@ -727,7 +727,7 @@ export default function NewReferralPage() {
                 value={gender}
                 onChange={(e) => setGender(e.target.value)}
                 required
-                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-[850] focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
               >
                 <option value="" disabled>
                   Select
@@ -746,7 +746,7 @@ export default function NewReferralPage() {
                 onChange={(e) => setAddressOfCare(e.target.value)}
                 placeholder="Street, City, State, ZIP"
                 required
-                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-[850] focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
               />
             </div>
           </div>
@@ -783,7 +783,7 @@ export default function NewReferralPage() {
                   onChange={(e) => setPrimaryPayer(e.target.value)}
                   placeholder="e.g., BCBS, Aetna, Medicare"
                   required
-                  className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-[850] focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+                  className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
                 />
               </div>
               <div>
@@ -796,7 +796,7 @@ export default function NewReferralPage() {
                   onChange={(e) => setPrimaryPolicy(e.target.value)}
                   placeholder="Policy / Member ID"
                   required
-                  className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-[850] focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+                  className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
                 />
               </div>
               <div>
@@ -809,7 +809,7 @@ export default function NewReferralPage() {
                   onChange={(e) => setPrimaryPlanGroup(e.target.value)}
                   placeholder="Plan / Group"
                   required
-                  className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-[850] focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+                  className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
                 />
               </div>
             </div>
@@ -838,7 +838,7 @@ export default function NewReferralPage() {
                     value={block.payer}
                     onChange={(e) => updateInsuranceBlock(block.id, "payer", e.target.value)}
                     placeholder="e.g., BCBS, Aetna, Medicare"
-                    className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-[850] focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+                    className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
                   />
                 </div>
                 <div>
@@ -848,7 +848,7 @@ export default function NewReferralPage() {
                     value={block.policy}
                     onChange={(e) => updateInsuranceBlock(block.id, "policy", e.target.value)}
                     placeholder="Policy / Member ID"
-                    className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-[850] focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+                    className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
                   />
                 </div>
                 <div>
@@ -858,7 +858,7 @@ export default function NewReferralPage() {
                     value={block.planGroup}
                     onChange={(e) => updateInsuranceBlock(block.id, "planGroup", e.target.value)}
                     placeholder="Plan / Group"
-                    className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-[850] focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+                    className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
                   />
                 </div>
               </div>
@@ -914,7 +914,7 @@ export default function NewReferralPage() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 required
-                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-[850] focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
               />
             </div>
             <div>
@@ -923,7 +923,7 @@ export default function NewReferralPage() {
                 type="text"
                 value={language}
                 onChange={(e) => setLanguage(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-[850] focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
               />
             </div>
             <div>
@@ -933,7 +933,7 @@ export default function NewReferralPage() {
                 value={ssn}
                 onChange={(e) => setSsn(e.target.value)}
                 placeholder="XXX-XX-XXXX"
-                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-[850] focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
               />
             </div>
             <div>
@@ -942,7 +942,7 @@ export default function NewReferralPage() {
                 type="text"
                 value={representative}
                 onChange={(e) => setRepresentative(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-[850] focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
               />
             </div>
             <div className="md:col-span-2">
@@ -951,7 +951,7 @@ export default function NewReferralPage() {
                 value={otherInfo}
                 onChange={(e) => setOtherInfo(e.target.value)}
                 placeholder="Additional details visible after receiver unlock..."
-                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-[850] min-h-[95px] resize-y focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal min-h-[95px] resize-y focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
               />
             </div>
           </div>
@@ -1010,7 +1010,7 @@ export default function NewReferralPage() {
                 value={pcpName}
                 onChange={(e) => setPcpName(e.target.value)}
                 placeholder="PCP full name"
-                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-[850] focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
               />
             </div>
             <div className="md:col-span-2">
@@ -1020,7 +1020,7 @@ export default function NewReferralPage() {
                 value={pcpAddress}
                 onChange={(e) => setPcpAddress(e.target.value)}
                 placeholder="Street, City, State, ZIP"
-                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-[850] focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
               />
             </div>
             <div>
@@ -1030,7 +1030,7 @@ export default function NewReferralPage() {
                 value={pcpTel}
                 onChange={(e) => setPcpTel(e.target.value)}
                 placeholder="(xxx) xxx-xxxx"
-                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-[850] focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
               />
             </div>
             <div>
@@ -1040,7 +1040,7 @@ export default function NewReferralPage() {
                 value={pcpFax}
                 onChange={(e) => setPcpFax(e.target.value)}
                 placeholder="(xxx) xxx-xxxx"
-                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-[850] focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
               />
             </div>
             <div>
@@ -1050,7 +1050,7 @@ export default function NewReferralPage() {
                 value={pcpEmail}
                 onChange={(e) => setPcpEmail(e.target.value)}
                 placeholder="pcp@example.com"
-                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-[850] focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
               />
             </div>
             <div>
@@ -1060,7 +1060,7 @@ export default function NewReferralPage() {
                 value={pcpNpi}
                 onChange={(e) => setPcpNpi(e.target.value)}
                 placeholder="NPI number"
-                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-[850] focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+                className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
               />
             </div>
           </div>

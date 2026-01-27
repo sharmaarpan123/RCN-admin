@@ -84,7 +84,7 @@ export default function AdBanner() {
   const currentAd = ads[currentAdIndex];
 
   return (
-    <aside className="hidden 2xl:block fixed right-4 top-24 w-[300px] z-40" aria-label="Sponsored banner">
+    <aside className="hidden 2xl:block fixed right-4 top-28 w-[300px] z-60" aria-label="Sponsored banner">
       <div className="bg-[rgba(255,255,255,0.86)] border border-rcn-border-light rounded-rcn-lg shadow-[0_10px_30px_rgba(2,44,22,0.08)] overflow-hidden" role="complementary">
         <div className="flex items-center justify-between gap-2.5 px-3.5 py-3 border-b border-rcn-border-light bg-linear-to-br from-[rgba(15,107,58,0.10)] to-[rgba(31,138,76,0.08)]">
           <div className="text-[11px] tracking-[0.14em] uppercase text-rcn-muted font-black">

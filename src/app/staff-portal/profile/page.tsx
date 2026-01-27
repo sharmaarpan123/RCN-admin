@@ -162,7 +162,7 @@ export default function StaffProfilePage() {
               type="text"
               value={formData.firstName}
               onChange={(e) => handleChange("firstName", e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-[850] text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
+              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-normal text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
               placeholder="Enter first name"
             />
           </div>
@@ -177,7 +177,7 @@ export default function StaffProfilePage() {
               type="text"
               value={formData.lastName}
               onChange={(e) => handleChange("lastName", e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-[850] text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
+              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-normal text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
               placeholder="Enter last name"
             />
           </div>
@@ -192,7 +192,7 @@ export default function StaffProfilePage() {
               type="email"
               value={formData.email}
               onChange={(e) => handleChange("email", e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-[850] text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
+              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-normal text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
               placeholder="Enter email address"
             />
           </div>
@@ -207,7 +207,7 @@ export default function StaffProfilePage() {
               type="text"
               value={formData.address}
               onChange={(e) => handleChange("address", e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-[850] text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
+              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-normal text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
               placeholder="Enter address"
             />
           </div>
@@ -222,7 +222,7 @@ export default function StaffProfilePage() {
               type="tel"
               value={formData.phone}
               onChange={(e) => handleChange("phone", e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-[850] text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
+              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-normal text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
               placeholder="(312) 555-0100"
             />
           </div>
@@ -237,7 +237,7 @@ export default function StaffProfilePage() {
               type="tel"
               value={formData.fax}
               onChange={(e) => handleChange("fax", e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-[850] text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
+              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-normal text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
               placeholder="(312) 555-0199"
             />
           </div>
@@ -252,7 +252,7 @@ export default function StaffProfilePage() {
               value={formData.notes}
               onChange={(e) => handleChange("notes", e.target.value)}
               rows={4}
-              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-[850] text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10 resize-none"
+              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-normal text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10 resize-none"
               placeholder="Additional notes or information"
             />
           </div>

@@ -48,7 +48,7 @@ export default function OrgPortalDepartmentsPage() {
           <h1 className="text-xl font-bold m-0">Department</h1>
           <p className="text-sm text-rcn-muted m-0 mt-0.5">Create and manage departments under a branch.</p>
         </div>
-        <div className="flex gap-2 items-center flex-wrap">
+        <div className="flex gap-2 items-end flex-wrap">
           <div className="w-full sm:w-auto min-w-0">
             <label className="block text-xs text-rcn-muted mb-1">Branch</label>
             <select
@@ -61,7 +61,7 @@ export default function OrgPortalDepartmentsPage() {
               ))}
             </select>
           </div>
-          <Button variant="primary" size="sm" onClick={openAdd} disabled={!br}>+ Add Department</Button>
+          <Button variant="primary" size="md" onClick={openAdd} disabled={!br}>+ Add Department</Button>
         </div>
       </div>
 

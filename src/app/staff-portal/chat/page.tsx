@@ -6,7 +6,6 @@ import { fmtDate } from "@/app/staff-portal/inbox/helpers";
 import type { Referral, ChatMsg } from "@/app/staff-portal/inbox/types";
 import { ChatInput } from "@/components/staffComponents/ChatInput";
 
-const BOX_GRAD = "linear-gradient(90deg, rgba(15,107,58,.18), rgba(31,138,76,.12), rgba(31,138,76,.06))";
 
 interface ChatListItem {
   referralId: string;
@@ -124,11 +123,11 @@ export default function ChatPage() {
                           <div className="text-xs font-semibold text-rcn-text truncate">{chat.receiverName}</div>
                           <div className="text-[11px] text-rcn-muted font-[850] truncate">{chat.patientName}</div>
                         </div>
-                        {chat.lastMessage && (
+                       
                           <span className="text-[10px] text-rcn-muted font-black shrink-0">
-                            {new Date(chat.lastMessage.at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                            {new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" })}
                           </span>
-                        )}
+                       
                       </div>
                       {chat.lastMessage && (
                         <div className="text-[11px] text-rcn-muted truncate mt-1">{chat.lastMessage.text}</div>
@@ -183,9 +182,12 @@ export default function ChatPage() {
                                   }`}
                                 >
                                   <div className="text-[11px] text-rcn-muted font-black mb-1 flex gap-2 flex-wrap justify-between">
-                                    {m.fromName} <span>{fmtDate(m.at)}</span>
+                                    {m.fromName} 
                                   </div>
                                   <div className="text-[13px] font-[850] text-rcn-text leading-snug whitespace-pre-wrap">{m.text}</div>
+                                  <div className="text-[11px] text-rcn-muted font-black mb-1 flex gap-2 flex-wrap justify-end">
+                                  <span>{fmtDate(m.at)}</span>
+                                  </div>
                                 </div>
                               </div>
                             );
