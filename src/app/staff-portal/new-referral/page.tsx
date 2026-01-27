@@ -549,7 +549,7 @@ export default function NewReferralPage() {
           </div>
 
           {/* Receiver Mover */}
-          <div className="grid grid-cols-1 md:grid-cols-[1fr_120px_1fr] gap-3 items-center">
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-3 items-start">
             <div>
               <label className="block text-xs text-rcn-muted font-[850] mb-1.5">Available receivers (multi-select)</label>
               <select
@@ -575,36 +575,7 @@ export default function NewReferralPage() {
               <p className="text-xs text-rcn-muted text-center mt-1.5">Add a new receiver company to the list.</p>
             </div>
 
-            <div className="flex flex-col gap-2 justify-center">
-              <button
-                type="button"
-                onClick={() => moveReceiver("right")}
-                className="border border-rcn-border bg-white px-2.5 py-2 rounded-xl font-extrabold text-xs shadow text-center"
-              >
-                ▶
-              </button>
-              <button
-                type="button"
-                onClick={() => moveReceiver("allRight")}
-                className="border border-rcn-border bg-white px-2.5 py-2 rounded-xl font-extrabold text-xs shadow text-center"
-              >
-                ▶▶
-              </button>
-              <button
-                type="button"
-                onClick={() => moveReceiver("left")}
-                className="border border-rcn-border bg-white px-2.5 py-2 rounded-xl font-extrabold text-xs shadow text-center"
-              >
-                ◀
-              </button>
-              <button
-                type="button"
-                onClick={() => moveReceiver("allLeft")}
-                className="border border-rcn-border bg-white px-2.5 py-2 rounded-xl font-extrabold text-xs shadow text-center"
-              >
-                ◀◀
-              </button>
-            </div>
+            
 
             <div>
               <label className="block text-xs text-rcn-muted font-[850] mb-1.5">Selected receivers</label>
@@ -640,7 +611,7 @@ export default function NewReferralPage() {
 
           <p className="text-xs text-rcn-muted mb-3">Use the buttons to move services between Available and Requested.</p>
 
-          <div className="grid grid-cols-1 md:grid-cols-[1fr_120px_1fr] gap-3 items-center mb-3">
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-3 items-center mb-3">
             <div>
               <label className="block text-xs text-rcn-muted font-[850] mb-1.5">Available services</label>
               <select
@@ -657,36 +628,7 @@ export default function NewReferralPage() {
               </select>
             </div>
 
-            <div className="flex flex-col gap-2 justify-center">
-              <button
-                type="button"
-                onClick={() => moveService("right")}
-                className="border border-rcn-border bg-white px-2.5 py-2 rounded-xl font-extrabold text-xs shadow text-center"
-              >
-                ▶
-              </button>
-              <button
-                type="button"
-                onClick={() => moveService("allRight")}
-                className="border border-rcn-border bg-white px-2.5 py-2 rounded-xl font-extrabold text-xs shadow text-center"
-              >
-                ▶▶
-              </button>
-              <button
-                type="button"
-                onClick={() => moveService("left")}
-                className="border border-rcn-border bg-white px-2.5 py-2 rounded-xl font-extrabold text-xs shadow text-center"
-              >
-                ◀
-              </button>
-              <button
-                type="button"
-                onClick={() => moveService("allLeft")}
-                className="border border-rcn-border bg-white px-2.5 py-2 rounded-xl font-extrabold text-xs shadow text-center"
-              >
-                ◀◀
-              </button>
-            </div>
+           
 
             <div>
               <label className="block text-xs text-rcn-muted font-[850] mb-1.5">Requested services</label>

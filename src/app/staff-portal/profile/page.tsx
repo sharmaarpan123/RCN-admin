@@ -19,9 +19,9 @@ export default function StaffProfilePage() {
   });
 
   useEffect(() => {
-    if (session?.userId) {
+    // if (session?.userId) {
       const db = getDB();
-      const user = db.users.find((u: any) => u.id === session.userId);
+      const user = db?.users?.find((u: any) => u.id === session?.userId);
       if (user) {
         setFormData({
           firstName: user.firstName || "",
@@ -35,7 +35,7 @@ export default function StaffProfilePage() {
         });
       }
       setLoading(false);
-    }
+    // }
   }, [session]);
 
   const handleReset = () => {

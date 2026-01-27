@@ -6,11 +6,11 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const NAV = [
+  { href: "/staff-portal/profile", label: "Profile" },
   { href: "/staff-portal/inbox", label: "Inbox" },
   { href: "/staff-portal/chat", label: "Chat" },
   { href: "/staff-portal/new-referral", label: "New Referral" },
   { href: "/staff-portal/wallet", label: "Wallet" },
-  { href: "/staff-portal/profile", label: "Profile" },
 ] as const;
 
 function StaffPortalSidebar({

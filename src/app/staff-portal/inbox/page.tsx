@@ -51,11 +51,7 @@ export default function StaffInboxPage() {
           <Link href="/staff-portal/new-referral" className="border border-rcn-brand/25 bg-rcn-brand/10 text-rcn-accent-dark px-3 py-2.5 rounded-xl font-extrabold text-xs shadow-[0_10px_22px_rgba(2,6,23,.06)] whitespace-nowrap no-underline">
             + New Referral
           </Link>
-          {role === "SENDER" && (
-            <button type="button" onClick={() => alert("Demo: open Add Referral Receiver form.")} className="border border-rcn-brand/30 bg-rcn-brand/10 text-rcn-accent-dark px-3 py-2.5 rounded-xl font-extrabold text-xs shadow-[0_10px_22px_rgba(2,6,23,.06)] whitespace-nowrap">
-              Add Referral Receiver (if not listed)
-            </button>
-          )}
+          
         </div>
       </div>
 

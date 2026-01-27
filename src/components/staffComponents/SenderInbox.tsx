@@ -150,7 +150,7 @@ export function SenderInbox({
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border ${pillClass(st)}`}>{pillLabel(st)}</span>
                       </td>
                       <td className="p-2.5 text-rcn-muted text-xs font-[850]">{fmtDate(ref.sentAt)}</td>
-                      <td className="p-2.5">
+                      <td className="p-2.5 flex gap-1">
                         <button type="button" onClick={(e) => { e.stopPropagation(); router.push(`/staff-portal/inbox/sender/${ref.id}`); }} className="border border-rcn-brand/25 bg-rcn-brand/10 text-rcn-accent-dark px-2 py-1.5 rounded-xl font-extrabold text-xs shadow mr-1">View</button>
                         <button type="button" onClick={(e) => { e.stopPropagation(); openForward(ref.id); }} className="border border-slate-200 bg-white px-2 py-1.5 rounded-xl font-extrabold text-xs shadow">Forward</button>
                       </td>

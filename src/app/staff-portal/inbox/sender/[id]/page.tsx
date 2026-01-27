@@ -9,6 +9,7 @@ import { DEMO_REFERRALS, DEMO_COMPANIES } from "@/app/staff-portal/inbox/demo-da
 import { ForwardModal } from "@/components/staffComponents/ForwardModal";
 import { ChatInput } from "@/components/staffComponents/ChatInput";
 import { DocUploadInline } from "@/components/staffComponents/DocUploadInline";
+import Modal from "@/components/Modal";
 
 const BOX_GRAD = "linear-gradient(90deg, rgba(15,107,58,.18), rgba(31,138,76,.12), rgba(31,138,76,.06))";
 
@@ -21,6 +22,7 @@ export default function SenderDetailPage() {
   const [forwardRefId, setForwardRefId] = useState<string | null>(null);
   const [forwardSelectedCompany, setForwardSelectedCompany] = useState<Company | null>(null);
   const [chatReceiverSelection, setChatReceiverSelection] = useState<Record<string, string>>({});
+  const [deleteDocModal, setDeleteDocModal] = useState<{ refId: string; docIndex: number; docName: string } | null>(null);
   const chatBodyRef = useRef<HTMLDivElement>(null);
 
   const selected = useMemo(() => referrals.find((r) => r.id === params.id) ?? null, [referrals, params.id]);
@@ -47,21 +49,25 @@ export default function SenderDetailPage() {
     []
   );
 
-  const deleteDoc = useCallback(
-    (refId: string, docIndex: number) => {
-      const r = referrals.find((x) => x.id === refId);
-      const doc = r?.docs[docIndex];
-      if (!doc || !confirm(`Delete document: "${doc.name}" ?`)) return;
-      setReferrals((prev) =>
-        prev.map((x) => {
-          if (x.id !== refId) return x;
-          const docs = x.docs.filter((_, i) => i !== docIndex);
-          return { ...x, docs, comms: [...x.comms, { at: new Date(), who: "Sender", msg: `Deleted document: ${doc.name}.` }] };
-        })
-      );
-    },
-    [referrals]
-  );
+  const openDeleteDocModal = useCallback((refId: string, docIndex: number) => {
+    const r = referrals.find((x) => x.id === refId);
+    const doc = r?.docs[docIndex];
+    if (!doc) return;
+    setDeleteDocModal({ refId, docIndex, docName: doc.name });
+  }, [referrals]);
+
+  const confirmDeleteDoc = useCallback(() => {
+    if (!deleteDocModal) return;
+    const { refId, docIndex, docName } = deleteDocModal;
+    setReferrals((prev) =>
+      prev.map((x) => {
+        if (x.id !== refId) return x;
+        const docs = x.docs.filter((_, i) => i !== docIndex);
+        return { ...x, docs, comms: [...x.comms, { at: new Date(), who: "Sender", msg: `Deleted document: ${docName}.` }] };
+      })
+    );
+    setDeleteDocModal(null);
+  }, [deleteDocModal]);
 
   const sendChatMessage = useCallback(
     (refId: string, receiverId: string, text: string) => {
@@ -266,7 +272,7 @@ export default function SenderDetailPage() {
                             <td className="p-2.5"><strong>{d.name}</strong>{d.fileName && <div className="text-rcn-muted text-xs">File: {d.fileName}</div>}</td>
                             <td className="p-2.5">{d.type}</td>
                             <td className="p-2.5"><button type="button" onClick={() => alert(`Demo: download ${d.name}`)} className="border border-slate-200 bg-white px-2 py-1.5 rounded-xl text-xs font-extrabold shadow">Download</button></td>
-                            <td className="p-2.5"><button type="button" onClick={() => deleteDoc(selected.id, idx)} className="border border-red-200 bg-red-50 text-red-700 px-2 py-1.5 rounded-xl text-xs font-extrabold shadow">Delete</button></td>
+                            <td className="p-2.5"><button type="button" onClick={() => openDeleteDocModal(selected.id, idx)} className="border border-red-200 bg-red-50 text-red-700 px-2 py-1.5 rounded-xl text-xs font-extrabold shadow">Delete</button></td>
                           </tr>
                         ))}
                       </tbody>
@@ -386,6 +392,38 @@ export default function SenderDetailPage() {
         onForward={(company, customServices) => forwardRefId && forwardReferral(forwardRefId, company, customServices)}
         onAddCompanyAndSelect={addCompanyAndSelect}
       />
+
+      <Modal
+        isOpen={deleteDocModal !== null}
+        onClose={() => setDeleteDocModal(null)}
+        maxWidth="500px"
+      >
+        <div className="p-4">
+          <h3 className="m-0 text-base font-semibold mb-3 flex items-center gap-2.5">
+            <span className="text-2xl">🗑️</span>
+            Delete Document
+          </h3>
+          <p className="m-0 mb-4 text-sm text-rcn-text">
+            Are you sure you want to delete the document <strong>"{deleteDocModal?.docName}"</strong>? This action cannot be undone.
+          </p>
+          <div className="flex gap-2.5 justify-end">
+            <button
+              type="button"
+              onClick={() => setDeleteDocModal(null)}
+              className="border border-slate-200 bg-white text-rcn-text px-4 py-2 rounded-xl font-extrabold text-xs shadow hover:bg-slate-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={confirmDeleteDoc}
+              className="border border-red-200 bg-red-50 text-red-700 px-4 py-2 rounded-xl font-extrabold text-xs shadow hover:bg-red-100"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
