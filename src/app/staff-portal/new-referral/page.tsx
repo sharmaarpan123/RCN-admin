@@ -480,16 +480,14 @@ export default function NewReferralPage() {
                       element.scrollIntoView({ behavior: "smooth", block: "start" });
                     }
                   }}
-                  className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
-                    isActive
+                  className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all whitespace-nowrap ${isActive
                       ? "bg-[#d4f4e0] border border-[#4ade80] text-rcn-text shadow-sm"
                       : "bg-white border border-slate-300 text-rcn-text hover:bg-slate-50"
-                  }`}
+                    }`}
                 >
                   <span
-                    className={`w-2 h-2 rounded-full shrink-0 ${
-                      isActive ? "bg-[#22c55e]" : "bg-slate-400"
-                    }`}
+                    className={`w-2 h-2 rounded-full shrink-0 ${isActive ? "bg-[#22c55e]" : "bg-slate-400"
+                      }`}
                   />
                   {item.label}
                 </a>
@@ -563,6 +561,7 @@ export default function NewReferralPage() {
                 value={stateFilter}
                 onChange={(e) => setStateFilter(e.target.value)}
                 className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+
               >
                 {US_STATES.map((s) => (
                   <option key={s.value} value={s.value}>
@@ -632,7 +631,7 @@ export default function NewReferralPage() {
               <p className="text-xs text-rcn-muted text-center mt-1.5">Add a new receiver company to the list.</p>
             </div>
 
-            
+
 
             <div>
               <label className="block text-xs text-rcn-muted font-[850] mb-1.5">Selected receivers</label>
@@ -685,7 +684,7 @@ export default function NewReferralPage() {
               </select>
             </div>
 
-           
+
 
             <div>
               <label className="block text-xs text-rcn-muted font-[850] mb-1.5">Requested services</label>

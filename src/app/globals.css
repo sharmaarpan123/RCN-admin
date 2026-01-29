@@ -64,6 +64,11 @@
   }
 }
 
+select option {
+  white-space: normal;
+  word-break: break-word;
+}
+
 @layer utilities {
   /* Monospace font utility */
   .font-mono {
