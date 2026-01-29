@@ -128,7 +128,7 @@ function StaffPortalLayoutInner({ children }: { children: React.ReactNode }) {
         <span className="font-semibold text-sm">Staff Portal</span>
       </header>
       <StaffPortalSidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-      <main className="flex-1  p-4 pt-14 lg:p-6 lg:pt-6">{children}</main>
+      <main className="flex-1  p-4 pt-14 lg:p-6 lg:pt-6 overflow-auto">{children}</main>
     </div>
   );
 }

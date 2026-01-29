@@ -118,11 +118,11 @@ export function SenderInbox({
             ))}
           </div>
         </div>
-        <div className="overflow-x-auto">
+        <div className="overflow-auto max-w-full">
           {filtered.length === 0 ? (
             <div className="py-5 px-3.5 text-center text-rcn-muted font-extrabold text-[13px]">No referrals match your filters.</div>
           ) : (
-            <table className="w-full border-collapse text-xs">
+            <table className="w-full border-collapse text-xs ">
               <thead>
                 <tr className="bg-rcn-brand/10">
                   <th className="text-left p-2.5 font-black text-[11px] uppercase tracking-wide border-b border-slate-200">Referral ID</th>
