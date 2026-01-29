@@ -19,7 +19,15 @@ interface ChatListItem {
 export default function ChatPage() {
   const [referrals, setReferrals] = useState<Referral[]>(() => JSON.parse(JSON.stringify(DEMO_REFERRALS)));
   const [selectedChat, setSelectedChat] = useState<{ referralId: string; receiverId: string } | null>(null);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const chatBodyRef = useRef<HTMLDivElement>(null);
+
+  // Close mobile sidebar when body scroll is locked
+  useEffect(() => {
+    if (mobileSidebarOpen) document.body.style.overflow = "hidden";
+    else document.body.style.overflow = "";
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileSidebarOpen]);
 
   // Get all chats from referrals
   const chatList = useMemo<ChatListItem[]>(() => {
@@ -48,30 +56,31 @@ export default function ChatPage() {
     });
   }, [referrals]);
 
-  // Get selected referral and thread
+  // Effective selected chat: use first in list when none selected
+  const displayChat = useMemo(
+    () => selectedChat ?? (chatList.length > 0
+      ? { referralId: chatList[0].referralId, receiverId: chatList[0].receiverId }
+      : null),
+    [selectedChat, chatList]
+  );
+
+  // Get selected referral and thread (use displayChat so first chat shows when none selected)
   const selectedReferral = useMemo(() => {
-    if (!selectedChat) return null;
-    return referrals.find((r) => r.id === selectedChat.referralId) ?? null;
-  }, [referrals, selectedChat]);
+    if (!displayChat) return null;
+    return referrals.find((r) => r.id === displayChat.referralId) ?? null;
+  }, [referrals, displayChat]);
 
   const thread = useMemo(() => {
-    if (!selectedChat || !selectedReferral) return [];
-    return selectedReferral.chatByReceiver?.[selectedChat.receiverId] || [];
-  }, [selectedChat, selectedReferral]);
-
-  // Auto-select first chat if none selected
-  useEffect(() => {
-    if (!selectedChat && chatList.length > 0) {
-      setSelectedChat({ referralId: chatList[0].referralId, receiverId: chatList[0].receiverId });
-    }
-  }, [chatList, selectedChat]);
+    if (!displayChat || !selectedReferral) return [];
+    return selectedReferral.chatByReceiver?.[displayChat.receiverId] || [];
+  }, [displayChat, selectedReferral]);
 
   // Auto-scroll to bottom when thread updates
   useEffect(() => {
     if (chatBodyRef.current) {
       chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
     }
-  }, [thread.length, selectedChat]);
+  }, [thread.length, displayChat]);
 
   const sendChatMessage = useCallback(
     (refId: string, receiverId: string, text: string) => {
@@ -90,7 +99,7 @@ export default function ChatPage() {
     []
   );
 
-  const selectedReceiver = selectedReferral?.receivers.find((r) => r.receiverId === selectedChat?.receiverId);
+  const selectedReceiver = selectedReferral?.receivers.find((r) => r.receiverId === displayChat?.receiverId);
 
   return (
     <div className="max-w-[1600px] mx-auto p-[18px]">
@@ -99,21 +108,50 @@ export default function ChatPage() {
           <h2 className="m-0 text-sm font-semibold tracking-wide">Chat</h2>
           <p className="m-0 mt-1 text-rcn-muted text-xs font-[850]">Communicate with receivers about referrals.</p>
         </div>
-        <div className="flex h-[calc(100vh-220px)] min-h-[600px]">
-          {/* Sidebar - Chat List */}
-          <div className="w-[320px] border-r border-slate-200 bg-white/50 overflow-y-auto">
-            <div className="p-3 border-b border-slate-200 bg-white/90 sticky top-0 z-10">
+        <div className="flex h-[calc(100vh-220px)] min-h-[600px] relative">
+          {/* Mobile overlay when sidebar open */}
+          {mobileSidebarOpen && (
+            <div
+              className="md:hidden fixed inset-0 bg-black/50 z-40"
+              onClick={() => setMobileSidebarOpen(false)}
+              aria-hidden="true"
+            />
+          )}
+
+          {/* Sidebar - Chat List (toggleable on mobile) */}
+          <aside
+            className={`
+              w-[280px] sm:w-[320px] h-full shrink-0 border-r border-slate-200 bg-white overflow-y-auto
+              md:relative md:translate-x-0 md:z-auto md:bg-white/50
+              fixed top-0 left-0 z-50 shadow-xl md:shadow-none
+              transition-transform duration-200 ease-out
+              ${mobileSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+            `}
+            aria-label="Chat list"
+          >
+            <div className="p-3 border-b border-slate-200 bg-white/90 sticky top-0 z-10 flex items-center justify-between gap-2">
               <h3 className="m-0 text-xs font-semibold text-rcn-muted">All Chats</h3>
+              <button
+                type="button"
+                onClick={() => setMobileSidebarOpen(false)}
+                aria-label="Close chat list"
+                className="md:hidden w-8 h-8 flex items-center justify-center rounded-lg text-rcn-muted hover:bg-slate-100"
+              >
+                ✕
+              </button>
             </div>
             {chatList.length > 0 ? (
               <div className="p-2">
                 {chatList.map((chat) => {
-                  const isSelected = selectedChat?.referralId === chat.referralId && selectedChat?.receiverId === chat.receiverId;
+                  const isSelected = displayChat?.referralId === chat.referralId && displayChat?.receiverId === chat.receiverId;
                   return (
                     <button
                       key={`${chat.referralId}-${chat.receiverId}`}
                       type="button"
-                      onClick={() => setSelectedChat({ referralId: chat.referralId, receiverId: chat.receiverId })}
+                      onClick={() => {
+                        setSelectedChat({ referralId: chat.referralId, receiverId: chat.receiverId });
+                        setMobileSidebarOpen(false); // Close sidebar on mobile when selecting a chat
+                      }}
                       className={`w-full text-left p-3 rounded-xl mb-2 transition-all ${
                         isSelected ? "bg-rcn-brand/10 border-2 border-rcn-brand/30" : "bg-white/80 border border-slate-200 hover:bg-slate-50"
                       }`}
@@ -123,11 +161,11 @@ export default function ChatPage() {
                           <div className="text-xs font-semibold text-rcn-text truncate">{chat.receiverName}</div>
                           <div className="text-[11px] text-rcn-muted font-[850] truncate">{chat.patientName}</div>
                         </div>
-                       
+                        {chat.lastMessage && (
                           <span className="text-[10px] text-rcn-muted font-black shrink-0">
-                            {new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                            {new Date(chat.lastMessage.at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
                           </span>
-                       
+                        )}
                       </div>
                       {chat.lastMessage && (
                         <div className="text-[11px] text-rcn-muted truncate mt-1">{chat.lastMessage.text}</div>
@@ -140,14 +178,33 @@ export default function ChatPage() {
             ) : (
               <div className="p-4 text-center text-rcn-muted text-sm">No chats yet.</div>
             )}
-          </div>
+          </aside>
 
           {/* Main Area - Messages */}
-          <div className="flex-1 flex flex-col bg-white/30">
-            {selectedChat && selectedReferral && selectedReceiver ? (
+          <div className="flex-1 flex flex-col bg-white/30 min-w-0">
+            {/* Mobile: toggle to open chat list */}
+            <div className="md:hidden flex items-center gap-2 p-3 border-b border-slate-200 bg-white/90">
+              <button
+                type="button"
+                onClick={() => setMobileSidebarOpen(true)}
+                aria-label="Open chat list"
+                className="w-10 h-10 flex items-center justify-center rounded-xl text-rcn-text hover:bg-slate-100 border border-slate-200"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <line x1="3" y1="12" x2="21" y2="12" />
+                  <line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
+              </button>
+              <span className="text-sm font-semibold text-rcn-text">
+                {displayChat && selectedReceiver ? selectedReceiver.name : "Chat"}
+              </span>
+            </div>
+
+            {displayChat && selectedReferral && selectedReceiver ? (
               <>
-                {/* Chat Header */}
-                <div className="p-3.5 border-b border-slate-200 bg-white/90">
+                {/* Chat Header (desktop) */}
+                <div className="p-3.5 border-b border-slate-200 bg-white/90 hidden md:block">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="m-0 text-sm font-semibold">{selectedReceiver.name}</h3>
@@ -198,8 +255,8 @@ export default function ChatPage() {
                     </div>
                     <ChatInput
                       selected={selectedReferral}
-                      chatReceiverId={selectedChat.receiverId}
-                      onSend={(rid, t) => sendChatMessage(selectedChat.referralId, rid, t)}
+                      chatReceiverId={displayChat.receiverId}
+                      onSend={(rid, t) => sendChatMessage(displayChat.referralId, rid, t)}
                       role="SENDER"
                     />
                   </div>
