@@ -74,7 +74,7 @@ export function ReceiverInbox({
         <p className="m-0 mt-1 text-rcn-muted text-xs font-[850]">Signed in as: {RECEIVER_CTX.receiverName}.</p>
       </div>
       <div className="flex flex-col gap-2.5 p-3 border-b border-slate-200 bg-white/90">
-        <input id="q" type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search patient, DOB, receiver, referral ID…" className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-[850] text-rcn-text" aria-label="Search inbox" />
+        <input id="q" type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search patient, DOB, receiver, referral ID…" className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px]  text-rcn-text" aria-label="Search inbox" />
         <div className="flex gap-2 flex-wrap" aria-label="Status filters">
           {["ALL", "PENDING", "ACCEPTED", "REJECTED", "PAID", "COMPLETED"].map((f) => (
             <button key={f} type="button" onClick={() => setStatusFilter(f)} className={`inline-flex items-center gap-1.5 px-2.5 py-2 rounded-full border cursor-pointer text-xs font-extrabold select-none ${statusFilter === f ? "bg-rcn-brand/10 border-rcn-brand/20 text-rcn-accent-dark" : "border-slate-200 bg-white text-rcn-muted"}`}>

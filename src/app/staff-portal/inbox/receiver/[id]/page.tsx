@@ -4,7 +4,7 @@ import React, { useState, useCallback, useMemo, useRef, useEffect } from "react"
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { RECEIVER_CTX } from "@/app/staff-portal/inbox/demo-data";
-import { fmtDate, pillClass, pillLabel, scrollToId } from "@/app/staff-portal/inbox/helpers";
+import { fmtDate, pillClass, scrollToId } from "@/app/staff-portal/inbox/helpers";
 import type { Referral } from "@/app/staff-portal/inbox/types";
 import { DEMO_REFERRALS } from "@/app/staff-portal/inbox/demo-data";
 import { ChatInput } from "@/components/staffComponents/ChatInput";

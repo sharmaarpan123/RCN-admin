@@ -52,7 +52,7 @@ export default function OrgPortalUsersPage() {
                 <th className="px-2 py-2 sm:px-3 sm:py-2.5 text-left text-xs uppercase tracking-wide text-rcn-muted font-semibold">Role</th>
                 <th className="px-2 py-2 sm:px-3 sm:py-2.5 text-left text-xs uppercase tracking-wide text-rcn-muted font-semibold">Status</th>
                 <th className="px-2 py-2 sm:px-3 sm:py-2.5 text-left text-xs uppercase tracking-wide text-rcn-muted font-semibold">Assigned</th>
-                <th className="px-2 py-2 sm:px-3 sm:py-2.5 text-right text-xs uppercase tracking-wide text-rcn-muted font-semibold">Actions</th>
+                <th className="px-2 py-2 sm:px-3 sm:py-2.5 text-left text-xs uppercase tracking-wide text-rcn-muted font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -68,7 +68,7 @@ export default function OrgPortalUsersPage() {
                   <td className="px-2 py-2 sm:px-3 sm:py-2.5">{u.isAdmin ? "Admin" : (u.role || "User")}</td>
                   <td className="px-2 py-2 sm:px-3 sm:py-2.5">{u.isActive ? "Active" : "Inactive"}</td>
                   <td className="px-2 py-2 sm:px-3 sm:py-2.5">{u.orgAssigned ? "Yes" : "No"}</td>
-                  <td className="px-2 py-2 sm:px-3 sm:py-2.5 text-right whitespace-nowrap">
+                  <td className="px-2 py-2 sm:px-3 sm:py-2.5 text-left whitespace-nowrap">
                     <CustomNextLink href={`/org-portal/users/${u.id}`} variant="secondary" size="sm">View</CustomNextLink>
                     <span className="inline-block w-1.5 sm:w-2" />
                     <CustomNextLink href={`/org-portal/users/${u.id}/edit`} variant="secondary" size="sm">Edit</CustomNextLink>

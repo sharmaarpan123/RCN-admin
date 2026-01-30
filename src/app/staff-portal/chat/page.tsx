@@ -241,7 +241,7 @@ export default function ChatPage() {
                                   <div className="text-[11px] text-rcn-muted font-black mb-1 flex gap-2 flex-wrap justify-between">
                                     {m.fromName} 
                                   </div>
-                                  <div className="text-[13px] font-[850] text-rcn-text leading-snug whitespace-pre-wrap">{m.text}</div>
+                                  <div className="text-[13px] font-[450] text-rcn-text leading-snug whitespace-pre-wrap">{m.text}</div>
                                   <div className="text-[11px] text-rcn-muted font-black mb-1 flex gap-2 flex-wrap justify-end">
                                   <span>{fmtDate(m.at)}</span>
                                   </div>
