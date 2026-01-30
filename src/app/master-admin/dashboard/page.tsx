@@ -11,7 +11,7 @@ import {
   audit,
   centsToMoney
 } from '../../../utils/database';
-import { Button } from '../../../components';
+import { Button, StateSelect } from '../../../components';
 
 const Dashboard: React.FC = () => {
   const { db, refreshDB, showToast, openModal, closeModal } = useApp();
@@ -416,9 +416,13 @@ const Dashboard: React.FC = () => {
             </div>
             <div className="flex flex-col gap-1.5 min-w-[120px]">
               <label className="text-xs text-rcn-muted">State</label>
-              <select value={senderFilterState} onChange={(e) => setSenderFilterState(e.target.value)} className={inputClass}>
-                {US_STATES.map(s => <option key={s} value={s}>{s === '' ? 'All' : s}</option>)}
-              </select>
+              <StateSelect
+                value={senderFilterState}
+                onChange={setSenderFilterState}
+                options={US_STATES}
+                className={inputClass}
+                aria-label="Filter by state"
+              />
             </div>
             <div className="flex flex-col gap-1.5 min-w-[120px]">
               <label className="text-xs text-rcn-muted">Zip</label>
@@ -478,9 +482,13 @@ const Dashboard: React.FC = () => {
             </div>
             <div className="flex flex-col gap-1.5 min-w-[120px]">
               <label className="text-xs text-rcn-muted">State</label>
-              <select value={receiverFilterState} onChange={(e) => setReceiverFilterState(e.target.value)} className={inputClass}>
-                {US_STATES.map(s => <option key={s} value={s}>{s === '' ? 'All' : s}</option>)}
-              </select>
+              <StateSelect
+                value={receiverFilterState}
+                onChange={setReceiverFilterState}
+                options={US_STATES}
+                className={inputClass}
+                aria-label="Filter by state"
+              />
             </div>
             <div className="flex flex-col gap-1.5 min-w-[120px]">
               <label className="text-xs text-rcn-muted">Zip</label>
