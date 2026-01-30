@@ -3,34 +3,20 @@
 import { useOrgPortal } from "@/context/OrgPortalContext";
 import type { Branch } from "@/context/OrgPortalContext";
 import { Button, Modal, TableLayout } from "@/components";
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import type { TableColumn } from "@/components";
 
 export default function OrgPortalBranchesPage() {
   const { branches, addBranch, renameBranch } = useOrgPortal();
   const [modal, setModal] = useState<{ mode: "add" } | { mode: "edit"; id: string; name: string } | null>(null);
   const [name, setName] = useState("");
+  const [search, setSearch] = useState("");
 
   const brs = branches();
-
-  const columns: TableColumn<Branch>[] = useMemo(
-    () => [
-      { head: "Name", accessor: "name", component: (row) => <span className="font-medium">{row.name}</span> },
-      {
-        head: "Departments",
-        component: (row) => <span className="text-rcn-muted">{(row.departments || []).length} departments</span>,
-      },
-      {
-        head: "Actions",
-        thClassName: "text-right",
-        tdClassName: "text-right",
-        component: (row) => (
-          <Button variant="secondary" size="sm" onClick={() => openEdit(row.id, row.name)}>Edit</Button>
-        ),
-      },
-    ],
-    []
-  );
+  const searchLower = search.trim().toLowerCase();
+  const filteredBrs = searchLower
+    ? brs.filter((b) => b.name.toLowerCase().includes(searchLower) || b.id.toLowerCase().includes(searchLower))
+    : brs;
 
   const openAdd = () => {
     setName("");
@@ -53,6 +39,22 @@ export default function OrgPortalBranchesPage() {
     setModal(null);
   };
 
+  const columns: TableColumn<Branch>[] = [
+    { head: "Name", accessor: "name", component: (row) => <span className="font-medium">{row.name}</span> },
+    {
+      head: "Departments",
+      component: (row) => <span className="text-rcn-muted">{(row.departments || []).length} departments</span>,
+    },
+    {
+      head: "Actions",
+      thClassName: "text-right",
+      tdClassName: "text-right",
+      component: (row) => (
+        <Button variant="secondary" size="sm" onClick={() => openEdit(row.id, row.name)}>Edit</Button>
+      ),
+    },
+  ];
+
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
@@ -66,11 +68,33 @@ export default function OrgPortalBranchesPage() {
       <div className="bg-rcn-card border border-rcn-border rounded-2xl shadow-rcn overflow-hidden">
         <div className="p-4">
           <p className="text-xs text-rcn-muted mb-3">Branches belong to this organization only. Users may be assigned to multiple branches.</p>
+          <div className="flex flex-col sm:flex-row gap-2 mb-3">
+            <div className="flex-1 min-w-0">
+              <label className="sr-only" htmlFor="branch-search">Search branches</label>
+              <input
+                id="branch-search"
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by name or ID"
+                className="w-full px-2.5 py-2 text-sm rounded-xl border border-rcn-border bg-white focus:outline-none focus:ring-2 focus:ring-rcn-accent/30"
+              />
+            </div>
+            {search && (
+              <Button variant="secondary" size="sm" onClick={() => setSearch("")}>
+                Clear
+              </Button>
+            )}
+          </div>
           <div className="border border-rcn-border rounded-xl overflow-hidden">
             <TableLayout<Branch>
               columns={columns}
-              data={brs}
-              emptyMessage='No branches yet. Click "+ Add Branch" to create one.'
+              data={filteredBrs}
+              emptyMessage={
+                search.trim()
+                  ? 'No branches match your search.'
+                  : 'No branches yet. Click "+ Add Branch" to create one.'
+              }
               wrapperClassName="min-w-[260px]"
               getRowKey={(row) => row.id}
             />

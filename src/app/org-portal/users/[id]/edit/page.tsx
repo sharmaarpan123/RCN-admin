@@ -3,14 +3,12 @@
 import { useOrgPortal } from "@/context/OrgPortalContext";
 import type { OrgUser } from "@/context/OrgPortalContext";
 import { Button, CustomNextLink } from "@/components";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
-export default function OrgPortalUserEditPage() {
-  const params = useParams<{ id: string }>();
+function UserEditForm({ user }: { user: OrgUser }) {
   const router = useRouter();
   const {
-    users,
     userDisplayName: ctxDisplayName,
     branches,
     findBranch,
@@ -24,44 +22,27 @@ export default function OrgPortalUserEditPage() {
     toast,
   } = useOrgPortal();
 
-  const user = users.find((u) => u.id === params.id);
   const brs = branches();
 
-  const [firstName, setFirstName] = useState(user?.firstName ?? "");
-  const [lastName, setLastName] = useState(user?.lastName ?? "");
-  const [email, setEmail] = useState(user?.email ?? "");
-  const [phone, setPhone] = useState(user?.phone ?? "");
-  const [role, setRole] = useState(user?.role ?? "User");
-  const [isAdmin, setIsAdmin] = useState(user?.isAdmin ?? false);
-  const [isActive, setIsActive] = useState(user?.isActive ?? true);
-  const [notes, setNotes] = useState(user?.notes ?? "");
-  const [branchIds, setBranchIds] = useState<Set<string>>(new Set(user?.branchIds ?? []));
-  const [deptIds, setDeptIds] = useState<Set<string>>(new Set(user?.deptIds ?? []));
+  const [firstName, setFirstName] = useState(user.firstName ?? "");
+  const [lastName, setLastName] = useState(user.lastName ?? "");
+  const [email, setEmail] = useState(user.email ?? "");
+  const [phone, setPhone] = useState(user.phone ?? "");
+  const [role, setRole] = useState(user.role ?? "User");
+  const [isAdmin, setIsAdmin] = useState(user.isAdmin ?? false);
+  const [isActive, setIsActive] = useState(user.isActive ?? true);
+  const [notes, setNotes] = useState(user.notes ?? "");
+  const [branchIds, setBranchIds] = useState<Set<string>>(new Set(user.branchIds ?? []));
+  const [deptIds, setDeptIds] = useState<Set<string>>(new Set(user.deptIds ?? []));
   const [showPassword, setShowPassword] = useState(false);
   const [p1, setP1] = useState("");
   const [p2, setP2] = useState("");
-
-  useEffect(() => {
-    if (user) {
-      setFirstName(user.firstName);
-      setLastName(user.lastName);
-      setEmail(user.email ?? "");
-      setPhone(user.phone ?? "");
-      setRole(user.role ?? "User");
-      setIsAdmin(user.isAdmin);
-      setIsActive(user.isActive);
-      setNotes(user.notes ?? "");
-      setBranchIds(new Set(user.branchIds ?? []));
-      setDeptIds(new Set(user.deptIds ?? []));
-    }
-  }, [user?.id]);
 
   const toggleBranch = (id: string) => setBranchIds((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   const toggleDept = (id: string) => setDeptIds((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   const showBranchIds = Array.from(branchIds);
 
   const handleSave = () => {
-    if (!user) return;
     const form: Partial<OrgUser> = { firstName, lastName, email, phone, role, isAdmin, isActive, notes };
     if (!saveUser(user, form)) return;
     saveUserBranches(user, Array.from(branchIds));
@@ -70,7 +51,6 @@ export default function OrgPortalUserEditPage() {
   };
 
   const handlePassword = () => {
-    if (!user) return;
     if (p1.length < 8) return;
     if (p1 !== p2) return;
     updatePassword(user);
@@ -80,7 +60,6 @@ export default function OrgPortalUserEditPage() {
   };
 
   const handleDelete = () => {
-    if (!user) return;
     if (window.prompt(`Type DELETE to permanently delete ${ctxDisplayName(user)}:`)?.trim().toUpperCase() !== "DELETE") {
       toast("Cancelled", "Delete not confirmed.");
       return;
@@ -89,26 +68,33 @@ export default function OrgPortalUserEditPage() {
     router.push("/org-portal/users");
   };
 
-  if (!user) {
-    return (
-      <div>
-        <CustomNextLink href="/org-portal/users" variant="ghost" size="sm">← User list</CustomNextLink>
-        <p className="mt-4 text-rcn-muted">User not found.</p>
-      </div>
-    );
-  }
-
   return (
     <div>
-      <div className="flex items-center gap-3 mb-4">
-        <CustomNextLink href="/org-portal/users" variant="ghost" size="sm">← User list</CustomNextLink>
-        <span className="text-rcn-muted">/</span>
-        <CustomNextLink href={`/org-portal/users/${user.id}`} variant="ghost" size="sm">View</CustomNextLink>
-      </div>
       <div className="bg-rcn-card border border-rcn-border rounded-2xl shadow-rcn overflow-hidden">
         <div className="p-4 sm:p-6">
-          <h1 className="text-xl font-bold m-0">Edit User</h1>
-          <p className="text-sm text-rcn-muted m-0 mt-1">{ctxDisplayName(user)}</p>
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div>
+              <h1 className="text-xl font-bold m-0">Edit User detail</h1>
+              <p className="text-sm text-rcn-muted m-0 mt-1">{ctxDisplayName(user)}</p>
+            </div>
+
+          </div>
+
+          <div className="shrink-0 border border-rcn-border rounded-xl p-4 mt-2  bg-rcn-bg/50 min-w-[220px]">
+            <h2 className="font-bold text-sm m-0 mb-2">Manage Password</h2>
+            {!showPassword ? (
+              <Button variant="secondary" size="sm" onClick={() => setShowPassword(true)}>Change Password</Button>
+            ) : (
+              <div className="space-y-2">
+                <input type="password" value={p1} onChange={(e) => setP1(e.target.value)} placeholder="New password (8+ chars)" className="w-full px-2.5 py-2 text-sm rounded-xl border border-rcn-border" />
+                <input type="password" value={p2} onChange={(e) => setP2(e.target.value)} placeholder="Confirm" className="w-full px-2.5 py-2 text-sm rounded-xl border border-rcn-border" />
+                <div className="flex flex-col gap-2">
+                  <Button variant="primary" size="sm" onClick={handlePassword} disabled={p1.length < 8 || p1 !== p2}>Update Password</Button>
+                  <Button variant="secondary" size="sm" onClick={() => { setShowPassword(false); setP1(""); setP2(""); }}>Cancel</Button>
+                </div>
+              </div>
+            )}
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
             <div>
@@ -192,22 +178,6 @@ export default function OrgPortalUserEditPage() {
             </div>
           </div>
 
-          <div className="border-t border-rcn-border mt-6 pt-6">
-            <h2 className="font-bold text-sm m-0 mb-2">Manage Password</h2>
-            {!showPassword ? (
-              <Button variant="secondary" size="sm" onClick={() => setShowPassword(true)}>Change Password</Button>
-            ) : (
-              <div className="space-y-2 max-w-xs">
-                <input type="password" value={p1} onChange={(e) => setP1(e.target.value)} placeholder="New password (8+ chars)" className="w-full px-2.5 py-2 text-sm rounded-xl border border-rcn-border" />
-                <input type="password" value={p2} onChange={(e) => setP2(e.target.value)} placeholder="Confirm" className="w-full px-2.5 py-2 text-sm rounded-xl border border-rcn-border" />
-                <div className="flex gap-2">
-                  <Button variant="primary" size="sm" onClick={handlePassword} disabled={p1.length < 8 || p1 !== p2}>Update Password</Button>
-                  <Button variant="secondary" size="sm" onClick={() => { setShowPassword(false); setP1(""); setP2(""); }}>Cancel</Button>
-                </div>
-              </div>
-            )}
-          </div>
-
           <div className="flex flex-col sm:flex-row flex-wrap gap-2 mt-6 pt-6 border-t border-rcn-border justify-between">
             <div className="flex flex-wrap gap-2">
               <Button variant="secondary" size="sm" onClick={() => toggleUserActive(user)}>{user.isActive ? "Deactivate" : "Activate"}</Button>
@@ -217,11 +187,27 @@ export default function OrgPortalUserEditPage() {
             <div className="flex flex-wrap gap-2">
               <Button variant="primary" size="sm" onClick={handleSave}>Save</Button>
               <CustomNextLink href="/org-portal/users" variant="secondary" size="sm">Cancel</CustomNextLink>
-              <CustomNextLink href={`/org-portal/users/${user.id}`} variant="ghost" size="sm">View</CustomNextLink>
             </div>
           </div>
         </div>
       </div>
     </div>
   );
+}
+
+export default function OrgPortalUserEditPage() {
+  const params = useParams<{ id: string }>();
+  const { users } = useOrgPortal();
+  const user = users.find((u) => u.id === params.id);
+
+  if (!user) {
+    return (
+      <div>
+        <CustomNextLink href="/org-portal/users" variant="ghost" size="sm">← User list</CustomNextLink>
+        <p className="mt-4 text-rcn-muted">User not found.</p>
+      </div>
+    );
+  }
+
+  return <UserEditForm key={user.id} user={user} />;
 }

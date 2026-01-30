@@ -1,6 +1,7 @@
 "use client";
 
 import { useApp } from "@/context/AppContext";
+import { ConfirmModal } from "@/components";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -23,13 +24,18 @@ function StaffPortalSidebar({
 }) {
   const pathname = usePathname();
   const { logout } = useApp();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  const handleLogout = () => {
+  const handleLogoutClick = () => setShowLogoutModal(true);
+
+  const handleLogoutConfirm = () => {
+    setShowLogoutModal(false);
     setSidebarOpen(false);
     logout();
   };
 
   return (
+    <>
     <aside
       className={`
         fixed lg:relative inset-y-0 left-0 z-50 lg:z-auto
@@ -79,7 +85,7 @@ function StaffPortalSidebar({
       <div className="border-t border-white/10 pt-3 mt-2">
         <button
           type="button"
-          onClick={handleLogout}
+          onClick={handleLogoutClick}
           className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl w-full text-left mx-1.5 transition-all text-rcn-dark-text hover:bg-white/10"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -90,7 +96,15 @@ function StaffPortalSidebar({
           Logout
         </button>
       </div>
+
     </aside>
+      <ConfirmModal
+        type="logout"
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleLogoutConfirm}
+      />
+      </>
   );
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../../../context/AppContext';
 import {
   US_STATES,
@@ -11,7 +11,97 @@ import {
   audit,
   centsToMoney
 } from '../../../utils/database';
-import { Button, StateSelect } from '../../../components';
+import { Button } from '../../../components';
+
+const inputClassBase = "w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white text-sm outline-none focus:border-[#b9d7c5] focus:shadow-[0_0_0_3px_rgba(31,122,75,0.12)]";
+
+const DROPDOWN_MAX_HEIGHT = 200;
+
+function StateSelect({
+  value,
+  onChange,
+  options,
+  className,
+  "aria-label": ariaLabel,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: string[];
+  className?: string;
+  "aria-label"?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [openUp, setOpenUp] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handle = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, [open]);
+
+  const handleToggle = () => {
+    const nextOpen = !open;
+    setOpen(nextOpen);
+    if (nextOpen) {
+      setTimeout(() => {
+        if (buttonRef.current && typeof window !== "undefined") {
+          const rect = buttonRef.current.getBoundingClientRect();
+          const spaceBelow = window.innerHeight - rect.bottom;
+          setOpenUp(spaceBelow < DROPDOWN_MAX_HEIGHT + 8);
+        }
+      }, 0);
+    }
+  };
+
+  const display = value === "" ? "All" : value;
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={handleToggle}
+        className={`${className ?? inputClassBase} text-left flex items-center justify-between min-h-[42px]`}
+        aria-label={ariaLabel}
+        aria-expanded={open}
+        aria-haspopup="listbox"
+      >
+        <span>{display}</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 opacity-70">
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </button>
+      {open && (
+        <ul
+          role="listbox"
+          className={`absolute z-50 left-0 right-0 py-1 border border-rcn-border bg-white shadow-lg max-h-[200px] overflow-y-auto ${
+            openUp ? "bottom-full mb-1" : "mt-1"
+          }`}
+        > 
+          {options.map((s) => (
+            <li
+              key={s}
+              role="option"
+              aria-selected={value === s}
+              onClick={() => {
+                onChange(s);
+                setOpen(false);
+              }}
+              className={`px-3 py-2 text-sm cursor-pointer hover:bg-rcn-accent/10 ${value === s ? "bg-rcn-accent/15 font-medium" : ""}`}
+            >
+              {s === "" ? "All" : s}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 const Dashboard: React.FC = () => {
   const { db, refreshDB, showToast, openModal, closeModal } = useApp();

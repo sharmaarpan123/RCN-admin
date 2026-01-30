@@ -121,14 +121,13 @@ export default function OrgPortalReferralDashboardPage() {
             <TableLayout<Referral>
               columns={columns}
               data={filtered}
-              emptyMessage='No referrals found. Use "Load Demo Referrals" to add demo data.'
+              emptyMessage='No referrals found.'
               wrapperClassName="min-w-[520px]"
               getRowKey={(r) => r.id}
               onRowClick={(r) => setModal({ mode: inboxRefMode, r })}
             />
           </div>
-          <p className="text-xs text-rcn-muted m-0">Tip: Click any row to open details.</p>
-        </div>
+                 </div>
       </div>
 
       {modal && (

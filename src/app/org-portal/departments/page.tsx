@@ -17,16 +17,28 @@ export default function OrgPortalDepartmentsPage() {
     | null
   >(null);
   const [name, setName] = useState("");
+  const [search, setSearch] = useState("");
 
   const brs = branches();
   const branchId = branchFilter || brs[0]?.id || "";
   const br = findBranch(branchId);
   const depts = br?.departments ?? [];
   const data: DeptRow[] = depts.map((dp) => ({ ...dp, branchName: br?.name }));
+  const searchLower = search.trim().toLowerCase();
+  const filteredData = searchLower
+    ? data.filter(
+        (row) =>
+          (row.name ?? "").toLowerCase().includes(searchLower) ||
+          (row.id ?? "").toLowerCase().includes(searchLower) ||
+          (row.branchName ?? "").toLowerCase().includes(searchLower)
+      )
+    : data;
 
   const emptyMessage = !br
     ? "No branches yet. Create a branch first."
-    : "No departments in this branch. Click \"+ Add Department\" to create one.";
+    : search.trim()
+      ? "No departments match your search."
+      : "No departments in this branch. Click \"+ Add Department\" to create one.";
 
   const openAdd = () => {
     if (!br) return;
@@ -98,10 +110,28 @@ export default function OrgPortalDepartmentsPage() {
 
       <div className="bg-rcn-card border border-rcn-border rounded-2xl shadow-rcn overflow-hidden">
         <div className="p-4">
+          <div className="flex flex-col sm:flex-row gap-2 mb-3">
+            <div className="flex-1 min-w-0">
+              <label className="sr-only" htmlFor="dept-search">Search departments</label>
+              <input
+                id="dept-search"
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by name, ID, or branch"
+                className="w-full px-2.5 py-2 text-sm rounded-xl border border-rcn-border bg-white focus:outline-none focus:ring-2 focus:ring-rcn-accent/30"
+              />
+            </div>
+            {search && (
+              <Button variant="secondary" size="sm" onClick={() => setSearch("")}>
+                Clear
+              </Button>
+            )}
+          </div>
           <div className="border border-rcn-border rounded-xl overflow-hidden">
             <TableLayout<DeptRow>
               columns={columns}
-              data={data}
+              data={filteredData}
               emptyMessage={emptyMessage}
               wrapperClassName="min-w-[260px]"
               getRowKey={(row) => row.id}

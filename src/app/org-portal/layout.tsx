@@ -2,6 +2,7 @@
 
 import { OrgPortalProvider, useOrgPortal } from "@/context/OrgPortalContext";
 import { useApp } from "@/context/AppContext";
+import { ConfirmModal } from "@/components";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -24,13 +25,18 @@ function OrgPortalSidebar({
 }) {
   const pathname = usePathname();
   const { logout } = useApp();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  const handleLogout = () => {
+  const handleLogoutClick = () => setShowLogoutModal(true);
+
+  const handleLogoutConfirm = () => {
+    setShowLogoutModal(false);
     setSidebarOpen(false);
     logout();
   };
 
   return (
+    <>
     <aside
       className={`
         fixed lg:relative inset-y-0 left-0 z-50 lg:z-auto
@@ -82,7 +88,7 @@ function OrgPortalSidebar({
       <div className="border-t border-white/10 pt-3 mt-2">
         <button
           type="button"
-          onClick={handleLogout}
+          onClick={handleLogoutClick}
           className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl w-full text-left mx-1.5 transition-all text-rcn-dark-text hover:bg-white/10"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -93,7 +99,16 @@ function OrgPortalSidebar({
           Logout
         </button>
       </div>
+
+      
     </aside>
+    <ConfirmModal
+    type="logout"
+    isOpen={showLogoutModal}
+    onClose={() => setShowLogoutModal(false)}
+    onConfirm={handleLogoutConfirm}
+  />
+  </>
   );
 }
 
@@ -114,9 +129,8 @@ function OrgPortalToast() {
 
   return (
     <div
-      className={`fixed left-4 right-4 sm:left-auto sm:right-4 bottom-4 z-50 min-w-0 max-w-[min(440px,calc(100vw-2rem))] bg-rcn-dark-bg text-white rounded-2xl px-4 py-3 shadow-rcn border border-white/10 transition-all duration-200 ${
-        state.show ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
-      }`}
+      className={`fixed left-4 right-4 sm:left-auto sm:right-4 bottom-4 z-50 min-w-0 max-w-[min(440px,calc(100vw-2rem))] bg-rcn-dark-bg text-white rounded-2xl px-4 py-3 shadow-rcn border border-white/10 transition-all duration-200 ${state.show ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
+        }`}
       role="status"
       aria-live="polite"
       aria-atomic="true"

@@ -39,13 +39,9 @@ export default function OrgPortalOrganizationSettingsPage() {
             <h3 className="font-bold text-sm m-0">Organization Profile</h3>
             <p className="text-xs text-rcn-muted m-0 mt-0.5">Update required organization profile details and optional contacts.</p>
           </div>
-          <Button variant="primary" size="sm" onClick={handleSave} className="w-full sm:w-auto shrink-0">Save Organization</Button>
-        </div>
+           </div>
         <div className="p-4 space-y-4">
-          <div className="rounded-xl border border-dashed border-rcn-accent/50 bg-rcn-accent/5 px-3 py-2 text-xs text-rcn-accent">
-            Fields marked <span className="text-rcn-danger font-bold">*</span> are required.
-          </div>
-
+          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs text-rcn-muted mb-1.5">Organization Name</label>
@@ -201,6 +197,9 @@ export default function OrgPortalOrganizationSettingsPage() {
             </div>
           </div>
         </div>
+        <div className="p-4 flex justify-end">
+        <Button variant="primary" size="sm" onClick={handleSave} className="w-full sm:w-auto shrink-0">Save Organization</Button>
+        </div>  
       </div>
     </div>
   );
