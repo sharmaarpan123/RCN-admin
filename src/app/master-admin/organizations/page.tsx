@@ -1,8 +1,8 @@
 "use client";
-import React, { useState } from 'react';
-import { useApp } from '../../../context/AppContext';
-import { US_STATES, safeLower } from '../../../utils/database';
-import Button from '../../../components/Button';
+import React, { useState } from "react";
+import { useApp } from "@/context/AppContext";
+import { US_STATES, safeLower } from "@/utils/database";
+import { Button, TableLayout, type TableColumn } from "@/components";
 
 const Organizations: React.FC = () => {
   const { db, refreshDB, showToast, openModal, closeModal } = useApp();
@@ -42,6 +42,55 @@ const Organizations: React.FC = () => {
 
   const selectedOrg = selectedOrgId ? db.orgs.find((o: any) => o.id === selectedOrgId) : null;
 
+  type OrgTableRow = { id: string; name: string; email: string; address: { state?: string; zip?: string; city?: string; street?: string }; enabled?: boolean };
+  const orgTableColumns: TableColumn<OrgTableRow>[] = [
+    {
+      head: "Name",
+      component: (o) => (
+        <>
+          <b>{o.name}</b>
+          <div className="text-rcn-muted">{o.email}</div>
+        </>
+      ),
+    },
+    { head: "State", component: (o) => o.address?.state ?? "—" },
+    { head: "Zip", component: (o) => <span className="font-mono">{o.address?.zip ?? "—"}</span> },
+    { head: "City", component: (o) => o.address?.city ?? "—" },
+    { head: "Street", component: (o) => o.address?.street ?? "—" },
+    {
+      head: "Enabled",
+      component: (o) =>
+        o.enabled ? (
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">Enabled</span>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#f3b8b8] bg-[#fff1f2] text-[#991b1b]">Disabled</span>
+        ),
+    },
+    {
+      head: "Actions",
+      component: (o) => (
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedOrgId(o.id);
+              setActiveTab("branches");
+              setTimeout(() => {
+                document.getElementById("org-modules-card")?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }, 100);
+            }}
+            className={btnSmallClass}
+          >
+            Manage
+          </button>
+          <button type="button" onClick={() => openOrgModal(o.id)} className={btnSmallClass}>
+            Edit
+          </button>
+        </div>
+      ),
+    },
+  ];
+
   const getFilteredBranches = () => {
     if (!selectedOrgId) return [];
     const q = safeLower(branchSearch);
@@ -75,6 +124,59 @@ const Organizations: React.FC = () => {
       return hay.includes(q);
     });
   };
+
+  type OrgUserRow = { id: string; name: string; email: string; role: string; adminCap?: boolean; resetIntervalDays?: number; mfaEmail?: string; enabled?: boolean };
+  const orgUserColumns: TableColumn<OrgUserRow>[] = [
+    {
+      head: "Name",
+      component: (u) => (
+        <>
+          <b>{u.name}</b> <span className="text-rcn-muted font-mono text-[11px]">({u.id})</span>
+        </>
+      ),
+    },
+    { head: "Email", component: (u) => <span className="font-mono">{u.email}</span> },
+    {
+      head: "Role",
+      component: (u) => (u.role === "ORG_ADMIN" ? "Organization Admin" : u.role === "STAFF" ? "Staff" : u.role),
+    },
+    {
+      head: "Access",
+      component: (u) =>
+        u.adminCap ? (
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">Admin capabilities</span>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-rcn-border bg-rcn-bg">Active user</span>
+        ),
+    },
+    { head: "Reset", component: (u) => <>{u.resetIntervalDays ?? "—"} days</> },
+    {
+      head: "MFA",
+      component: (u) =>
+        u.mfaEmail ? (
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">On</span>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-rcn-border bg-rcn-bg">Off</span>
+        ),
+    },
+    {
+      head: "Enabled",
+      component: (u) =>
+        u.enabled ? (
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">Enabled</span>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#f3b8b8] bg-[#fff1f2] text-[#991b1b]">Disabled</span>
+        ),
+    },
+    {
+      head: "Actions",
+      component: (u) => (
+        <button type="button" onClick={() => openUserModal(u.id)} className={btnSmallClass}>
+          Edit
+        </button>
+      ),
+    },
+  ];
 
   // Helper functions
   const uid = (prefix: string) => `${prefix}_${Math.random().toString(16).slice(2)}${Math.random().toString(16).slice(2)}`;
@@ -722,61 +824,14 @@ const Organizations: React.FC = () => {
         </div>
 
         <div className="overflow-auto mt-3">
-          <table className="w-full border-separate border-spacing-0 overflow-hidden rounded-2xl border border-rcn-border">
-            <thead>
-              <tr>
-                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Name</th>
-                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">State</th>
-                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Zip</th>
-                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">City</th>
-                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Street</th>
-                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Enabled</th>
-                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredOrgs.length === 0 ? (
-                <tr><td colSpan={7} className="px-2.5 py-2.5 text-xs text-rcn-muted">No organizations found.</td></tr>
-              ) : (
-                filteredOrgs.map((o: any) => (
-                  <tr key={o.id}>
-                    <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                      <b>{o.name}</b>
-                      <div className="text-rcn-muted">{o.email}</div>
-                    </td>
-                    <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">{o.address.state}</td>
-                    <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono">{o.address.zip}</td>
-                    <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">{o.address.city}</td>
-                    <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">{o.address.street}</td>
-                    <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                      {o.enabled ? (
-                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">Enabled</span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#f3b8b8] bg-[#fff1f2] text-[#991b1b]">Disabled</span>
-                      )}
-                    </td>
-                    <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => {
-                            setSelectedOrgId(o.id);
-                            setActiveTab('branches');
-                            setTimeout(() => {
-                              document.getElementById('org-modules-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                            }, 100);
-                          }}
-                          className={btnSmallClass}
-                        >
-                          Manage
-                        </button>
-                        <button onClick={() => openOrgModal(o.id)} className={btnSmallClass}>Edit</button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+          <TableLayout<OrgTableRow>
+            columns={orgTableColumns}
+            data={filteredOrgs as OrgTableRow[]}
+            variant="bordered"
+            size="sm"
+            emptyMessage="No organizations found."
+            getRowKey={(o) => o.id}
+          />
         </div>
       </div>
 
@@ -1038,7 +1093,7 @@ const Organizations: React.FC = () => {
                 </div>
 
                 <div className="flex gap-3 items-end mb-3">
-                  <div className="flex flex-col gap-1.5 flex-1 min-w-[320px]">
+                  <div className="flex flex-col gap-1.5 flex-1 ">
                     <label className="text-xs text-rcn-muted">Search Users</label>
                     <input
                       value={userSearch}
@@ -1051,63 +1106,14 @@ const Organizations: React.FC = () => {
                 </div>
 
                 <div className="overflow-auto">
-                  <table className="w-full border-separate border-spacing-0 overflow-hidden rounded-2xl border border-rcn-border">
-                    <thead>
-                      <tr>
-                        <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Name</th>
-                        <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Email</th>
-                        <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Role</th>
-                        <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Access</th>
-                        <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Reset</th>
-                        <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">MFA</th>
-                        <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Enabled</th>
-                        <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {getFilteredUsers().length === 0 ? (
-                        <tr><td colSpan={8} className="px-2.5 py-2.5 text-xs text-rcn-muted">No users for this organization.</td></tr>
-                      ) : (
-                        getFilteredUsers().map((u: any) => {
-                          const roleLabel = u.role === 'ORG_ADMIN' ? 'Organization Admin' : u.role === 'STAFF' ? 'Staff' : u.role;
-                          return (
-                            <tr key={u.id}>
-                              <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                                <b>{u.name}</b> <span className="text-rcn-muted font-mono text-[11px]">({u.id})</span>
-                              </td>
-                              <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono">{u.email}</td>
-                              <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">{roleLabel}</td>
-                              <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                                {u.adminCap ? (
-                                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">Admin capabilities</span>
-                                ) : (
-                                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-rcn-border bg-rcn-bg">Active user</span>
-                                )}
-                              </td>
-                              <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">{u.resetIntervalDays || '—'} days</td>
-                              <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                                {u.mfaEmail ? (
-                                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">On</span>
-                                ) : (
-                                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-rcn-border bg-rcn-bg">Off</span>
-                                )}
-                              </td>
-                              <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                                {u.enabled ? (
-                                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">Enabled</span>
-                                ) : (
-                                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#f3b8b8] bg-[#fff1f2] text-[#991b1b]">Disabled</span>
-                                )}
-                              </td>
-                              <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                                <button onClick={() => openUserModal(u.id)} className={btnSmallClass}>Edit</button>
-                              </td>
-                            </tr>
-                          );
-                        })
-                      )}
-                    </tbody>
-                  </table>
+                  <TableLayout<OrgUserRow>
+                    columns={orgUserColumns}
+                    data={getFilteredUsers() as OrgUserRow[]}
+                    variant="bordered"
+                    size="sm"
+                    emptyMessage="No users for this organization."
+                    getRowKey={(u) => u.id}
+                  />
                 </div>
               </div>
             )}

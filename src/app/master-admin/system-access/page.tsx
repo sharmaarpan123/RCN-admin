@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../../context/AppContext';
 import { roleLabel, safeLower, saveDB, audit, uid } from '../../../utils/database';
+import { TableLayout, type TableColumn } from '../../../components';
 
 const UserPanel: React.FC = () => {
   const { db, refreshDB, showToast, openModal, closeModal } = useApp();
@@ -11,6 +12,62 @@ const UserPanel: React.FC = () => {
 
   const systemAdmins = db.users.filter((u: any) => u.role === 'SYSTEM_ADMIN');
   
+  type MasterAdminRow = { id: string; name: string; firstName?: string; lastName?: string; email: string; phone?: string; role: string; adminCap?: boolean; resetIntervalDays?: number; mfaEmail?: boolean; enabled?: boolean };
+  const systemAccessColumns: TableColumn<MasterAdminRow>[] = [
+    {
+      head: "Name",
+      component: (u) => (
+        <>
+          <b>{u.name}</b>
+          <div className="text-rcn-muted">{u.firstName} {u.lastName}</div>
+        </>
+      ),
+    },
+    { head: "Email", accessor: "email", tdClassName: "font-mono" },
+    { head: "Phone", component: (u) => <span className="font-mono">{u.phone || '—'}</span> },
+    { head: "Role", component: (u) => roleLabel(u.role) },
+    {
+      head: "Access",
+      component: (u) =>
+        u.adminCap ? (
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">Admin capabilities</span>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border border-rcn-border bg-[#f8fcf9]">Active user</span>
+        ),
+    },
+    { head: "Reset", component: (u) => <>{u.resetIntervalDays || '—'} days</> },
+    {
+      head: "MFA",
+      component: (u) =>
+        u.mfaEmail ? (
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">On</span>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border border-rcn-border bg-[#f8fcf9]">Off</span>
+        ),
+    },
+    {
+      head: "Enabled",
+      component: (u) =>
+        u.enabled ? (
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">Enabled</span>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#f3b8b8] bg-[#fff1f2] text-[#991b1b]">Disabled</span>
+        ),
+    },
+    {
+      head: "",
+      component: (u) => (
+        <button
+          type="button"
+          onClick={() => openUserModal(u.id)}
+          className="border border-rcn-border bg-white px-2.5 py-2 rounded-xl text-xs font-semibold hover:border-[#c9ddd0]"
+        >
+          Edit
+        </button>
+      ),
+    },
+  ];
+
   const filtered = systemAdmins.filter((u: any) => {
     const searchLower = safeLower(search);
     const hay = [u.name, u.firstName, u.lastName, u.email, u.phone, u.role, u.notes]
@@ -398,69 +455,15 @@ const UserPanel: React.FC = () => {
           </div>
         </div>
 
-        <div className="overflow-auto mt-3">
-          <table className="w-full border-separate border-spacing-0 overflow-hidden rounded-2xl border border-rcn-border">
-            <thead>
-              <tr>
-                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Name</th>
-                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Email</th>
-                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Phone</th>
-                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Role</th>
-                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Access</th>
-                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Reset</th>
-                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">MFA</th>
-                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Enabled</th>
-                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 ? (
-                <tr><td colSpan={9} className="px-2.5 py-2.5 text-xs text-rcn-muted">No master admin users found.</td></tr>
-              ) : (
-                filtered.map((u: any) => (
-                  <tr key={u.id}>
-                    <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                      <b>{u.name}</b>
-                      <div className="text-rcn-muted">{u.firstName} {u.lastName}</div>
-                    </td>
-                    <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono">{u.email}</td>
-                    <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono">{u.phone || '—'}</td>
-                    <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">{roleLabel(u.role)}</td>
-                    <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                      {u.adminCap ? (
-                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">Admin capabilities</span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border border-rcn-border bg-[#f8fcf9]">Active user</span>
-                      )}
-                    </td>
-                    <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">{u.resetIntervalDays || '—'} days</td>
-                    <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                      {u.mfaEmail ? (
-                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">On</span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border border-rcn-border bg-[#f8fcf9]">Off</span>
-                      )}
-                    </td>
-                    <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                      {u.enabled ? (
-                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">Enabled</span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#f3b8b8] bg-[#fff1f2] text-[#991b1b]">Disabled</span>
-                      )}
-                    </td>
-                    <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                      <button 
-                        onClick={() => openUserModal(u.id)}
-                        className="border border-rcn-border bg-white px-2.5 py-2 rounded-xl text-xs font-semibold hover:border-[#c9ddd0]"
-                      >
-                        Edit
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+        <div className="mt-3">
+          <TableLayout<MasterAdminRow>
+            columns={systemAccessColumns}
+            data={filtered}
+            variant="bordered"
+            size="sm"
+            emptyMessage="No master admin users found."
+            getRowKey={(row) => row.id}
+          />
         </div>
 
         <p className="text-xs text-rcn-muted mt-2.5 mb-0">

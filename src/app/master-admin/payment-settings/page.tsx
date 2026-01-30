@@ -1,8 +1,8 @@
 "use client";
-import React, { useState, useEffect } from 'react';
-import { useApp } from '../../../context/AppContext';
-import { saveDB, audit } from '../../../utils/database';
-import { Button } from '@/components';
+import React, { useState, useEffect, useMemo } from "react";
+import { useApp } from "@/context/AppContext";
+import { saveDB, audit } from "@/utils/database";
+import { Button, TableLayout, type TableColumn } from "@/components";
 
 const PaymentSettings: React.FC = () => {
   const { db, refreshDB, showToast } = useApp();
@@ -85,16 +85,44 @@ const PaymentSettings: React.FC = () => {
 
   const payMethodLabel = (key: string) => {
     const labels: Record<string, string> = {
-      creditCard: 'Credit Card',
-      debitCard: 'Debit Card',
-      applePay: 'Apple Pay',
-      paypal: 'PayPal',
-      googlePay: 'Google Pay',
-      bankTransfer: 'Bank Transfer',
-      ach: 'ACH',
+      creditCard: "Credit Card",
+      debitCard: "Debit Card",
+      applePay: "Apple Pay",
+      paypal: "PayPal",
+      googlePay: "Google Pay",
+      bankTransfer: "Bank Transfer",
+      ach: "ACH",
     };
     return labels[key] || key;
   };
+
+  type PaymentMethodRow = { key: string; label: string; enabled: boolean; feePct: number; feeDollar: number; total: number };
+  const paymentMethodData: PaymentMethodRow[] = useMemo(
+    () =>
+      Object.keys(processingFees).map((key) => ({
+        key,
+        label: payMethodLabel(key),
+        enabled: methods[key as keyof typeof methods],
+        feePct: processingFees[key as keyof typeof processingFees],
+        feeDollar: calculateProcessingFee(key),
+        total: calculateTotal(key),
+      })),
+    [processingFees, methods, serviceFee]
+  );
+  const paymentMethodColumns: TableColumn<PaymentMethodRow>[] = [
+    {
+      head: "Payment Method",
+      component: (row) => (
+        <>
+          {row.label}
+          {!row.enabled && <span className="ml-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border border-rcn-border bg-[#f8fcf9] opacity-70">Off</span>}
+        </>
+      ),
+    },
+    { head: "Processing Fee (%)", component: (row) => <span className="font-mono">{row.feePct.toFixed(2)}</span> },
+    { head: "Processing Fee ($)", component: (row) => <span className="font-mono">{row.feeDollar.toFixed(2)}</span> },
+    { head: "Total ($)", component: (row) => <span className="font-mono">{row.total.toFixed(2)}</span> },
+  ];
 
   const calculateBulkFinal = () => {
     const subtotal = bulkQty * bulkUnitPrice;
@@ -303,32 +331,13 @@ const PaymentSettings: React.FC = () => {
             <div className="h-px bg-rcn-border my-3.5"></div>
 
             <div className="overflow-auto">
-              <table className="w-full border-separate border-spacing-0 overflow-hidden rounded-2xl border border-rcn-border">
-                <thead>
-                  <tr>
-                    <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Payment Method</th>
-                    <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Processing Fee (%)</th>
-                    <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Processing Fee ($)</th>
-                    <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Total ($)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Object.keys(processingFees).map((key) => {
-                    const enabled = methods[key as keyof typeof methods];
-                    return (
-                      <tr key={key}>
-                        <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                          {payMethodLabel(key)}
-                          {!enabled && <span className="ml-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border border-rcn-border bg-[#f8fcf9] opacity-70">Off</span>}
-                        </td>
-                        <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono">{processingFees[key as keyof typeof processingFees].toFixed(2)}</td>
-                        <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono">{calculateProcessingFee(key).toFixed(2)}</td>
-                        <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono">{calculateTotal(key).toFixed(2)}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <TableLayout
+                columns={paymentMethodColumns}
+                data={paymentMethodData}
+                variant="bordered"
+                size="sm"
+                getRowKey={(row) => row.key}
+              />
             </div>
 
             <p className="text-xs text-rcn-muted mt-2.5 mb-0">Tip: fees are used for calculation previews in this demo (no real payment processing).</p>

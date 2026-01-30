@@ -1,8 +1,10 @@
 "use client";
 
 import { useOrgPortal } from "@/context/OrgPortalContext";
-import { Button, Modal } from "@/components";
-import { useState } from "react";
+import type { Branch } from "@/context/OrgPortalContext";
+import { Button, Modal, TableLayout } from "@/components";
+import { useState, useMemo } from "react";
+import type { TableColumn } from "@/components";
 
 export default function OrgPortalBranchesPage() {
   const { branches, addBranch, renameBranch } = useOrgPortal();
@@ -10,6 +12,25 @@ export default function OrgPortalBranchesPage() {
   const [name, setName] = useState("");
 
   const brs = branches();
+
+  const columns: TableColumn<Branch>[] = useMemo(
+    () => [
+      { head: "Name", accessor: "name", component: (row) => <span className="font-medium">{row.name}</span> },
+      {
+        head: "Departments",
+        component: (row) => <span className="text-rcn-muted">{(row.departments || []).length} departments</span>,
+      },
+      {
+        head: "Actions",
+        thClassName: "text-right",
+        tdClassName: "text-right",
+        component: (row) => (
+          <Button variant="secondary" size="sm" onClick={() => openEdit(row.id, row.name)}>Edit</Button>
+        ),
+      },
+    ],
+    []
+  );
 
   const openAdd = () => {
     setName("");
@@ -45,32 +66,14 @@ export default function OrgPortalBranchesPage() {
       <div className="bg-rcn-card border border-rcn-border rounded-2xl shadow-rcn overflow-hidden">
         <div className="p-4">
           <p className="text-xs text-rcn-muted mb-3">Branches belong to this organization only. Users may be assigned to multiple branches.</p>
-          <div className="border border-rcn-border rounded-xl overflow-x-auto">
-            <table className="w-full border-collapse text-sm min-w-[260px]">
-              <thead>
-                <tr className="bg-rcn-bg/90">
-                  <th className="px-2 py-2 sm:px-3 sm:py-2.5 text-left text-xs uppercase tracking-wide text-rcn-muted font-semibold">Name</th>
-                  <th className="px-2 py-2 sm:px-3 sm:py-2.5 text-left text-xs uppercase tracking-wide text-rcn-muted font-semibold">Departments</th>
-                  <th className="px-2 py-2 sm:px-3 sm:py-2.5 text-right text-xs uppercase tracking-wide text-rcn-muted font-semibold">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {!brs.length && (
-                  <tr>
-                    <td colSpan={3} className="px-2 py-6 sm:px-3 text-rcn-muted text-xs text-center">No branches yet. Click &quot;+ Add Branch&quot; to create one.</td>
-                  </tr>
-                )}
-                {brs.map((br) => (
-                  <tr key={br.id} className="border-t border-rcn-border/60 hover:bg-rcn-accent/5">
-                    <td className="px-2 py-2 sm:px-3 sm:py-2.5 font-medium">{br.name}</td>
-                    <td className="px-2 py-2 sm:px-3 sm:py-2.5 text-rcn-muted">{(br.departments || []).length} departments</td>
-                    <td className="px-2 py-2 sm:px-3 sm:py-2.5 text-right">
-                      <Button variant="secondary" size="sm" onClick={() => openEdit(br.id, br.name)}>Edit</Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="border border-rcn-border rounded-xl overflow-hidden">
+            <TableLayout<Branch>
+              columns={columns}
+              data={brs}
+              emptyMessage='No branches yet. Click "+ Add Branch" to create one.'
+              wrapperClassName="min-w-[260px]"
+              getRowKey={(row) => row.id}
+            />
           </div>
         </div>
       </div>

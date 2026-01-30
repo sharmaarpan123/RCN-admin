@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { Referral, Company } from "@/app/staff-portal/inbox/types";
 import { fmtDate, pillClass, pillLabel, overallStatus } from "@/app/staff-portal/inbox/helpers";
 import { ForwardModal } from "./ForwardModal";
+import { TableLayout, type TableColumn } from "@/components";
 
 interface SenderInboxProps {
   referrals: Referral[];
@@ -60,7 +61,6 @@ export function SenderInbox({
 
   const fullRef = forwardRefId ? referrals.find((r) => r.id === forwardRefId) : null;
 
-
   const openForward = useCallback((id: string) => {
     setForwardRefId(id);
     setForwardSelectedCompany(null);
@@ -94,6 +94,69 @@ export function SenderInbox({
     [companyDirectory, setCompanyDirectory]
   );
 
+  const columns: TableColumn<Referral>[] = useMemo(
+    () => [
+      { head: "Referral ID", component: (ref) => <span className="font-black text-[13px]">{ref.id}</span> },
+      {
+        head: "Patient",
+        component: (ref) => (
+          <span className="font-[850] text-[13px]">{ref.patient.last}, {ref.patient.first} • DOB {ref.patient.dob}</span>
+        ),
+      },
+      {
+        head: "Services",
+        component: (ref) => {
+          const svc = ref.servicesRequested.slice(0, 2).join(", ") + (ref.servicesRequested.length > 2 ? ` +${ref.servicesRequested.length - 2} more` : "");
+          return <span className="text-rcn-muted text-xs font-[850]">{svc || "—"}</span>;
+        },
+      },
+      {
+        head: "Receivers",
+        component: (ref) => {
+          const receiversLabel = ref.receivers.length > 1 ? `${ref.receivers.length} receivers` : ref.receivers[0]?.name ?? "";
+          return <span className="text-rcn-muted text-xs font-[850]">{receiversLabel}</span>;
+        },
+      },
+      {
+        head: "Status",
+        component: (ref) => {
+          const st = overallStatus(ref);
+          return (
+            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border ${pillClass(st)}`}>
+              {pillLabel(st)}
+            </span>
+          );
+        },
+      },
+      {
+        head: "Sent Date",
+        component: (ref) => <span className="text-rcn-muted text-xs font-[850]">{fmtDate(ref.sentAt)}</span>,
+      },
+      {
+        head: "Actions",
+        component: (ref) => (
+          <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              onClick={() => router.push(`/staff-portal/inbox/sender/${ref.id}`)}
+              className="border border-rcn-brand/25 bg-rcn-brand/10 text-rcn-accent-dark px-2 py-1.5 rounded-xl font-extrabold text-xs shadow mr-1"
+            >
+              View
+            </button>
+            <button
+              type="button"
+              onClick={() => openForward(ref.id)}
+              className="border border-slate-200 bg-white px-2 py-1.5 rounded-xl font-extrabold text-xs shadow"
+            >
+              Forward
+            </button>
+          </div>
+        ),
+      },
+    ],
+    [router, openForward]
+  );
+
   return (
     <>
       <section className="mt-3.5 border border-slate-200 bg-white/65 rounded-2xl shadow-[0_10px_30px_rgba(2,6,23,.07)] overflow-hidden" aria-label="Sender inbox list">
@@ -122,43 +185,14 @@ export function SenderInbox({
           {filtered.length === 0 ? (
             <div className="py-5 px-3.5 text-center text-rcn-muted font-extrabold text-[13px]">No referrals match your filters.</div>
           ) : (
-            <table className="w-full border-collapse text-xs ">
-              <thead>
-                <tr className="bg-rcn-brand/10">
-                  <th className="text-left p-2.5 font-black text-[11px] uppercase tracking-wide border-b border-slate-200">Referral ID</th>
-                  <th className="text-left p-2.5 font-black text-[11px] uppercase border-b border-slate-200">Patient</th>
-                  <th className="text-left p-2.5 font-black text-[11px] uppercase border-b border-slate-200">Services</th>
-                  <th className="text-left p-2.5 font-black text-[11px] uppercase border-b border-slate-200">Receivers</th>
-                  <th className="text-left p-2.5 font-black text-[11px] uppercase border-b border-slate-200">Status</th>
-                  <th className="text-left p-2.5 font-black text-[11px] uppercase border-b border-slate-200">Sent Date</th>
-                  <th className="text-left p-2.5 font-black text-[11px] uppercase border-b border-slate-200">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((ref) => {
-                  const st = overallStatus(ref);
-                  const receiversLabel = ref.receivers.length > 1 ? `${ref.receivers.length} receivers` : ref.receivers[0]?.name ?? "";
-                  const svc = ref.servicesRequested.slice(0, 2).join(", ") + (ref.servicesRequested.length > 2 ? ` +${ref.servicesRequested.length - 2} more` : "");
-                  const patientLine = `${ref.patient.last}, ${ref.patient.first} • DOB ${ref.patient.dob}`;
-                  return (
-                    <tr key={ref.id} className="border-b border-slate-200 hover:bg-slate-50/50 transition-colors cursor-pointer" onClick={() => router.push(`/staff-portal/inbox/sender/${ref.id}`)}>
-                      <td className="p-2.5 font-black text-[13px]">{ref.id}</td>
-                      <td className="p-2.5 font-[850] text-[13px]">{patientLine}</td>
-                      <td className="p-2.5 text-rcn-muted text-xs font-[850]">{svc || "—"}</td>
-                      <td className="p-2.5 text-rcn-muted text-xs font-[850]">{receiversLabel}</td>
-                      <td className="p-2.5">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border ${pillClass(st)}`}>{pillLabel(st)}</span>
-                      </td>
-                      <td className="p-2.5 text-rcn-muted text-xs font-[850]">{fmtDate(ref.sentAt)}</td>
-                      <td className="p-2.5 flex gap-1">
-                        <button type="button" onClick={(e) => { e.stopPropagation(); router.push(`/staff-portal/inbox/sender/${ref.id}`); }} className="border border-rcn-brand/25 bg-rcn-brand/10 text-rcn-accent-dark px-2 py-1.5 rounded-xl font-extrabold text-xs shadow mr-1">View</button>
-                        <button type="button" onClick={(e) => { e.stopPropagation(); openForward(ref.id); }} className="border border-slate-200 bg-white px-2 py-1.5 rounded-xl font-extrabold text-xs shadow">Forward</button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <TableLayout<Referral>
+              columns={columns}
+              data={filtered}
+              size="sm"
+              tableClassName="[&_thead_tr]:bg-rcn-brand/10 [&_th]:border-slate-200 [&_th]:border-b [&_td]:border-slate-200 [&_td]:border-b [&_tr]:border-slate-200 [&_tr:hover]:bg-slate-50/50"
+              getRowKey={(ref) => ref.id}
+              onRowClick={(ref) => router.push(`/staff-portal/inbox/sender/${ref.id}`)}
+            />
           )}
         </div>
       </section>

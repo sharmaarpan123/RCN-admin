@@ -1,10 +1,22 @@
 "use client";
 
-import React, { useState } from 'react';
-import { useApp } from '../../../context/AppContext';
-import { safeLower } from '../../../utils/database';
-import { Button } from '../../../components';
-import Image from 'next/image';
+import React, { useState } from "react";
+import { useApp } from "@/context/AppContext";
+import { safeLower } from "@/utils/database";
+import { Button, TableLayout, type TableColumn } from "@/components";
+import Image from "next/image";
+
+interface BannerRow {
+  id: string;
+  name: string;
+  linkUrl?: string;
+  placement: string;
+  scope: string;
+  orgId?: string;
+  active: boolean;
+  startAt?: string;
+  endAt?: string;
+}
 
 const Banners: React.FC = () => {
   const { db, showToast } = useApp();
@@ -32,7 +44,7 @@ const Banners: React.FC = () => {
     return labels[p] || p;
   };
 
-  const isInDateRange = (banner: any) => {
+  const isInDateRange = (banner: BannerRow) => {
     const now = new Date();
     if (banner.startAt) {
       const start = new Date(banner.startAt);
@@ -45,7 +57,7 @@ const Banners: React.FC = () => {
     return true;
   };
 
-  const filtered = (db.banners || []).filter((b: any) => {
+  const filtered: BannerRow[] = (db.banners || []).filter((b: BannerRow) => {
     const searchLower = safeLower(search);
     const hay = safeLower((b.name || '') + ' ' + (b.linkUrl || ''));
     if (search && !hay.includes(searchLower)) return false;
@@ -62,7 +74,7 @@ const Banners: React.FC = () => {
     return true;
   });
 
-  const previewBanners = (db.banners || []).filter((b: any) => {
+  const previewBanners = (db.banners || []).filter((b: BannerRow) => {
     if (!b.active) return false;
     if (!isInDateRange(b)) return false;
     if (b.placement !== previewPlacement) return false;
@@ -72,6 +84,73 @@ const Banners: React.FC = () => {
 
     return false;
   });
+
+  const bannerColumns: TableColumn<BannerRow>[] = [
+    {
+      head: "Name / Link",
+      component: (b) => (
+        <>
+          <div><strong>{b.name}</strong></div>
+          <div className="text-rcn-muted text-xs break-all">{b.linkUrl || "—"}</div>
+        </>
+      ),
+    },
+    { head: "Placement", component: (b) => placementLabel(b.placement) },
+    {
+      head: "Scope",
+      component: (b) => {
+        const org = b.orgId ? db.orgs?.find((o: { id: string; name: string; address?: { state?: string; zip?: string } }) => o.id === b.orgId) : null;
+        return (
+          <>
+            {b.scope === "GLOBAL" ? "Global" : "Organization"}
+            {b.scope === "ORG" && org && (
+              <div className="text-rcn-muted text-xs">
+                {org.name} ({org.address?.state} {org.address?.zip})
+              </div>
+            )}
+          </>
+        );
+      },
+    },
+    {
+      head: "Status",
+      component: (b) => {
+        const inRange = isInDateRange(b);
+        return (
+          <>
+            {b.active ? (
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">Active</span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#f3d9a1] bg-[#fff8e6] text-[#7a4a00]">Inactive</span>
+            )}
+            {!inRange && (
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#f3d9a1] bg-[#fff8e6] text-[#7a4a00] ml-1" title="Outside date range">
+                Out of range
+              </span>
+            )}
+          </>
+        );
+      },
+    },
+    {
+      head: "Date Range",
+      component: (b) => (
+        <>{b.startAt ? new Date(b.startAt).toLocaleDateString() : "—"} → {b.endAt ? new Date(b.endAt).toLocaleDateString() : "—"}</>
+      ),
+    },
+    {
+      head: "Actions",
+      thClassName: "text-right",
+      tdClassName: "text-right",
+      component: () => (
+        <div className="flex gap-1 justify-end">
+          <Button onClick={() => showToast("Preview functionality not implemented")} variant="secondary">Preview</Button>
+          <Button onClick={() => showToast("Edit functionality not implemented")} variant="secondary">Edit</Button>
+          <Button onClick={() => showToast("Delete functionality not implemented")} variant="danger">Delete</Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <>
@@ -150,84 +229,15 @@ const Banners: React.FC = () => {
 
         {/* Banner Table */}
         <div className="overflow-auto">
-          <table className="w-full border-separate border-spacing-0 overflow-hidden rounded-2xl border border-rcn-border">
-            <thead>
-              <tr>
-                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Name / Link</th>
-                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Placement</th>
-                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Scope</th>
-                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Status</th>
-                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Date Range</th>
-                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-right align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 ? (
-                <tr><td colSpan={6} className="px-2.5 py-2.5 text-xs text-rcn-muted">No banners found.</td></tr>
-              ) : (
-                filtered.map((b: any) => {
-                  const org = b.orgId ? db.orgs?.find((o: any) => o.id === b.orgId) : null;
-                  const inRange = isInDateRange(b);
-                  return (
-                    <tr key={b.id}>
-                      <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                        <div><strong>{b.name}</strong></div>
-                        <div className="text-rcn-muted text-xs break-all">{b.linkUrl || '—'}</div>
-                      </td>
-                      <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                        {placementLabel(b.placement)}
-                      </td>
-                      <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                        {b.scope === 'GLOBAL' ? 'Global' : 'Organization'}
-                        {b.scope === 'ORG' && org && (
-                          <div className="text-rcn-muted text-xs">
-                            {org.name} ({org.address?.state} {org.address?.zip})
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                        {b.active ? (
-                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">Active</span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#f3d9a1] bg-[#fff8e6] text-[#7a4a00]">Inactive</span>
-                        )}
-                        {!inRange && (
-                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#f3d9a1] bg-[#fff8e6] text-[#7a4a00] ml-1" title="Outside date range">
-                            Out of range
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                        {b.startAt ? new Date(b.startAt).toLocaleDateString() : '—'} → {b.endAt ? new Date(b.endAt).toLocaleDateString() : '—'}
-                      </td>
-                      <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top text-right">
-                        <div className="flex gap-1 justify-end">
-                          <Button
-                            onClick={() => showToast('Preview functionality not implemented')}
-                            variant="secondary"
-                          >
-                            Preview
-                          </Button>
-                          <Button
-                            onClick={() => showToast('Edit functionality not implemented')}
-                            variant="secondary"
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            onClick={() => showToast('Delete functionality not implemented')}
-                            variant="danger"
-                          >
-                            Delete
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+          <TableLayout<BannerRow>
+            columns={bannerColumns}
+            data={filtered}
+            variant="bordered"
+            size="sm"
+            emptyMessage="No banners found."
+            getRowKey={(b) => b.id}
+            tableClassName="[&_td:last-child]:text-right"
+          />
         </div>
       </div>
 

@@ -1,8 +1,12 @@
 "use client";
 
 import { useOrgPortal } from "@/context/OrgPortalContext";
-import { Button, Modal } from "@/components";
+import type { Dept } from "@/context/OrgPortalContext";
+import { Button, Modal, TableLayout } from "@/components";
 import { useState } from "react";
+import type { TableColumn } from "@/components";
+
+type DeptRow = Dept & { branchName?: string };
 
 export default function OrgPortalDepartmentsPage() {
   const { branches, findBranch, addDepartment, renameDepartment } = useOrgPortal();
@@ -18,6 +22,11 @@ export default function OrgPortalDepartmentsPage() {
   const branchId = branchFilter || brs[0]?.id || "";
   const br = findBranch(branchId);
   const depts = br?.departments ?? [];
+  const data: DeptRow[] = depts.map((dp) => ({ ...dp, branchName: br?.name }));
+
+  const emptyMessage = !br
+    ? "No branches yet. Create a branch first."
+    : "No departments in this branch. Click \"+ Add Department\" to create one.";
 
   const openAdd = () => {
     if (!br) return;
@@ -40,6 +49,28 @@ export default function OrgPortalDepartmentsPage() {
     }
     setModal(null);
   };
+
+  const columns: TableColumn<DeptRow>[] = [
+    { head: "Name", accessor: "name", component: (row) => <span className="font-medium">{row.name}</span> },
+    { head: "Branch", accessor: "branchName", component: (row) => <span className="text-rcn-muted">{row.branchName ?? "—"}</span> },
+    {
+      head: "Actions",
+      thClassName: "text-right",
+      tdClassName: "text-right",
+      component: (row) => (
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (br) openEdit(br.id, row.id, row.name);
+          }}
+        >
+          Edit
+        </Button>
+      ),
+    },
+  ];
 
   return (
     <div>
@@ -67,37 +98,14 @@ export default function OrgPortalDepartmentsPage() {
 
       <div className="bg-rcn-card border border-rcn-border rounded-2xl shadow-rcn overflow-hidden">
         <div className="p-4">
-          <div className="border border-rcn-border rounded-xl overflow-x-auto">
-            <table className="w-full border-collapse text-sm min-w-[260px]">
-              <thead>
-                <tr className="bg-rcn-bg/90">
-                  <th className="px-2 py-2 sm:px-3 sm:py-2.5 text-left text-xs uppercase tracking-wide text-rcn-muted font-semibold">Name</th>
-                  <th className="px-2 py-2 sm:px-3 sm:py-2.5 text-left text-xs uppercase tracking-wide text-rcn-muted font-semibold">Branch</th>
-                  <th className="px-2 py-2 sm:px-3 sm:py-2.5 text-right text-xs uppercase tracking-wide text-rcn-muted font-semibold">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {!br && (
-                  <tr>
-                    <td colSpan={3} className="px-2 py-6 sm:px-3 text-rcn-muted text-xs text-center">No branches yet. Create a branch first.</td>
-                  </tr>
-                )}
-                {br && !depts.length && (
-                  <tr>
-                    <td colSpan={3} className="px-2 py-6 sm:px-3 text-rcn-muted text-xs text-center">No departments in this branch. Click &quot;+ Add Department&quot; to create one.</td>
-                  </tr>
-                )}
-                {depts.map((dp) => (
-                  <tr key={dp.id} className="border-t border-rcn-border/60 hover:bg-rcn-accent/5">
-                    <td className="px-2 py-2 sm:px-3 sm:py-2.5 font-medium">{dp.name}</td>
-                    <td className="px-2 py-2 sm:px-3 sm:py-2.5 text-rcn-muted">{br?.name}</td>
-                    <td className="px-2 py-2 sm:px-3 sm:py-2.5 text-right">
-                      <Button variant="secondary" size="sm" onClick={() => openEdit(br!.id, dp.id, dp.name)}>Edit</Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="border border-rcn-border rounded-xl overflow-hidden">
+            <TableLayout<DeptRow>
+              columns={columns}
+              data={data}
+              emptyMessage={emptyMessage}
+              wrapperClassName="min-w-[260px]"
+              getRowKey={(row) => row.id}
+            />
           </div>
         </div>
       </div>

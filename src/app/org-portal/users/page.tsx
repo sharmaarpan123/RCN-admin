@@ -1,7 +1,8 @@
 "use client";
 
 import { useOrgPortal } from "@/context/OrgPortalContext";
-import { Button, CustomNextLink } from "@/components";
+import type { OrgUser } from "@/context/OrgPortalContext";
+import { Button, CustomNextLink, TableLayout, TableActions, type TableColumn, type TableSortState } from "@/components";
 import { useState, useMemo } from "react";
 
 export default function OrgPortalUsersPage() {
@@ -12,16 +13,50 @@ export default function OrgPortalUsersPage() {
   } = useOrgPortal();
 
   const [search, setSearch] = useState("");
+  const [body, setBody] = useState<TableSortState>({ sort: "name", order: 1 });
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return users;
-    return users.filter((u) => {
-      const name = ctxDisplayName(u).toLowerCase();
-      const email = (u.email || "").toLowerCase();
-      return name.includes(q) || email.includes(q);
+    let list = users;
+    if (q) {
+      list = users.filter((u) => {
+        const name = ctxDisplayName(u).toLowerCase();
+        const email = (u.email || "").toLowerCase();
+        return name.includes(q) || email.includes(q);
+      });
+    }
+    const sortKey = body.sort;
+    const dir = body.order ?? 1;
+    if (!sortKey) return list;
+    return [...list].sort((a, b) => {
+      const an = sortKey === "name" ? ctxDisplayName(a) : (a[sortKey as keyof OrgUser] ?? "");
+      const bn = sortKey === "name" ? ctxDisplayName(b) : (b[sortKey as keyof OrgUser] ?? "");
+      const cmp = String(an).localeCompare(String(bn), undefined, { sensitivity: "base" });
+      return dir === -1 ? -cmp : cmp;
     });
-  }, [users, search, ctxDisplayName]);
+  }, [users, search, ctxDisplayName, body.sort, body.order]);
+
+  const columns: TableColumn<OrgUser>[] = useMemo(
+    () => [
+      { head: "Name", sortKey: "name", component: (u) => <span className="font-medium">{ctxDisplayName(u)}</span> },
+      { head: "Email", accessor: "email", sortKey: "email", component: (u) => <span className="text-rcn-muted">{u.email || "—"}</span> },
+      { head: "Role", component: (u) => (u.isAdmin ? "Admin" : (u.role || "User")) },
+      { head: "Status", component: (u) => (u.isActive ? "Active" : "Inactive") },
+      { head: "Assigned", component: (u) => (u.orgAssigned ? "Yes" : "No") },
+      {
+        head: "Actions",
+        tdClassName: "text-left whitespace-nowrap",
+        component: (u) => (
+          <TableActions
+            viewLink={`/org-portal/users/${u.id}`}
+            viewButtonText="View"
+            editUrl={`/org-portal/users/${u.id}/edit`}
+          />
+        ),
+      },
+    ],
+    [ctxDisplayName]
+  );
 
   return (
     <div>
@@ -43,41 +78,15 @@ export default function OrgPortalUsersPage() {
       </div>
 
       <div className="bg-rcn-card border border-rcn-border rounded-2xl shadow-rcn overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-sm min-w-[640px]">
-            <thead>
-              <tr className="bg-rcn-bg/90">
-                <th className="px-2 py-2 sm:px-3 sm:py-2.5 text-left text-xs uppercase tracking-wide text-rcn-muted font-semibold">Name</th>
-                <th className="px-2 py-2 sm:px-3 sm:py-2.5 text-left text-xs uppercase tracking-wide text-rcn-muted font-semibold">Email</th>
-                <th className="px-2 py-2 sm:px-3 sm:py-2.5 text-left text-xs uppercase tracking-wide text-rcn-muted font-semibold">Role</th>
-                <th className="px-2 py-2 sm:px-3 sm:py-2.5 text-left text-xs uppercase tracking-wide text-rcn-muted font-semibold">Status</th>
-                <th className="px-2 py-2 sm:px-3 sm:py-2.5 text-left text-xs uppercase tracking-wide text-rcn-muted font-semibold">Assigned</th>
-                <th className="px-2 py-2 sm:px-3 sm:py-2.5 text-left text-xs uppercase tracking-wide text-rcn-muted font-semibold">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {!filtered.length && (
-                <tr>
-                  <td colSpan={6} className="px-2 py-6 sm:px-3 text-rcn-muted text-xs text-center">No users found.</td>
-                </tr>
-              )}
-              {filtered.map((u) => (
-                <tr key={u.id} className="border-t border-rcn-border/60 hover:bg-rcn-accent/5">
-                  <td className="px-2 py-2 sm:px-3 sm:py-2.5 font-medium">{ctxDisplayName(u)}</td>
-                  <td className="px-2 py-2 sm:px-3 sm:py-2.5 text-rcn-muted">{u.email || "—"}</td>
-                  <td className="px-2 py-2 sm:px-3 sm:py-2.5">{u.isAdmin ? "Admin" : (u.role || "User")}</td>
-                  <td className="px-2 py-2 sm:px-3 sm:py-2.5">{u.isActive ? "Active" : "Inactive"}</td>
-                  <td className="px-2 py-2 sm:px-3 sm:py-2.5">{u.orgAssigned ? "Yes" : "No"}</td>
-                  <td className="px-2 py-2 sm:px-3 sm:py-2.5 text-left whitespace-nowrap">
-                    <CustomNextLink href={`/org-portal/users/${u.id}`} variant="secondary" size="sm">View</CustomNextLink>
-                    <span className="inline-block w-1.5 sm:w-2" />
-                    <CustomNextLink href={`/org-portal/users/${u.id}/edit`} variant="secondary" size="sm">Edit</CustomNextLink>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <TableLayout<OrgUser>
+          columns={columns}
+          data={filtered}
+          body={body}
+          setBody={setBody}
+          emptyMessage="No users found."
+          wrapperClassName="min-w-[640px]"
+          getRowKey={(u) => u.id}
+        />
       </div>
     </div>
   );

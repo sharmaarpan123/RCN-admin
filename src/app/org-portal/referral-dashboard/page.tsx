@@ -5,8 +5,9 @@ import {
   type Referral,
   type InboxRefMode,
 } from "@/context/OrgPortalContext";
-import { Button, Modal } from "@/components";
-import { useState } from "react";
+import { Button, Modal, TableLayout } from "@/components";
+import { useState, useMemo } from "react";
+import type { TableColumn } from "@/components";
 
 function fmtDate(iso: string) {
   if (!iso) return "—";
@@ -39,24 +40,27 @@ export default function OrgPortalReferralDashboardPage() {
     return okQ && okS;
   });
 
-  const cols =
-    inboxRefMode === "received"
-      ? [
-          { k: "date" as const, t: "Date" },
-          { k: "patient" as const, t: "Patient" },
-          { k: "dob" as const, t: "DOB" },
-          { k: "service" as const, t: "Service" },
-          { k: "senderOrg" as const, t: "Sender" },
-          { k: "status" as const, t: "Status" },
-        ]
-      : [
-          { k: "date" as const, t: "Date" },
-          { k: "patient" as const, t: "Patient" },
-          { k: "dob" as const, t: "DOB" },
-          { k: "service" as const, t: "Service" },
-          { k: "receiverOrg" as const, t: "Receiver" },
-          { k: "status" as const, t: "Status" },
-        ];
+  const columns: TableColumn<Referral>[] = useMemo(
+    () =>
+      inboxRefMode === "received"
+        ? [
+            { head: "Date", component: (r) => fmtDate(r.date) },
+            { head: "Patient", accessor: "patient" },
+            { head: "DOB", accessor: "dob" },
+            { head: "Service", accessor: "service" },
+            { head: "Sender", accessor: "senderOrg" },
+            { head: "Status", accessor: "status" },
+          ]
+        : [
+            { head: "Date", component: (r) => fmtDate(r.date) },
+            { head: "Patient", accessor: "patient" },
+            { head: "DOB", accessor: "dob" },
+            { head: "Service", accessor: "service" },
+            { head: "Receiver", accessor: "receiverOrg" },
+            { head: "Status", accessor: "status" },
+          ],
+    [inboxRefMode]
+  );
 
   return (
     <div>
@@ -114,35 +118,14 @@ export default function OrgPortalReferralDashboardPage() {
             </div>
           </div>
           <div className="overflow-x-auto rounded-2xl border border-rcn-border">
-            <table className="w-full border-collapse text-sm min-w-[520px]">
-              <thead>
-                <tr className="bg-rcn-bg/90">
-                  {cols.map((c) => (
-                    <th key={c.k} className="px-2 py-2 sm:px-3 sm:py-2.5 text-left text-xs uppercase tracking-wide text-rcn-muted font-semibold">{c.t}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {!filtered.length && (
-                  <tr>
-                    <td colSpan={cols.length} className="px-2 py-4 sm:px-3 text-rcn-muted text-xs">No referrals found. Use &quot;Load Demo Referrals&quot; to add demo data.</td>
-                  </tr>
-                )}
-                {filtered.map((r) => (
-                  <tr
-                    key={r.id}
-                    className="border-t border-rcn-border/60 hover:bg-rcn-accent/5 cursor-pointer"
-                    onClick={() => setModal({ mode: inboxRefMode, r })}
-                  >
-                    {cols.map((c) => (
-                      <td key={c.k} className="px-2 py-2 sm:px-3 sm:py-2.5">
-                        {c.k === "date" ? fmtDate(r.date) : (r[c.k] ?? "—")}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <TableLayout<Referral>
+              columns={columns}
+              data={filtered}
+              emptyMessage='No referrals found. Use "Load Demo Referrals" to add demo data.'
+              wrapperClassName="min-w-[520px]"
+              getRowKey={(r) => r.id}
+              onRowClick={(r) => setModal({ mode: inboxRefMode, r })}
+            />
           </div>
           <p className="text-xs text-rcn-muted m-0">Tip: Click any row to open details.</p>
         </div>

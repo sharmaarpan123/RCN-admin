@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../../context/AppContext';
 import { safeLower } from '../../../utils/database';
+import { TableLayout, type TableColumn } from '../../../components';
 
 const Financial: React.FC = () => {
   const { db, refreshDB, showToast } = useApp();
@@ -104,6 +105,29 @@ const Financial: React.FC = () => {
     ...orgStats[o.id]
   })).sort((a: any, b: any) => b.total - a.total);
 
+  type OrgRow = { id: string; name: string; state: string; sent: number; received: number; total: number };
+  const orgTableColumns: TableColumn<OrgRow>[] = [
+    {
+      head: "Organization",
+      component: (row) => (
+        <>
+          <b>{row.name}</b>
+          <div className="text-rcn-muted font-mono text-[11px]">({row.id})</div>
+        </>
+      ),
+    },
+    { head: "State", accessor: "state", tdClassName: "font-mono" },
+    { head: "Sent", accessor: "sent", tdClassName: "font-mono" },
+    { head: "Received", accessor: "received", tdClassName: "font-mono" },
+    { head: "Total", component: (row) => <b className="font-mono">{row.total}</b> },
+  ];
+
+  type StateRow = { state: string; count: number };
+  const stateTableColumns: TableColumn<StateRow>[] = [
+    { head: "State", accessor: "state", tdClassName: "font-mono" },
+    { head: "Referrals", component: (row) => <b className="font-mono">{row.count}</b> },
+  ];
+
   // Referrals by state
   const receiverStateCount: Record<string, number> = {};
   const senderStateCount: Record<string, number> = {};
@@ -157,6 +181,38 @@ const Financial: React.FC = () => {
 
     return true;
   });
+
+  type InvoiceRow = { id: string; number?: string; orgName?: string; orgEmail?: string; createdAt: string; totalCents?: number; emailStatus?: string };
+  const invoiceTableColumns: TableColumn<InvoiceRow>[] = [
+    { head: "Invoice #", component: (inv) => <span className="font-mono font-semibold">{inv.number}</span> },
+    { head: "Organization", accessor: "orgName" },
+    { head: "Email", component: (inv) => <span className="font-mono">{inv.orgEmail || '—'}</span> },
+    { head: "Date", component: (inv) => <span className="font-mono">{new Date(inv.createdAt).toLocaleDateString()}</span> },
+    { head: "Total", component: (inv) => <span className="font-mono font-semibold">${centsToMoney(inv.totalCents || 0)}</span> },
+    { head: "Status", component: (inv) => <span className="font-mono">{inv.emailStatus || 'PENDING'}</span> },
+    {
+      head: "Actions",
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Actions column does not use row
+      component: (_inv: InvoiceRow) => (
+        <div className="flex gap-1">
+          <button
+            type="button"
+            onClick={() => showToast('View invoice functionality not implemented')}
+            className="border border-rcn-border bg-white px-2 py-1.5 rounded-lg cursor-pointer font-semibold text-rcn-text text-xs hover:border-[#c9ddd0] transition-colors"
+          >
+            View
+          </button>
+          <button
+            type="button"
+            onClick={() => showToast('Email functionality not implemented')}
+            className="border border-rcn-border bg-white px-2 py-1.5 rounded-lg cursor-pointer font-semibold text-rcn-text text-xs hover:border-[#c9ddd0] transition-colors"
+          >
+            Email
+          </button>
+        </div>
+      ),
+    },
+  ];
 
   const handleApplyTime = () => {
     refreshDB();
@@ -279,37 +335,14 @@ const Financial: React.FC = () => {
             </span>
           </div>
 
-          <div className="overflow-auto">
-            <table className="w-full border-separate border-spacing-0 overflow-hidden rounded-2xl border border-rcn-border">
-              <thead>
-                <tr>
-                  <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Organization</th>
-                  <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">State</th>
-                  <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Sent</th>
-                  <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Received</th>
-                  <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orgRows.length === 0 ? (
-                  <tr><td colSpan={5} className="px-2.5 py-2.5 text-xs text-rcn-muted">No data.</td></tr>
-                ) : (
-                  orgRows.map((row: any) => (
-                    <tr key={row.id}>
-                      <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                        <b>{row.name}</b>
-                        <div className="text-rcn-muted font-mono text-[11px]">({row.id})</div>
-                      </td>
-                      <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono">{row.state}</td>
-                      <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono">{row.sent}</td>
-                      <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono">{row.received}</td>
-                      <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono"><b>{row.total}</b></td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+          <TableLayout<OrgRow>
+            columns={orgTableColumns}
+            data={orgRows}
+            variant="bordered"
+            size="sm"
+            emptyMessage="No data."
+            getRowKey={(row) => row.id}
+          />
         </div>
 
         {/* Referrals by State */}
@@ -325,55 +358,25 @@ const Financial: React.FC = () => {
           {/* Receiver State */}
           <div className="bg-white border border-rcn-border rounded-xl p-3 mb-3" style={{background: 'rgba(255,255,255,0.55)'}}>
             <div className="text-rcn-muted text-xs font-semibold mb-2">Receiver organization state</div>
-            <div className="overflow-auto">
-              <table className="w-full border-separate border-spacing-0 overflow-hidden rounded-2xl border border-rcn-border">
-                <thead>
-                  <tr>
-                    <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">State</th>
-                    <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Referrals</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {receiverStateRows.length === 0 ? (
-                    <tr><td colSpan={2} className="px-2.5 py-2.5 text-xs text-rcn-muted">No data.</td></tr>
-                  ) : (
-                    receiverStateRows.map((row: any, idx: number) => (
-                      <tr key={idx}>
-                        <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono">{row.state}</td>
-                        <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono"><b>{row.count}</b></td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <TableLayout<StateRow>
+              columns={stateTableColumns}
+              data={receiverStateRows}
+              variant="bordered"
+              size="sm"
+              emptyMessage="No data."
+            />
           </div>
 
           {/* Sender State */}
           <div className="bg-white border border-rcn-border rounded-xl p-3" style={{background: 'rgba(255,255,255,0.55)'}}>
             <div className="text-rcn-muted text-xs font-semibold mb-2">Sender organization state</div>
-            <div className="overflow-auto">
-              <table className="w-full border-separate border-spacing-0 overflow-hidden rounded-2xl border border-rcn-border">
-                <thead>
-                  <tr>
-                    <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">State</th>
-                    <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Referrals</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {senderStateRows.length === 0 ? (
-                    <tr><td colSpan={2} className="px-2.5 py-2.5 text-xs text-rcn-muted">No data.</td></tr>
-                  ) : (
-                    senderStateRows.map((row: any, idx: number) => (
-                      <tr key={idx}>
-                        <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono">{row.state}</td>
-                        <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono"><b>{row.count}</b></td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <TableLayout<StateRow>
+              columns={stateTableColumns}
+              data={senderStateRows}
+              variant="bordered"
+              size="sm"
+              emptyMessage="No data."
+            />
           </div>
         </div>
       </div>
@@ -446,69 +449,14 @@ const Financial: React.FC = () => {
         </div>
 
         {/* Invoice Table */}
-        <div className="overflow-auto">
-          <table className="w-full border-separate border-spacing-0 overflow-hidden rounded-2xl border border-rcn-border">
-            <thead>
-              <tr>
-                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Invoice #</th>
-                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Organization</th>
-                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Email</th>
-                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Date</th>
-                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Total</th>
-                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Status</th>
-                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredInvoices.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-2.5 py-3 text-xs text-rcn-muted">
-                    No invoices found.
-                  </td>
-                </tr>
-              ) : (
-                filteredInvoices.map((inv: any) => (
-                  <tr key={inv.id}>
-                    <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono font-semibold">
-                      {inv.number}
-                    </td>
-                    <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                      {inv.orgName}
-                    </td>
-                    <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono">
-                      {inv.orgEmail || '—'}
-                    </td>
-                    <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono">
-                      {new Date(inv.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono font-semibold">
-                      ${centsToMoney(inv.totalCents || 0)}
-                    </td>
-                    <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono">
-                      {inv.emailStatus || 'PENDING'}
-                    </td>
-                    <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                      <div className="flex gap-1">
-                        <button 
-                          onClick={() => showToast('View invoice functionality not implemented')}
-                          className="border border-rcn-border bg-white px-2 py-1.5 rounded-lg cursor-pointer font-semibold text-rcn-text text-xs hover:border-[#c9ddd0] transition-colors"
-                        >
-                          View
-                        </button>
-                        <button 
-                          onClick={() => showToast('Email functionality not implemented')}
-                          className="border border-rcn-border bg-white px-2 py-1.5 rounded-lg cursor-pointer font-semibold text-rcn-text text-xs hover:border-[#c9ddd0] transition-colors"
-                        >
-                          Email
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+        <TableLayout<InvoiceRow>
+          columns={invoiceTableColumns}
+          data={filteredInvoices}
+          variant="bordered"
+          size="sm"
+          emptyMessage="No invoices found."
+          getRowKey={(row) => row.id}
+        />
       </div>
     </>
   );
