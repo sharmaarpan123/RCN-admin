@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { useApp } from "@/context/AppContext";
 import { US_STATES, safeLower } from "@/utils/database";
-import { Button, TableLayout, type TableColumn } from "@/components";
+import { Button, CustomReactSelect, TableLayout, type TableColumn } from "@/components";
 
 const Organizations: React.FC = () => {
   const { db, refreshDB, showToast, openModal, closeModal } = useApp();
@@ -174,6 +174,77 @@ const Organizations: React.FC = () => {
         <button type="button" onClick={() => openUserModal(u.id)} className={btnSmallClass}>
           Edit
         </button>
+      ),
+    },
+  ];
+
+  type BranchTableRow = { id: string; name: string; enabled?: boolean };
+  const branchTableColumns: TableColumn<BranchTableRow>[] = [
+    {
+      head: "Branch",
+      component: (b) => (
+        <>
+          <b>{b.name}</b> <span className="text-rcn-muted font-mono text-[11px]">({b.id})</span>
+        </>
+      ),
+    },
+    {
+      head: "Enabled",
+      component: (b) =>
+        b.enabled ? (
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">Enabled</span>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#f3b8b8] bg-[#fff1f2] text-[#991b1b]">Disabled</span>
+        ),
+    },
+    {
+      head: "Actions",
+      component: (b) => (
+        <div className="flex gap-2">
+          <button type="button" onClick={() => toggleBranch(b.id)} className={btnSmallClass}>Toggle</button>
+          <button type="button" onClick={() => openBranchModal(b.id)} className={btnSmallClass}>Edit</button>
+        </div>
+      ),
+    },
+  ];
+
+  type DeptTableRow = { id: string; name: string; branchId: string; enabled?: boolean };
+  const deptTableColumns: TableColumn<DeptTableRow>[] = [
+    {
+      head: "Branch",
+      component: (d) => {
+        const branch = db.branches.find((b: any) => b.id === d.branchId);
+        return (
+          <>
+            {branch?.name || "—"} <span className="text-rcn-muted font-mono text-[11px]">({d.branchId || "—"})</span>
+          </>
+        );
+      },
+    },
+    {
+      head: "Department",
+      component: (d) => (
+        <>
+          <b>{d.name}</b> <span className="text-rcn-muted font-mono text-[11px]">({d.id})</span>
+        </>
+      ),
+    },
+    {
+      head: "Enabled",
+      component: (d) =>
+        d.enabled ? (
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">Enabled</span>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#f3b8b8] bg-[#fff1f2] text-[#991b1b]">Disabled</span>
+        ),
+    },
+    {
+      head: "Actions",
+      component: (d) => (
+        <div className="flex gap-2">
+          <button type="button" onClick={() => toggleDept(d.id)} className={btnSmallClass}>Toggle</button>
+          <button type="button" onClick={() => openDeptModal(d.id)} className={btnSmallClass}>Edit</button>
+        </div>
       ),
     },
   ];
@@ -842,20 +913,20 @@ const Organizations: React.FC = () => {
             <h3 className="m-0 text-sm font-semibold">Organization Modules</h3>
             <p className="text-xs text-rcn-muted mt-1 mb-0">Branches, Departments, and Users are managed inside the selected Organization.</p>
           </div>
-          <div className="flex flex-col gap-1.5 min-w-[360px]">
+          <div className="flex flex-col gap-1.5 w-full  md:w-[300px]">
             <label className="text-xs text-rcn-muted">Select Organization</label>
-            <select
+            <CustomReactSelect
+              options={db.orgs.map((o: { id: string; name: string; address?: { state?: string; zip?: string } }) => ({
+                value: o.id,
+                label: `${o.name} — ${o.address?.state ?? ""} ${o.address?.zip ?? ""}`.trim(),
+              }))}
               value={selectedOrgId}
-              onChange={(e) => setSelectedOrgId(e.target.value)}
-              className={inputClass}
-            >
-              <option value="">— Select Organization —</option>
-              {db.orgs.map((o: any) => (
-                <option key={o.id} value={o.id}>
-                  {o.name} — {o.address?.state} {o.address?.zip}
-                </option>
-              ))}
-            </select>
+              onChange={setSelectedOrgId}
+              placeholder="— Select Organization —"
+              aria-label="Select Organization"
+              isClearable
+              maxMenuHeight={280}
+            />
           </div>
         </div>
 
@@ -958,7 +1029,7 @@ const Organizations: React.FC = () => {
                 </div>
 
                 <div className="flex gap-3 items-end mb-3">
-                  <div className="flex flex-col gap-1.5 flex-1 min-w-[320px]">
+                  <div className="flex flex-col gap-1.5 flex-1">
                     <label className="text-xs text-rcn-muted">Search Branches</label>
                     <input
                       value={branchSearch}
@@ -971,41 +1042,14 @@ const Organizations: React.FC = () => {
                 </div>
 
                 <div className="overflow-auto">
-                  <table className="w-full border-separate border-spacing-0 overflow-hidden rounded-2xl border border-rcn-border">
-                    <thead>
-                      <tr>
-                        <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Branch</th>
-                        <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Enabled</th>
-                        <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {getFilteredBranches().length === 0 ? (
-                        <tr><td colSpan={3} className="px-2.5 py-2.5 text-xs text-rcn-muted">No branches for this organization.</td></tr>
-                      ) : (
-                        getFilteredBranches().map((b: any) => (
-                          <tr key={b.id}>
-                            <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                              <b>{b.name}</b> <span className="text-rcn-muted font-mono text-[11px]">({b.id})</span>
-                            </td>
-                            <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                              {b.enabled ? (
-                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">Enabled</span>
-                              ) : (
-                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#f3b8b8] bg-[#fff1f2] text-[#991b1b]">Disabled</span>
-                              )}
-                            </td>
-                            <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                              <div className="flex gap-2">
-                                <button onClick={() => toggleBranch(b.id)} className={btnSmallClass}>Toggle</button>
-                                <button onClick={() => openBranchModal(b.id)} className={btnSmallClass}>Edit</button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
+                  <TableLayout<BranchTableRow>
+                    columns={branchTableColumns}
+                    data={getFilteredBranches() as BranchTableRow[]}
+                    variant="bordered"
+                    size="sm"
+                    emptyMessage="No branches for this organization."
+                    getRowKey={(b) => b.id}
+                  />
                 </div>
               </div>
             )}
@@ -1022,7 +1066,7 @@ const Organizations: React.FC = () => {
                 </div>
 
                 <div className="flex gap-3 items-end mb-3">
-                  <div className="flex flex-col gap-1.5 flex-1 min-w-[320px]">
+                  <div className="flex flex-col gap-1.5 flex-1 ">
                     <label className="text-xs text-rcn-muted">Search Departments</label>
                     <input
                       value={deptSearch}
@@ -1035,48 +1079,14 @@ const Organizations: React.FC = () => {
                 </div>
 
                 <div className="overflow-auto">
-                  <table className="w-full border-separate border-spacing-0 overflow-hidden rounded-2xl border border-rcn-border">
-                    <thead>
-                      <tr>
-                        <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Branch</th>
-                        <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Department</th>
-                        <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Enabled</th>
-                        <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {getFilteredDepts().length === 0 ? (
-                        <tr><td colSpan={4} className="px-2.5 py-2.5 text-xs text-rcn-muted">No departments for this organization.</td></tr>
-                      ) : (
-                        getFilteredDepts().map((d: any) => {
-                          const branch = db.branches.find((b: any) => b.id === d.branchId);
-                          return (
-                            <tr key={d.id}>
-                              <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                                {branch?.name || '—'} <span className="text-rcn-muted font-mono text-[11px]">({d.branchId || '—'})</span>
-                              </td>
-                              <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                                <b>{d.name}</b> <span className="text-rcn-muted font-mono text-[11px]">({d.id})</span>
-                              </td>
-                              <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                                {d.enabled ? (
-                                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">Enabled</span>
-                                ) : (
-                                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#f3b8b8] bg-[#fff1f2] text-[#991b1b]">Disabled</span>
-                                )}
-                              </td>
-                              <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                                <div className="flex gap-2">
-                                  <button onClick={() => toggleDept(d.id)} className={btnSmallClass}>Toggle</button>
-                                  <button onClick={() => openDeptModal(d.id)} className={btnSmallClass}>Edit</button>
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })
-                      )}
-                    </tbody>
-                  </table>
+                  <TableLayout<DeptTableRow>
+                    columns={deptTableColumns}
+                    data={getFilteredDepts() as DeptTableRow[]}
+                    variant="bordered"
+                    size="sm"
+                    emptyMessage="No departments for this organization."
+                    getRowKey={(d) => d.id}
+                  />
                 </div>
               </div>
             )}
