@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 import { useApp } from "@/context/AppContext";
-import { safeLower } from "@/utils/database";
-import { Button, TableLayout, type TableColumn } from "@/components";
+import { safeLower, saveDB, uid } from "@/utils/database";
+import { Button, TableLayout, type TableColumn, Modal } from "@/components";
 import Image from "next/image";
 
 interface BannerRow {
@@ -12,14 +12,29 @@ interface BannerRow {
   linkUrl?: string;
   placement: string;
   scope: string;
-  orgId?: string;
+  orgId?: string | null;
   active: boolean;
   startAt?: string;
   endAt?: string;
+  imageData?: string;
+  imageUrl?: string;
+  alt?: string;
+  notes?: string;
 }
 
+const PLACEMENT_OPTIONS = [
+  { value: "RIGHT_SIDEBAR", label: "Right Sidebar" },
+  { value: "HEADER_STRIP", label: "Header Strip" },
+  { value: "LOGIN_RIGHT", label: "Login Right" },
+];
+
+const SCOPE_OPTIONS = [
+  { value: "GLOBAL", label: "Global" },
+  { value: "ORG", label: "Organization-specific" },
+];
+
 const Banners: React.FC = () => {
-  const { db, showToast } = useApp();
+  const { db, showToast, refreshDB } = useApp();
 
   // Filter states
   const [search, setSearch] = useState('');
@@ -31,9 +46,12 @@ const Banners: React.FC = () => {
   // Preview state
   const [previewPlacement, setPreviewPlacement] = useState('RIGHT_SIDEBAR');
 
+  // Banner modal (create / edit)
+  const [isBannerModalOpen, setIsBannerModalOpen] = useState(false);
+  const [editingBannerId, setEditingBannerId] = useState<string | null>(null);
+
   const inputClass = "w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white text-sm outline-none focus:border-[#b9d7c5] focus:shadow-[0_0_0_3px_rgba(31,122,75,0.12)]";
   const btnClass = "border border-rcn-border bg-white px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-rcn-text text-sm hover:border-[#c9ddd0] transition-colors";
-  const btnPrimaryClass = "bg-rcn-accent border-rcn-accent text-white px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-sm hover:bg-rcn-accent-dark transition-colors";
 
   const placementLabel = (p: string) => {
     const labels: Record<string, string> = {
@@ -84,6 +102,79 @@ const Banners: React.FC = () => {
 
     return false;
   });
+
+  const closeBannerModal = () => {
+    setIsBannerModalOpen(false);
+    setEditingBannerId(null);
+  };
+
+  const openBannerModal = (bannerId?: string) => {
+    setEditingBannerId(bannerId ?? null);
+    setIsBannerModalOpen(true);
+  };
+
+  const saveBanner = () => {
+    const name = (document.getElementById('banner_name') as HTMLInputElement)?.value.trim();
+    if (!name) {
+      showToast('Banner name is required.');
+      return;
+    }
+    const linkUrl = (document.getElementById('banner_linkUrl') as HTMLInputElement)?.value.trim() || '';
+    const placement = (document.getElementById('banner_placement') as HTMLSelectElement)?.value || 'RIGHT_SIDEBAR';
+    const scope = (document.getElementById('banner_scope') as HTMLSelectElement)?.value || 'GLOBAL';
+    const orgId = scope === 'ORG' ? (document.getElementById('banner_orgId') as HTMLSelectElement)?.value || null : null;
+    const active = (document.getElementById('banner_active') as HTMLSelectElement)?.value === 'true';
+    const startAt = (document.getElementById('banner_startAt') as HTMLInputElement)?.value || '';
+    const endAt = (document.getElementById('banner_endAt') as HTMLInputElement)?.value || '';
+    const alt = (document.getElementById('banner_alt') as HTMLInputElement)?.value.trim() || '';
+    const notes = (document.getElementById('banner_notes') as HTMLTextAreaElement)?.value.trim() || '';
+    const imageUrl = (document.getElementById('banner_imageUrl') as HTMLInputElement)?.value.trim() || '';
+
+    const existing = editingBannerId ? (db.banners || []).find((b: { id: string }) => b.id === editingBannerId) : null;
+    const now = new Date().toISOString();
+    const bannerObj = {
+      id: editingBannerId || uid('banner'),
+      name,
+      linkUrl,
+      placement,
+      scope,
+      orgId,
+      active,
+      startAt,
+      endAt,
+      alt,
+      notes,
+      imageUrl,
+      imageData: existing?.imageData || '',
+      createdAt: existing?.createdAt || now,
+      createdBy: existing?.createdBy || 'user',
+      updatedAt: now,
+      updatedBy: 'user',
+    };
+
+    if (editingBannerId) {
+      const idx = (db.banners || []).findIndex((b: { id: string }) => b.id === editingBannerId);
+      if (idx !== -1) db.banners[idx] = bannerObj;
+    } else {
+      db.banners = db.banners || [];
+      db.banners.push(bannerObj);
+    }
+    saveDB(db);
+    refreshDB();
+    closeBannerModal();
+    showToast(editingBannerId ? 'Banner updated.' : 'Banner created.');
+  };
+
+  const deleteBanner = (bannerId: string) => {
+    if (!window.confirm('Delete this banner? This cannot be undone.')) return;
+    db.banners = (db.banners || []).filter((b: { id: string }) => b.id !== bannerId);
+    saveDB(db);
+    refreshDB();
+    closeBannerModal();
+    showToast('Banner deleted.');
+  };
+
+  const editingBanner = editingBannerId ? (db.banners || []).find((b: { id: string }) => b.id === editingBannerId) : null;
 
   const bannerColumns: TableColumn<BannerRow>[] = [
     {
@@ -142,11 +233,16 @@ const Banners: React.FC = () => {
       head: "Actions",
       thClassName: "text-right",
       tdClassName: "text-right",
-      component: () => (
-        <div className="flex gap-1 justify-end">
-          <Button onClick={() => showToast("Preview functionality not implemented")} variant="secondary">Preview</Button>
-          <Button onClick={() => showToast("Edit functionality not implemented")} variant="secondary">Edit</Button>
-          <Button onClick={() => showToast("Delete functionality not implemented")} variant="danger">Delete</Button>
+      component: (b) => (
+        <div className="flex gap-1 justify-end flex-wrap">
+          <Button
+            variant="secondary"
+            onClick={() => b.linkUrl ? window.open(b.linkUrl, '_blank') : showToast('No link URL set')}
+          >
+            Preview
+          </Button>
+          <Button variant="secondary" onClick={() => openBannerModal(b.id)}>Edit</Button>
+          <Button variant="danger" onClick={() => deleteBanner(b.id)}>Delete</Button>
         </div>
       ),
     },
@@ -162,10 +258,7 @@ const Banners: React.FC = () => {
               Create and manage advertising banners. Banners can be Global (all organizations) or scoped to a specific organization.
             </p>
           </div>
-          <Button
-            variant="primary"
-            onClick={() => showToast('Banner creation not implemented in this demo')}
-          >
+          <Button variant="primary" onClick={() => openBannerModal()}>
             + New Banner
           </Button>
         </div>
@@ -227,7 +320,8 @@ const Banners: React.FC = () => {
 
         <div className="h-px bg-rcn-border my-3.5"></div>
 
-        {/* Banner Table */}
+        {/* Banner list */}
+        <h4 className="text-xs font-semibold text-rcn-muted uppercase tracking-wider m-0 mb-2">Banner list</h4>
         <div className="overflow-auto">
           <TableLayout<BannerRow>
             columns={bannerColumns}
@@ -240,6 +334,134 @@ const Banners: React.FC = () => {
           />
         </div>
       </div>
+
+      {/* Banner Create / Edit Modal */}
+      <Modal isOpen={isBannerModalOpen} onClose={closeBannerModal} maxWidth="720px">
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold m-0">
+              {editingBanner ? 'Edit Banner' : 'New Banner'}
+            </h3>
+            <button type="button" onClick={closeBannerModal} className={btnClass}>Close</button>
+          </div>
+          <div className="h-px bg-rcn-border mb-4"></div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-rcn-muted font-semibold mb-1.5">Banner Name *</label>
+              <input
+                id="banner_name"
+                type="text"
+                defaultValue={editingBanner?.name || ''}
+                placeholder="e.g. Summer Promo"
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-rcn-muted font-semibold mb-1.5">Link URL</label>
+              <input
+                id="banner_linkUrl"
+                type="url"
+                defaultValue={editingBanner?.linkUrl || ''}
+                placeholder="https://..."
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-rcn-muted font-semibold mb-1.5">Placement</label>
+              <select id="banner_placement" defaultValue={editingBanner?.placement || 'RIGHT_SIDEBAR'} className={inputClass}>
+                {PLACEMENT_OPTIONS.map((p) => (
+                  <option key={p.value} value={p.value}>{p.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-rcn-muted font-semibold mb-1.5">Scope</label>
+              <select id="banner_scope" defaultValue={editingBanner?.scope || 'GLOBAL'} className={inputClass}>
+                {SCOPE_OPTIONS.map((s) => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-rcn-muted font-semibold mb-1.5">Organization (if scoped)</label>
+              <select id="banner_orgId" defaultValue={editingBanner?.orgId || ''} className={inputClass}>
+                <option value="">— None (Global) —</option>
+                {(db.orgs || []).map((o: { id: string; name: string; address?: { state?: string; zip?: string } }) => (
+                  <option key={o.id} value={o.id}>{o.name} ({o.address?.state} {o.address?.zip})</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-rcn-muted font-semibold mb-1.5">Status</label>
+              <select id="banner_active" defaultValue={String(editingBanner?.active ?? true)} className={inputClass}>
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-rcn-muted font-semibold mb-1.5">Start Date (optional)</label>
+              <input
+                id="banner_startAt"
+                type="datetime-local"
+                defaultValue={editingBanner?.startAt ? editingBanner.startAt.slice(0, 16) : ''}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-rcn-muted font-semibold mb-1.5">End Date (optional)</label>
+              <input
+                id="banner_endAt"
+                type="datetime-local"
+                defaultValue={editingBanner?.endAt ? editingBanner.endAt.slice(0, 16) : ''}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-rcn-muted font-semibold mb-1.5">Image URL (optional)</label>
+              <input
+                id="banner_imageUrl"
+                type="url"
+                defaultValue={editingBanner?.imageUrl || ''}
+                placeholder="https://..."
+                className={inputClass}
+              />
+              <p className="text-xs text-rcn-muted mt-1">Image upload not in demo; use a URL.</p>
+            </div>
+            <div>
+              <label className="block text-xs text-rcn-muted font-semibold mb-1.5">Alt Text (optional)</label>
+              <input
+                id="banner_alt"
+                type="text"
+                defaultValue={editingBanner?.alt || ''}
+                placeholder="Accessibility description"
+                className={inputClass}
+              />
+            </div>
+          </div>
+          <div className="mt-4">
+            <label className="block text-xs text-rcn-muted font-semibold mb-1.5">Notes (optional)</label>
+            <textarea
+              id="banner_notes"
+              rows={2}
+              defaultValue={editingBanner?.notes || ''}
+              className={inputClass}
+              placeholder="Internal notes..."
+            />
+          </div>
+
+          <div className="h-px bg-rcn-border my-4"></div>
+          <div className="flex justify-between items-center">
+            <p className="text-xs text-rcn-muted m-0">Changes apply after Save.</p>
+            <div className="flex gap-2">
+              {editingBanner && (
+                <Button variant="danger" onClick={() => deleteBanner(editingBanner.id)}>Delete</Button>
+              )}
+              <Button variant="primary" onClick={saveBanner}>Save</Button>
+            </div>
+          </div>
+        </div>
+      </Modal>
 
       {/* Live Preview and Notes */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5 mt-3.5">
