@@ -2,6 +2,7 @@
 
 import React from "react";
 import Button from "@/components/Button";
+import CustomReactSelect from "@/components/CustomReactSelect";
 import { SectionHeader } from "./SectionHeader";
 import { US_STATES } from "./types";
 import type { Receiver } from "./types";
@@ -94,17 +95,15 @@ export function SelectReceiverSection({
           <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
             State (business location)
           </label>
-          <select
+          <CustomReactSelect
             value={stateFilter}
-            onChange={(e) => setStateFilter(e.target.value)}
-            className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
-          >
-            {US_STATES.map((s) => (
-              <option key={s.value} value={s.value}>
-                {s.label}
-              </option>
-            ))}
-          </select>
+            onChange={setStateFilter}
+            options={US_STATES}
+            placeholder="Select state..."
+            aria-label="State (business location)"
+            isClearable={false}
+            maxMenuHeight={280}
+          />
           <p className="text-xs text-rcn-muted mt-1.5">
             Select a state to narrow down available receivers.
           </p>

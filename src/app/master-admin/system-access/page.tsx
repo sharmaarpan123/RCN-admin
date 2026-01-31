@@ -2,12 +2,15 @@
 import React, { useState } from 'react';
 import { useApp } from '../../../context/AppContext';
 import { roleLabel, safeLower, saveDB, audit, uid } from '../../../utils/database';
-import { TableLayout, type TableColumn } from '../../../components';
+import { TableLayout, type TableColumn, Modal } from '../../../components';
 
 const UserPanel: React.FC = () => {
-  const { db, refreshDB, showToast, openModal, closeModal } = useApp();
+  const { db, refreshDB, showToast } = useApp();
   const [search, setSearch] = useState('');
   const [enabledFilter, setEnabledFilter] = useState('');
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
+
   const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
 
   const systemAdmins = db.users.filter((u: any) => u.role === 'SYSTEM_ADMIN');
@@ -81,244 +84,20 @@ const UserPanel: React.FC = () => {
   const btnClass = "border border-rcn-border bg-white px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-rcn-text text-sm hover:border-[#c9ddd0] transition-colors";
   const btnPrimaryClass = "bg-rcn-accent border-rcn-accent text-white px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-sm hover:bg-rcn-accent-dark transition-colors";
 
-  const openUserModal = (userId: string | null = null) => {
-    const user = userId ? db.users.find((u: any) => u.id === userId) : null;
-    const isEdit = !!user;
-
-    const modalContent = (
-      <div>
-        <div className="flex justify-between items-center mb-4">
-          <div>
-            <h3 className="text-lg font-semibold m-0">{isEdit ? 'Edit' : 'New'} Master Admin User</h3>
-            <p className="text-sm text-rcn-muted mt-1 mb-0">Master Admin users belong only to this Admin Panel and have no affiliation with any organization.</p>
-          </div>
-          <button onClick={closeModal} className={btnClass}>Close</button>
-        </div>
-
-        <div className="border-b border-rcn-border mb-4"></div>
-
-        {/* Tabs */}
-        <div className="flex gap-2 mb-4">
-          <button 
-            onClick={() => setActiveTab('profile')}
-            className={`px-4 py-2 rounded-full text-sm font-bold transition-colors ${
-              activeTab === 'profile' 
-                ? 'bg-rcn-accent text-white border border-rcn-accent' 
-                : 'bg-[#f6fbf7] border border-rcn-border hover:border-[#b9d7c5]'
-            }`}
-          >
-            User Profile
-          </button>
-          <button 
-            onClick={() => setActiveTab('password')}
-            className={`px-4 py-2 rounded-full text-sm font-bold transition-colors ${
-              activeTab === 'password' 
-                ? 'bg-rcn-accent text-white border border-rcn-accent' 
-                : 'bg-[#f6fbf7] border border-rcn-border hover:border-[#b9d7c5]'
-            }`}
-          >
-            Manage Password
-          </button>
-        </div>
-
-        {/* Profile Tab */}
-        {activeTab === 'profile' && (
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <div className="grid grid-cols-2 gap-3 mb-3">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs text-rcn-muted font-semibold">First Name</label>
-                  <input id="u_first" defaultValue={user?.firstName || ''} className={inputClass} />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs text-rcn-muted font-semibold">Last Name</label>
-                  <input id="u_last" defaultValue={user?.lastName || ''} className={inputClass} />
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-1.5 mb-3">
-                <label className="text-xs text-rcn-muted font-semibold">Email</label>
-                <input id="u_email" type="email" defaultValue={user?.email || ''} className={inputClass} />
-              </div>
-
-              <div className="flex flex-col gap-1.5 mb-3">
-                <label className="text-xs text-rcn-muted font-semibold">Phone (optional)</label>
-                <input id="u_phone" defaultValue={user?.phone || ''} placeholder="(optional)" className={inputClass} />
-              </div>
-
-              <div className="flex flex-col gap-1.5 mb-3">
-                <label className="text-xs text-rcn-muted font-semibold">Role</label>
-                <input type="text" value="System Admin" readOnly className={inputClass} />
-              </div>
-
-              <div className="flex flex-col gap-1.5 mb-3">
-                <label className="text-xs text-rcn-muted font-semibold">Organization</label>
-                <input type="text" value="— (Master Admin only)" readOnly className={inputClass} />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex flex-col gap-1.5 mb-3">
-                <label className="text-xs text-rcn-muted font-semibold">Access</label>
-                <select id="u_access" defaultValue={user?.adminCap ? 'ADMIN' : 'ACTIVE'} className={inputClass}>
-                  <option value="ACTIVE">Active user</option>
-                  <option value="ADMIN">Admin capabilities</option>
-                </select>
-              </div>
-
-              <div className="flex flex-col gap-1.5 mb-3">
-                <label className="text-xs text-rcn-muted font-semibold">Active user status</label>
-                <select id="u_enabled" defaultValue={String(user?.enabled ?? true)} className={inputClass}>
-                  <option value="true">Active</option>
-                  <option value="false">Disabled</option>
-                </select>
-              </div>
-
-              {/* Module Access */}
-              <div className="bg-[#fbfefc] border border-rcn-border rounded-xl p-3 mb-3">
-                <h4 className="text-sm font-semibold m-0 mb-2">Module Access</h4>
-                <p className="text-xs text-rcn-muted mb-3">Control which Admin Panel modules this user can access.</p>
-                
-                <div className="flex flex-wrap gap-2">
-                  <label className="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs border border-rcn-border bg-white hover:border-[#b9d7c5] cursor-pointer">
-                    <input type="checkbox" id="perm_dashboard" defaultChecked={user?.permissions?.referralDashboard ?? true} />
-                    Referral Dashboard
-                  </label>
-                  <label className="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs border border-rcn-border bg-white hover:border-[#b9d7c5] cursor-pointer">
-                    <input type="checkbox" id="perm_userpanel" defaultChecked={user?.permissions?.userPanel ?? true} />
-                    User Panel
-                  </label>
-                  <label className="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs border border-rcn-border bg-white hover:border-[#b9d7c5] cursor-pointer">
-                    <input type="checkbox" id="perm_payments" defaultChecked={user?.permissions?.paymentAdjustmentSettings ?? true} />
-                    Payment Settings
-                  </label>
-                  <label className="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs border border-rcn-border bg-white hover:border-[#b9d7c5] cursor-pointer">
-                    <input type="checkbox" id="perm_banners" defaultChecked={user?.permissions?.bannerManagement ?? true} />
-                    Banner Management
-                  </label>
-                  <label className="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs border border-rcn-border bg-white hover:border-[#b9d7c5] cursor-pointer">
-                    <input type="checkbox" id="perm_financials" defaultChecked={user?.permissions?.financials ?? true} />
-                    Financials
-                  </label>
-                  <label className="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs border border-rcn-border bg-white hover:border-[#b9d7c5] cursor-pointer">
-                    <input type="checkbox" id="perm_reports" defaultChecked={user?.permissions?.reports ?? true} />
-                    Reports
-                  </label>
-                  <label className="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs border border-rcn-border bg-white hover:border-[#b9d7c5] cursor-pointer">
-                    <input type="checkbox" id="perm_audit" defaultChecked={user?.permissions?.auditLog ?? true} />
-                    Audit Log
-                  </label>
-                  <label className="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs border border-rcn-border bg-white hover:border-[#b9d7c5] cursor-pointer">
-                    <input type="checkbox" id="perm_settings" defaultChecked={user?.permissions?.settings ?? true} />
-                    Settings
-                  </label>
-                </div>
-
-                <div className="border-t border-rcn-border my-2"></div>
-                <p className="text-xs text-rcn-muted m-0">Tip: Enable User Panel only if this Master Admin should manage other Master Admin users.</p>
-              </div>
-
-              <div className="flex flex-col gap-1.5 mb-3">
-                <label className="text-xs text-rcn-muted font-semibold">Notes (optional)</label>
-                <textarea id="u_notes" defaultValue={user?.notes || ''} placeholder="Optional notes..." rows={3} className={inputClass} />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs text-rcn-muted font-semibold">Current Assignments (read-only)</label>
-                <textarea value="Branches: —\nDepartments: —" readOnly rows={2} className={inputClass} />
-              </div>
-
-              <p className="text-xs text-rcn-muted mt-2 mb-0">Master Admin users are not attached to branches/departments.</p>
-            </div>
-          </div>
-        )}
-
-        {/* Password Tab */}
-        {activeTab === 'password' && (
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <div className="flex flex-col gap-1.5 mb-3">
-                <label className="text-xs text-rcn-muted font-semibold">New Password</label>
-                <input 
-                  id="u_newpass" 
-                  type="password" 
-                  placeholder={user ? 'Leave blank to keep current password' : 'Default is Admin123!'} 
-                  className={inputClass} 
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5 mb-3">
-                <label className="text-xs text-rcn-muted font-semibold">Confirm Password</label>
-                <input id="u_confpass" type="password" placeholder="Confirm new password" className={inputClass} />
-              </div>
-
-              <label className="inline-flex items-center gap-2 mt-2 cursor-pointer">
-                <input type="checkbox" id="u_force" defaultChecked={user?.forceChangeNextLogin ?? !user} />
-                <span className="text-sm">Force change at next login</span>
-              </label>
-
-              <p className="text-xs text-rcn-muted mt-3 mb-0">Passwords are stored locally in your browser for demo purposes only.</p>
-            </div>
-
-            <div>
-              <div className="flex flex-col gap-1.5 mb-3">
-                <label className="text-xs text-rcn-muted font-semibold">Password Reset Interval (days)</label>
-                <input 
-                  id="u_reset" 
-                  type="number" 
-                  min="1" 
-                  step="1" 
-                  defaultValue={user?.resetIntervalDays || 30} 
-                  className={inputClass} 
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5 mb-3">
-                <label className="text-xs text-rcn-muted font-semibold">Email Multi-Factor Authentication (MFA)</label>
-                <select id="u_mfa" defaultValue={String(user?.mfaEmail ?? false)} className={inputClass}>
-                  <option value="true">Enabled</option>
-                  <option value="false">Disabled</option>
-                </select>
-              </div>
-
-              <div className="flex flex-col gap-1.5 mb-3">
-                <label className="text-xs text-rcn-muted font-semibold">Last Password Change</label>
-                <input 
-                  type="text" 
-                  readOnly 
-                  value={user?.passwordChangedAt || '—'} 
-                  className={inputClass} 
-                />
-              </div>
-
-              <p className="text-xs text-rcn-muted mt-3 mb-0">To set a password for a new user, enter it above and Save (or keep default).</p>
-            </div>
-          </div>
-        )}
-
-        <div className="border-t border-rcn-border my-4"></div>
-
-        <div className="flex justify-between items-center">
-          <p className="text-xs text-rcn-muted m-0">Changes apply immediately.</p>
-          <div className="flex gap-2">
-            {isEdit && userId && (
-              <button 
-                onClick={() => handleDeleteUser(userId)}
-                className="bg-white border border-[#f0c0c0] text-rcn-danger px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-sm hover:bg-[#fff1f2] transition-colors"
-              >
-                Delete
-              </button>
-            )}
-            <button onClick={() => handleSaveUser(userId)} className={btnPrimaryClass}>
-              Save
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-
-    openModal(modalContent);
+  const closeUserModal = () => {
+    setActiveTab('profile');
+    setIsUserModalOpen(false);
+    setEditingUserId(null);
   };
+
+  const openUserModal = (userId: string | null = null) => {
+    setEditingUserId(userId ?? null);
+    setActiveTab('profile');
+    setIsUserModalOpen(true);
+  };
+
+  const user = editingUserId ? db.users.find((u: any) => u.id === editingUserId) : null;
+  const isEdit = !!user;
 
   const handleSaveUser = (userId: string | null) => {
     const firstName = (document.getElementById('u_first') as HTMLInputElement)?.value.trim();
@@ -398,18 +177,18 @@ const UserPanel: React.FC = () => {
     }
 
     saveDB(db);
-    closeModal();
+    closeUserModal();
     refreshDB();
     showToast('User saved.');
   };
 
   const handleDeleteUser = (userId: string) => {
     if (!window.confirm('Delete this user?')) return;
-    
+
     db.users = db.users.filter((u: any) => u.id !== userId);
     saveDB(db);
     audit('user_deleted', { userId });
-    closeModal();
+    closeUserModal();
     refreshDB();
     showToast('User deleted.');
   };
@@ -434,7 +213,8 @@ const UserPanel: React.FC = () => {
               placeholder="Name, email, phone..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className={inputClass}
+              className={`${inputClass} ring-2 ring-[#b9d7c5]/30 border-[#b9d7c5]/60`}
+              aria-label="Search master admin users"
             />
           </div>
 
@@ -470,6 +250,202 @@ const UserPanel: React.FC = () => {
           Organization users are managed under <b>Organizations → Organization Modules → Users</b>.
         </p>
       </div>
+
+      <Modal isOpen={isUserModalOpen} onClose={closeUserModal} maxWidth="900px">
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h3 className="text-lg font-semibold m-0">{isEdit ? 'Edit' : 'New'} Master Admin User</h3>
+              <p className="text-sm text-rcn-muted mt-1 mb-0">Master Admin users belong only to this Admin Panel and have no affiliation with any organization.</p>
+            </div>
+            <button onClick={closeUserModal} className={btnClass}>Close</button>
+          </div>
+
+          <div className="border-b border-rcn-border mb-4"></div>
+
+          <div className="flex gap-2 mb-4">
+            <button
+              onClick={() => setActiveTab('profile')}
+              className={`px-4 py-2 rounded-full text-sm font-bold transition-colors ${
+                activeTab === 'profile'
+                  ? 'bg-rcn-accent text-white border border-rcn-accent'
+                  : 'bg-[#f6fbf7] border border-rcn-border hover:border-[#b9d7c5]'
+              }`}
+            >
+              User Profile
+            </button>
+            <button
+              onClick={() => setActiveTab('password')}
+              className={`px-4 py-2 rounded-full text-sm font-bold transition-colors ${
+                activeTab === 'password'
+                  ? 'bg-rcn-accent text-white border border-rcn-accent'
+                  : 'bg-[#f6fbf7] border border-rcn-border hover:border-[#b9d7c5]'
+              }`}
+            >
+              Manage Password
+            </button>
+          </div>
+
+          {activeTab === 'profile' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs text-rcn-muted font-semibold">First Name</label>
+                    <input id="u_first" defaultValue={user?.firstName || ''} className={inputClass} />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs text-rcn-muted font-semibold">Last Name</label>
+                    <input id="u_last" defaultValue={user?.lastName || ''} className={inputClass} />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1.5 mb-3">
+                  <label className="text-xs text-rcn-muted font-semibold">Email</label>
+                  <input id="u_email" type="email" defaultValue={user?.email || ''} className={inputClass} />
+                </div>
+                <div className="flex flex-col gap-1.5 mb-3">
+                  <label className="text-xs text-rcn-muted font-semibold">Phone (optional)</label>
+                  <input id="u_phone" defaultValue={user?.phone || ''} placeholder="(optional)" className={inputClass} />
+                </div>
+                <div className="flex flex-col gap-1.5 mb-3">
+                  <label className="text-xs text-rcn-muted font-semibold">Role</label>
+                  <input type="text" value="System Admin" readOnly className={inputClass} />
+                </div>
+                <div className="flex flex-col gap-1.5 mb-3">
+                  <label className="text-xs text-rcn-muted font-semibold">Organization</label>
+                  <input type="text" value="— (Master Admin only)" readOnly className={inputClass} />
+                </div>
+              </div>
+              <div>
+                <div className="flex flex-col gap-1.5 mb-3">
+                  <label className="text-xs text-rcn-muted font-semibold">Access</label>
+                  <select id="u_access" defaultValue={user?.adminCap ? 'ADMIN' : 'ACTIVE'} className={inputClass}>
+                    <option value="ACTIVE">Active user</option>
+                    <option value="ADMIN">Admin capabilities</option>
+                  </select>
+                </div>
+                <div className="flex flex-col gap-1.5 mb-3">
+                  <label className="text-xs text-rcn-muted font-semibold">Active user status</label>
+                  <select id="u_enabled" defaultValue={String(user?.enabled ?? true)} className={inputClass}>
+                    <option value="true">Active</option>
+                    <option value="false">Disabled</option>
+                  </select>
+                </div>
+                <div className="bg-[#fbfefc] border border-rcn-border rounded-xl p-3 mb-3">
+                  <h4 className="text-sm font-semibold m-0 mb-2">Module Access</h4>
+                  <p className="text-xs text-rcn-muted mb-3">Control which Admin Panel modules this user can access.</p>
+                  <div className="flex flex-wrap gap-2">
+                    <label className="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs border border-rcn-border bg-white hover:border-[#b9d7c5] cursor-pointer">
+                      <input type="checkbox" id="perm_dashboard" defaultChecked={user?.permissions?.referralDashboard ?? true} />
+                      Referral Dashboard
+                    </label>
+                    <label className="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs border border-rcn-border bg-white hover:border-[#b9d7c5] cursor-pointer">
+                      <input type="checkbox" id="perm_userpanel" defaultChecked={user?.permissions?.userPanel ?? true} />
+                      User Panel
+                    </label>
+                    <label className="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs border border-rcn-border bg-white hover:border-[#b9d7c5] cursor-pointer">
+                      <input type="checkbox" id="perm_payments" defaultChecked={user?.permissions?.paymentAdjustmentSettings ?? true} />
+                      Payment Settings
+                    </label>
+                    <label className="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs border border-rcn-border bg-white hover:border-[#b9d7c5] cursor-pointer">
+                      <input type="checkbox" id="perm_banners" defaultChecked={user?.permissions?.bannerManagement ?? true} />
+                      Banner Management
+                    </label>
+                    <label className="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs border border-rcn-border bg-white hover:border-[#b9d7c5] cursor-pointer">
+                      <input type="checkbox" id="perm_financials" defaultChecked={user?.permissions?.financials ?? true} />
+                      Financials
+                    </label>
+                    <label className="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs border border-rcn-border bg-white hover:border-[#b9d7c5] cursor-pointer">
+                      <input type="checkbox" id="perm_reports" defaultChecked={user?.permissions?.reports ?? true} />
+                      Reports
+                    </label>
+                    <label className="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs border border-rcn-border bg-white hover:border-[#b9d7c5] cursor-pointer">
+                      <input type="checkbox" id="perm_audit" defaultChecked={user?.permissions?.auditLog ?? true} />
+                      Audit Log
+                    </label>
+                    <label className="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs border border-rcn-border bg-white hover:border-[#b9d7c5] cursor-pointer">
+                      <input type="checkbox" id="perm_settings" defaultChecked={user?.permissions?.settings ?? true} />
+                      Settings
+                    </label>
+                  </div>
+                  <div className="border-t border-rcn-border my-2"></div>
+                  <p className="text-xs text-rcn-muted m-0">Tip: Enable User Panel only if this Master Admin should manage other Master Admin users.</p>
+                </div>
+                <div className="flex flex-col gap-1.5 mb-3">
+                  <label className="text-xs text-rcn-muted font-semibold">Notes (optional)</label>
+                  <textarea id="u_notes" defaultValue={user?.notes || ''} placeholder="Optional notes..." rows={3} className={inputClass} />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs text-rcn-muted font-semibold">Current Assignments (read-only)</label>
+                  <textarea value="Branches: —\nDepartments: —" readOnly rows={2} className={inputClass} />
+                </div>
+                <p className="text-xs text-rcn-muted mt-2 mb-0">Master Admin users are not attached to branches/departments.</p>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'password' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <div className="flex flex-col gap-1.5 mb-3">
+                  <label className="text-xs text-rcn-muted font-semibold">New Password</label>
+                  <input
+                    id="u_newpass"
+                    type="password"
+                    placeholder={user ? 'Leave blank to keep current password' : 'Default is Admin123!'}
+                    className={inputClass}
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5 mb-3">
+                  <label className="text-xs text-rcn-muted font-semibold">Confirm Password</label>
+                  <input id="u_confpass" type="password" placeholder="Confirm new password" className={inputClass} />
+                </div>
+                <label className="inline-flex items-center gap-2 mt-2 cursor-pointer">
+                  <input type="checkbox" id="u_force" defaultChecked={user?.forceChangeNextLogin ?? !user} />
+                  <span className="text-sm">Force change at next login</span>
+                </label>
+                <p className="text-xs text-rcn-muted mt-3 mb-0">Passwords are stored locally in your browser for demo purposes only.</p>
+              </div>
+              <div>
+                <div className="flex flex-col gap-1.5 mb-3">
+                  <label className="text-xs text-rcn-muted font-semibold">Password Reset Interval (days)</label>
+                  <input id="u_reset" type="number" min={1} step={1} defaultValue={user?.resetIntervalDays || 30} className={inputClass} />
+                </div>
+                <div className="flex flex-col gap-1.5 mb-3">
+                  <label className="text-xs text-rcn-muted font-semibold">Email Multi-Factor Authentication (MFA)</label>
+                  <select id="u_mfa" defaultValue={String(user?.mfaEmail ?? false)} className={inputClass}>
+                    <option value="true">Enabled</option>
+                    <option value="false">Disabled</option>
+                  </select>
+                </div>
+                <div className="flex flex-col gap-1.5 mb-3">
+                  <label className="text-xs text-rcn-muted font-semibold">Last Password Change</label>
+                  <input type="text" readOnly value={user?.passwordChangedAt || '—'} className={inputClass} />
+                </div>
+                <p className="text-xs text-rcn-muted mt-3 mb-0">To set a password for a new user, enter it above and Save (or keep default).</p>
+              </div>
+            </div>
+          )}
+
+          <div className="border-t border-rcn-border my-4"></div>
+          <div className="flex justify-between items-center">
+            <p className="text-xs text-rcn-muted m-0">Changes apply immediately.</p>
+            <div className="flex gap-2">
+              {isEdit && editingUserId && (
+                <button
+                  onClick={() => handleDeleteUser(editingUserId)}
+                  className="bg-white border border-[#f0c0c0] text-rcn-danger px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-sm hover:bg-[#fff1f2] transition-colors"
+                >
+                  Delete
+                </button>
+              )}
+              <button onClick={() => handleSaveUser(editingUserId)} className={btnPrimaryClass}>
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      </Modal>
     </>
   );
 };
