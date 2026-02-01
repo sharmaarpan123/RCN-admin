@@ -1,22 +1,41 @@
 "use client";
 
 import React, { useState } from 'react';
-import { useApp } from '../../../context/AppContext';
 import {
   US_STATES,
   fmtDate,
-  safeLower,
-  chargeOnOpen,
-  saveDB,
-  audit,
   centsToMoney
 } from '../../../utils/database';
 import { Button, CustomReactSelect, optionsFromStrings } from '../../../components';
+import { MOCK_ORGS_DASHBOARD, MOCK_REFERRALS_DASHBOARD, MOCK_PAYMENT_SETTINGS } from './mockData';
 
 const STATE_OPTIONS = optionsFromStrings(US_STATES);
 
+const safeLower = (s: any) => (s || "").toString().toLowerCase();
+
 const Dashboard: React.FC = () => {
-  const { db, refreshDB, showToast, openModal, closeModal } = useApp();
+  const [toastMessage, setToastMessage] = useState("");
+  const [showToastFlag, setShowToastFlag] = useState(false);
+  const [modalContent, setModalContent] = useState<React.ReactNode>(null);
+
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    setShowToastFlag(true);
+    setTimeout(() => setShowToastFlag(false), 2600);
+  };
+
+  const openModal = (content: React.ReactNode) => {
+    setModalContent(content);
+  };
+
+  const closeModal = () => {
+    setModalContent(null);
+  };
+
+  // Mock data
+  const orgs = MOCK_ORGS_DASHBOARD;
+  const referrals = MOCK_REFERRALS_DASHBOARD;
+  const paymentSettings = MOCK_PAYMENT_SETTINGS;
   const [senderFilterName, setSenderFilterName] = useState('');
   const [senderFilterState, setSenderFilterState] = useState('');
   const [senderFilterZip, setSenderFilterZip] = useState('');
@@ -36,15 +55,15 @@ const Dashboard: React.FC = () => {
   const triggerFilterUpdate = () => setFilterUpdateTrigger(prev => prev + 1);
 
   // KPIs
-  const totalOrgs = db.orgs.length;
-  const totalRefs = db.referrals.length;
+  const totalOrgs = orgs.length;
+  const totalRefs = referrals.length;
   const since7 = new Date();
   since7.setDate(since7.getDate() - 7);
-  const refs7Days = db.referrals.filter((r: any) => new Date(r.createdAt) >= since7).length;
-  const pendingRefs = db.referrals.filter((r: any) => r.status === "Pending").length;
+  const refs7Days = referrals.filter((r: any) => new Date(r.createdAt) >= since7).length;
+  const pendingRefs = referrals.filter((r: any) => r.status === "Pending").length;
 
   // Filter organizations
-  const filteredSenderOrgs = db.orgs.filter((o: any) => {
+  const filteredSenderOrgs = orgs.filter((o: any) => {
     if (!o.enabled) return false;
     const name = safeLower(o.name);
     const zip = safeLower(o.address.zip);
@@ -56,7 +75,7 @@ const Dashboard: React.FC = () => {
     );
   });
 
-  const filteredReceiverOrgs = db.orgs.filter((o: any) => {
+  const filteredReceiverOrgs = orgs.filter((o: any) => {
     if (!o.enabled) return false;
     const name = safeLower(o.name);
     const zip = safeLower(o.address.zip);
@@ -85,7 +104,7 @@ const Dashboard: React.FC = () => {
     const acceptedChecked = (document.getElementById('senderF_st_accepted') as HTMLInputElement)?.checked;
     const rejectedChecked = (document.getElementById('senderF_st_rejected') as HTMLInputElement)?.checked;
 
-    return db.referrals
+    return referrals
       .filter((r: any) => {
         // Organization filter
         if (r.senderOrgId !== senderOrgId) return false;
@@ -143,7 +162,7 @@ const Dashboard: React.FC = () => {
     const acceptedChecked = (document.getElementById('receiverF_st_accepted') as HTMLInputElement)?.checked;
     const rejectedChecked = (document.getElementById('receiverF_st_rejected') as HTMLInputElement)?.checked;
 
-    return db.referrals
+    return referrals
       .filter((r: any) => {
         // Organization filter
         if (r.receiverOrgId !== receiverOrgId) return false;
@@ -193,29 +212,11 @@ const Dashboard: React.FC = () => {
 
   // Handlers
   const handleViewReferral = (refId: string, isReceiver: boolean) => {
-    const ref = db.referrals.find((r: any) => r.id === refId);
+    const ref = referrals.find((r: any) => r.id === refId);
     if (!ref) return;
 
-    // Charge receiver on first open (if enabled)
-    if (isReceiver && !ref.billing.receiverOpenCharged) {
-      const ps = db.paymentSettings || {};
-      if (ps.fees?.serviceFee > 0) {
-        const charged = chargeOnOpen(db, refId, "creditCard");
-        if (charged) {
-          saveDB(db);
-          refreshDB();
-          const creditUsed = ref.billing.receiverUsedCredit;
-          audit("receiver_charged", { refId, method: creditUsed ? "credit" : "wallet" });
-          showToast(`Charged ${creditUsed ? "1 credit" : "$" + centsToMoney(ps.fees.serviceFee || 0)} for opening referral.`);
-        } else {
-          showToast("Insufficient funds/credits to open referral.");
-          return;
-        }
-      }
-    }
-
-    const sender = db.orgs.find((o: any) => o.id === ref.senderOrgId);
-    const receiver = db.orgs.find((o: any) => o.id === ref.receiverOrgId);
+    const sender = orgs.find((o: any) => o.id === ref.senderOrgId);
+    const receiver = orgs.find((o: any) => o.id === ref.receiverOrgId);
 
     openModal(
       <div>
@@ -313,11 +314,7 @@ const Dashboard: React.FC = () => {
               <Button
                 variant="primary"
                 onClick={() => {
-                  ref.status = "Accepted";
-                  saveDB(db);
-                  refreshDB();
-                  audit("referral_accepted", { refId });
-                  showToast("Referral accepted.");
+                  showToast("Accept/Reject functionality will be available with API integration.");
                   closeModal();
                 }}
                 className="logo-gradient text-white border-0 px-4 py-2.5 rounded-xl cursor-pointer font-semibold text-sm hover:opacity-90 transition-opacity"
@@ -327,11 +324,7 @@ const Dashboard: React.FC = () => {
               <Button
                 variant="danger"
                 onClick={() => {
-                  ref.status = "Rejected";
-                  saveDB(db);
-                  refreshDB();
-                  audit("referral_rejected", { refId });
-                  showToast("Referral rejected.");
+                  showToast("Accept/Reject functionality will be available with API integration.");
                   closeModal();
                 }}
               >
@@ -538,7 +531,7 @@ const Dashboard: React.FC = () => {
             <div className="flex justify-between items-center">
               <h3 className="m-0 text-sm font-semibold">Sender Inbox</h3>
               <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border border-rcn-border bg-[#f8fcf9]">
-                {db.orgs.find((o: any) => o.id === senderOrgId)?.name || 'Sender'}
+                {orgs.find((o: any) => o.id === senderOrgId)?.name || 'Sender'}
               </span>
             </div>
 
@@ -635,7 +628,7 @@ const Dashboard: React.FC = () => {
                         <tr><td colSpan={6} className="px-2.5 py-2.5 text-xs text-rcn-muted">No referrals found.</td></tr>
                       ) : (
                         getSenderReferrals().map((ref: any) => {
-                          const receiver = db.orgs.find((o: any) => o.id === ref.receiverOrgId);
+                          const receiver = orgs.find((o: any) => o.id === ref.receiverOrgId);
                           return (
                             <tr key={ref.id}>
                               <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono">{ref.id}</td>
@@ -683,7 +676,7 @@ const Dashboard: React.FC = () => {
             <div className="flex justify-between items-center">
               <h3 className="m-0 text-sm font-semibold">Receiver Inbox</h3>
               <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border border-rcn-border bg-[#f8fcf9]">
-                {db.orgs.find((o: any) => o.id === receiverOrgId)?.name || 'Receiver'}
+                {orgs.find((o: any) => o.id === receiverOrgId)?.name || 'Receiver'}
               </span>
             </div>
 
@@ -780,7 +773,7 @@ const Dashboard: React.FC = () => {
                         <tr><td colSpan={6} className="px-2.5 py-2.5 text-xs text-rcn-muted">No referrals found.</td></tr>
                       ) : (
                         getReceiverReferrals().map((ref: any) => {
-                          const sender = db.orgs.find((o: any) => o.id === ref.senderOrgId);
+                          const sender = orgs.find((o: any) => o.id === ref.senderOrgId);
                           return (
                             <tr key={ref.id}>
                               <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono">{ref.id}</td>
@@ -830,6 +823,31 @@ const Dashboard: React.FC = () => {
             Use the Find Sender/Receiver selectors above. Click <b>Apply Sender Inbox</b> and/or{' '}
             <b>Apply Receiver Inbox</b> to load each inbox. You can load one side at a time.
           </p>
+        </div>
+      )}
+
+      {/* Toast notification */}
+      <div className={`fixed right-4 bottom-4 z-60 bg-rcn-dark-bg text-rcn-dark-text border border-white/15 px-3 py-2.5 rounded-2xl shadow-rcn max-w-[360px] text-sm transition-all duration-300 ${
+        showToastFlag ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'
+      }`}>
+        {toastMessage}
+      </div>
+
+      {/* Modal */}
+      {modalContent && (
+        <div 
+          className="fixed inset-0 bg-black/55 flex items-center justify-center p-5 z-50" 
+          onClick={(e) => {
+            if ((e.target as HTMLElement).classList.contains('bg-black/55')) {
+              closeModal();
+            }
+          }}
+        >
+          <div className="max-w-[900px] w-full">
+            <div className="bg-white border border-rcn-border rounded-rcn-lg shadow-rcn p-4 max-h-[80vh] overflow-auto">
+              {modalContent}
+            </div>
+          </div>
         </div>
       )}
     </>

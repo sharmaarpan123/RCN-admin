@@ -1,10 +1,15 @@
 "use client";
 
 import React, { useState } from "react";
-import { useApp } from "@/context/AppContext";
-import { safeLower, saveDB, uid } from "@/utils/database";
 import { Button, TableLayout, type TableColumn, Modal } from "@/components";
 import Image from "next/image";
+import { MOCK_BANNERS, MOCK_ORGS_BANNERS } from "./mockData";
+
+const safeLower = (s: any) => (s || "").toString().toLowerCase();
+
+const uid = (prefix = "id") => {
+  return prefix + "_" + Math.random().toString(16).slice(2) + Math.random().toString(16).slice(2);
+};
 
 interface BannerRow {
   id: string;
@@ -34,7 +39,19 @@ const SCOPE_OPTIONS = [
 ];
 
 const Banners: React.FC = () => {
-  const { db, showToast, refreshDB } = useApp();
+  // Mock data state
+  const [banners, setBanners] = useState(MOCK_BANNERS);
+  const [orgs] = useState(MOCK_ORGS_BANNERS);
+
+  // Toast and modal state
+  const [toastMessage, setToastMessage] = useState("");
+  const [showToastFlag, setShowToastFlag] = useState(false);
+
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    setShowToastFlag(true);
+    setTimeout(() => setShowToastFlag(false), 2600);
+  };
 
   // Filter states
   const [search, setSearch] = useState('');
@@ -75,7 +92,7 @@ const Banners: React.FC = () => {
     return true;
   };
 
-  const filtered: BannerRow[] = (db.banners || []).filter((b: BannerRow) => {
+  const filtered: BannerRow[] = banners.filter((b: BannerRow) => {
     const searchLower = safeLower(search);
     const hay = safeLower((b.name || '') + ' ' + (b.linkUrl || ''));
     if (search && !hay.includes(searchLower)) return false;
@@ -92,7 +109,7 @@ const Banners: React.FC = () => {
     return true;
   });
 
-  const previewBanners = (db.banners || []).filter((b: BannerRow) => {
+  const previewBanners = banners.filter((b: BannerRow) => {
     if (!b.active) return false;
     if (!isInDateRange(b)) return false;
     if (b.placement !== previewPlacement) return false;
@@ -130,7 +147,7 @@ const Banners: React.FC = () => {
     const notes = (document.getElementById('banner_notes') as HTMLTextAreaElement)?.value.trim() || '';
     const imageUrl = (document.getElementById('banner_imageUrl') as HTMLInputElement)?.value.trim() || '';
 
-    const existing = editingBannerId ? (db.banners || []).find((b: { id: string }) => b.id === editingBannerId) : null;
+    const existing = editingBannerId ? banners.find((b: { id: string }) => b.id === editingBannerId) : null;
     const now = new Date().toISOString();
     const bannerObj = {
       id: editingBannerId || uid('banner'),
@@ -153,28 +170,22 @@ const Banners: React.FC = () => {
     };
 
     if (editingBannerId) {
-      const idx = (db.banners || []).findIndex((b: { id: string }) => b.id === editingBannerId);
-      if (idx !== -1) db.banners[idx] = bannerObj;
+      setBanners(banners.map((b) => (b.id === editingBannerId ? bannerObj : b)));
     } else {
-      db.banners = db.banners || [];
-      db.banners.push(bannerObj);
+      setBanners([...banners, bannerObj]);
     }
-    saveDB(db);
-    refreshDB();
     closeBannerModal();
     showToast(editingBannerId ? 'Banner updated.' : 'Banner created.');
   };
 
   const deleteBanner = (bannerId: string) => {
     if (!window.confirm('Delete this banner? This cannot be undone.')) return;
-    db.banners = (db.banners || []).filter((b: { id: string }) => b.id !== bannerId);
-    saveDB(db);
-    refreshDB();
+    setBanners(banners.filter((b: { id: string }) => b.id !== bannerId));
     closeBannerModal();
     showToast('Banner deleted.');
   };
 
-  const editingBanner = editingBannerId ? (db.banners || []).find((b: { id: string }) => b.id === editingBannerId) : null;
+  const editingBanner = editingBannerId ? banners.find((b: { id: string }) => b.id === editingBannerId) : null;
 
   const bannerColumns: TableColumn<BannerRow>[] = [
     {
@@ -190,7 +201,7 @@ const Banners: React.FC = () => {
     {
       head: "Scope",
       component: (b) => {
-        const org = b.orgId ? db.orgs?.find((o: { id: string; name: string; address?: { state?: string; zip?: string } }) => o.id === b.orgId) : null;
+        const org = b.orgId ? orgs?.find((o: { id: string; name: string; address?: { state?: string; zip?: string } }) => o.id === b.orgId) : null;
         return (
           <>
             {b.scope === "GLOBAL" ? "Global" : "Organization"}
@@ -309,7 +320,7 @@ const Banners: React.FC = () => {
             <label className="text-xs text-rcn-muted">Organization (if scoped)</label>
             <select value={orgFilter} onChange={(e) => setOrgFilter(e.target.value)} className={inputClass}>
               <option value="">— Select Organization —</option>
-              {(db.orgs || []).map((o: any) => (
+              {orgs.map((o: any) => (
                 <option key={o.id} value={o.id}>
                   {o.name} ({o.address?.state} {o.address?.zip})
                 </option>
@@ -387,7 +398,7 @@ const Banners: React.FC = () => {
               <label className="block text-xs text-rcn-muted font-semibold mb-1.5">Organization (if scoped)</label>
               <select id="banner_orgId" defaultValue={editingBanner?.orgId || ''} className={inputClass}>
                 <option value="">— None (Global) —</option>
-                {(db.orgs || []).map((o: { id: string; name: string; address?: { state?: string; zip?: string } }) => (
+                {orgs.map((o: { id: string; name: string; address?: { state?: string; zip?: string } }) => (
                   <option key={o.id} value={o.id}>{o.name} ({o.address?.state} {o.address?.zip})</option>
                 ))}
               </select>
@@ -504,7 +515,7 @@ const Banners: React.FC = () => {
             ) : (
               <div className="space-y-3">
                 {previewBanners.slice(0, 3).map((b: any) => {
-                  const org = b.orgId ? db.orgs?.find((o: any) => o.id === b.orgId) : null;
+                  const org = b.orgId ? orgs?.find((o: any) => o.id === b.orgId) : null;
                   return (
                     <div key={b.id} className="bg-white border border-rcn-border rounded-xl p-3">
                       <div className="text-xs text-rcn-muted mb-2">
@@ -560,6 +571,13 @@ const Banners: React.FC = () => {
             </li>
           </ul>
         </div>
+      </div>
+
+      {/* Toast notification */}
+      <div className={`fixed right-4 bottom-4 z-60 bg-rcn-dark-bg text-rcn-dark-text border border-white/15 px-3 py-2.5 rounded-2xl shadow-rcn max-w-[360px] text-sm transition-all duration-300 ${
+        showToastFlag ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'
+      }`}>
+        {toastMessage}
       </div>
     </>
   );

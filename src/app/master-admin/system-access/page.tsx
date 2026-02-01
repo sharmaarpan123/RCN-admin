@@ -1,11 +1,34 @@
 "use client";
 import React, { useState } from 'react';
-import { useApp } from '../../../context/AppContext';
-import { roleLabel, safeLower, saveDB, audit, uid } from '../../../utils/database';
 import { TableLayout, type TableColumn, Modal } from '../../../components';
+import { MOCK_SYSTEM_ADMINS } from './mockData';
+
+const safeLower = (s: any) => (s || "").toString().toLowerCase();
+const roleLabel = (r: string) => {
+  if (r === "SYSTEM_ADMIN") return "System Admin";
+  if (r === "ORG_ADMIN") return "Organization Admin";
+  if (r === "STAFF") return "Staff";
+  return r;
+};
+
+const uid = (prefix = "id") => {
+  return prefix + "_" + Math.random().toString(16).slice(2) + Math.random().toString(16).slice(2);
+};
 
 const UserPanel: React.FC = () => {
-  const { db, refreshDB, showToast } = useApp();
+  // Mock data state
+  const [users, setUsers] = useState(MOCK_SYSTEM_ADMINS);
+
+  // Toast state
+  const [toastMessage, setToastMessage] = useState("");
+  const [showToastFlag, setShowToastFlag] = useState(false);
+
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    setShowToastFlag(true);
+    setTimeout(() => setShowToastFlag(false), 2600);
+  };
+
   const [search, setSearch] = useState('');
   const [enabledFilter, setEnabledFilter] = useState('');
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
@@ -13,7 +36,7 @@ const UserPanel: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
 
-  const systemAdmins = db.users.filter((u: any) => u.role === 'SYSTEM_ADMIN');
+  const systemAdmins = users.filter((u: any) => u.role === 'SYSTEM_ADMIN');
   
   type MasterAdminRow = { id: string; name: string; firstName?: string; lastName?: string; email: string; phone?: string; role: string; adminCap?: boolean; resetIntervalDays?: number; mfaEmail?: boolean; enabled?: boolean };
   const systemAccessColumns: TableColumn<MasterAdminRow>[] = [
@@ -96,7 +119,7 @@ const UserPanel: React.FC = () => {
     setIsUserModalOpen(true);
   };
 
-  const user = editingUserId ? db.users.find((u: any) => u.id === editingUserId) : null;
+  const user = editingUserId ? users.find((u: any) => u.id === editingUserId) : null;
   const isEdit = !!user;
 
   const handleSaveUser = (userId: string | null) => {
@@ -118,12 +141,12 @@ const UserPanel: React.FC = () => {
     if (!email) { showToast('Email required.'); return; }
     if (!email.includes('@')) { showToast('Invalid email.'); return; }
 
-    if (!userId && db.users.some((u: any) => u.email.toLowerCase() === email)) {
+    if (!userId && users.some((u: any) => u.email.toLowerCase() === email)) {
       showToast('Email already exists.');
       return;
     }
 
-    const existing = userId ? db.users.find((u: any) => u.id === userId) : null;
+    const existing = userId ? users.find((u: any) => u.id === userId) : null;
     let password = existing?.password || 'Admin123!';
     let passwordChangedAt = existing?.passwordChangedAt || '';
 
@@ -168,28 +191,20 @@ const UserPanel: React.FC = () => {
     };
 
     if (existing) {
-      const idx = db.users.findIndex((u: any) => u.id === userId);
-      db.users[idx] = userObj;
-      audit('user_updated', { userId });
+      setUsers(users.map((u) => (u.id === userId ? userObj : u)));
     } else {
-      db.users.push(userObj);
-      audit('user_created', { userId: userObj.id });
+      setUsers([...users, userObj]);
     }
 
-    saveDB(db);
     closeUserModal();
-    refreshDB();
     showToast('User saved.');
   };
 
   const handleDeleteUser = (userId: string) => {
     if (!window.confirm('Delete this user?')) return;
 
-    db.users = db.users.filter((u: any) => u.id !== userId);
-    saveDB(db);
-    audit('user_deleted', { userId });
+    setUsers(users.filter((u: any) => u.id !== userId));
     closeUserModal();
-    refreshDB();
     showToast('User deleted.');
   };
 
@@ -446,6 +461,13 @@ const UserPanel: React.FC = () => {
           </div>
         </div>
       </Modal>
+
+      {/* Toast notification */}
+      <div className={`fixed right-4 bottom-4 z-60 bg-rcn-dark-bg text-rcn-dark-text border border-white/15 px-3 py-2.5 rounded-2xl shadow-rcn max-w-[360px] text-sm transition-all duration-300 ${
+        showToastFlag ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'
+      }`}>
+        {toastMessage}
+      </div>
     </>
   );
 };

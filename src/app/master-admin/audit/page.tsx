@@ -1,7 +1,6 @@
 "use client";
-import React from "react";
-import { useApp } from "@/context/AppContext";
-import { fmtDate, escapeHtml, saveDB } from "@/utils/database";
+import React, { useState } from "react";
+import { fmtDate, escapeHtml } from "@/utils/database";
 import { Button, TableLayout, type TableColumn } from "@/components";
 
 interface AuditEntry {
@@ -12,20 +11,43 @@ interface AuditEntry {
   meta?: Record<string, unknown>;
 }
 
+// Mock audit data
+const MOCK_AUDIT_DATA: AuditEntry[] = [
+  {
+    id: "audit_001",
+    at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    who: "sysadmin@rcn.local",
+    action: "login",
+    meta: { role: "SYSTEM_ADMIN" },
+  },
+  {
+    id: "audit_002",
+    at: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
+    who: "sysadmin@rcn.local",
+    action: "organization_updated",
+    meta: { orgId: "org_northlake" },
+  },
+];
+
 const Audit: React.FC = () => {
-  const { db, refreshDB, showToast } = useApp();
+  const [auditData, setAuditData] = useState<AuditEntry[]>(MOCK_AUDIT_DATA);
+  const [toastMessage, setToastMessage] = useState("");
+  const [showToastFlag, setShowToastFlag] = useState(false);
+
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    setShowToastFlag(true);
+    setTimeout(() => setShowToastFlag(false), 2600);
+  };
 
   const clearLog = () => {
     if (window.confirm("Clear audit log?")) {
-      const newDb = { ...db };
-      newDb.audit = [];
-      saveDB(db);
-      refreshDB();
+      setAuditData([]);
       showToast("Audit log cleared.");
     }
   };
 
-  const data: AuditEntry[] = (db.audit || []).slice(0, 200);
+  const data = auditData.slice(0, 200);
   const columns: TableColumn<AuditEntry>[] = [
     {
       head: "Time",
@@ -63,6 +85,13 @@ const Audit: React.FC = () => {
             getRowKey={(a) => a.id}
           />
         </div>
+      </div>
+
+      {/* Toast notification */}
+      <div className={`fixed right-4 bottom-4 z-60 bg-rcn-dark-bg text-rcn-dark-text border border-white/15 px-3 py-2.5 rounded-2xl shadow-rcn max-w-[360px] text-sm transition-all duration-300 ${
+        showToastFlag ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'
+      }`}>
+        {toastMessage}
       </div>
     </>
   );

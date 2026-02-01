@@ -1,28 +1,34 @@
 "use client";
-import React from 'react';
-import { useApp } from '../../../context/AppContext';
-import { downloadFile, audit } from '../../../utils/database';
+import React, { useState } from 'react';
+import { downloadFile } from '../../../utils/database';
 
 const Reports: React.FC = () => {
-  const { db, showToast } = useApp();
+  const [toastMessage, setToastMessage] = useState("");
+  const [showToastFlag, setShowToastFlag] = useState(false);
+
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    setShowToastFlag(true);
+    setTimeout(() => setShowToastFlag(false), 2600);
+  };
 
   const exportJSON = () => {
-    const json = JSON.stringify(db, null, 2);
+    const mockData = {
+      orgs: [],
+      referrals: [],
+      audit: [],
+    };
+    const json = JSON.stringify(mockData, null, 2);
     downloadFile('rcn-demo-export.json', json, 'application/json');
-    audit('export_json', {});
     showToast('JSON exported successfully.');
   };
 
   const downloadAuditCSV = () => {
     const rows = [['at', 'who', 'action', 'meta']];
-    (db.audit || []).forEach((a: any) => {
-      rows.push([a.at, a.who, a.action, JSON.stringify(a.meta || {})]);
-    });
     const csv = rows.map(r => 
       r.map(x => `"${(x ?? '').toString().replaceAll('"', '""')}"`).join(',')
     ).join('\n');
     downloadFile('audit-log.csv', csv, 'text/csv');
-    audit('export_audit_csv', { count: (db.audit || []).length });
     showToast('Audit CSV downloaded.');
   };
 
@@ -46,6 +52,13 @@ const Reports: React.FC = () => {
             Export Audit CSV
           </button>
         </div>
+      </div>
+
+      {/* Toast notification */}
+      <div className={`fixed right-4 bottom-4 z-60 bg-rcn-dark-bg text-rcn-dark-text border border-white/15 px-3 py-2.5 rounded-2xl shadow-rcn max-w-[360px] text-sm transition-all duration-300 ${
+        showToastFlag ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'
+      }`}>
+        {toastMessage}
       </div>
     </>
   );

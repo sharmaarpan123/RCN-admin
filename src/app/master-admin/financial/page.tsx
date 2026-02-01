@@ -1,11 +1,26 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { useApp } from '../../../context/AppContext';
-import { safeLower } from '../../../utils/database';
 import { TableLayout, type TableColumn } from '../../../components';
+import { MOCK_FINANCIAL_ORGS, MOCK_FINANCIAL_REFERRALS, MOCK_LEDGER, MOCK_INVOICES } from './mockData';
+
+const safeLower = (s: any) => (s || "").toString().toLowerCase();
 
 const Financial: React.FC = () => {
-  const { db, refreshDB, showToast } = useApp();
+  // Mock data
+  const orgs = MOCK_FINANCIAL_ORGS;
+  const referralsData = MOCK_FINANCIAL_REFERRALS;
+  const ledger = MOCK_LEDGER;
+  const invoices = MOCK_INVOICES;
+
+  // Toast state
+  const [toastMessage, setToastMessage] = useState("");
+  const [showToastFlag, setShowToastFlag] = useState(false);
+
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    setShowToastFlag(true);
+    setTimeout(() => setShowToastFlag(false), 2600);
+  };
   
   // Time frame state
   const [timePreset, setTimePreset] = useState('all');
@@ -67,14 +82,14 @@ const Financial: React.FC = () => {
   };
 
   // Calculate financial
-  const referrals = (db.referrals || []).filter((r: any) => isInTimeRange(r.createdAt));
-  const ledger = (db.finance?.ledger || []).filter((e: any) => isInTimeRange(e.at));
+  const referrals = referralsData.filter((r: any) => isInTimeRange(r.createdAt));
+  const ledgerFiltered = ledger.filter((e: any) => isInTimeRange(e.at));
   
-  const grossCents = ledger
+  const grossCents = ledgerFiltered
     .filter((e: any) => e.deltaCents < 0)
     .reduce((sum: number, e: any) => sum + Math.abs(e.deltaCents || 0), 0);
   
-  const bonusCents = ledger
+  const bonusCents = ledgerFiltered
     .filter((e: any) => e.type === 'sender_bonus')
     .reduce((sum: number, e: any) => sum + Math.abs(e.deltaCents || 0), 0);
   
@@ -84,7 +99,7 @@ const Financial: React.FC = () => {
 
   // Referrals by organization
   const orgStats: Record<string, { sent: number; received: number; total: number; state: string }> = {};
-  db.orgs.forEach((o: any) => {
+  orgs.forEach((o: any) => {
     orgStats[o.id] = { sent: 0, received: 0, total: 0, state: o.address?.state || '' };
   });
 
@@ -99,7 +114,7 @@ const Financial: React.FC = () => {
     }
   });
 
-  const orgRows = db.orgs.map((o: any) => ({
+  const orgRows = orgs.map((o: any) => ({
     id: o.id,
     name: o.name,
     ...orgStats[o.id]
@@ -133,8 +148,8 @@ const Financial: React.FC = () => {
   const senderStateCount: Record<string, number> = {};
 
   referrals.forEach((r: any) => {
-    const senderOrg = db.orgs.find((o: any) => o.id === r.senderOrgId);
-    const receiverOrg = db.orgs.find((o: any) => o.id === r.receiverOrgId);
+    const senderOrg = orgs.find((o: any) => o.id === r.senderOrgId);
+    const receiverOrg = orgs.find((o: any) => o.id === r.receiverOrgId);
     
     const sState = senderOrg?.address?.state || '—';
     const rState = receiverOrg?.address?.state || '—';
@@ -152,7 +167,7 @@ const Financial: React.FC = () => {
     .sort((a, b) => b.count - a.count);
 
   // Filter invoices
-  const filteredInvoices = (db.finance?.invoices || []).filter((inv: any) => {
+  const filteredInvoices = invoices.filter((inv: any) => {
     if (!isInTimeRange(inv.createdAt)) return false;
     
     if (invSearch) {
@@ -215,7 +230,6 @@ const Financial: React.FC = () => {
   ];
 
   const handleApplyTime = () => {
-    refreshDB();
     showToast('Time frame applied.');
   };
 
@@ -288,7 +302,7 @@ const Financial: React.FC = () => {
             </div>
 
             <div className="ml-auto">
-              <button onClick={refreshDB} className={btnClass}>Refresh</button>
+              <button onClick={() => showToast('Data refreshed.')} className={btnClass}>Refresh</button>
             </div>
           </div>
           <p className="text-xs text-rcn-muted mt-2 mb-0">
@@ -443,7 +457,7 @@ const Financial: React.FC = () => {
           </div>
 
           <div className="flex gap-2">
-            <button onClick={() => refreshDB()} className={btnPrimaryClass}>Apply</button>
+            <button onClick={() => showToast('Filters applied.')} className={btnPrimaryClass}>Apply</button>
             <button onClick={handleClearInvoiceFilters} className={btnClass}>Clear</button>
           </div>
         </div>
@@ -457,6 +471,13 @@ const Financial: React.FC = () => {
           emptyMessage="No invoices found."
           getRowKey={(row) => row.id}
         />
+      </div>
+
+      {/* Toast notification */}
+      <div className={`fixed right-4 bottom-4 z-60 bg-rcn-dark-bg text-rcn-dark-text border border-white/15 px-3 py-2.5 rounded-2xl shadow-rcn max-w-[360px] text-sm transition-all duration-300 ${
+        showToastFlag ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'
+      }`}>
+        {toastMessage}
       </div>
     </>
   );

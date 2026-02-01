@@ -1,11 +1,22 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
-import { useApp } from "@/context/AppContext";
-import { saveDB, audit } from "@/utils/database";
 import { Button, TableLayout, type TableColumn } from "@/components";
 
+const MOCK_ORGS = [
+  { id: "org_northlake", name: "Northlake Medical Group", address: { state: "IL", zip: "60601" } },
+  { id: "org_evergreen", name: "Evergreen Imaging Center", address: { state: "IL", zip: "60563" } },
+  { id: "org_sunrise", name: "Sunrise Specialty Clinic", address: { state: "TX", zip: "77002" } },
+];
+
 const PaymentSettings: React.FC = () => {
-  const { db, refreshDB, showToast } = useApp();
+  const [toastMessage, setToastMessage] = useState("");
+  const [showToastFlag, setShowToastFlag] = useState(false);
+
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    setShowToastFlag(true);
+    setTimeout(() => setShowToastFlag(false), 2600);
+  };
 
   // Payment Settings State
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -51,24 +62,10 @@ const PaymentSettings: React.FC = () => {
   const btnClass = "border border-rcn-border bg-white px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-rcn-text text-sm hover:border-[#c9ddd0] transition-colors";
   const btnPrimaryClass = "bg-rcn-accent border-rcn-accent text-white px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-sm hover:bg-rcn-accent-dark transition-colors";
 
-  // Load settings from database
+  // Load default settings
   useEffect(() => {
-    const ps = db.paymentSettings || {};
-    if (ps.methods) setMethods(ps.methods);
-    if (ps.fees) {
-      setServiceFee(ps.fees.serviceFee || 5.00);
-      if (ps.fees.processingByMethod) setProcessingFees(ps.fees.processingByMethod);
-    }
-    if (ps.bonus) {
-      setSenderBonus(ps.bonus.senderPerReceiverPaid || 0.10);
-      setApplyToAll(ps.bonus.applyToAllSenders !== false);
-      setBulkThreshold(ps.bonus.bulkThreshold || 10);
-      setBulkDiscount(ps.bonus.bulkDiscountPct || 10);
-    }
-    if (ps.invoice) {
-      setAutoEmail(ps.invoice.autoEmail !== false);
-    }
-  }, [db]);
+    // Settings are initialized with default values
+  }, []);
 
   const enabledMethods = () => {
     return Object.entries(methods).filter(([_, enabled]) => enabled).map(([key]) => key);
@@ -136,29 +133,7 @@ const PaymentSettings: React.FC = () => {
   };
 
   const handleSave = () => {
-    const paymentSettings = {
-      version: 4,
-      methods,
-      fees: {
-        serviceFee,
-        processingByMethod: processingFees,
-      },
-      bonus: {
-        senderPerReceiverPaid: senderBonus,
-        applyToAllSenders: applyToAll,
-        bulkThreshold,
-        bulkDiscountPct: bulkDiscount,
-      },
-      invoice: {
-        autoEmail,
-      },
-    };
-
-    // db.paymentSettings = paymentSettings;
-    saveDB(db);
-    audit('payment_settings_save', {});
-    refreshDB();
-    showToast('Payment Adjustment Settings saved.');
+    showToast('Payment Adjustment Settings saved (will be persisted via API).');
   };
 
   const handleReset = () => {
@@ -197,9 +172,8 @@ const PaymentSettings: React.FC = () => {
       showToast('Select both sender and receiver organizations.');
       return;
     }
-    const key = `${pairSender}__${pairReceiver}`;
-    const count = db.finance?.pairCounts?.[key] || 0;
-    setPairCount(count);
+    // Mock: set to a default value
+    setPairCount(5);
   };
 
   return (
@@ -387,8 +361,7 @@ const PaymentSettings: React.FC = () => {
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs text-rcn-muted font-semibold">Organization</label>
                 <select className={inputClass}>
-                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                  {db.orgs.map((org: any) => (
+                  {MOCK_ORGS.map((org) => (
                     <option key={org.id} value={org.id}>{org.name} - {org.address?.state} {org.address?.zip}</option>
                   ))}
                 </select>
@@ -430,6 +403,13 @@ const PaymentSettings: React.FC = () => {
             </div>
           </label>
         </div>
+      </div>
+
+      {/* Toast notification */}
+      <div className={`fixed right-4 bottom-4 z-60 bg-rcn-dark-bg text-rcn-dark-text border border-white/15 px-3 py-2.5 rounded-2xl shadow-rcn max-w-[360px] text-sm transition-all duration-300 ${
+        showToastFlag ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'
+      }`}>
+        {toastMessage}
       </div>
     </>
   );

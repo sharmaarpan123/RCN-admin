@@ -37,6 +37,9 @@ export function OrganizationsPage() {
     openDeptModal,
     openUserModal,
     db,
+    toastMessage,
+    showToastFlag,
+    modalContent,
   } = useOrganizations();
 
   const orgsForSelect = db.orgs.map(
@@ -85,6 +88,31 @@ export function OrganizationsPage() {
         onNewDept={() => openDeptModal(undefined, selectedOrgId)}
         onNewUser={() => openUserModal(undefined, selectedOrgId)}
       />
+
+      {/* Toast notification */}
+      <div className={`fixed right-4 bottom-4 z-60 bg-rcn-dark-bg text-rcn-dark-text border border-white/15 px-3 py-2.5 rounded-2xl shadow-rcn max-w-[360px] text-sm transition-all duration-300 ${
+        showToastFlag ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'
+      }`}>
+        {toastMessage}
+      </div>
+
+      {/* Modal */}
+      {modalContent && (
+        <div 
+          className="fixed inset-0 bg-black/55 flex items-center justify-center p-5 z-50" 
+          onClick={(e) => {
+            if ((e.target as HTMLElement).classList.contains('bg-black/55')) {
+              // closeModal would need to be exposed or handled via escape key
+            }
+          }}
+        >
+          <div className="max-w-[900px] w-full">
+            <div className="bg-white border border-rcn-border rounded-rcn-lg shadow-rcn p-4 max-h-[80vh] overflow-auto">
+              {modalContent}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
