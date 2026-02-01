@@ -14,7 +14,7 @@ export type OrgUserRow = {
   role: string;
   adminCap?: boolean;
   resetIntervalDays?: number;
-  mfaEmail?: string;
+  mfaEmail?: boolean;
   enabled?: boolean;
 };
 

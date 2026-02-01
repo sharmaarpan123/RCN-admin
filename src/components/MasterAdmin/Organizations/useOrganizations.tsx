@@ -200,7 +200,7 @@ export function useOrganizations() {
   };
 
   const openOrgModal = (orgId?: string) => {
-    const org = orgId ? orgs.find((o) => o.id === orgId) : null;
+    const org = orgId ? orgs.find((o) => o.id === orgId) ?? null : null;
     openModal(
       <OrgModalContent
         org={org}
@@ -252,7 +252,7 @@ export function useOrganizations() {
 
   const openBranchModal = (branchId?: string, presetOrgId?: string) => {
     const branch = branchId
-      ? branches.find((b) => b.id === branchId)
+      ? branches.find((b) => b.id === branchId) ?? null
       : null;
     const targetOrgId = branch?.orgId || presetOrgId || selectedOrgId || "";
     openModal(
@@ -308,7 +308,7 @@ export function useOrganizations() {
   };
 
   const openDeptModal = (deptId?: string, presetOrgId?: string) => {
-    const dept = deptId ? depts.find((d) => d.id === deptId) : null;
+    const dept = deptId ? depts.find((d) => d.id === deptId) ?? null : null;
     const targetOrgId = dept?.orgId || presetOrgId || selectedOrgId || "";
     openModal(
       <DeptModalContent
@@ -330,7 +330,7 @@ export function useOrganizations() {
     const email = (document.getElementById("u_email") as HTMLInputElement)?.value.trim().toLowerCase();
     const phone = (document.getElementById("u_phone") as HTMLInputElement)?.value.trim();
     const role = (document.getElementById("u_role") as HTMLSelectElement)?.value;
-    const orgId = (document.getElementById("u_org") as HTMLSelectElement)?.value || null;
+    const orgId = (document.getElementById("u_org") as HTMLSelectElement)?.value || "";
     const adminCap = (document.getElementById("u_access") as HTMLSelectElement)?.value === "ADMIN";
     const enabled = (document.getElementById("u_enabled") as HTMLSelectElement)?.value === "true";
     const notes = (document.getElementById("u_notes") as HTMLTextAreaElement)?.value.trim();
@@ -410,7 +410,7 @@ export function useOrganizations() {
   };
 
   const openUserModal = (userId?: string, presetOrgId?: string) => {
-    const user = userId ? users.find((u) => u.id === userId) : null;
+    const user = userId ? users.find((u) => u.id === userId) ?? null : null;
     const targetOrgId = user?.orgId || presetOrgId || selectedOrgId || "";
     openModal(
       <UserModalContent

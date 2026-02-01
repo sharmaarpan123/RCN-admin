@@ -1,4 +1,25 @@
 // Mock data for Banners
+
+export interface Banner {
+  id: string;
+  name: string;
+  placement: string;
+  scope: string;
+  orgId: string | null;
+  active: boolean;
+  startAt: string;
+  endAt: string;
+  imageData: string;
+  imageUrl: string;
+  linkUrl: string;
+  alt: string;
+  notes: string;
+  createdAt: string;
+  createdBy: string;
+  updatedAt: string;
+  updatedBy: string;
+}
+
 const defaultBannerSvgData = () => {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="250">
     <defs>
@@ -14,7 +35,7 @@ const defaultBannerSvgData = () => {
   return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
 };
 
-export const MOCK_BANNERS = [
+export const MOCK_BANNERS: Banner[] = [
   {
     id: "banner_rcn",
     name: "RCN Sponsored Banner",

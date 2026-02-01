@@ -2,7 +2,6 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { getDB, getSession, setSession, clearSession, audit } from '../utils/database';
 import { useRouter } from 'next/navigation';
 
 interface ModalOptions {
@@ -11,15 +10,11 @@ interface ModalOptions {
 }
 
 interface AppContextType {
-  db: any;
-  session: any;
-  refreshDB: () => void;
   login: (email: string, password: string) => boolean;
   logout: () => void;
   showToast: (message: string) => void;
   openModal: (content: ReactNode, options?: ModalOptions) => void;
   closeModal: () => void;
-  currentUser: any;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -36,22 +31,43 @@ interface AppProviderProps {
   children: ReactNode;
 }
 
+// Mock users for demo login
+const MOCK_USERS = [
+  { 
+    id: 'sys-1', 
+    email: 'sysadmin@rcn.local', 
+    password: 'Admin123!', 
+    role: 'SYSTEM_ADMIN', 
+    enabled: true,
+    orgId: null 
+  },
+  { 
+    id: 'org-1', 
+    email: 'orgadmin@demo.com', 
+    password: 'Admin123!', 
+    role: 'ORG_ADMIN', 
+    enabled: true,
+    orgId: 'org-1' 
+  },
+  { 
+    id: 'staff-1', 
+    email: 'staff@demo.com', 
+    password: 'Admin123!', 
+    role: 'STAFF', 
+    enabled: true,
+    orgId: 'org-1' 
+  },
+];
+
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
-  const [db, setDb] = useState<any>(getDB());
   const router = useRouter();
-  const [session, setSessionState] = useState<any>(getSession());
   const [toastMessage, setToastMessage] = useState<string>('');
   const [showToastFlag, setShowToastFlag] = useState(false);
   const [modalContent, setModalContent] = useState<ReactNode>(null);
   const [modalOptions, setModalOptions] = useState<any>({});
 
-  const refreshDB = () => {
-    setDb(getDB());
-  };
-
   const login = (email: string, password: string): boolean => {
-    const database = getDB();
-    const user = database.users.find((u: any) => 
+    const user = MOCK_USERS.find((u: any) => 
       u.email.toLowerCase() === email.toLowerCase() && u.enabled
     );
     
@@ -66,20 +82,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       return false;
     }
 
-    const newSession = {
-      email: user.email,
-      userId: user.id,
-      role: user.role,
-      orgId: user.orgId,
-      at: new Date().toISOString(),
-      selected: { senderOrgId: null, receiverOrgId: null }
-    };
-
-    setSession(newSession);
-    setSessionState(newSession);
-    audit("login", { email: user.email, role: user.role });
-    refreshDB();
-    // Org users (ORG_ADMIN, STAFF, or any user with orgId) → org-portal; System Admin → master-admin
+    // Route based on role
     if (user.role === 'SYSTEM_ADMIN' || !user.orgId) {
       router.push('/master-admin/dashboard');
     } else if(user.role === 'STAFF') {
@@ -91,9 +94,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   };
 
   const logout = () => {
-    audit("logout", {});
-    clearSession();
-    setSessionState(null);
     router.push('/login');
   };
 
@@ -117,18 +117,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     setModalOptions({});
   };
 
-  const currentUser = session ? db.users.find((u: any) => u.id === session.userId) : null;
-
   const value = {
-    db,
-    session,
-    refreshDB,
     login,
     logout,
     showToast,
     openModal,
     closeModal,
-    currentUser
   };
 
   return (

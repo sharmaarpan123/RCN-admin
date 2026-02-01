@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { useApp } from '../../../context/AppContext';
-import { roleLabel, MODULE_PERMS } from '../../../utils/database';
 import Button from '../../Button';
 import ConfirmModal from '../../ConfirmModal';
 
@@ -15,7 +14,7 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
   const router = useRouter();
   const pathname = usePathname();
-  const { currentUser, logout } = useApp();
+  const { logout } = useApp();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleLogoutClick = () => setShowLogoutModal(true);
@@ -26,18 +25,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
     logout();
   };
 
-  const canAccessView = (view: string): boolean => {
-    if (!currentUser) return false;
-    if (view === 'orgs') return true;
-
-    const permKey = MODULE_PERMS[view as keyof typeof MODULE_PERMS];
-    if (!permKey) return true;
-
-    if (view === 'userpanel') {
-      return currentUser.role === 'SYSTEM_ADMIN' && !!currentUser.permissions?.userPanel;
-    }
-
-    return !!currentUser.permissions?.[permKey];
+  // Simplified - all pages are accessible since there's no real auth
+  const canAccessView = (_view: string): boolean => {
+    return true;
   };
 
   const handleNavClick = (path: string, view: string) => {

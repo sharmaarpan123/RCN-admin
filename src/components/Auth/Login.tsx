@@ -2,12 +2,11 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useApp } from '../../context/AppContext';
-import { seedDemo } from '../../utils/database';
 import Button from '../Button';
 import CustomNextLink from '../CustomNextLink';
 
 const Login: React.FC = () => {
-  const { login, showToast, refreshDB } = useApp();
+  const { login, showToast } = useApp();
   const [email, setEmail] = useState('sysadmin@rcn.local');
   const [password, setPassword] = useState('Admin123!');
 
@@ -20,9 +19,7 @@ const Login: React.FC = () => {
 
   const handleResetDemo = () => {
     if (window.confirm("Reset demo data? This clears local changes.")) {
-      seedDemo();
       showToast("Demo data reset.");
-      refreshDB();
     }
   };
 

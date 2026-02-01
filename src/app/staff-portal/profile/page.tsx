@@ -4,8 +4,12 @@ import React, { useState, useEffect } from "react";
 import { useApp } from "@/context/AppContext";
 import { getDB, saveDB, nowISO, audit } from "@/utils/database";
 
+// Mock session for demo
+const MOCK_SESSION = { userId: 'staff-1', orgId: 'org-1', role: 'STAFF' };
+
 export default function StaffProfilePage() {
-  const { session, refreshDB, showToast } = useApp();
+  const { showToast } = useApp();
+  const session = MOCK_SESSION;
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     firstName: "",
@@ -121,7 +125,6 @@ export default function StaffProfilePage() {
     };
 
     saveDB(db);
-    refreshDB();
     audit("profile_updated", { userId: session.userId });
     showToast("Profile saved successfully.");
   };

@@ -3,29 +3,13 @@
 import React, { useState } from "react";
 import { Button, TableLayout, type TableColumn, Modal } from "@/components";
 import Image from "next/image";
-import { MOCK_BANNERS, MOCK_ORGS_BANNERS } from "./mockData";
+import { MOCK_BANNERS, MOCK_ORGS_BANNERS, type Banner } from "./mockData";
 
 const safeLower = (s: any) => (s || "").toString().toLowerCase();
 
 const uid = (prefix = "id") => {
   return prefix + "_" + Math.random().toString(16).slice(2) + Math.random().toString(16).slice(2);
 };
-
-interface BannerRow {
-  id: string;
-  name: string;
-  linkUrl?: string;
-  placement: string;
-  scope: string;
-  orgId?: string | null;
-  active: boolean;
-  startAt?: string;
-  endAt?: string;
-  imageData?: string;
-  imageUrl?: string;
-  alt?: string;
-  notes?: string;
-}
 
 const PLACEMENT_OPTIONS = [
   { value: "RIGHT_SIDEBAR", label: "Right Sidebar" },
@@ -40,7 +24,7 @@ const SCOPE_OPTIONS = [
 
 const Banners: React.FC = () => {
   // Mock data state
-  const [banners, setBanners] = useState(MOCK_BANNERS);
+  const [banners, setBanners] = useState<Banner[]>(MOCK_BANNERS);
   const [orgs] = useState(MOCK_ORGS_BANNERS);
 
   // Toast and modal state
@@ -79,7 +63,7 @@ const Banners: React.FC = () => {
     return labels[p] || p;
   };
 
-  const isInDateRange = (banner: BannerRow) => {
+  const isInDateRange = (banner: Banner) => {
     const now = new Date();
     if (banner.startAt) {
       const start = new Date(banner.startAt);
@@ -92,7 +76,7 @@ const Banners: React.FC = () => {
     return true;
   };
 
-  const filtered: BannerRow[] = banners.filter((b: BannerRow) => {
+  const filtered: Banner[] = banners.filter((b: Banner) => {
     const searchLower = safeLower(search);
     const hay = safeLower((b.name || '') + ' ' + (b.linkUrl || ''));
     if (search && !hay.includes(searchLower)) return false;
@@ -109,7 +93,7 @@ const Banners: React.FC = () => {
     return true;
   });
 
-  const previewBanners = banners.filter((b: BannerRow) => {
+  const previewBanners = banners.filter((b: Banner) => {
     if (!b.active) return false;
     if (!isInDateRange(b)) return false;
     if (b.placement !== previewPlacement) return false;
@@ -187,7 +171,7 @@ const Banners: React.FC = () => {
 
   const editingBanner = editingBannerId ? banners.find((b: { id: string }) => b.id === editingBannerId) : null;
 
-  const bannerColumns: TableColumn<BannerRow>[] = [
+  const bannerColumns: TableColumn<Banner>[] = [
     {
       head: "Name / Link",
       component: (b) => (
@@ -334,7 +318,7 @@ const Banners: React.FC = () => {
         {/* Banner list */}
         <h4 className="text-xs font-semibold text-rcn-muted uppercase tracking-wider m-0 mb-2">Banner list</h4>
         <div className="overflow-auto">
-          <TableLayout<BannerRow>
+          <TableLayout<Banner>
             columns={bannerColumns}
             data={filtered}
             variant="bordered"

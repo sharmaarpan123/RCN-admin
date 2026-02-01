@@ -69,7 +69,7 @@ export function OrganizationsPage() {
         setSelectedOrgId={setSelectedOrgId}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        selectedOrg={selectedOrg}
+        selectedOrg={selectedOrg ?? null}
         orgs={orgsForSelect}
         branchSearch={branchSearch}
         setBranchSearch={setBranchSearch}

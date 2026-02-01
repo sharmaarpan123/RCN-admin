@@ -3,12 +3,32 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useApp } from '../../context/AppContext';
-import { US_STATES } from '../../utils/database';
 import Button from '../../components/Button';
 import CustomNextLink from '../../components/CustomNextLink';
 
+// US States list
+const US_STATES = [
+  { abbr: "AL", name: "Alabama" }, { abbr: "AK", name: "Alaska" }, { abbr: "AZ", name: "Arizona" },
+  { abbr: "AR", name: "Arkansas" }, { abbr: "CA", name: "California" }, { abbr: "CO", name: "Colorado" },
+  { abbr: "CT", name: "Connecticut" }, { abbr: "DE", name: "Delaware" }, { abbr: "FL", name: "Florida" },
+  { abbr: "GA", name: "Georgia" }, { abbr: "HI", name: "Hawaii" }, { abbr: "ID", name: "Idaho" },
+  { abbr: "IL", name: "Illinois" }, { abbr: "IN", name: "Indiana" }, { abbr: "IA", name: "Iowa" },
+  { abbr: "KS", name: "Kansas" }, { abbr: "KY", name: "Kentucky" }, { abbr: "LA", name: "Louisiana" },
+  { abbr: "ME", name: "Maine" }, { abbr: "MD", name: "Maryland" }, { abbr: "MA", name: "Massachusetts" },
+  { abbr: "MI", name: "Michigan" }, { abbr: "MN", name: "Minnesota" }, { abbr: "MS", name: "Mississippi" },
+  { abbr: "MO", name: "Missouri" }, { abbr: "MT", name: "Montana" }, { abbr: "NE", name: "Nebraska" },
+  { abbr: "NV", name: "Nevada" }, { abbr: "NH", name: "New Hampshire" }, { abbr: "NJ", name: "New Jersey" },
+  { abbr: "NM", name: "New Mexico" }, { abbr: "NY", name: "New York" }, { abbr: "NC", name: "North Carolina" },
+  { abbr: "ND", name: "North Dakota" }, { abbr: "OH", name: "Ohio" }, { abbr: "OK", name: "Oklahoma" },
+  { abbr: "OR", name: "Oregon" }, { abbr: "PA", name: "Pennsylvania" }, { abbr: "RI", name: "Rhode Island" },
+  { abbr: "SC", name: "South Carolina" }, { abbr: "SD", name: "South Dakota" }, { abbr: "TN", name: "Tennessee" },
+  { abbr: "TX", name: "Texas" }, { abbr: "UT", name: "Utah" }, { abbr: "VT", name: "Vermont" },
+  { abbr: "VA", name: "Virginia" }, { abbr: "WA", name: "Washington" }, { abbr: "WV", name: "West Virginia" },
+  { abbr: "WI", name: "Wisconsin" }, { abbr: "WY", name: "Wyoming" }, { abbr: "DC", name: "District of Columbia" },
+];
+
 const OrgSignup: React.FC = () => {
-  const { db, refreshDB, showToast } = useApp();
+  const { showToast } = useApp();
   const router = useRouter();
 
   // Form state
@@ -69,43 +89,11 @@ const OrgSignup: React.FC = () => {
       return;
     }
 
-    // Generate unique ID
-    const uid = (prefix: string) => `${prefix}_${Math.random().toString(16).slice(2)}${Math.random().toString(16).slice(2)}`;
-
-    // Create organization object
-    const newOrg = {
-      id: uid('org'),
-      name: formData.name.trim(),
-      phone: formData.phone.trim(),
-      email: formData.email.trim(),
-      ein: formData.ein.trim() || '',
-      enabled: true,
-      address: {
-        street: formData.street.trim() || '',
-        suite: formData.suite.trim() || '',
-        city: formData.city.trim() || '',
-        state: formData.state.trim(),
-        zip: formData.zip.trim()
-      },
-      contact: {
-        first: formData.contactFirst.trim() || '',
-        last: formData.contactLast.trim() || '',
-        email: formData.contactEmail.trim() || '',
-        tel: formData.contactTel.trim() || '',
-        fax: formData.contactFax.trim() || ''
-      },
-      walletCents: 0,
-      referralCredits: 0
-    };
-
-    // Save to database
-    db.orgs.push(newOrg);
-    localStorage.setItem('rcn_demo_v6', JSON.stringify(db));
-    refreshDB();
-
-    showToast('Organization registered successfully!');
+    // In a real application, this would POST to an API
+    // For demo purposes, just show success message and redirect
+    showToast('Organization registered successfully! (Demo mode - no actual signup)');
     
-    // Redirect to login or dashboard after a short delay
+    // Redirect to login after a short delay
     setTimeout(() => {
       router.push('/login');
     }, 1500);
@@ -284,8 +272,8 @@ const OrgSignup: React.FC = () => {
                         required
                       >
                         <option value="">Select State</option>
-                        {US_STATES.filter(s => s !== '').map(s => (
-                          <option key={s} value={s}>{s}</option>
+                        {US_STATES.map(s => (
+                          <option key={s.abbr} value={s.abbr}>{s.name}</option>
                         ))}
                       </select>
                     </div>

@@ -161,7 +161,7 @@ function UserEditForm({ user }: { user: OrgUser }) {
               <div>
                 <label className="block text-xs text-rcn-muted mb-1.5">Branches</label>
                 <div className="border border-rcn-border rounded-xl p-3 max-h-40 overflow-auto space-y-1">
-                  {brs.map((b) => (
+                  {branches.map((b) => (
                     <label key={b.id} className="flex items-center gap-2 py-1 cursor-pointer">
                       <input type="checkbox" checked={branchIds.has(b.id)} onChange={() => toggleBranch(b.id)} className="rounded border-rcn-border" />
                       <span className="text-sm">{b.name}</span>

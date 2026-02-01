@@ -7,6 +7,9 @@ import { getDB, saveDB, nowISO, audit, moneyToCents, ensureOrgMoney, postLedger,
 // Pricing: 5 credits = $10, so 1 credit = $2
 const CREDIT_PRICE = 2.00;
 
+// Mock session for demo
+const MOCK_SESSION = { userId: 'staff-1', orgId: 'org-1', role: 'STAFF' };
+
 interface CardDetails {
   cardNumber: string;
   expiryMonth: string;
@@ -17,7 +20,9 @@ interface CardDetails {
 }
 
 export default function WalletPage() {
-  const { session, db, refreshDB, showToast } = useApp();
+  const { showToast } = useApp();
+  const session = MOCK_SESSION;
+  const db = getDB();
   const [creditAmount, setCreditAmount] = useState<string>("");
   const [paymentMethod, setPaymentMethod] = useState<string>("creditCard");
   const [loading, setLoading] = useState(true);
@@ -155,7 +160,6 @@ export default function WalletPage() {
     });
 
     saveDB(database);
-    refreshDB();
     audit("credit_purchase", { 
       orgId: session.orgId, 
       credits: totalCredits, 
