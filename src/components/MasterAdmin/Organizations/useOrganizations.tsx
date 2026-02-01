@@ -544,7 +544,7 @@ export function useOrganizations() {
     {
       head: "Actions",
       component: (u) => (
-        <button type="button"  className="cursor-pointer" onClick={() => openUserModal(u.id)} className={BTN_SMALL_CLASS}>
+        <button type="button"   onClick={() => openUserModal(u.id)} className={BTN_SMALL_CLASS}>
           Edit
         </button>
       ),
@@ -578,10 +578,10 @@ export function useOrganizations() {
       head: "Actions",
       component: (b) => (
         <div className="flex gap-2">
-          <button type="button"  className="cursor-pointer" onClick={() => toggleBranch(b.id)} className={BTN_SMALL_CLASS}>
+          <button type="button"   onClick={() => toggleBranch(b.id)} className={BTN_SMALL_CLASS}>
             Toggle
           </button>
-          <button type="button"  className="cursor-pointer" onClick={() => openBranchModal(b.id)} className={BTN_SMALL_CLASS}>
+          <button type="button"   onClick={() => openBranchModal(b.id)} className={BTN_SMALL_CLASS}>
             Edit
           </button>
         </div>
@@ -630,10 +630,10 @@ export function useOrganizations() {
       head: "Actions",
       component: (d) => (
         <div className="flex gap-2">
-          <button type="button" className="cursor-pointer" onClick={() => toggleDept(d.id)} className={BTN_SMALL_CLASS}>
+          <button type="button"  onClick={() => toggleDept(d.id)} className={BTN_SMALL_CLASS}>
             Toggle
           </button>
-          <button type="button" className="cursor-pointer" onClick={() => openDeptModal(d.id)} className={BTN_SMALL_CLASS}>
+          <button type="button"  onClick={() => openDeptModal(d.id)} className={BTN_SMALL_CLASS}>
             Edit
           </button>
         </div>
