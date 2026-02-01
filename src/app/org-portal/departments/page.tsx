@@ -1,15 +1,14 @@
 "use client";
 
-import { useOrgPortal } from "@/context/OrgPortalContext";
-import type { Dept } from "@/context/OrgPortalContext";
 import { Button, Modal, TableLayout } from "@/components";
 import { useState } from "react";
 import type { TableColumn } from "@/components";
+import { MOCK_ORG, uid, type Dept, type Branch } from "../mockData";
 
 type DeptRow = Dept & { branchName?: string };
 
 export default function OrgPortalDepartmentsPage() {
-  const { branches, findBranch, addDepartment, renameDepartment } = useOrgPortal();
+  const [branches, setBranches] = useState<Branch[]>(MOCK_ORG.branches);
   const [branchFilter, setBranchFilter] = useState<string>("");
   const [modal, setModal] = useState<
     | { mode: "add"; branchId: string }
@@ -18,9 +17,40 @@ export default function OrgPortalDepartmentsPage() {
   >(null);
   const [name, setName] = useState("");
   const [search, setSearch] = useState("");
+  const [toastMsg, setToastMsg] = useState<{ title: string; body: string } | null>(null);
 
-  const brs = branches();
-  const branchId = branchFilter || brs[0]?.id || "";
+  const showToast = (title: string, body: string) => {
+    setToastMsg({ title, body });
+    setTimeout(() => setToastMsg(null), 2200);
+  };
+
+  const addDepartment = (branchId: string, name: string) => {
+    const n = (name || "").trim();
+    if (!n) return;
+    setBranches((prev) =>
+      prev.map((b) =>
+        b.id === branchId ? { ...b, departments: [...(b.departments || []), { id: uid("dp"), name: n }] } : b
+      )
+    );
+    showToast("Department created", "Department added.");
+  };
+
+  const renameDepartment = (branchId: string, deptId: string, name: string) => {
+    const n = (name || "").trim();
+    if (!n) return;
+    setBranches((prev) =>
+      prev.map((b) =>
+        b.id === branchId
+          ? { ...b, departments: (b.departments || []).map((dp) => (dp.id === deptId ? { ...dp, name: n } : dp)) }
+          : b
+      )
+    );
+    showToast("Department updated", "Department renamed.");
+  };
+
+  const findBranch = (id: string) => branches.find((b) => b.id === id) || null;
+
+  const branchId = branchFilter || branches[0]?.id || "";
   const br = findBranch(branchId);
   const depts = br?.departments ?? [];
   const data: DeptRow[] = depts.map((dp) => ({ ...dp, branchName: br?.name }));
@@ -99,7 +129,7 @@ export default function OrgPortalDepartmentsPage() {
               onChange={(e) => setBranchFilter(e.target.value)}
               className="w-full sm:w-auto min-w-0 px-2.5 py-2 text-sm rounded-xl border border-rcn-border bg-white focus:outline-none focus:ring-2 focus:ring-rcn-accent/30"
             >
-              {brs.map((b) => (
+              {branches.map((b) => (
                 <option key={b.id} value={b.id}>{b.name}</option>
               ))}
             </select>
@@ -151,7 +181,7 @@ export default function OrgPortalDepartmentsPage() {
                 onChange={(e) => setModal({ mode: "add", branchId: e.target.value })}
                 className="w-full px-2.5 py-2 text-sm rounded-xl border border-rcn-border bg-white focus:outline-none focus:ring-2 focus:ring-rcn-accent/30 mb-2"
               >
-                {brs.map((b) => (
+                {branches.map((b) => (
                   <option key={b.id} value={b.id}>{b.name}</option>
                 ))}
               </select>
@@ -170,6 +200,17 @@ export default function OrgPortalDepartmentsPage() {
           </div>
         </div>
       </Modal>
+
+      {toastMsg && (
+        <div
+          className="fixed left-4 right-4 sm:left-auto sm:right-4 bottom-4 z-50 min-w-0 max-w-[min(440px,calc(100vw-2rem))] bg-rcn-dark-bg text-white rounded-2xl px-4 py-3 shadow-rcn border border-white/10"
+          role="status"
+          aria-live="polite"
+        >
+          <p className="font-bold text-sm m-0">{toastMsg.title}</p>
+          <p className="text-xs m-0 mt-1 opacity-90">{toastMsg.body}</p>
+        </div>
+      )}
     </div>
   );
 }

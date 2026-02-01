@@ -1,13 +1,11 @@
 "use client";
 
-import {
-  useOrgPortal,
-  type Referral,
-  type InboxRefMode,
-} from "@/context/OrgPortalContext";
 import { Button, Modal, TableLayout } from "@/components";
 import { useState, useMemo } from "react";
 import type { TableColumn } from "@/components";
+import { MOCK_ORG, MOCK_REFERRALS_SENT, MOCK_REFERRALS_RECEIVED, uid, type Referral } from "../mockData";
+
+type InboxRefMode = "sent" | "received";
 
 function fmtDate(iso: string) {
   if (!iso) return "—";
@@ -19,18 +17,50 @@ function fmtDate(iso: string) {
 }
 
 export default function OrgPortalReferralDashboardPage() {
-  const {
-    org,
-    referralsSent,
-    referralsReceived,
-    seedReferrals,
-    setReferralStatus,
-    inboxRefMode,
-    setInboxRefMode,
-  } = useOrgPortal();
+  const [org] = useState(MOCK_ORG);
+  const [referralsSent, setReferralsSent] = useState<Referral[]>(MOCK_REFERRALS_SENT);
+  const [referralsReceived, setReferralsReceived] = useState<Referral[]>(MOCK_REFERRALS_RECEIVED);
+  const [inboxRefMode, setInboxRefMode] = useState<InboxRefMode>("received");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [modal, setModal] = useState<{ mode: InboxRefMode; r: Referral } | null>(null);
+  const [toastMsg, setToastMsg] = useState<{ title: string; body: string } | null>(null);
+
+  const showToast = (title: string, body: string) => {
+    setToastMsg({ title, body });
+    setTimeout(() => setToastMsg(null), 2200);
+  };
+
+  const seedReferrals = () => {
+    const today = new Date();
+    const d = (daysAgo: number) => {
+      const x = new Date(today);
+      x.setDate(x.getDate() - daysAgo);
+      return x.toISOString();
+    };
+    const sent: Referral[] = [
+      { id: uid("r"), patient: "Judy Leonard", dob: "09/16/1944", service: "Hospice Eval", receiverOrg: "North Suburbs Branch — Clinical Review", status: "Pending", date: d(0) },
+      { id: uid("r"), patient: "Irene Felton", dob: "05/02/1945", service: "Home Health", receiverOrg: "Chicago Branch — Intake / Referrals", status: "Accepted", date: d(2) },
+      { id: uid("r"), patient: "John Doe", dob: "01/11/1959", service: "Wound Care", receiverOrg: "Chicago Branch — Medical Records", status: "Completed", date: d(7) },
+    ];
+    const received: Referral[] = [
+      { id: uid("r"), patient: "Cassidy Lancaster", dob: "08/03/1980", service: "Neurology Consult", senderOrg: "West Suburbs Clinic", status: "Pending", date: d(1) },
+      { id: uid("r"), patient: "Eric Lancaster", dob: "04/14/1974", service: "Internal Medicine", senderOrg: "Urgent Care — Elmhurst", status: "Rejected", date: d(3) },
+      { id: uid("r"), patient: "Aisha Patel", dob: "02/05/1970", service: "Pulmonology", senderOrg: "North Suburbs Branch — Scheduling", status: "Paid/Unlocked", date: d(5) },
+    ];
+    setReferralsSent(sent);
+    setReferralsReceived(received);
+    showToast("Loaded", "Demo referrals added.");
+  };
+
+  const setReferralStatus = (mode: InboxRefMode, id: string, status: string) => {
+    if (mode === "received") {
+      setReferralsReceived((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
+    } else {
+      setReferralsSent((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
+    }
+    showToast("Updated", `Status set to ${status}.`);
+  };
 
   const arr = inboxRefMode === "received" ? referralsReceived : referralsSent;
   const filtered = arr.filter((r) => {
@@ -150,6 +180,17 @@ export default function OrgPortalReferralDashboardPage() {
             </div>
           </div>
         </Modal>
+      )}
+
+      {toastMsg && (
+        <div
+          className="fixed left-4 right-4 sm:left-auto sm:right-4 bottom-4 z-50 min-w-0 max-w-[min(440px,calc(100vw-2rem))] bg-rcn-dark-bg text-white rounded-2xl px-4 py-3 shadow-rcn border border-white/10"
+          role="status"
+          aria-live="polite"
+        >
+          <p className="font-bold text-sm m-0">{toastMsg.title}</p>
+          <p className="text-xs m-0 mt-1 opacity-90">{toastMsg.body}</p>
+        </div>
       )}
     </div>
   );

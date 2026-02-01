@@ -1,23 +1,17 @@
 "use client";
 
 import { CustomNextLink } from "@/components";
-import { useOrgPortal } from "@/context/OrgPortalContext";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { MOCK_USERS, MOCK_ORG, userDisplayName, type Branch } from "../../mockData";
 
 export default function OrgPortalUserViewPage() {
   const params = useParams<{ id: string }>();
-
-  const {
-    users,
-    userDisplayName: ctxDisplayName,
-    branches,
-    findBranch,
-
-  } = useOrgPortal();
+  const [users] = useState(MOCK_USERS);
+  const [branches] = useState<Branch[]>(MOCK_ORG.branches);
 
   const user = users.find((u) => u.id === params.id);
-  const brs = branches();
+  const findBranch = (id: string) => branches.find((b) => b.id === id) || null;
 
   const [branchIds, setBranchIds] = useState<Set<string>>(new Set(user?.branchIds ?? []));
   const [deptIds, setDeptIds] = useState<Set<string>>(new Set(user?.deptIds ?? []));
@@ -51,7 +45,7 @@ export default function OrgPortalUserViewPage() {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <h1 className="text-xl font-bold m-0">View User</h1>
-              <p className="text-sm text-rcn-muted m-0 mt-1">{ctxDisplayName(user)}</p>
+              <p className="text-sm text-rcn-muted m-0 mt-1">{userDisplayName(user)}</p>
             </div>
             <CustomNextLink href={`/org-portal/users/${user.id}/edit`} variant="primary" size="sm">Edit</CustomNextLink>
           </div>

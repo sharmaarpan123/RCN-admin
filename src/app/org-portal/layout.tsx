@@ -1,11 +1,9 @@
 "use client";
 
-import { OrgPortalProvider, useOrgPortal } from "@/context/OrgPortalContext";
-import { useApp } from "@/context/AppContext";
 import { ConfirmModal } from "@/components";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const NAV = [
@@ -24,7 +22,7 @@ function OrgPortalSidebar({
   setSidebarOpen: (v: boolean) => void;
 }) {
   const pathname = usePathname();
-  const { logout } = useApp();
+  const router = useRouter();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleLogoutClick = () => setShowLogoutModal(true);
@@ -32,7 +30,8 @@ function OrgPortalSidebar({
   const handleLogoutConfirm = () => {
     setShowLogoutModal(false);
     setSidebarOpen(false);
-    logout();
+    // Simple logout - redirect to login
+    router.push('/login');
   };
 
   return (
@@ -112,35 +111,6 @@ function OrgPortalSidebar({
   );
 }
 
-function OrgPortalToast() {
-  const { setToast } = useOrgPortal();
-  const [state, setState] = useState<{ show: boolean; title: string; body: string }>({
-    show: false,
-    title: "",
-    body: "",
-  });
-
-  useEffect(() => {
-    setToast((title, body) => {
-      setState({ show: true, title, body });
-      setTimeout(() => setState((s) => ({ ...s, show: false })), 2200);
-    });
-  }, [setToast]);
-
-  return (
-    <div
-      className={`fixed left-4 right-4 sm:left-auto sm:right-4 bottom-4 z-50 min-w-0 max-w-[min(440px,calc(100vw-2rem))] bg-rcn-dark-bg text-white rounded-2xl px-4 py-3 shadow-rcn border border-white/10 transition-all duration-200 ${state.show ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
-        }`}
-      role="status"
-      aria-live="polite"
-      aria-atomic="true"
-    >
-      <p className="font-bold text-sm m-0">{state.title}</p>
-      <p className="text-xs m-0 mt-1 opacity-90">{state.body}</p>
-    </div>
-  );
-}
-
 function OrgPortalLayoutInner({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -176,15 +146,10 @@ function OrgPortalLayoutInner({ children }: { children: React.ReactNode }) {
       </header>
       <OrgPortalSidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       <main className="flex-1 overflow-auto p-4 pt-14 lg:p-6 lg:pt-6">{children}</main>
-      <OrgPortalToast />
     </div>
   );
 }
 
 export default function OrgPortalLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <OrgPortalProvider>
-      <OrgPortalLayoutInner>{children}</OrgPortalLayoutInner>
-    </OrgPortalProvider>
-  );
+  return <OrgPortalLayoutInner>{children}</OrgPortalLayoutInner>;
 }

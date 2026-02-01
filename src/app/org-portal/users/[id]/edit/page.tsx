@@ -1,28 +1,21 @@
 "use client";
 
-import { useOrgPortal } from "@/context/OrgPortalContext";
-import type { OrgUser } from "@/context/OrgPortalContext";
 import { Button, CustomNextLink } from "@/components";
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { MOCK_USERS, MOCK_ORG, userDisplayName, isValidEmail, type OrgUser, type Branch } from "../../../mockData";
 
 function UserEditForm({ user }: { user: OrgUser }) {
   const router = useRouter();
-  const {
-    userDisplayName: ctxDisplayName,
-    branches,
-    findBranch,
-    saveUser,
-    saveUserBranches,
-    saveUserDepts,
-    updatePassword,
-    toggleUserActive,
-    removeUserFromOrg,
-    deleteUser,
-    toast,
-  } = useOrgPortal();
+  const [branches] = useState<Branch[]>(MOCK_ORG.branches);
+  const [toastMsg, setToastMsg] = useState<{ title: string; body: string } | null>(null);
 
-  const brs = branches();
+  const showToast = (title: string, body: string) => {
+    setToastMsg({ title, body });
+    setTimeout(() => setToastMsg(null), 2200);
+  };
+
+  const findBranch = (id: string) => branches.find((b) => b.id === id) || null;
 
   const [firstName, setFirstName] = useState(user.firstName ?? "");
   const [lastName, setLastName] = useState(user.lastName ?? "");
@@ -43,29 +36,52 @@ function UserEditForm({ user }: { user: OrgUser }) {
   const showBranchIds = Array.from(branchIds);
 
   const handleSave = () => {
-    const form: Partial<OrgUser> = { firstName, lastName, email, phone, role, isAdmin, isActive, notes };
-    if (!saveUser(user, form)) return;
-    saveUserBranches(user, Array.from(branchIds));
-    saveUserDepts(user, Array.from(branchIds), Array.from(deptIds));
-    router.push("/org-portal/users");
+    const firstNameTrimmed = (firstName || "").trim();
+    const lastNameTrimmed = (lastName || "").trim();
+    const emailTrimmed = (email || "").trim().toLowerCase();
+    
+    if (!firstNameTrimmed || !lastNameTrimmed) {
+      showToast("Missing required field", "First name and last name are required.");
+      return;
+    }
+    if (!emailTrimmed || !isValidEmail(emailTrimmed)) {
+      showToast("Invalid email", "Please enter a valid email.");
+      return;
+    }
+    
+    // In a real app, this would PUT to an API
+    showToast("User saved", "User profile updated.");
+    setTimeout(() => router.push("/org-portal/users"), 1000);
   };
 
   const handlePassword = () => {
     if (p1.length < 8) return;
     if (p1 !== p2) return;
-    updatePassword(user);
+    showToast("Password updated", "Password reset prepared (demo).");
     setP1("");
     setP2("");
     setShowPassword(false);
   };
 
-  const handleDelete = () => {
-    if (window.prompt(`Type DELETE to permanently delete ${ctxDisplayName(user)}:`)?.trim().toUpperCase() !== "DELETE") {
-      toast("Cancelled", "Delete not confirmed.");
+  const handleToggleActive = () => {
+    showToast(user.isActive ? "User deactivated" : "User activated", "Status updated.");
+  };
+
+  const handleRemoveFromOrg = () => {
+    if (!user.orgAssigned) {
+      showToast("Nothing to remove", "User is already unassigned in this organization.");
       return;
     }
-    deleteUser(user);
-    router.push("/org-portal/users");
+    showToast("Removed", "User unassigned from this organization.");
+  };
+
+  const handleDelete = () => {
+    if (window.prompt(`Type DELETE to permanently delete ${userDisplayName(user)}:`)?.trim().toUpperCase() !== "DELETE") {
+      showToast("Cancelled", "Delete not confirmed.");
+      return;
+    }
+    showToast("User deleted", "User permanently deleted.");
+    setTimeout(() => router.push("/org-portal/users"), 1000);
   };
 
   return (
@@ -75,9 +91,8 @@ function UserEditForm({ user }: { user: OrgUser }) {
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div>
               <h1 className="text-xl font-bold m-0">Edit User detail</h1>
-              <p className="text-sm text-rcn-muted m-0 mt-1">{ctxDisplayName(user)}</p>
+              <p className="text-sm text-rcn-muted m-0 mt-1">{userDisplayName(user)}</p>
             </div>
-
           </div>
 
           <div className="shrink-0 border border-rcn-border rounded-xl p-4 mt-2  bg-rcn-bg/50 min-w-[220px]">
@@ -180,8 +195,8 @@ function UserEditForm({ user }: { user: OrgUser }) {
 
           <div className="flex flex-col sm:flex-row flex-wrap gap-2 mt-6 pt-6 border-t border-rcn-border justify-between">
             <div className="flex flex-wrap gap-2">
-              <Button variant="secondary" size="sm" onClick={() => toggleUserActive(user)}>{user.isActive ? "Deactivate" : "Activate"}</Button>
-              <Button variant="danger" size="sm" onClick={() => removeUserFromOrg(user)} disabled={!user.orgAssigned}>Remove from Org</Button>
+              <Button variant="secondary" size="sm" onClick={handleToggleActive}>{user.isActive ? "Deactivate" : "Activate"}</Button>
+              <Button variant="danger" size="sm" onClick={handleRemoveFromOrg} disabled={!user.orgAssigned}>Remove from Org</Button>
               <Button variant="danger" size="sm" onClick={handleDelete}>Delete</Button>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -191,13 +206,24 @@ function UserEditForm({ user }: { user: OrgUser }) {
           </div>
         </div>
       </div>
+
+      {toastMsg && (
+        <div
+          className="fixed left-4 right-4 sm:left-auto sm:right-4 bottom-4 z-50 min-w-0 max-w-[min(440px,calc(100vw-2rem))] bg-rcn-dark-bg text-white rounded-2xl px-4 py-3 shadow-rcn border border-white/10"
+          role="status"
+          aria-live="polite"
+        >
+          <p className="font-bold text-sm m-0">{toastMsg.title}</p>
+          <p className="text-xs m-0 mt-1 opacity-90">{toastMsg.body}</p>
+        </div>
+      )}
     </div>
   );
 }
 
 export default function OrgPortalUserEditPage() {
   const params = useParams<{ id: string }>();
-  const { users } = useOrgPortal();
+  const [users] = useState(MOCK_USERS);
   const user = users.find((u) => u.id === params.id);
 
   if (!user) {

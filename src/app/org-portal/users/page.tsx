@@ -1,26 +1,31 @@
 "use client";
 
-import { useOrgPortal } from "@/context/OrgPortalContext";
-import type { OrgUser } from "@/context/OrgPortalContext";
 import { Button, CustomNextLink, TableLayout, TableActions, type TableColumn, type TableSortState } from "@/components";
 import { useState, useMemo } from "react";
+import { MOCK_USERS, userDisplayName, type OrgUser } from "../mockData";
 
 export default function OrgPortalUsersPage() {
-  const {
-    users,
-    userDisplayName: ctxDisplayName,
-    resetDemo,
-  } = useOrgPortal();
-
+  const [users, setUsers] = useState<OrgUser[]>(MOCK_USERS);
   const [search, setSearch] = useState("");
   const [body, setBody] = useState<TableSortState>({ sort: "name", order: 1 });
+  const [toastMsg, setToastMsg] = useState<{ title: string; body: string } | null>(null);
+
+  const showToast = (title: string, body: string) => {
+    setToastMsg({ title, body });
+    setTimeout(() => setToastMsg(null), 2200);
+  };
+
+  const resetDemo = () => {
+    setUsers(MOCK_USERS);
+    showToast("Demo reset", "Organization data restored.");
+  };
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     let list = users;
     if (q) {
       list = users.filter((u) => {
-        const name = ctxDisplayName(u).toLowerCase();
+        const name = userDisplayName(u).toLowerCase();
         const email = (u.email || "").toLowerCase();
         return name.includes(q) || email.includes(q);
       });
@@ -29,16 +34,16 @@ export default function OrgPortalUsersPage() {
     const dir = body.order ?? 1;
     if (!sortKey) return list;
     return [...list].sort((a, b) => {
-      const an = sortKey === "name" ? ctxDisplayName(a) : (a[sortKey as keyof OrgUser] ?? "");
-      const bn = sortKey === "name" ? ctxDisplayName(b) : (b[sortKey as keyof OrgUser] ?? "");
+      const an = sortKey === "name" ? userDisplayName(a) : (a[sortKey as keyof OrgUser] ?? "");
+      const bn = sortKey === "name" ? userDisplayName(b) : (b[sortKey as keyof OrgUser] ?? "");
       const cmp = String(an).localeCompare(String(bn), undefined, { sensitivity: "base" });
       return dir === -1 ? -cmp : cmp;
     });
-  }, [users, search, ctxDisplayName, body.sort, body.order]);
+  }, [users, search, body.sort, body.order]);
 
   const columns: TableColumn<OrgUser>[] = useMemo(
     () => [
-      { head: "Name", sortKey: "name", component: (u) => <span className="font-medium">{ctxDisplayName(u)}</span> },
+      { head: "Name", sortKey: "name", component: (u) => <span className="font-medium">{userDisplayName(u)}</span> },
       { head: "Email", accessor: "email", sortKey: "email", component: (u) => <span className="text-rcn-muted">{u.email || "—"}</span> },
       { head: "Role", component: (u) => (u.isAdmin ? "Admin" : (u.role || "User")) },
       { head: "Status", component: (u) => (u.isActive ? "Active" : "Inactive") },
@@ -55,7 +60,7 @@ export default function OrgPortalUsersPage() {
         ),
       },
     ],
-    [ctxDisplayName]
+    []
   );
 
   return (
@@ -88,6 +93,17 @@ export default function OrgPortalUsersPage() {
           getRowKey={(u) => u.id}
         />
       </div>
+
+      {toastMsg && (
+        <div
+          className="fixed left-4 right-4 sm:left-auto sm:right-4 bottom-4 z-50 min-w-0 max-w-[min(440px,calc(100vw-2rem))] bg-rcn-dark-bg text-white rounded-2xl px-4 py-3 shadow-rcn border border-white/10"
+          role="status"
+          aria-live="polite"
+        >
+          <p className="font-bold text-sm m-0">{toastMsg.title}</p>
+          <p className="text-xs m-0 mt-1 opacity-90">{toastMsg.body}</p>
+        </div>
+      )}
     </div>
   );
 }

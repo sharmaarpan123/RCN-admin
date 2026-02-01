@@ -1,21 +1,15 @@
 "use client";
 
-import { useOrgPortal } from "@/context/OrgPortalContext";
-import type { OrgUser } from "@/context/OrgPortalContext";
 import { Button, CustomNextLink } from "@/components";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { MOCK_ORG, uid, isValidEmail, type OrgUser, type Branch } from "../../mockData";
 
 export default function OrgPortalUserAddPage() {
-  const {
-    branches,
-    findBranch,
-    createUser,
-    saveUser,
-    saveUserBranches,
-    saveUserDepts,
-  } = useOrgPortal();
+  const [branches] = useState<Branch[]>(MOCK_ORG.branches);
   const router = useRouter();
+
+  const findBranch = (id: string) => branches.find((b) => b.id === id) || null;
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -28,17 +22,27 @@ export default function OrgPortalUserAddPage() {
   const [branchIds, setBranchIds] = useState<Set<string>>(new Set());
   const [deptIds, setDeptIds] = useState<Set<string>>(new Set());
 
-  const brs = branches();
   const toggleBranch = (id: string) => setBranchIds((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   const toggleDept = (id: string) => setDeptIds((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   const showBranchIds = Array.from(branchIds);
 
   const handleSave = () => {
-    const form: Partial<OrgUser> = { firstName, lastName, email, phone, role, isAdmin, isActive, notes };
-    const u = createUser();
-    saveUser(u, form);
-    saveUserBranches(u, Array.from(branchIds));
-    saveUserDepts(u, Array.from(branchIds), Array.from(deptIds));
+    // Basic validation
+    const firstNameTrimmed = (firstName || "").trim();
+    const lastNameTrimmed = (lastName || "").trim();
+    const emailTrimmed = (email || "").trim().toLowerCase();
+    
+    if (!firstNameTrimmed || !lastNameTrimmed) {
+      alert("First name and last name are required.");
+      return;
+    }
+    if (!emailTrimmed || !isValidEmail(emailTrimmed)) {
+      alert("Please enter a valid email.");
+      return;
+    }
+    
+    // In a real app, this would POST to an API
+    // For demo purposes, just redirect back
     router.push("/org-portal/users");
   };
 
