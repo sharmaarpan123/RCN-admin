@@ -1,13 +1,12 @@
 "use client";
 
 import React, { useState } from 'react';
+import { Button, CustomReactSelect, optionsFromStrings } from '../../../components';
 import {
   US_STATES,
-  fmtDate,
-  centsToMoney
+  fmtDate
 } from '../../../utils/database';
-import { Button, CustomReactSelect, optionsFromStrings } from '../../../components';
-import { MOCK_ORGS_DASHBOARD, MOCK_REFERRALS_DASHBOARD, MOCK_PAYMENT_SETTINGS } from './mockData';
+import { MOCK_ORGS_DASHBOARD, MOCK_PAYMENT_SETTINGS, MOCK_REFERRALS_DASHBOARD } from './mockData';
 
 const STATE_OPTIONS = optionsFromStrings(US_STATES);
 

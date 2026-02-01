@@ -2,15 +2,13 @@
 
 import React, { useState, useEffect } from "react";
 import { useApp } from "@/context/AppContext";
-import { getDB, saveDB, nowISO, audit } from "@/utils/database";
-
-// Mock session for demo
-const MOCK_SESSION = { userId: 'staff-1', orgId: 'org-1', role: 'STAFF' };
+import { MOCK_SESSION, MOCK_STAFF_USER, nowISO, type StaffUser } from "../mockData";
 
 export default function StaffProfilePage() {
   const { showToast } = useApp();
   const session = MOCK_SESSION;
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<StaffUser>(MOCK_STAFF_USER);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -23,43 +21,31 @@ export default function StaffProfilePage() {
   });
 
   useEffect(() => {
-    // if (session?.userId) {
-      const db = getDB();
-      const user = db?.users?.find((u: any) => u.id === session?.userId);
-      if (user) {
-        setFormData({
-          firstName: user.firstName || "",
-          lastName: user.lastName || "",
-          email: user.email || "",
-          phone: user.phone || "",
-          fax: user.fax || "",
-          address: user.address || "",
-          role: user.role || "",
-          notes: user.notes || "",
-        });
-      }
-      setLoading(false);
-    // }
-  }, [session]);
+    setFormData({
+      firstName: user.firstName || "",
+      lastName: user.lastName || "",
+      email: user.email || "",
+      phone: user.phone || "",
+      fax: user.fax || "",
+      address: user.address || "",
+      role: user.role || "",
+      notes: user.notes || "",
+    });
+    setLoading(false);
+  }, []);
 
   const handleReset = () => {
-    if (session?.userId) {
-      const db = getDB();
-      const user = db.users.find((u: any) => u.id === session.userId);
-      if (user) {
-        setFormData({
-          firstName: user.firstName || "",
-          lastName: user.lastName || "",
-          email: user.email || "",
-          phone: user.phone || "",
-          fax: user.fax || "",
-          address: user.address || "",
-          role: user.role || "",
-          notes: user.notes || "",
-        });
-        showToast("Form reset to saved values.");
-      }
-    }
+    setFormData({
+      firstName: user.firstName || "",
+      lastName: user.lastName || "",
+      email: user.email || "",
+      phone: user.phone || "",
+      fax: user.fax || "",
+      address: user.address || "",
+      role: user.role || "",
+      notes: user.notes || "",
+    });
+    showToast("Form reset to saved values.");
   };
 
   const handleSaveProfile = () => {
@@ -93,26 +79,8 @@ export default function StaffProfilePage() {
       return;
     }
 
-    const db = getDB();
-    const userIndex = db.users.findIndex((u: any) => u.id === session.userId);
-    
-    if (userIndex === -1) {
-      showToast("User not found.");
-      return;
-    }
-
-    // Check for duplicate email (excluding current user)
-    const duplicateEmail = db.users.some(
-      (u: any) => u.id !== session.userId && u.email?.toLowerCase() === email
-    );
-    if (duplicateEmail) {
-      showToast("This email is already in use by another user.");
-      return;
-    }
-
-    // Update user
-    db.users[userIndex] = {
-      ...db.users[userIndex],
+    setUser((prev) => ({
+      ...prev,
       firstName,
       lastName,
       name: `${firstName} ${lastName}`.trim(),
@@ -122,10 +90,7 @@ export default function StaffProfilePage() {
       address,
       notes,
       updatedAt: nowISO(),
-    };
-
-    saveDB(db);
-    audit("profile_updated", { userId: session.userId });
+    }));
     showToast("Profile saved successfully.");
   };
 
@@ -135,7 +100,7 @@ export default function StaffProfilePage() {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
+      <div className=" max-w-4xl mx-auto p-6">
         <div className="text-center py-10">Loading profile...</div>
       </div>
     );

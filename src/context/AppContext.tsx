@@ -4,17 +4,10 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
-interface ModalOptions {
-  locked?: boolean;
-  maxWidth?: string;
-}
-
 interface AppContextType {
   login: (email: string, password: string) => boolean;
   logout: () => void;
   showToast: (message: string) => void;
-  openModal: (content: ReactNode, options?: ModalOptions) => void;
-  closeModal: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -43,7 +36,7 @@ const MOCK_USERS = [
   },
   { 
     id: 'org-1', 
-    email: 'orgadmin@demo.com', 
+    email: 'orgadmin@northlake.org', 
     password: 'Admin123!', 
     role: 'ORG_ADMIN', 
     enabled: true,
@@ -51,7 +44,7 @@ const MOCK_USERS = [
   },
   { 
     id: 'staff-1', 
-    email: 'staff@demo.com', 
+    email: 'staff@northlake.org', 
     password: 'Admin123!', 
     role: 'STAFF', 
     enabled: true,
@@ -63,8 +56,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const router = useRouter();
   const [toastMessage, setToastMessage] = useState<string>('');
   const [showToastFlag, setShowToastFlag] = useState(false);
-  const [modalContent, setModalContent] = useState<ReactNode>(null);
-  const [modalOptions, setModalOptions] = useState<any>({});
 
   const login = (email: string, password: string): boolean => {
     const user = MOCK_USERS.find((u: any) => 
@@ -103,26 +94,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     setTimeout(() => setShowToastFlag(false), 2600);
   };
 
-  const openModal = (content: ReactNode, options = {}) => {
-    setModalContent(content);
-    setModalOptions(options);
-  };
-
-  const closeModal = () => {
-    if (modalOptions.locked) {
-      showToast("Please complete the required action.");
-      return;
-    }
-    setModalContent(null);
-    setModalOptions({});
-  };
-
   const value = {
     login,
     logout,
     showToast,
-    openModal,
-    closeModal,
   };
 
   return (
@@ -135,24 +110,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       }`}>
         {toastMessage}
       </div>
-
-      {/* Modal */}
-      {modalContent && (
-        <div 
-          className="fixed inset-0 bg-black/55 flex items-center justify-center p-5 z-50" 
-          onClick={(e) => {
-            if ((e.target as HTMLElement).classList.contains('bg-black/55')) {
-              closeModal();
-            }
-          }}
-        >
-          <div className="max-w-[900px] w-full">
-            <div className="bg-white border border-rcn-border rounded-rcn-lg shadow-rcn p-4 max-h-[80vh] overflow-auto">
-              {modalContent}
-            </div>
-          </div>
-        </div>
-      )}
     </AppContext.Provider>
   );
 };

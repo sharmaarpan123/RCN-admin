@@ -2,13 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { useApp } from "@/context/AppContext";
-import { getDB, saveDB, nowISO, audit, moneyToCents, ensureOrgMoney, postLedger, ensureFinance } from "@/utils/database";
+import { MOCK_SESSION, MOCK_ORG, type StaffOrg } from "../mockData";
 
 // Pricing: 5 credits = $10, so 1 credit = $2
 const CREDIT_PRICE = 2.00;
-
-// Mock session for demo
-const MOCK_SESSION = { userId: 'staff-1', orgId: 'org-1', role: 'STAFF' };
 
 interface CardDetails {
   cardNumber: string;
@@ -22,12 +19,10 @@ interface CardDetails {
 export default function WalletPage() {
   const { showToast } = useApp();
   const session = MOCK_SESSION;
-  const db = getDB();
   const [creditAmount, setCreditAmount] = useState<string>("");
   const [paymentMethod, setPaymentMethod] = useState<string>("creditCard");
   const [loading, setLoading] = useState(true);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [org, setOrg] = useState<any>(null);
+  const [org, setOrg] = useState<StaffOrg | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [cardDetails, setCardDetails] = useState<CardDetails>({
     cardNumber: "",
@@ -40,19 +35,11 @@ export default function WalletPage() {
   const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
-    if (session?.orgId) {
-      const database = getDB();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const organization = database.orgs.find((o: any) => o.id === session.orgId);
-      if (organization) {
-        ensureOrgMoney(organization);
-        setOrg(organization);
-      }
-      setLoading(false);
-    } else {
-      setLoading(false);
+    if (session?.orgId && session.orgId === MOCK_ORG.id) {
+      setOrg({ ...MOCK_ORG });
     }
-  }, [session, db]);
+    setLoading(false);
+  }, []);
 
   const formatCardNumber = (value: string) => {
     const v = value.replace(/\s+/g, "").replace(/[^0-9]/gi, "");
@@ -125,47 +112,14 @@ export default function WalletPage() {
 
     setProcessing(true);
 
-    const database = getDB();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const organization = database.orgs.find((o: any) => o.id === session.orgId);
-    if (!organization) {
-      showToast("Organization not found.");
-      return;
-    }
-
-    ensureOrgMoney(organization);
-
-    // Calculate total credits and price
     const totalCredits = credits;
     const price = calculatePrice(credits);
-    const priceCents = moneyToCents(price);
 
-    // Add credits to organization
-    organization.referralCredits = (organization.referralCredits || 0) + totalCredits;
-
-    // Ensure finance structure exists
-    ensureFinance(database);
-
-    // Record transaction in ledger
-    postLedger(database, {
-      id: `ldg_${Date.now()}_${Math.random().toString(16).slice(2)}`,
-      at: nowISO(),
-      orgId: session.orgId,
-      deltaCents: 0, // No wallet change, just credits
-      type: "credit_purchase",
-      paymentMethod,
-      credits: totalCredits,
-      priceCents,
-      note: `Purchased ${totalCredits} credits via ${paymentMethod} - $${price.toFixed(2)}`,
-    });
-
-    saveDB(database);
-    audit("credit_purchase", { 
-      orgId: session.orgId, 
-      credits: totalCredits, 
-      priceCents,
-      paymentMethod 
-    });
+    setOrg((prev) =>
+      prev
+        ? { ...prev, referralCredits: (prev.referralCredits || 0) + totalCredits }
+        : null
+    );
 
     showToast(`Successfully purchased ${totalCredits} credits!`);
     setCreditAmount("");
@@ -179,16 +133,6 @@ export default function WalletPage() {
       zipCode: "",
     });
     setProcessing(false);
-    
-    // Refresh data
-    setTimeout(() => {
-      const updatedDb = getDB();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const updatedOrg = updatedDb.orgs.find((o: any) => o.id === session.orgId);
-      if (updatedOrg) {
-        setOrg(updatedOrg);
-      }
-    }, 100);
   };
 
   const getPaymentMethodLabel = (method: string) => {
