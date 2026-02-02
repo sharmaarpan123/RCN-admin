@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import Button from '../../Button';
 import ConfirmModal from '../../ConfirmModal';
+import Link from 'next/link';
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -139,7 +140,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
           </div>
           <div className="flex-1">
             <h1 className="text-sm font-semibold m-0 leading-tight">RCN Admin</h1>
-            
+
           </div>
           {/* Mobile Close Button */}
           <Button
@@ -165,18 +166,20 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
                   return null;
                 }
                 return (
-                  <a
+                  <Link
                     key={item.path}
                     className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl no-underline text-inherit mx-1.5 transition-all cursor-pointer ${isActive(item.path) ? 'bg-white/15' : 'hover:bg-white/10'
                       }`}
-                    onClick={() => handleNavClick(item.path, item.view)}
+                    // onClick={() => handleNavClick(item.path, item.view)}
+                    href={item.path}
                   >
                     {item.label}
-                  </a>
+                  </Link>
                 );
               })}
               {section.title === 'System' && (
                 <a
+
                   role="button"
                   className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl no-underline text-inherit mx-1.5 transition-all cursor-pointer hover:bg-white/10"
                   onClick={handleLogoutClick}
