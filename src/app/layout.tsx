@@ -1,6 +1,7 @@
-import { ToastProvider } from "@/components/ToastProvider";
+
 import type { Metadata } from "next";
 import "./globals.css";
+import CommonProvider from "@/Providers";
 
 export const metadata: Metadata = {
   title: "RCN",
@@ -15,8 +16,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        {children}
-        <ToastProvider />
+        <CommonProvider>
+          {children}
+        </CommonProvider>
       </body>
     </html>
   );

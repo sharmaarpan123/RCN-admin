@@ -3,7 +3,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 
 const api = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_PROXY_API_URL, // your backend URL
+    baseURL: process.env.NEXT_PUBLIC_API_URL, // your backend URL
     withCredentials: true, // allows sending cookies if backend uses them
 });
 
@@ -27,7 +27,6 @@ api.interceptors.request.use(
         return config;
     },
     (error) => {
-
         Promise.reject(error)
     }
 );
