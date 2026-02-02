@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { US_STATES } from "@/utils/database";
+import { toastSuccess, toastError } from "@/utils/toast";
 import { TableColumn } from "@/components";
 import type {
   OrgTableRow,
@@ -20,8 +21,6 @@ import { MOCK_ORGANIZATIONS, MOCK_BRANCHES, MOCK_DEPARTMENTS, MOCK_ORG_USERS } f
 const safeLower = (s: any) => (s || "").toString().toLowerCase();
 
 export function useOrganizations() {
-  const [toastMessage, setToastMessage] = useState("");
-  const [showToastFlag, setShowToastFlag] = useState(false);
   const [modalContent, setModalContent] = useState<React.ReactNode>(null);
   
   // Mock data stored in state
@@ -29,12 +28,6 @@ export function useOrganizations() {
   const [branches, setBranches] = useState(MOCK_BRANCHES);
   const [depts, setDepts] = useState(MOCK_DEPARTMENTS);
   const [users, setUsers] = useState(MOCK_ORG_USERS);
-
-  const showToast = (message: string) => {
-    setToastMessage(message);
-    setShowToastFlag(true);
-    setTimeout(() => setShowToastFlag(false), 2600);
-  };
 
   const openModal = (content: React.ReactNode) => {
     setModalContent(content);
@@ -133,23 +126,23 @@ export function useOrganizations() {
     const zip = (document.getElementById("org_zip") as HTMLInputElement)?.value.trim();
 
     if (!name) {
-      showToast("Organization Name is required.");
+      toastError("Organization Name is required.");
       return;
     }
     if (!phone) {
-      showToast("Organization Phone is required.");
+      toastError("Organization Phone is required.");
       return;
     }
     if (!email) {
-      showToast("Organization Email is required.");
+      toastError("Organization Email is required.");
       return;
     }
     if (!state) {
-      showToast("State is required.");
+      toastError("State is required.");
       return;
     }
     if (!zip) {
-      showToast("Zip is required.");
+      toastError("Zip is required.");
       return;
     }
 
@@ -184,7 +177,7 @@ export function useOrganizations() {
       setOrgs([...orgs, obj]);
     }
     closeModal();
-    showToast("Organization saved.");
+    toastSuccess("Organization saved.");
   };
 
   const deleteOrg = (orgId: string) => {
@@ -196,7 +189,7 @@ export function useOrganizations() {
     setUsers(users.filter((u) => u.orgId !== orgId));
     closeModal();
     setSelectedOrgId("");
-    showToast("Organization deleted.");
+    toastSuccess("Organization deleted.");
   };
 
   const openOrgModal = (orgId?: string) => {
@@ -216,7 +209,7 @@ export function useOrganizations() {
     const orgId = (document.getElementById("br_org") as HTMLSelectElement)?.value;
     const name = (document.getElementById("br_name") as HTMLInputElement)?.value.trim();
     if (!name) {
-      showToast("Branch name required.");
+      toastError("Branch name required.");
       return;
     }
     const obj = {
@@ -233,7 +226,7 @@ export function useOrganizations() {
       setBranches([...branches, obj]);
     }
     closeModal();
-    showToast("Branch saved.");
+    toastSuccess("Branch saved.");
   };
 
   const deleteBranch = (branchId: string) => {
@@ -241,7 +234,7 @@ export function useOrganizations() {
     setBranches(branches.filter((b) => b.id !== branchId));
     setDepts(depts.filter((d) => d.branchId !== branchId));
     closeModal();
-    showToast("Branch deleted.");
+    toastSuccess("Branch deleted.");
   };
 
   const toggleBranch = (branchId: string) => {
@@ -273,7 +266,7 @@ export function useOrganizations() {
     const branchId = (document.getElementById("dp_branch") as HTMLSelectElement)?.value;
     const name = (document.getElementById("dp_name") as HTMLInputElement)?.value.trim();
     if (!name) {
-      showToast("Department name required.");
+      toastError("Department name required.");
       return;
     }
     const obj = {
@@ -291,14 +284,14 @@ export function useOrganizations() {
       setDepts([...depts, obj]);
     }
     closeModal();
-    showToast("Department saved.");
+    toastSuccess("Department saved.");
   };
 
   const deleteDept = (deptId: string) => {
     if (!confirm("Delete this department?")) return;
     setDepts(depts.filter((d) => d.id !== deptId));
     closeModal();
-    showToast("Department deleted.");
+    toastSuccess("Department deleted.");
   };
 
   const toggleDept = (deptId: string) => {
@@ -341,23 +334,23 @@ export function useOrganizations() {
     const mfaEmail = (document.getElementById("u_mfa") as HTMLSelectElement)?.value === "true";
 
     if (!firstName) {
-      showToast("First Name required.");
+      toastError("First Name required.");
       return;
     }
     if (!lastName) {
-      showToast("Last Name required.");
+      toastError("Last Name required.");
       return;
     }
     if (!email) {
-      showToast("Email required.");
+      toastError("Email required.");
       return;
     }
     if (!email.includes("@")) {
-      showToast("Invalid email.");
+      toastError("Invalid email.");
       return;
     }
     if (!userId && users.some((u) => u.email.toLowerCase() === email)) {
-      showToast("Email already exists.");
+      toastError("Email already exists.");
       return;
     }
 
@@ -399,14 +392,14 @@ export function useOrganizations() {
       setUsers([...users, obj]);
     }
     closeModal();
-    showToast("User saved.");
+    toastSuccess("User saved.");
   };
 
   const deleteUser = (userId: string) => {
     if (!confirm("Delete this user?")) return;
     setUsers(users.filter((u) => u.id !== userId));
     closeModal();
-    showToast("User deleted.");
+    toastSuccess("User deleted.");
   };
 
   const openUserModal = (userId?: string, presetOrgId?: string) => {
@@ -670,8 +663,6 @@ export function useOrganizations() {
     openDeptModal,
     openUserModal,
     db: { orgs, branches, depts, users },
-    toastMessage,
-    showToastFlag,
     modalContent,
   };
 }

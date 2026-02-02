@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { TableLayout, type TableColumn } from '../../../components';
+import { toastSuccess, toastWarning } from '../../../utils/toast';
 import { MOCK_FINANCIAL_ORGS, MOCK_FINANCIAL_REFERRALS, MOCK_LEDGER, MOCK_INVOICES } from './mockData';
 
 const safeLower = (s: any) => (s || "").toString().toLowerCase();
@@ -12,16 +13,6 @@ const Financial: React.FC = () => {
   const ledger = MOCK_LEDGER;
   const invoices = MOCK_INVOICES;
 
-  // Toast state
-  const [toastMessage, setToastMessage] = useState("");
-  const [showToastFlag, setShowToastFlag] = useState(false);
-
-  const showToast = (message: string) => {
-    setToastMessage(message);
-    setShowToastFlag(true);
-    setTimeout(() => setShowToastFlag(false), 2600);
-  };
-  
   // Time frame state
   const [timePreset, setTimePreset] = useState('all');
   const [fromDate, setFromDate] = useState('');
@@ -212,14 +203,14 @@ const Financial: React.FC = () => {
         <div className="flex gap-1">
           <button
             type="button"
-            onClick={() => showToast('View invoice functionality not implemented')}
+            onClick={() => toastWarning('View invoice functionality not implemented')}
             className="border border-rcn-border bg-white px-2 py-1.5 rounded-lg cursor-pointer font-semibold text-rcn-text text-xs hover:border-[#c9ddd0] transition-colors"
           >
             View
           </button>
           <button
             type="button"
-            onClick={() => showToast('Email functionality not implemented')}
+            onClick={() => toastWarning('Email functionality not implemented')}
             className="border border-rcn-border bg-white px-2 py-1.5 rounded-lg cursor-pointer font-semibold text-rcn-text text-xs hover:border-[#c9ddd0] transition-colors"
           >
             Email
@@ -230,7 +221,7 @@ const Financial: React.FC = () => {
   ];
 
   const handleApplyTime = () => {
-    showToast('Time frame applied.');
+    toastWarning('Time frame applied.');
   };
 
   const handlePrint = () => {
@@ -238,7 +229,7 @@ const Financial: React.FC = () => {
   };
 
   const handlePDF = () => {
-    showToast('PDF export: Use Print → Save as PDF');
+    toastWarning('PDF export: Use Print → Save as PDF');
     setTimeout(() => window.print(), 100);
   };
 
@@ -302,7 +293,7 @@ const Financial: React.FC = () => {
             </div>
 
             <div className="ml-auto">
-              <button onClick={() => showToast('Data refreshed.')} className={btnClass}>Refresh</button>
+              <button onClick={() => toastWarning('Data refreshed.')} className={btnClass}>Refresh</button>
             </div>
           </div>
           <p className="text-xs text-rcn-muted mt-2 mb-0">
@@ -457,7 +448,7 @@ const Financial: React.FC = () => {
           </div>
 
           <div className="flex gap-2">
-            <button onClick={() => showToast('Filters applied.')} className={btnPrimaryClass}>Apply</button>
+            <button onClick={() => toastWarning('Filters applied.')} className={btnPrimaryClass}>Apply</button>
             <button onClick={handleClearInvoiceFilters} className={btnClass}>Clear</button>
           </div>
         </div>
@@ -473,12 +464,6 @@ const Financial: React.FC = () => {
         />
       </div>
 
-      {/* Toast notification */}
-      <div className={`fixed right-4 bottom-4 z-60 bg-rcn-dark-bg text-rcn-dark-text border border-white/15 px-3 py-2.5 rounded-2xl shadow-rcn max-w-[360px] text-sm transition-all duration-300 ${
-        showToastFlag ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'
-      }`}>
-        {toastMessage}
-      </div>
     </>
   );
 };

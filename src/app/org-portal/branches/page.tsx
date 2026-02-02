@@ -3,6 +3,7 @@
 import { Button, Modal, TableLayout } from "@/components";
 import { useState } from "react";
 import type { TableColumn } from "@/components";
+import { toastSuccess } from "@/utils/toast";
 import { MOCK_ORG, uid, type Branch } from "../mockData";
 
 export default function OrgPortalBranchesPage() {
@@ -10,26 +11,20 @@ export default function OrgPortalBranchesPage() {
   const [modal, setModal] = useState<{ mode: "add" } | { mode: "edit"; id: string; name: string } | null>(null);
   const [name, setName] = useState("");
   const [search, setSearch] = useState("");
-  const [toastMsg, setToastMsg] = useState<{ title: string; body: string } | null>(null);
-
-  const showToast = (title: string, body: string) => {
-    setToastMsg({ title, body });
-    setTimeout(() => setToastMsg(null), 2200);
-  };
 
   const addBranch = (name: string) => {
     const n = (name || "").trim();
     if (!n) return;
     const newBranch: Branch = { id: uid("br"), name: n, departments: [] };
     setBranches((prev) => [...prev, newBranch]);
-    showToast("Branch created", "Branch added.");
+    toastSuccess("Branch created. Branch added.");
   };
 
   const renameBranch = (branchId: string, name: string) => {
     const n = (name || "").trim();
     if (!n) return;
     setBranches((prev) => prev.map((b) => (b.id === branchId ? { ...b, name: n } : b)));
-    showToast("Branch updated", "Branch renamed.");
+    toastSuccess("Branch updated. Branch renamed.");
   };
 
   const searchLower = search.trim().toLowerCase();
@@ -137,17 +132,6 @@ export default function OrgPortalBranchesPage() {
           </div>
         </div>
       </Modal>
-
-      {toastMsg && (
-        <div
-          className="fixed left-4 right-4 sm:left-auto sm:right-4 bottom-4 z-50 min-w-0 max-w-[min(440px,calc(100vw-2rem))] bg-rcn-dark-bg text-white rounded-2xl px-4 py-3 shadow-rcn border border-white/10"
-          role="status"
-          aria-live="polite"
-        >
-          <p className="font-bold text-sm m-0">{toastMsg.title}</p>
-          <p className="text-xs m-0 mt-1 opacity-90">{toastMsg.body}</p>
-        </div>
-      )}
     </div>
   );
 }

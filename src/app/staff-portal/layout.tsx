@@ -1,10 +1,9 @@
 "use client";
 
-import { useApp } from "@/context/AppContext";
 import { ConfirmModal } from "@/components";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const NAV = [
@@ -23,7 +22,7 @@ function StaffPortalSidebar({
   setSidebarOpen: (v: boolean) => void;
 }) {
   const pathname = usePathname();
-  const { logout } = useApp();
+  const router = useRouter();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleLogoutClick = () => setShowLogoutModal(true);
@@ -31,7 +30,7 @@ function StaffPortalSidebar({
   const handleLogoutConfirm = () => {
     setShowLogoutModal(false);
     setSidebarOpen(false);
-    logout();
+    router.push('/login');
   };
 
   return (

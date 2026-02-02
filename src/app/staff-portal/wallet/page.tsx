@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useApp } from "@/context/AppContext";
+import { toastSuccess, toastError } from "@/utils/toast";
 import { MOCK_SESSION, MOCK_ORG, type StaffOrg } from "../mockData";
 
 // Pricing: 5 credits = $10, so 1 credit = $2
@@ -17,7 +17,6 @@ interface CardDetails {
 }
 
 export default function WalletPage() {
-  const { showToast } = useApp();
   const session = MOCK_SESSION;
   const [creditAmount, setCreditAmount] = useState<string>("");
   const [paymentMethod, setPaymentMethod] = useState<string>("creditCard");
@@ -68,7 +67,7 @@ export default function WalletPage() {
   const handleOpenPaymentModal = () => {
     const credits = parseInt(creditAmount, 10);
     if (!creditAmount || isNaN(credits) || credits <= 0) {
-      showToast("Please enter a valid number of credits.");
+      toastError("Please enter a valid number of credits.");
       return;
     }
     if (paymentMethod === "creditCard" || paymentMethod === "debitCard") {
@@ -82,30 +81,30 @@ export default function WalletPage() {
   const handlePurchase = () => {
     const credits = parseInt(creditAmount, 10);
     if (!creditAmount || isNaN(credits) || credits <= 0 || !session?.orgId) {
-      showToast("Please enter a valid number of credits.");
+      toastError("Please enter a valid number of credits.");
       return;
     }
 
     // Validate card details if using card payment
     if ((paymentMethod === "creditCard" || paymentMethod === "debitCard") && showPaymentModal) {
       if (!cardDetails.cardNumber.replace(/\s/g, "") || cardDetails.cardNumber.replace(/\s/g, "").length < 13) {
-        showToast("Please enter a valid card number.");
+        toastError("Please enter a valid card number.");
         return;
       }
       if (!cardDetails.expiryMonth || !cardDetails.expiryYear) {
-        showToast("Please enter card expiry date.");
+        toastError("Please enter card expiry date.");
         return;
       }
       if (!cardDetails.cvv || cardDetails.cvv.length < 3) {
-        showToast("Please enter a valid CVV.");
+        toastError("Please enter a valid CVV.");
         return;
       }
       if (!cardDetails.nameOnCard.trim()) {
-        showToast("Please enter name on card.");
+        toastError("Please enter name on card.");
         return;
       }
       if (!cardDetails.zipCode.trim()) {
-        showToast("Please enter zip code.");
+        toastError("Please enter zip code.");
         return;
       }
     }
@@ -121,7 +120,7 @@ export default function WalletPage() {
         : null
     );
 
-    showToast(`Successfully purchased ${totalCredits} credits!`);
+    toastSuccess(`Successfully purchased ${totalCredits} credits!`);
     setCreditAmount("");
     setShowPaymentModal(false);
     setCardDetails({

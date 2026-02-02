@@ -3,6 +3,7 @@
 import { Button, Modal, TableLayout } from "@/components";
 import { useState, useMemo } from "react";
 import type { TableColumn } from "@/components";
+import { toastSuccess } from "@/utils/toast";
 import { MOCK_ORG, MOCK_REFERRALS_SENT, MOCK_REFERRALS_RECEIVED, uid, type Referral } from "../mockData";
 
 type InboxRefMode = "sent" | "received";
@@ -24,12 +25,6 @@ export default function OrgPortalReferralDashboardPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [modal, setModal] = useState<{ mode: InboxRefMode; r: Referral } | null>(null);
-  const [toastMsg, setToastMsg] = useState<{ title: string; body: string } | null>(null);
-
-  const showToast = (title: string, body: string) => {
-    setToastMsg({ title, body });
-    setTimeout(() => setToastMsg(null), 2200);
-  };
 
   const seedReferrals = () => {
     const today = new Date();
@@ -50,7 +45,7 @@ export default function OrgPortalReferralDashboardPage() {
     ];
     setReferralsSent(sent);
     setReferralsReceived(received);
-    showToast("Loaded", "Demo referrals added.");
+    toastSuccess("Demo referrals added.");
   };
 
   const setReferralStatus = (mode: InboxRefMode, id: string, status: string) => {
@@ -59,7 +54,7 @@ export default function OrgPortalReferralDashboardPage() {
     } else {
       setReferralsSent((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
     }
-    showToast("Updated", `Status set to ${status}.`);
+    toastSuccess(`Status set to ${status}.`);
   };
 
   const arr = inboxRefMode === "received" ? referralsReceived : referralsSent;
@@ -180,17 +175,6 @@ export default function OrgPortalReferralDashboardPage() {
             </div>
           </div>
         </Modal>
-      )}
-
-      {toastMsg && (
-        <div
-          className="fixed left-4 right-4 sm:left-auto sm:right-4 bottom-4 z-50 min-w-0 max-w-[min(440px,calc(100vw-2rem))] bg-rcn-dark-bg text-white rounded-2xl px-4 py-3 shadow-rcn border border-white/10"
-          role="status"
-          aria-live="polite"
-        >
-          <p className="font-bold text-sm m-0">{toastMsg.title}</p>
-          <p className="text-xs m-0 mt-1 opacity-90">{toastMsg.body}</p>
-        </div>
       )}
     </div>
   );

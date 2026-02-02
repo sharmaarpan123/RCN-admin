@@ -6,6 +6,7 @@ import {
   US_STATES,
   fmtDate
 } from '../../../utils/database';
+import { toastWarning } from '../../../utils/toast';
 import { MOCK_ORGS_DASHBOARD, MOCK_PAYMENT_SETTINGS, MOCK_REFERRALS_DASHBOARD } from './mockData';
 
 const STATE_OPTIONS = optionsFromStrings(US_STATES);
@@ -13,15 +14,7 @@ const STATE_OPTIONS = optionsFromStrings(US_STATES);
 const safeLower = (s: any) => (s || "").toString().toLowerCase();
 
 const Dashboard: React.FC = () => {
-  const [toastMessage, setToastMessage] = useState("");
-  const [showToastFlag, setShowToastFlag] = useState(false);
   const [modalContent, setModalContent] = useState<React.ReactNode>(null);
-
-  const showToast = (message: string) => {
-    setToastMessage(message);
-    setShowToastFlag(true);
-    setTimeout(() => setShowToastFlag(false), 2600);
-  };
 
   const openModal = (content: React.ReactNode) => {
     setModalContent(content);
@@ -313,7 +306,7 @@ const Dashboard: React.FC = () => {
               <Button
                 variant="primary"
                 onClick={() => {
-                  showToast("Accept/Reject functionality will be available with API integration.");
+                  toastWarning("Accept/Reject functionality will be available with API integration.");
                   closeModal();
                 }}
                 className="logo-gradient text-white border-0 px-4 py-2.5 rounded-xl cursor-pointer font-semibold text-sm hover:opacity-90 transition-opacity"
@@ -323,7 +316,7 @@ const Dashboard: React.FC = () => {
               <Button
                 variant="danger"
                 onClick={() => {
-                  showToast("Accept/Reject functionality will be available with API integration.");
+                  toastWarning("Accept/Reject functionality will be available with API integration.");
                   closeModal();
                 }}
               >
@@ -603,7 +596,7 @@ const Dashboard: React.FC = () => {
                   <div>
                     <Button
                       className="border border-rcn-border bg-white px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-rcn-text text-sm hover:border-[#c9ddd0] transition-colors"
-                      onClick={() => showToast('Export CSV functionality coming soon')}
+                      onClick={() => toastWarning('Export CSV functionality coming soon')}
                     >
                       Export CSV
                     </Button>
@@ -748,7 +741,7 @@ const Dashboard: React.FC = () => {
                   <div>
                     <button
                       className="border border-rcn-border bg-white px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-rcn-text text-sm hover:border-[#c9ddd0] transition-colors"
-                      onClick={() => showToast('Export CSV functionality coming soon')}
+                      onClick={() => toastWarning('Export CSV functionality coming soon')}
                     >
                       Export CSV
                     </button>
@@ -824,13 +817,6 @@ const Dashboard: React.FC = () => {
           </p>
         </div>
       )}
-
-      {/* Toast notification */}
-      <div className={`fixed right-4 bottom-4 z-60 bg-rcn-dark-bg text-rcn-dark-text border border-white/15 px-3 py-2.5 rounded-2xl shadow-rcn max-w-[360px] text-sm transition-all duration-300 ${
-        showToastFlag ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'
-      }`}>
-        {toastMessage}
-      </div>
 
       {/* Modal */}
       {modalContent && (

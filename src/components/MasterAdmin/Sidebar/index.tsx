@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
-import { useApp } from '../../../context/AppContext';
 import Button from '../../Button';
 import ConfirmModal from '../../ConfirmModal';
 
@@ -14,7 +13,6 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
   const router = useRouter();
   const pathname = usePathname();
-  const { logout } = useApp();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleLogoutClick = () => setShowLogoutModal(true);
@@ -22,7 +20,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
   const handleLogoutConfirm = () => {
     setShowLogoutModal(false);
     onClose?.();
-    logout();
+    router.push('/login');
   };
 
   // Simplified - all pages are accessible since there's no real auth

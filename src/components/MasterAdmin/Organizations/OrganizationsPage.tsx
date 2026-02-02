@@ -37,8 +37,6 @@ export function OrganizationsPage() {
     openDeptModal,
     openUserModal,
     db,
-    toastMessage,
-    showToastFlag,
     modalContent,
   } = useOrganizations();
 
@@ -88,13 +86,6 @@ export function OrganizationsPage() {
         onNewDept={() => openDeptModal(undefined, selectedOrgId)}
         onNewUser={() => openUserModal(undefined, selectedOrgId)}
       />
-
-      {/* Toast notification */}
-      <div className={`fixed right-4 bottom-4 z-60 bg-rcn-dark-bg text-rcn-dark-text border border-white/15 px-3 py-2.5 rounded-2xl shadow-rcn max-w-[360px] text-sm transition-all duration-300 ${
-        showToastFlag ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'
-      }`}>
-        {toastMessage}
-      </div>
 
       {/* Modal */}
       {modalContent && (

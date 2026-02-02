@@ -1,11 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useApp } from "@/context/AppContext";
+import { toastSuccess, toastError } from "@/utils/toast";
 import { MOCK_SESSION, MOCK_STAFF_USER, nowISO, type StaffUser } from "../mockData";
 
 export default function StaffProfilePage() {
-  const { showToast } = useApp();
   const session = MOCK_SESSION;
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<StaffUser>(MOCK_STAFF_USER);
@@ -45,12 +44,12 @@ export default function StaffProfilePage() {
       role: user.role || "",
       notes: user.notes || "",
     });
-    showToast("Form reset to saved values.");
+    toastSuccess("Form reset to saved values.");
   };
 
   const handleSaveProfile = () => {
     if (!session?.userId) {
-      showToast("No user session found.");
+      toastError("No user session found.");
       return;
     }
 
@@ -63,19 +62,19 @@ export default function StaffProfilePage() {
     const notes = formData.notes.trim();
 
     if (!firstName) {
-      showToast("First Name is required.");
+      toastError("First Name is required.");
       return;
     }
     if (!lastName) {
-      showToast("Last Name is required.");
+      toastError("Last Name is required.");
       return;
     }
     if (!email) {
-      showToast("Email is required.");
+      toastError("Email is required.");
       return;
     }
     if (!email.includes("@")) {
-      showToast("Please enter a valid email address.");
+      toastError("Please enter a valid email address.");
       return;
     }
 
@@ -91,7 +90,7 @@ export default function StaffProfilePage() {
       notes,
       updatedAt: nowISO(),
     }));
-    showToast("Profile saved successfully.");
+    toastSuccess("Profile saved successfully.");
   };
 
   const handleChange = (field: string, value: string) => {

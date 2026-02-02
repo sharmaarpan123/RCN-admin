@@ -1,16 +1,9 @@
 "use client";
 import React, { useState } from 'react';
+import { toastSuccess, toastError } from '@/utils/toast';
 
 const Settings: React.FC = () => {
-  const [toastMessage, setToastMessage] = useState("");
-  const [showToastFlag, setShowToastFlag] = useState(false);
   const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
-
-  const showToast = (message: string) => {
-    setToastMessage(message);
-    setShowToastFlag(true);
-    setTimeout(() => setShowToastFlag(false), 2600);
-  };
 
   // Mock current user
   const currentUser = {
@@ -33,12 +26,12 @@ const Settings: React.FC = () => {
     const lastName = (document.getElementById('admin_last') as HTMLInputElement)?.value.trim();
     const email = (document.getElementById('admin_email') as HTMLInputElement)?.value.trim().toLowerCase();
 
-    if (!firstName) { showToast('First Name required.'); return; }
-    if (!lastName) { showToast('Last Name required.'); return; }
-    if (!email) { showToast('Email required.'); return; }
-    if (!email.includes('@')) { showToast('Invalid email.'); return; }
+    if (!firstName) { toastError('First Name required.'); return; }
+    if (!lastName) { toastError('Last Name required.'); return; }
+    if (!email) { toastError('Email required.'); return; }
+    if (!email.includes('@')) { toastError('Invalid email.'); return; }
 
-    showToast('Profile updated (will be persisted via API).');
+    toastSuccess('Profile updated (will be persisted via API).');
   };
 
   const handleSavePassword = () => {
@@ -46,11 +39,11 @@ const Settings: React.FC = () => {
     const confPass = (document.getElementById('admin_confpass') as HTMLInputElement)?.value;
 
     if (newPass || confPass) {
-      if (newPass.length < 8) { showToast('Password must be at least 8 characters.'); return; }
-      if (newPass !== confPass) { showToast('Passwords do not match.'); return; }
+      if (newPass.length < 8) { toastError('Password must be at least 8 characters.'); return; }
+      if (newPass !== confPass) { toastError('Passwords do not match.'); return; }
     }
 
-    showToast('Password settings updated (will be persisted via API).');
+    toastSuccess('Password settings updated (will be persisted via API).');
 
     // Clear password fields
     if (document.getElementById('admin_newpass')) {
@@ -191,12 +184,6 @@ const Settings: React.FC = () => {
         </div>
       )}
 
-      {/* Toast notification */}
-      <div className={`fixed right-4 bottom-4 z-60 bg-rcn-dark-bg text-rcn-dark-text border border-white/15 px-3 py-2.5 rounded-2xl shadow-rcn max-w-[360px] text-sm transition-all duration-300 ${
-        showToastFlag ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'
-      }`}>
-        {toastMessage}
-      </div>
     </>
   );
 };

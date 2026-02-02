@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
 import { Button, TableLayout, type TableColumn } from "@/components";
+import { toastSuccess, toastWarning } from "@/utils/toast";
 
 const MOCK_ORGS = [
   { id: "org_northlake", name: "Northlake Medical Group", address: { state: "IL", zip: "60601" } },
@@ -9,15 +10,6 @@ const MOCK_ORGS = [
 ];
 
 const PaymentSettings: React.FC = () => {
-  const [toastMessage, setToastMessage] = useState("");
-  const [showToastFlag, setShowToastFlag] = useState(false);
-
-  const showToast = (message: string) => {
-    setToastMessage(message);
-    setShowToastFlag(true);
-    setTimeout(() => setShowToastFlag(false), 2600);
-  };
-
   // Payment Settings State
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [methods, setMethods] = useState<any>({
@@ -133,7 +125,7 @@ const PaymentSettings: React.FC = () => {
   };
 
   const handleSave = () => {
-    showToast('Payment Adjustment Settings saved (will be persisted via API).');
+    toastSuccess('Payment Adjustment Settings saved (will be persisted via API).');
   };
 
   const handleReset = () => {
@@ -164,12 +156,12 @@ const PaymentSettings: React.FC = () => {
     setBulkDiscount(10);
     setAutoEmail(true);
 
-    showToast('Settings reset to defaults.');
+    toastSuccess('Settings reset to defaults.');
   };
 
   const useLivePairCount = () => {
     if (!pairSender || !pairReceiver) {
-      showToast('Select both sender and receiver organizations.');
+      toastWarning('Select both sender and receiver organizations.');
       return;
     }
     // Mock: set to a default value
@@ -405,12 +397,6 @@ const PaymentSettings: React.FC = () => {
         </div>
       </div>
 
-      {/* Toast notification */}
-      <div className={`fixed right-4 bottom-4 z-60 bg-rcn-dark-bg text-rcn-dark-text border border-white/15 px-3 py-2.5 rounded-2xl shadow-rcn max-w-[360px] text-sm transition-all duration-300 ${
-        showToastFlag ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'
-      }`}>
-        {toastMessage}
-      </div>
     </>
   );
 };

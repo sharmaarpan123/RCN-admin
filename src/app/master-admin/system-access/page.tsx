@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import { TableLayout, type TableColumn, Modal } from '../../../components';
+import { toastSuccess, toastError } from '../../../utils/toast';
 import { MOCK_SYSTEM_ADMINS } from './mockData';
 
 const safeLower = (s: any) => (s || "").toString().toLowerCase();
@@ -18,16 +19,6 @@ const uid = (prefix = "id") => {
 const UserPanel: React.FC = () => {
   // Mock data state
   const [users, setUsers] = useState(MOCK_SYSTEM_ADMINS);
-
-  // Toast state
-  const [toastMessage, setToastMessage] = useState("");
-  const [showToastFlag, setShowToastFlag] = useState(false);
-
-  const showToast = (message: string) => {
-    setToastMessage(message);
-    setShowToastFlag(true);
-    setTimeout(() => setShowToastFlag(false), 2600);
-  };
 
   const [search, setSearch] = useState('');
   const [enabledFilter, setEnabledFilter] = useState('');
@@ -136,13 +127,13 @@ const UserPanel: React.FC = () => {
     const newPass = (document.getElementById('u_newpass') as HTMLInputElement)?.value;
     const confPass = (document.getElementById('u_confpass') as HTMLInputElement)?.value;
 
-    if (!firstName) { showToast('First Name required.'); return; }
-    if (!lastName) { showToast('Last Name required.'); return; }
-    if (!email) { showToast('Email required.'); return; }
-    if (!email.includes('@')) { showToast('Invalid email.'); return; }
+    if (!firstName) { toastError('First Name required.'); return; }
+    if (!lastName) { toastError('Last Name required.'); return; }
+    if (!email) { toastError('Email required.'); return; }
+    if (!email.includes('@')) { toastError('Invalid email.'); return; }
 
     if (!userId && users.some((u: any) => u.email.toLowerCase() === email)) {
-      showToast('Email already exists.');
+      toastError('Email already exists.');
       return;
     }
 
@@ -151,8 +142,8 @@ const UserPanel: React.FC = () => {
     let passwordChangedAt = existing?.passwordChangedAt || '';
 
     if (newPass || confPass) {
-      if (newPass.length < 8) { showToast('Password must be at least 8 characters.'); return; }
-      if (newPass !== confPass) { showToast('Passwords do not match.'); return; }
+      if (newPass.length < 8) { toastError('Password must be at least 8 characters.'); return; }
+      if (newPass !== confPass) { toastError('Passwords do not match.'); return; }
       password = newPass;
       passwordChangedAt = new Date().toISOString();
     }
@@ -197,7 +188,7 @@ const UserPanel: React.FC = () => {
     }
 
     closeUserModal();
-    showToast('User saved.');
+    toastSuccess('User saved.');
   };
 
   const handleDeleteUser = (userId: string) => {
@@ -205,7 +196,7 @@ const UserPanel: React.FC = () => {
 
     setUsers(users.filter((u: any) => u.id !== userId));
     closeUserModal();
-    showToast('User deleted.');
+    toastSuccess('User deleted.');
   };
 
   return (
@@ -461,13 +452,6 @@ const UserPanel: React.FC = () => {
           </div>
         </div>
       </Modal>
-
-      {/* Toast notification */}
-      <div className={`fixed right-4 bottom-4 z-60 bg-rcn-dark-bg text-rcn-dark-text border border-white/15 px-3 py-2.5 rounded-2xl shadow-rcn max-w-[360px] text-sm transition-all duration-300 ${
-        showToastFlag ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'
-      }`}>
-        {toastMessage}
-      </div>
     </>
   );
 };

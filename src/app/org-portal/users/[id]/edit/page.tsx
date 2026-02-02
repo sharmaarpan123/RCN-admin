@@ -3,17 +3,12 @@
 import { Button, CustomNextLink } from "@/components";
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { toastSuccess, toastError } from "@/utils/toast";
 import { MOCK_USERS, MOCK_ORG, userDisplayName, isValidEmail, type OrgUser, type Branch } from "../../../mockData";
 
 function UserEditForm({ user }: { user: OrgUser }) {
   const router = useRouter();
   const [branches] = useState<Branch[]>(MOCK_ORG.branches);
-  const [toastMsg, setToastMsg] = useState<{ title: string; body: string } | null>(null);
-
-  const showToast = (title: string, body: string) => {
-    setToastMsg({ title, body });
-    setTimeout(() => setToastMsg(null), 2200);
-  };
 
   const findBranch = (id: string) => branches.find((b) => b.id === id) || null;
 
@@ -41,46 +36,46 @@ function UserEditForm({ user }: { user: OrgUser }) {
     const emailTrimmed = (email || "").trim().toLowerCase();
     
     if (!firstNameTrimmed || !lastNameTrimmed) {
-      showToast("Missing required field", "First name and last name are required.");
+      toastError("First name and last name are required.");
       return;
     }
     if (!emailTrimmed || !isValidEmail(emailTrimmed)) {
-      showToast("Invalid email", "Please enter a valid email.");
+      toastError("Please enter a valid email.");
       return;
     }
     
     // In a real app, this would PUT to an API
-    showToast("User saved", "User profile updated.");
+    toastSuccess("User profile updated.");
     setTimeout(() => router.push("/org-portal/users"), 1000);
   };
 
   const handlePassword = () => {
     if (p1.length < 8) return;
     if (p1 !== p2) return;
-    showToast("Password updated", "Password reset prepared (demo).");
+    toastSuccess("Password reset prepared (demo).");
     setP1("");
     setP2("");
     setShowPassword(false);
   };
 
   const handleToggleActive = () => {
-    showToast(user.isActive ? "User deactivated" : "User activated", "Status updated.");
+    toastSuccess(user.isActive ? "User deactivated" : "User activated.");
   };
 
   const handleRemoveFromOrg = () => {
     if (!user.orgAssigned) {
-      showToast("Nothing to remove", "User is already unassigned in this organization.");
+      toastError("User is already unassigned in this organization.");
       return;
     }
-    showToast("Removed", "User unassigned from this organization.");
+    toastSuccess("User unassigned from this organization.");
   };
 
   const handleDelete = () => {
     if (window.prompt(`Type DELETE to permanently delete ${userDisplayName(user)}:`)?.trim().toUpperCase() !== "DELETE") {
-      showToast("Cancelled", "Delete not confirmed.");
+      toastError("Delete not confirmed.");
       return;
     }
-    showToast("User deleted", "User permanently deleted.");
+    toastSuccess("User permanently deleted.");
     setTimeout(() => router.push("/org-portal/users"), 1000);
   };
 
@@ -206,17 +201,6 @@ function UserEditForm({ user }: { user: OrgUser }) {
           </div>
         </div>
       </div>
-
-      {toastMsg && (
-        <div
-          className="fixed left-4 right-4 sm:left-auto sm:right-4 bottom-4 z-50 min-w-0 max-w-[min(440px,calc(100vw-2rem))] bg-rcn-dark-bg text-white rounded-2xl px-4 py-3 shadow-rcn border border-white/10"
-          role="status"
-          aria-live="polite"
-        >
-          <p className="font-bold text-sm m-0">{toastMsg.title}</p>
-          <p className="text-xs m-0 mt-1 opacity-90">{toastMsg.body}</p>
-        </div>
-      )}
     </div>
   );
 }

@@ -2,22 +2,17 @@
 
 import { Button, CustomNextLink, TableLayout, TableActions, type TableColumn, type TableSortState } from "@/components";
 import { useState, useMemo } from "react";
+import { toastSuccess } from "@/utils/toast";
 import { MOCK_USERS, userDisplayName, type OrgUser } from "../mockData";
 
 export default function OrgPortalUsersPage() {
   const [users, setUsers] = useState<OrgUser[]>(MOCK_USERS);
   const [search, setSearch] = useState("");
   const [body, setBody] = useState<TableSortState>({ sort: "name", order: 1 });
-  const [toastMsg, setToastMsg] = useState<{ title: string; body: string } | null>(null);
-
-  const showToast = (title: string, body: string) => {
-    setToastMsg({ title, body });
-    setTimeout(() => setToastMsg(null), 2200);
-  };
 
   const resetDemo = () => {
     setUsers(MOCK_USERS);
-    showToast("Demo reset", "Organization data restored.");
+    toastSuccess("Demo reset. Organization data restored.");
   };
 
   const filtered = useMemo(() => {
@@ -93,17 +88,6 @@ export default function OrgPortalUsersPage() {
           getRowKey={(u) => u.id}
         />
       </div>
-
-      {toastMsg && (
-        <div
-          className="fixed left-4 right-4 sm:left-auto sm:right-4 bottom-4 z-50 min-w-0 max-w-[min(440px,calc(100vw-2rem))] bg-rcn-dark-bg text-white rounded-2xl px-4 py-3 shadow-rcn border border-white/10"
-          role="status"
-          aria-live="polite"
-        >
-          <p className="font-bold text-sm m-0">{toastMsg.title}</p>
-          <p className="text-xs m-0 mt-1 opacity-90">{toastMsg.body}</p>
-        </div>
-      )}
     </div>
   );
 }

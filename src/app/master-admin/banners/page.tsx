@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Button, TableLayout, type TableColumn, Modal } from "@/components";
 import Image from "next/image";
+import { toastSuccess, toastError, toastWarning } from "@/utils/toast";
 import { MOCK_BANNERS, MOCK_ORGS_BANNERS, type Banner } from "./mockData";
 
 const safeLower = (s: any) => (s || "").toString().toLowerCase();
@@ -26,16 +27,6 @@ const Banners: React.FC = () => {
   // Mock data state
   const [banners, setBanners] = useState<Banner[]>(MOCK_BANNERS);
   const [orgs] = useState(MOCK_ORGS_BANNERS);
-
-  // Toast and modal state
-  const [toastMessage, setToastMessage] = useState("");
-  const [showToastFlag, setShowToastFlag] = useState(false);
-
-  const showToast = (message: string) => {
-    setToastMessage(message);
-    setShowToastFlag(true);
-    setTimeout(() => setShowToastFlag(false), 2600);
-  };
 
   // Filter states
   const [search, setSearch] = useState('');
@@ -117,7 +108,7 @@ const Banners: React.FC = () => {
   const saveBanner = () => {
     const name = (document.getElementById('banner_name') as HTMLInputElement)?.value.trim();
     if (!name) {
-      showToast('Banner name is required.');
+      toastError('Banner name is required.');
       return;
     }
     const linkUrl = (document.getElementById('banner_linkUrl') as HTMLInputElement)?.value.trim() || '';
@@ -159,14 +150,14 @@ const Banners: React.FC = () => {
       setBanners([...banners, bannerObj]);
     }
     closeBannerModal();
-    showToast(editingBannerId ? 'Banner updated.' : 'Banner created.');
+    toastSuccess(editingBannerId ? 'Banner updated.' : 'Banner created.');
   };
 
   const deleteBanner = (bannerId: string) => {
     if (!window.confirm('Delete this banner? This cannot be undone.')) return;
     setBanners(banners.filter((b: { id: string }) => b.id !== bannerId));
     closeBannerModal();
-    showToast('Banner deleted.');
+    toastSuccess('Banner deleted.');
   };
 
   const editingBanner = editingBannerId ? banners.find((b: { id: string }) => b.id === editingBannerId) : null;
@@ -232,7 +223,7 @@ const Banners: React.FC = () => {
         <div className="flex gap-1 justify-end flex-wrap">
           <Button
             variant="secondary"
-            onClick={() => b.linkUrl ? window.open(b.linkUrl, '_blank') : showToast('No link URL set')}
+            onClick={() => b.linkUrl ? window.open(b.linkUrl, '_blank') : toastWarning('No link URL set')}
           >
             Preview
           </Button>
@@ -555,13 +546,6 @@ const Banners: React.FC = () => {
             </li>
           </ul>
         </div>
-      </div>
-
-      {/* Toast notification */}
-      <div className={`fixed right-4 bottom-4 z-60 bg-rcn-dark-bg text-rcn-dark-text border border-white/15 px-3 py-2.5 rounded-2xl shadow-rcn max-w-[360px] text-sm transition-all duration-300 ${
-        showToastFlag ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'
-      }`}>
-        {toastMessage}
       </div>
     </>
   );

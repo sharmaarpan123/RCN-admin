@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useApp } from '../../context/AppContext';
+import { toastSuccess, toastError } from '../../utils/toast';
 import Button from '../../components/Button';
 import CustomNextLink from '../../components/CustomNextLink';
 
@@ -28,7 +28,6 @@ const US_STATES = [
 ];
 
 const OrgSignup: React.FC = () => {
-  const { showToast } = useApp();
   const router = useRouter();
 
   // Form state
@@ -69,29 +68,29 @@ const OrgSignup: React.FC = () => {
 
     // Validation
     if (!formData.name.trim()) {
-      showToast('Organization Name is required.');
+      toastError('Organization Name is required.');
       return;
     }
     if (!formData.phone.trim()) {
-      showToast('Organization Phone is required.');
+      toastError('Organization Phone is required.');
       return;
     }
     if (!formData.email.trim()) {
-      showToast('Organization Email is required.');
+      toastError('Organization Email is required.');
       return;
     }
     if (!formData.state.trim()) {
-      showToast('State is required.');
+      toastError('State is required.');
       return;
     }
     if (!formData.zip.trim()) {
-      showToast('Zip is required.');
+      toastError('Zip is required.');
       return;
     }
 
     // In a real application, this would POST to an API
     // For demo purposes, just show success message and redirect
-    showToast('Organization registered successfully! (Demo mode - no actual signup)');
+    toastSuccess('Organization registered successfully! (Demo mode - no actual signup)');
     
     // Redirect to login after a short delay
     setTimeout(() => {

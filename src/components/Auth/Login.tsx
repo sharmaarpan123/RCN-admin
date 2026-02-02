@@ -1,25 +1,47 @@
 "use client";
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { useApp } from '../../context/AppContext';
+import { useRouter } from 'next/navigation';
+import { toastError, toastSuccess } from '../../utils/toast';
 import Button from '../Button';
 import CustomNextLink from '../CustomNextLink';
 
+// Mock users for demo login
+const MOCK_USERS = [
+  { id: 'sys-1', email: 'sysadmin@rcn.local', password: 'Admin123!', role: 'SYSTEM_ADMIN', enabled: true, orgId: null as string | null },
+  { id: 'org-1', email: 'orgadmin@northlake.org', password: 'Admin123!', role: 'ORG_ADMIN', enabled: true, orgId: 'org-1' },
+  { id: 'staff-1', email: 'staff@northlake.org', password: 'Admin123!', role: 'STAFF', enabled: true, orgId: 'org-1' },
+];
+
 const Login: React.FC = () => {
-  const { login, showToast } = useApp();
+  const router = useRouter();
   const [email, setEmail] = useState('sysadmin@rcn.local');
   const [password, setPassword] = useState('Admin123!');
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (login(email, password)) {
-      // Login successful - navigation will be handled by App component
+    const user = MOCK_USERS.find((u) => u.email.toLowerCase() === email.toLowerCase() && u.enabled);
+    if (!user) {
+      toastError('User not found or disabled.');
+      return;
+    }
+    const actual = user.password || 'Admin123!';
+    if (password !== actual) {
+      toastError('Incorrect password.');
+      return;
+    }
+    if (user.role === 'SYSTEM_ADMIN' || !user.orgId) {
+      router.push('/master-admin/dashboard');
+    } else if (user.role === 'STAFF') {
+      router.push('/staff-portal');
+    } else if (user.role === 'ORG_ADMIN') {
+      router.push('/org-portal');
     }
   };
 
   const handleResetDemo = () => {
     if (window.confirm("Reset demo data? This clears local changes.")) {
-      showToast("Demo data reset.");
+      toastSuccess("Demo data reset.");
     }
   };
 
