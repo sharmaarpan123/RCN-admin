@@ -1,10 +1,15 @@
 "use client";
-import React, { useState } from 'react';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { toastSuccess, toastError } from '../../utils/toast';
-import Button from '../../components/Button';
-import CustomNextLink from '../../components/CustomNextLink';
+import React from "react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
+import { useMutation } from "@tanstack/react-query";
+import { catchAsync, checkResponse } from "@/utils/commonFunc";
+import { organizationSignupApi, type OrganizationSignupPayload } from "@/apis/organization";
+import Button from "@/components/Button";
+import CustomNextLink from "@/components/CustomNextLink";
 
 // US States list
 const US_STATES = [
@@ -27,76 +32,112 @@ const US_STATES = [
   { abbr: "WI", name: "Wisconsin" }, { abbr: "WY", name: "Wyoming" }, { abbr: "DC", name: "District of Columbia" },
 ];
 
+const DEFAULT_DIAL_CODE = "1";
+
+const orgSignupSchema = yup.object({
+  name: yup.string().trim().required("Organization Name is required."),
+  email: yup.string().trim().required("Organization Email is required.").email("Please enter a valid email."),
+  dial_code: yup.string().trim().optional().default(DEFAULT_DIAL_CODE),
+  phone_number: yup.string().trim().required("Organization Phone is required."),
+  ein_number: yup.string().trim().optional().default(""),
+  street: yup.string().trim().optional().default(""),
+  suite: yup.string().trim().optional().default(""),
+  latitude: yup.string().trim().optional().default(""),
+  longitude: yup.string().trim().optional().default(""),
+  city: yup.string().trim().optional().default(""),
+  state: yup.string().trim().required("State is required."),
+  country: yup.string().trim().optional().default("USA"),
+  zip_code: yup.string().trim().required("Zip is required.").matches(/^\d{5}(-\d{4})?$/, "Zip must be 5 digits or ZIP+4 (e.g. 12345 or 12345-6789)."),
+  user_first_name: yup.string().trim().optional().default(""),
+  user_last_name: yup.string().trim().optional().default(""),
+  user_email: yup.string().trim().optional().default("").test("email", "Please enter a valid contact email.", (v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)),
+  user_dial_code: yup.string().trim().optional().default(DEFAULT_DIAL_CODE),
+  user_phone_number: yup.string().trim().optional().default(""),
+  user_fax_number: yup.string().trim().optional().default(""),
+});
+
+type OrgSignupFormValues = yup.InferType<typeof orgSignupSchema>;
+
+const defaultValues: OrgSignupFormValues = {
+  name: "",
+  email: "",
+  dial_code: DEFAULT_DIAL_CODE,
+  phone_number: "",
+  ein_number: "",
+  street: "",
+  suite: "",
+  latitude: "",
+  longitude: "",
+  city: "",
+  state: "",
+  country: "USA",
+  zip_code: "",
+  user_first_name: "",
+  user_last_name: "",
+  user_email: "",
+  user_dial_code: DEFAULT_DIAL_CODE,
+  user_phone_number: "",
+  user_fax_number: "",
+};
+
+function buildPayload(data: OrgSignupFormValues): OrganizationSignupPayload {
+  const stateEntry = US_STATES.find((s) => s.abbr === data.state);
+  const s = (v: string | undefined) => (v ?? "").trim() || undefined;
+  const digits = (v: string | undefined, max = 15) => (v ?? "").replace(/\D/g, "").slice(0, max) || undefined;
+  return {
+    name: data.name,
+    email: data.email,
+    dial_code: data.dial_code ?? DEFAULT_DIAL_CODE,
+    phone_number: ((data.phone_number ?? "").replace(/\D/g, "").slice(0, 15)) || (data.phone_number ?? ""),
+    ein_number: s(data.ein_number),
+    street: s(data.street),
+    suite: s(data.suite),
+    latitude: s(data.latitude),
+    longitude: s(data.longitude),
+    city: s(data.city),
+    state: stateEntry?.name ?? data.state ?? "",
+    country: data.country ?? "USA",
+    zip_code: data.zip_code ?? "",
+    user_first_name: s(data.user_first_name),
+    user_last_name: s(data.user_last_name),
+    user_email: s(data.user_email),
+    user_dial_code: data.user_dial_code ?? DEFAULT_DIAL_CODE,
+    user_phone_number: digits(data.user_phone_number) ?? s(data.user_phone_number),
+    user_fax_number: s(data.user_fax_number),
+  };
+}
+
 const OrgSignup: React.FC = () => {
   const router = useRouter();
 
-  // Form state
-  const [formData, setFormData] = useState({
-    // Organization Info
-    name: '',
-    phone: '',
-    email: '',
-    ein: '',
-    
-    // Address
-    street: '',
-    suite: '',
-    city: '',
-    state: '',
-    zip: '',
-    
-    // Contact Person
-    contactFirst: '',
-    contactLast: '',
-    contactEmail: '',
-    contactTel: '',
-    contactFax: '',
+  const {
+    register,
+    handleSubmit: rhfHandleSubmit,
+    formState: { errors },
+  } = useForm<OrgSignupFormValues>({
+    defaultValues,
+    resolver: yupResolver(orgSignupSchema),
   });
 
-  const inputClass = "w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white text-sm outline-none focus:border-[#b9d7c5] focus:shadow-[0_0_0_3px_rgba(31,122,75,0.12)] transition-all";
+  const { isPending, mutate } = useMutation({
+    mutationFn: catchAsync(async (payload: OrganizationSignupPayload) => {
+      const res = await organizationSignupApi(payload);
+      if (checkResponse({ res, showSuccess: true })) {
+        router.push("/login");
+      }
+    }),
+  });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { id, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [id]: value
-    }));
+  const onSubmit = (data: OrgSignupFormValues) => {
+    mutate(buildPayload(data));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Validation
-    if (!formData.name.trim()) {
-      toastError('Organization Name is required.');
-      return;
-    }
-    if (!formData.phone.trim()) {
-      toastError('Organization Phone is required.');
-      return;
-    }
-    if (!formData.email.trim()) {
-      toastError('Organization Email is required.');
-      return;
-    }
-    if (!formData.state.trim()) {
-      toastError('State is required.');
-      return;
-    }
-    if (!formData.zip.trim()) {
-      toastError('Zip is required.');
-      return;
-    }
-
-    // In a real application, this would POST to an API
-    // For demo purposes, just show success message and redirect
-    toastSuccess('Organization registered successfully! (Demo mode - no actual signup)');
-    
-    // Redirect to login after a short delay
-    setTimeout(() => {
-      router.push('/login');
-    }, 1500);
-  };
+  const inputBaseClass =
+    "w-full px-3 py-2.5 rounded-xl border bg-white text-sm outline-none focus:shadow-[0_0_0_3px_rgba(31,122,75,0.12)] transition-all";
+  const inputClass = (name: keyof OrgSignupFormValues) =>
+    `${inputBaseClass} ${errors[name] ? "border-red-500" : "border-rcn-border focus:border-[#b9d7c5]"}`;
+  const errorMsg = (name: keyof OrgSignupFormValues) =>
+    errors[name]?.message ? <p className="text-xs text-red-500 mt-1">{errors[name]?.message}</p> : null;
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6 login-bg">
@@ -150,7 +191,7 @@ const OrgSignup: React.FC = () => {
               Complete the form below to register your organization. Required fields are marked with an asterisk (*).
             </p>
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={rhfHandleSubmit(onSubmit)}>
               {/* Organization Information */}
               <div className="mb-4">
                 <h4 className="text-xs font-semibold text-rcn-text mb-3 uppercase tracking-wide">Organization Information</h4>
@@ -160,14 +201,12 @@ const OrgSignup: React.FC = () => {
                       Organization Name <span className="text-rcn-danger">*</span>
                     </label>
                     <input
-                      id="name"
+                      {...register("name")}
                       type="text"
-                      value={formData.name}
-                      onChange={handleChange}
                       placeholder="e.g., Northlake Medical Center"
-                      className={inputClass}
-                      required
+                      className={inputClass("name")}
                     />
+                    {errorMsg("name")}
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
@@ -176,43 +215,36 @@ const OrgSignup: React.FC = () => {
                         Phone <span className="text-rcn-danger">*</span>
                       </label>
                       <input
-                        id="phone"
+                        {...register("phone_number")}
                         type="tel"
-                        value={formData.phone}
-                        onChange={handleChange}
                         placeholder="(555) 123-4567"
-                        className={inputClass}
-                        required
+                        className={inputClass("phone_number")}
                       />
+                      {errorMsg("phone_number")}
                     </div>
                     <div>
                       <label className="text-xs text-rcn-muted block mb-1.5">
                         Email <span className="text-rcn-danger">*</span>
                       </label>
                       <input
-                        id="email"
+                        {...register("email")}
                         type="email"
-                        value={formData.email}
-                        onChange={handleChange}
                         placeholder="contact@organization.com"
-                        className={inputClass}
-                        required
+                        className={inputClass("email")}
                       />
+                      {errorMsg("email")}
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-xs text-rcn-muted block mb-1.5">
-                      EIN (Optional)
-                    </label>
+                    <label className="text-xs text-rcn-muted block mb-1.5">EIN (Optional)</label>
                     <input
-                      id="ein"
+                      {...register("ein_number")}
                       type="text"
-                      value={formData.ein}
-                      onChange={handleChange}
                       placeholder="12-3456789"
-                      className={inputClass}
+                      className={inputClass("ein_number")}
                     />
+                    {errorMsg("ein_number")}
                   </div>
                 </div>
               </div>
@@ -226,55 +258,70 @@ const OrgSignup: React.FC = () => {
                   <div>
                     <label className="text-xs text-rcn-muted block mb-1.5">Street</label>
                     <input
-                      id="street"
+                      {...register("street")}
                       type="text"
-                      value={formData.street}
-                      onChange={handleChange}
                       placeholder="123 Main Street"
-                      className={inputClass}
+                      className={inputClass("street")}
                     />
+                    {errorMsg("street")}
                   </div>
 
                   <div>
                     <label className="text-xs text-rcn-muted block mb-1.5">Apt/Suite</label>
                     <input
-                      id="suite"
+                      {...register("suite")}
                       type="text"
-                      value={formData.suite}
-                      onChange={handleChange}
                       placeholder="Suite 100"
-                      className={inputClass}
+                      className={inputClass("suite")}
                     />
+                    {errorMsg("suite")}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs text-rcn-muted block mb-1.5">Latitude (optional)</label>
+                      <input
+                        {...register("latitude")}
+                        type="text"
+                        placeholder="e.g. 37.7749"
+                        className={inputClass("latitude")}
+                      />
+                      {errorMsg("latitude")}
+                    </div>
+                    <div>
+                      <label className="text-xs text-rcn-muted block mb-1.5">Longitude (optional)</label>
+                      <input
+                        {...register("longitude")}
+                        type="text"
+                        placeholder="e.g. -122.4194"
+                        className={inputClass("longitude")}
+                      />
+                      {errorMsg("longitude")}
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="text-xs text-rcn-muted block mb-1.5">City</label>
                       <input
-                        id="city"
+                        {...register("city")}
                         type="text"
-                        value={formData.city}
-                        onChange={handleChange}
                         placeholder="City"
-                        className={inputClass}
+                        className={inputClass("city")}
                       />
+                      {errorMsg("city")}
                     </div>
                     <div>
                       <label className="text-xs text-rcn-muted block mb-1.5">
                         State <span className="text-rcn-danger">*</span>
                       </label>
-                      <select
-                        id="state"
-                        value={formData.state}
-                        onChange={handleChange}
-                        className={inputClass}
-                        required
-                      >
+                      <select {...register("state")} className={inputClass("state")}>
                         <option value="">Select State</option>
-                        {US_STATES.map(s => (
+                        {US_STATES.map((s) => (
                           <option key={s.abbr} value={s.abbr}>{s.name}</option>
                         ))}
                       </select>
+                      {errorMsg("state")}
                     </div>
                   </div>
 
@@ -283,14 +330,12 @@ const OrgSignup: React.FC = () => {
                       Zip <span className="text-rcn-danger">*</span>
                     </label>
                     <input
-                      id="zip"
+                      {...register("zip_code")}
                       type="text"
-                      value={formData.zip}
-                      onChange={handleChange}
-                      placeholder="12345"
-                      className={inputClass}
-                      required
+                      placeholder="12345 or 12345-6789"
+                      className={inputClass("zip_code")}
                     />
+                    {errorMsg("zip_code")}
                   </div>
                 </div>
               </div>
@@ -305,61 +350,56 @@ const OrgSignup: React.FC = () => {
                     <div>
                       <label className="text-xs text-rcn-muted block mb-1.5">First Name</label>
                       <input
-                        id="contactFirst"
+                        {...register("user_first_name")}
                         type="text"
-                        value={formData.contactFirst}
-                        onChange={handleChange}
                         placeholder="John"
-                        className={inputClass}
+                        className={inputClass("user_first_name")}
                       />
+                      {errorMsg("user_first_name")}
                     </div>
                     <div>
                       <label className="text-xs text-rcn-muted block mb-1.5">Last Name</label>
                       <input
-                        id="contactLast"
+                        {...register("user_last_name")}
                         type="text"
-                        value={formData.contactLast}
-                        onChange={handleChange}
                         placeholder="Doe"
-                        className={inputClass}
+                        className={inputClass("user_last_name")}
                       />
+                      {errorMsg("user_last_name")}
                     </div>
                   </div>
 
                   <div>
                     <label className="text-xs text-rcn-muted block mb-1.5">Email</label>
                     <input
-                      id="contactEmail"
+                      {...register("user_email")}
                       type="email"
-                      value={formData.contactEmail}
-                      onChange={handleChange}
                       placeholder="contact@organization.com"
-                      className={inputClass}
+                      className={inputClass("user_email")}
                     />
+                    {errorMsg("user_email")}
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="text-xs text-rcn-muted block mb-1.5">Tel</label>
                       <input
-                        id="contactTel"
+                        {...register("user_phone_number")}
                         type="tel"
-                        value={formData.contactTel}
-                        onChange={handleChange}
                         placeholder="(555) 123-4567"
-                        className={inputClass}
+                        className={inputClass("user_phone_number")}
                       />
+                      {errorMsg("user_phone_number")}
                     </div>
                     <div>
                       <label className="text-xs text-rcn-muted block mb-1.5">Fax</label>
                       <input
-                        id="contactFax"
+                        {...register("user_fax_number")}
                         type="tel"
-                        value={formData.contactFax}
-                        onChange={handleChange}
                         placeholder="(555) 123-4568"
-                        className={inputClass}
+                        className={inputClass("user_fax_number")}
                       />
+                      {errorMsg("user_fax_number")}
                     </div>
                   </div>
                 </div>
@@ -372,8 +412,8 @@ const OrgSignup: React.FC = () => {
                 <CustomNextLink href="/" variant="ghost" size="sm">
                   Cancel
                 </CustomNextLink>
-                <Button variant="primary" type="submit">
-                  Register Organization
+                <Button variant="primary" type="submit" disabled={isPending}>
+                  {isPending ? "Registering…" : "Register Organization"}
                 </Button>
               </div>
             </form>
