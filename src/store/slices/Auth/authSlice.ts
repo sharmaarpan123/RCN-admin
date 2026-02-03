@@ -26,22 +26,16 @@ const authSlice = createSlice({
   reducers: {
     loginSuccess(state, action) {
       localStorage.setItem("authToken", action.payload.accessToken);
-      localStorage.setItem("customerId", action?.payload?.user?.id);
+      localStorage.setItem("role", action.payload.role);
       document.cookie = `authorization=${action.payload.accessToken}; path=/;`;
       document.cookie = `role=${action.payload.role}; path=/;`;
-      // state.token = action.payload.accessToken;
-      // state.user = action.payload.user;
-      // state.role = action.payload.role;
-      // state.customerId = action.payload.user?.id;
     },
     logoutSuccess(state) {
-      // state.token = null;
-      // state.user = null;
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("role");
+      document.cookie = "authorization=; path=/;";
+      document.cookie = "role=; path=/;";
     },
-    updateUser(state, action) {
-      // state.user = action.payload;
-    },
-
   },
 
 });
@@ -49,7 +43,6 @@ const authSlice = createSlice({
 export const {
   loginSuccess,
   logoutSuccess,
-  updateUser
 } = authSlice.actions;
 
 export default authSlice.reducer;

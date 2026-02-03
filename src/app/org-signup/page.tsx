@@ -7,9 +7,11 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useMutation } from "@tanstack/react-query";
 import { catchAsync, checkResponse } from "@/utils/commonFunc";
-import { organizationSignupApi, type OrganizationSignupPayload } from "@/apis/organization";
+import { organizationSignupApi } from "@/apis/ApiCalls";
 import Button from "@/components/Button";
 import CustomNextLink from "@/components/CustomNextLink";
+import { PhoneInputField, Autocomplete } from "@/components";
+import type { AddressResult } from "@/components";
 
 // US States list
 const US_STATES = [
@@ -37,17 +39,19 @@ const DEFAULT_DIAL_CODE = "1";
 const orgSignupSchema = yup.object({
   name: yup.string().trim().required("Organization Name is required."),
   email: yup.string().trim().required("Organization Email is required.").email("Please enter a valid email."),
+  password: yup.string().required("Password is required.").min(8, "Password must be at least 8 characters."),
+  confirm_password: yup.string().required("Confirm password is required.").oneOf([yup.ref("password")], "Passwords must match."),
   dial_code: yup.string().trim().optional().default(DEFAULT_DIAL_CODE),
   phone_number: yup.string().trim().required("Organization Phone is required."),
   ein_number: yup.string().trim().optional().default(""),
   street: yup.string().trim().optional().default(""),
   suite: yup.string().trim().optional().default(""),
-  latitude: yup.string().trim().optional().default(""),
-  longitude: yup.string().trim().optional().default(""),
+  latitude: yup.number().required("Please select an address."),
+  longitude: yup.number().required("Please select an address."),
   city: yup.string().trim().optional().default(""),
   state: yup.string().trim().required("State is required."),
   country: yup.string().trim().optional().default("USA"),
-  zip_code: yup.string().trim().required("Zip is required.").matches(/^\d{5}(-\d{4})?$/, "Zip must be 5 digits or ZIP+4 (e.g. 12345 or 12345-6789)."),
+  zip_code: yup.string().trim().required("Zip is required."),
   user_first_name: yup.string().trim().optional().default(""),
   user_last_name: yup.string().trim().optional().default(""),
   user_email: yup.string().trim().optional().default("").test("email", "Please enter a valid contact email.", (v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)),
@@ -58,16 +62,18 @@ const orgSignupSchema = yup.object({
 
 type OrgSignupFormValues = yup.InferType<typeof orgSignupSchema>;
 
-const defaultValues: OrgSignupFormValues = {
+const defaultValues: Omit<OrgSignupFormValues, "latitude" | "longitude"> & { latitude?: number | null; longitude?: number | null } = {
   name: "",
   email: "",
+  password: "",
+  confirm_password: "",
   dial_code: DEFAULT_DIAL_CODE,
   phone_number: "",
   ein_number: "",
   street: "",
   suite: "",
-  latitude: "",
-  longitude: "",
+  latitude: null,
+  longitude: null,
   city: "",
   state: "",
   country: "USA",
@@ -80,20 +86,21 @@ const defaultValues: OrgSignupFormValues = {
   user_fax_number: "",
 };
 
-function buildPayload(data: OrgSignupFormValues): OrganizationSignupPayload {
+function buildPayload(data: OrgSignupFormValues): unknown {
   const stateEntry = US_STATES.find((s) => s.abbr === data.state);
   const s = (v: string | undefined) => (v ?? "").trim() || undefined;
   const digits = (v: string | undefined, max = 15) => (v ?? "").replace(/\D/g, "").slice(0, max) || undefined;
   return {
     name: data.name,
     email: data.email,
+    password: data.password ?? "",
     dial_code: data.dial_code ?? DEFAULT_DIAL_CODE,
     phone_number: ((data.phone_number ?? "").replace(/\D/g, "").slice(0, 15)) || (data.phone_number ?? ""),
     ein_number: s(data.ein_number),
     street: s(data.street),
     suite: s(data.suite),
-    latitude: s(data.latitude),
-    longitude: s(data.longitude),
+    latitude: data.latitude ?? 0,
+    longitude: data.longitude ?? 0,
     city: s(data.city),
     state: stateEntry?.name ?? data.state ?? "",
     country: data.country ?? "USA",
@@ -113,14 +120,46 @@ const OrgSignup: React.FC = () => {
   const {
     register,
     handleSubmit: rhfHandleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<OrgSignupFormValues>({
-    defaultValues,
+    defaultValues: defaultValues as OrgSignupFormValues,
     resolver: yupResolver(orgSignupSchema),
   });
 
+  const dialCode = watch("dial_code");
+  const phoneNumber = watch("phone_number");
+  const userDialCode = watch("user_dial_code");
+  const userPhoneNumber = watch("user_phone_number");
+
+  const orgPhoneValue = (dialCode ?? "") + (phoneNumber ?? "").replace(/\D/g, "");
+  const userPhoneValue = (userDialCode ?? "") + (userPhoneNumber ?? "").replace(/\D/g, "");
+
+  const handleOrgPhoneChange = (value: string, country: { dialCode: string }) => {
+    const code = String(country?.dialCode ?? "1");
+    setValue("dial_code", code, { shouldValidate: true });
+    setValue("phone_number", value.slice(code.length) || "", { shouldValidate: true });
+  };
+
+  const handleUserPhoneChange = (value: string, country: { dialCode: string }) => {
+    const code = String(country?.dialCode ?? "1");
+    setValue("user_dial_code", code, { shouldValidate: true });
+    setValue("user_phone_number", value.slice(code.length) || "", { shouldValidate: true });
+  };
+
+  const handleAddressSelect = (address: AddressResult) => {
+    setValue("street", address.street, { shouldValidate: true });
+    setValue("suite", address.suite, { shouldValidate: true });
+    setValue("city", address.city, { shouldValidate: true });
+    setValue("state", address.state, { shouldValidate: true });
+    setValue("zip_code", address.zip_code, { shouldValidate: true });
+    if (address.latitude) setValue("latitude", address.latitude, { shouldValidate: true });
+    if (address.longitude) setValue("longitude", address.longitude, { shouldValidate: true });
+  };
+
   const { isPending, mutate } = useMutation({
-    mutationFn: catchAsync(async (payload: OrganizationSignupPayload) => {
+    mutationFn: catchAsync(async (payload: unknown) => {
       const res = await organizationSignupApi(payload);
       if (checkResponse({ res, showSuccess: true })) {
         router.push("/login");
@@ -214,11 +253,11 @@ const OrgSignup: React.FC = () => {
                       <label className="text-xs text-rcn-muted block mb-1.5">
                         Phone <span className="text-rcn-danger">*</span>
                       </label>
-                      <input
-                        {...register("phone_number")}
-                        type="tel"
-                        placeholder="(555) 123-4567"
-                        className={inputClass("phone_number")}
+                      <PhoneInputField
+                        value={orgPhoneValue}
+                        onChange={handleOrgPhoneChange}
+                        hasError={!!errors.phone_number}
+                        inputProps={{ required: true }}
                       />
                       {errorMsg("phone_number")}
                     </div>
@@ -246,6 +285,35 @@ const OrgSignup: React.FC = () => {
                     />
                     {errorMsg("ein_number")}
                   </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs text-rcn-muted block mb-1.5">
+                        Password <span className="text-rcn-danger">*</span>
+                      </label>
+                      <input
+                        {...register("password")}
+                        type="password"
+                        placeholder="Min. 8 characters"
+                        className={inputClass("password")}
+                        autoComplete="new-password"
+                      />
+                      {errorMsg("password")}
+                    </div>
+                    <div>
+                      <label className="text-xs text-rcn-muted block mb-1.5">
+                        Confirm Password <span className="text-rcn-danger">*</span>
+                      </label>
+                      <input
+                        {...register("confirm_password")}
+                        type="password"
+                        placeholder="Re-enter password"
+                        className={inputClass("confirm_password")}
+                        autoComplete="new-password"
+                      />
+                      {errorMsg("confirm_password")}
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -255,6 +323,17 @@ const OrgSignup: React.FC = () => {
               <div className="mb-4">
                 <h4 className="text-xs font-semibold text-rcn-text mb-3 uppercase tracking-wide">Organization Address</h4>
                 <div className="grid grid-cols-1 gap-3">
+                  <div>
+                    <label className="text-xs text-rcn-muted block mb-1.5">Search address</label>
+                    <Autocomplete
+                      onPlaceSelect={handleAddressSelect}
+                      placeholder="Start typing an address..."
+                      countryRestriction="us"
+                      className="mb-1"
+                    />
+                    <p className="text-xs text-rcn-muted mt-0.5">Select a suggestion to fill the fields below.</p>
+                    {errorMsg("street") || errorMsg("longitude")}
+                  </div>
                   <div>
                     <label className="text-xs text-rcn-muted block mb-1.5">Street</label>
                     <input
@@ -277,28 +356,7 @@ const OrgSignup: React.FC = () => {
                     {errorMsg("suite")}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs text-rcn-muted block mb-1.5">Latitude (optional)</label>
-                      <input
-                        {...register("latitude")}
-                        type="text"
-                        placeholder="e.g. 37.7749"
-                        className={inputClass("latitude")}
-                      />
-                      {errorMsg("latitude")}
-                    </div>
-                    <div>
-                      <label className="text-xs text-rcn-muted block mb-1.5">Longitude (optional)</label>
-                      <input
-                        {...register("longitude")}
-                        type="text"
-                        placeholder="e.g. -122.4194"
-                        className={inputClass("longitude")}
-                      />
-                      {errorMsg("longitude")}
-                    </div>
-                  </div>
+
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
@@ -383,11 +441,10 @@ const OrgSignup: React.FC = () => {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="text-xs text-rcn-muted block mb-1.5">Tel</label>
-                      <input
-                        {...register("user_phone_number")}
-                        type="tel"
-                        placeholder="(555) 123-4567"
-                        className={inputClass("user_phone_number")}
+                      <PhoneInputField
+                        value={userPhoneValue}
+                        onChange={handleUserPhoneChange}
+                        hasError={!!errors.user_phone_number}
                       />
                       {errorMsg("user_phone_number")}
                     </div>

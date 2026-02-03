@@ -2,21 +2,21 @@ import { getCookie } from "@/utils/commonFunc";
 import axios from "axios";
 import toast from "react-hot-toast";
 
-const api = axios.create({
+const AxiosInstance = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL, // your backend URL
     withCredentials: true, // allows sending cookies if backend uses them
 });
 
 export const logout = () => {
     localStorage.removeItem("authToken");
+    localStorage.removeItem("role");
     document.cookie = "authorization=; path=/;";
-    localStorage.removeItem("persist:auth");
     setTimeout(() => {
-        window.location.href = "/doctor-auth/login";
+        window.location.href = "/";
     }, 0);
 }
 
-api.interceptors.request.use(
+AxiosInstance.interceptors.request.use(
     (config) => {
         if (typeof window !== "undefined") {
             const token = getCookie("authorization");
@@ -32,7 +32,7 @@ api.interceptors.request.use(
 );
 
 // Response interceptor → handle errors
-api.interceptors.response.use(
+AxiosInstance.interceptors.response.use(
     (response) => response,
     (error) => {
         console.log("error", error);
@@ -55,5 +55,5 @@ api.interceptors.response.use(
     }
 );
 
-export default api;
+export default AxiosInstance;
 

@@ -5,6 +5,7 @@ import { Provider } from "react-redux";
 import Progressbar from "./Progressbar";
 import ReactQueryProvider from "./ReactQueryClient";
 import { ToastProvider } from "@/Providers/ToastProvider";
+import { GoogleMapsProvider } from "@/contexts/GoogleMapsContext";
 // import FirebaseProvider from "./FirebaseProvider";
 
 const CommonProvider = ({ children }: { children: React.ReactNode }) => {
@@ -14,8 +15,9 @@ const CommonProvider = ({ children }: { children: React.ReactNode }) => {
         <ToastProvider />
         <ReactQueryProvider>
           <Provider store={store}>
-            {children}
-            {/* <FirebaseProvider>{children}</FirebaseProvider> */}
+            <GoogleMapsProvider>
+              {children}
+            </GoogleMapsProvider>
           </Provider>
         </ReactQueryProvider>
       </Progressbar>
