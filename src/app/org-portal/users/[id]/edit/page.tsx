@@ -1,61 +1,48 @@
 "use client";
 
-import { Button, CustomNextLink } from "@/components";
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { CustomNextLink } from "@/components";
+import { UserForm } from "@/components/OrgComponent/UsersModule";
 import { toastSuccess, toastError } from "@/utils/toast";
-import { MOCK_USERS, MOCK_ORG, userDisplayName, isValidEmail, type OrgUser, type Branch } from "../../../mockData";
+import { MOCK_USERS, MOCK_ORG, userDisplayName, type OrgUser, type Branch } from "../../../mockData";
 
-function UserEditForm({ user }: { user: OrgUser }) {
+export default function OrgPortalUserEditPage() {
+  const params = useParams<{ id: string }>();
   const router = useRouter();
+  const [users] = useState(MOCK_USERS);
   const [branches] = useState<Branch[]>(MOCK_ORG.branches);
+  const user = users.find((u) => u.id === params.id);
 
-  const findBranch = (id: string) => branches.find((b) => b.id === id) || null;
+  if (!user) {
+    return (
+      <div>
+        <CustomNextLink href="/org-portal/users" variant="ghost" size="sm">
+          ← User list
+        </CustomNextLink>
+        <p className="mt-4 text-rcn-muted">User not found.</p>
+      </div>
+    );
+  }
 
-  const [firstName, setFirstName] = useState(user.firstName ?? "");
-  const [lastName, setLastName] = useState(user.lastName ?? "");
-  const [email, setEmail] = useState(user.email ?? "");
-  const [phone, setPhone] = useState(user.phone ?? "");
-  const [role, setRole] = useState(user.role ?? "User");
-  const [isAdmin, setIsAdmin] = useState(user.isAdmin ?? false);
-  const [isActive, setIsActive] = useState(user.isActive ?? true);
-  const [notes, setNotes] = useState(user.notes ?? "");
-  const [branchIds, setBranchIds] = useState<Set<string>>(new Set(user.branchIds ?? []));
-  const [deptIds, setDeptIds] = useState<Set<string>>(new Set(user.deptIds ?? []));
-  const [showPassword, setShowPassword] = useState(false);
-  const [p1, setP1] = useState("");
-  const [p2, setP2] = useState("");
-
-  const toggleBranch = (id: string) => setBranchIds((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
-  const toggleDept = (id: string) => setDeptIds((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
-  const showBranchIds = Array.from(branchIds);
-
-  const handleSave = () => {
-    const firstNameTrimmed = (firstName || "").trim();
-    const lastNameTrimmed = (lastName || "").trim();
-    const emailTrimmed = (email || "").trim().toLowerCase();
-    
-    if (!firstNameTrimmed || !lastNameTrimmed) {
-      toastError("First name and last name are required.");
-      return;
-    }
-    if (!emailTrimmed || !isValidEmail(emailTrimmed)) {
-      toastError("Please enter a valid email.");
-      return;
-    }
-    
-    // In a real app, this would PUT to an API
-    toastSuccess("User profile updated.");
-    setTimeout(() => router.push("/org-portal/users"), 1000);
+  const initial = {
+    firstName: user.firstName ?? "",
+    lastName: user.lastName ?? "",
+    email: user.email ?? "",
+    dialCode: (user as { dial_code?: string }).dial_code ?? "1",
+    phone: user.phone ?? "",
+    faxNumber: (user as { fax_number?: string }).fax_number ?? "",
+    role: user.role ?? "User",
+    isAdmin: user.isAdmin ?? false,
+    isActive: user.isActive ?? true,
+    notes: user.notes ?? "",
+    branchIds: user.branchIds ?? [],
+    deptIds: user.deptIds ?? [],
   };
 
-  const handlePassword = () => {
-    if (p1.length < 8) return;
-    if (p1 !== p2) return;
-    toastSuccess("Password reset prepared (demo).");
-    setP1("");
-    setP2("");
-    setShowPassword(false);
+  const handleSave = () => {
+    toastSuccess("User profile updated.");
+    setTimeout(() => router.push("/org-portal/users"), 1000);
   };
 
   const handleToggleActive = () => {
@@ -71,7 +58,10 @@ function UserEditForm({ user }: { user: OrgUser }) {
   };
 
   const handleDelete = () => {
-    if (window.prompt(`Type DELETE to permanently delete ${userDisplayName(user)}:`)?.trim().toUpperCase() !== "DELETE") {
+    if (
+      window.prompt(`Type DELETE to permanently delete ${userDisplayName(user)}:`)?.trim().toUpperCase() !==
+      "DELETE"
+    ) {
       toastError("Delete not confirmed.");
       return;
     }
@@ -81,143 +71,22 @@ function UserEditForm({ user }: { user: OrgUser }) {
 
   return (
     <div>
-      <div className="bg-rcn-card border border-rcn-border rounded-2xl shadow-rcn overflow-hidden">
-        <div className="p-4 sm:p-6">
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-            <div>
-              <h1 className="text-xl font-bold m-0">Edit User detail</h1>
-              <p className="text-sm text-rcn-muted m-0 mt-1">{userDisplayName(user)}</p>
-            </div>
-          </div>
-
-          <div className="shrink-0 border border-rcn-border rounded-xl p-4 mt-2  bg-rcn-bg/50 min-w-[220px]">
-            <h2 className="font-bold text-sm m-0 mb-2">Manage Password</h2>
-            {!showPassword ? (
-              <Button variant="secondary" size="sm" onClick={() => setShowPassword(true)}>Change Password</Button>
-            ) : (
-              <div className="space-y-2">
-                <input type="password" value={p1} onChange={(e) => setP1(e.target.value)} placeholder="New password (8+ chars)" className="w-full px-2.5 py-2 text-sm rounded-xl border border-rcn-border" />
-                <input type="password" value={p2} onChange={(e) => setP2(e.target.value)} placeholder="Confirm" className="w-full px-2.5 py-2 text-sm rounded-xl border border-rcn-border" />
-                <div className="flex flex-col gap-2">
-                  <Button variant="primary" size="sm" onClick={handlePassword} disabled={p1.length < 8 || p1 !== p2}>Update Password</Button>
-                  <Button variant="secondary" size="sm" onClick={() => { setShowPassword(false); setP1(""); setP2(""); }}>Cancel</Button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
-            <div>
-              <label className="block text-xs text-rcn-muted mb-1">First Name</label>
-              <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First" className="w-full px-2.5 py-2 text-sm rounded-xl border border-rcn-border bg-white focus:outline-none focus:ring-2 focus:ring-rcn-accent/30" />
-            </div>
-            <div>
-              <label className="block text-xs text-rcn-muted mb-1">Last Name</label>
-              <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last" className="w-full px-2.5 py-2 text-sm rounded-xl border border-rcn-border bg-white focus:outline-none focus:ring-2 focus:ring-rcn-accent/30" />
-            </div>
-            <div className="sm:col-span-2">
-              <label className="block text-xs text-rcn-muted mb-1">Email</label>
-              <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="email@example.com" className="w-full px-2.5 py-2 text-sm rounded-xl border border-rcn-border bg-white focus:outline-none focus:ring-2 focus:ring-rcn-accent/30" />
-            </div>
-            <div>
-              <label className="block text-xs text-rcn-muted mb-1">Phone</label>
-              <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(000) 000-0000" className="w-full px-2.5 py-2 text-sm rounded-xl border border-rcn-border bg-white focus:outline-none focus:ring-2 focus:ring-rcn-accent/30" />
-            </div>
-            <div>
-              <label className="block text-xs text-rcn-muted mb-1">Role</label>
-              <select value={role} onChange={(e) => setRole(e.target.value)} className="w-full px-2.5 py-2 text-sm rounded-xl border border-rcn-border bg-white focus:outline-none focus:ring-2 focus:ring-rcn-accent/30">
-                <option value="User">User</option>
-                <option value="Manager">Manager</option>
-                <option value="Admin">Admin</option>
-                <option value="Super Admin">Super Admin</option>
-              </select>
-            </div>
-            <div className="sm:col-span-2">
-              <label className="block text-xs text-rcn-muted mb-1.5">Access</label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={isAdmin} onChange={(e) => setIsAdmin(e.target.checked)} className="rounded border-rcn-border" />
-                <span className="text-sm">Admin capabilities</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer mt-1">
-                <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} className="rounded border-rcn-border" />
-                <span className="text-sm">Active user</span>
-              </label>
-            </div>
-            <div className="sm:col-span-2">
-              <label className="block text-xs text-rcn-muted mb-1">Notes</label>
-              <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} placeholder="Optional notes" className="w-full px-2.5 py-2 text-sm rounded-xl border border-rcn-border bg-white focus:outline-none focus:ring-2 focus:ring-rcn-accent/30 resize-y" />
-            </div>
-          </div>
-
-          <div className="border-t border-rcn-border mt-6 pt-6">
-            <h2 className="font-bold text-sm m-0 mb-2">Assign Branch & Department</h2>
-            <p className="text-xs text-rcn-muted m-0 mb-3">Select branches and departments for this user.</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-xs text-rcn-muted mb-1.5">Branches</label>
-                <div className="border border-rcn-border rounded-xl p-3 max-h-40 overflow-auto space-y-1">
-                  {branches.map((b) => (
-                    <label key={b.id} className="flex items-center gap-2 py-1 cursor-pointer">
-                      <input type="checkbox" checked={branchIds.has(b.id)} onChange={() => toggleBranch(b.id)} className="rounded border-rcn-border" />
-                      <span className="text-sm">{b.name}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs text-rcn-muted mb-1.5">Departments (by branch)</label>
-                <div className="border border-rcn-border rounded-xl p-3 max-h-40 overflow-auto space-y-2">
-                  {showBranchIds.map((brId) => {
-                    const br = findBranch(brId);
-                    if (!br) return null;
-                    return (
-                      <div key={br.id}>
-                        <p className="text-xs font-bold text-rcn-accent m-0 mb-1">{br.name}</p>
-                        {(br.departments ?? []).map((d) => (
-                          <label key={d.id} className="flex items-center gap-2 py-0.5 ml-2 cursor-pointer">
-                            <input type="checkbox" checked={deptIds.has(d.id)} onChange={() => toggleDept(d.id)} className="rounded border-rcn-border" />
-                            <span className="text-sm">{d.name}</span>
-                          </label>
-                        ))}
-                      </div>
-                    );
-                  })}
-                  {!showBranchIds.length && <p className="text-xs text-rcn-muted m-0">Select branches to see departments.</p>}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row flex-wrap gap-2 mt-6 pt-6 border-t border-rcn-border justify-between">
-            <div className="flex flex-wrap gap-2">
-              <Button variant="secondary" size="sm" onClick={handleToggleActive}>{user.isActive ? "Deactivate" : "Activate"}</Button>
-              <Button variant="danger" size="sm" onClick={handleRemoveFromOrg} disabled={!user.orgAssigned}>Remove from Org</Button>
-              <Button variant="danger" size="sm" onClick={handleDelete}>Delete</Button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Button variant="primary" size="sm" onClick={handleSave}>Save</Button>
-              <CustomNextLink href="/org-portal/users" variant="secondary" size="sm">Cancel</CustomNextLink>
-            </div>
-          </div>
-        </div>
+      <div className="flex items-center gap-3 mb-4">
+        <CustomNextLink href="/org-portal/users" variant="ghost" size="sm">
+          ← User list
+        </CustomNextLink>
       </div>
+      <UserForm
+        key={user.id}
+        mode="edit"
+        user={user}
+        branches={branches}
+        initial={initial}
+        onSave={handleSave}
+        onToggleActive={handleToggleActive}
+        onRemoveFromOrg={handleRemoveFromOrg}
+        onDelete={handleDelete}
+      />
     </div>
   );
-}
-
-export default function OrgPortalUserEditPage() {
-  const params = useParams<{ id: string }>();
-  const [users] = useState(MOCK_USERS);
-  const user = users.find((u) => u.id === params.id);
-
-  if (!user) {
-    return (
-      <div>
-        <CustomNextLink href="/org-portal/users" variant="ghost" size="sm">← User list</CustomNextLink>
-        <p className="mt-4 text-rcn-muted">User not found.</p>
-      </div>
-    );
-  }
-
-  return <UserEditForm key={user.id} user={user} />;
 }

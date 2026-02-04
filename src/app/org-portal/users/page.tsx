@@ -1,8 +1,8 @@
 "use client";
 
-import { Button, CustomNextLink, TableLayout, TableActions, type TableColumn, type TableSortState } from "@/components";
+import { CustomNextLink, TableLayout, TableActions, type TableColumn, type TableSortState } from "@/components";
 import { useState, useMemo } from "react";
-import { toastSuccess } from "@/utils/toast";
+
 import { MOCK_USERS, userDisplayName, type OrgUser } from "../mockData";
 
 export default function OrgPortalUsersPage() {
@@ -10,10 +10,7 @@ export default function OrgPortalUsersPage() {
   const [search, setSearch] = useState("");
   const [body, setBody] = useState<TableSortState>({ sort: "name", order: 1 });
 
-  const resetDemo = () => {
-    setUsers(MOCK_USERS);
-    toastSuccess("Demo reset. Organization data restored.");
-  };
+
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();

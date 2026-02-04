@@ -1,73 +1,71 @@
 "use client";
 
-import { Button, Modal, TableLayout } from "@/components";
-import { useState } from "react";
+import { getOrganizationBranchesApi } from "@/apis/ApiCalls";
 import type { TableColumn } from "@/components";
-import { toastSuccess } from "@/utils/toast";
-import { MOCK_ORG, uid, type Branch } from "../mockData";
+import { Button, TableLayout, DebouncedInput } from "@/components";
+import { BranchModal } from "@/components/OrgComponent/Branch";
+import { checkResponse } from "@/utils/commonFunc";
+import defaultQueryKeys from "@/utils/orgQueryKeys";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+
+interface Branch {
+  _id: string;
+  name: string;
+  department_count?: number;
+}
+
+const BRANCHES_QUERY_KEY = defaultQueryKeys.branchList;
 
 export default function OrgPortalBranchesPage() {
-  const [branches, setBranches] = useState<Branch[]>(MOCK_ORG.branches);
   const [modal, setModal] = useState<{ mode: "add" } | { mode: "edit"; id: string; name: string } | null>(null);
-  const [name, setName] = useState("");
-  const [search, setSearch] = useState("");
+  const [body, setBody] = useState<{ search: string }>({ search: "" });
+  const queryClient = useQueryClient();
 
-  const addBranch = (name: string) => {
-    const n = (name || "").trim();
-    if (!n) return;
-    const newBranch: Branch = { id: uid("br"), name: n, departments: [] };
-    setBranches((prev) => [...prev, newBranch]);
-    toastSuccess("Branch created. Branch added.");
-  };
+  const { data: apiData, isLoading } = useQuery({
+    queryKey: [...BRANCHES_QUERY_KEY, body.search],
+    queryFn: async () => {
+      try {
+        const res = await getOrganizationBranchesApi({ search: body.search });
+        if (!checkResponse({ res })) {
+          return [];
+        }
+        return res.data;
+      } catch {
+        return [];
+      }
+    },
+  });
 
-  const renameBranch = (branchId: string, name: string) => {
-    const n = (name || "").trim();
-    if (!n) return;
-    setBranches((prev) => prev.map((b) => (b.id === branchId ? { ...b, name: n } : b)));
-    toastSuccess("Branch updated. Branch renamed.");
-  };
 
-  const searchLower = search.trim().toLowerCase();
-  const filteredBrs = searchLower
-    ? branches.filter((b) => b.name.toLowerCase().includes(searchLower) || b.id.toLowerCase().includes(searchLower))
-    : branches;
+  const branches = apiData?.data ?? [];
 
-  const openAdd = () => {
-    setName("");
-    setModal({ mode: "add" });
-  };
-
-  const openEdit = (id: string, currentName: string) => {
-    setName(currentName);
-    setModal({ mode: "edit", id, name: currentName });
-  };
-
-  const handleSave = () => {
-    const n = name.trim();
-    if (!n) return;
-    if (modal?.mode === "add") {
-      addBranch(n);
-    } else if (modal?.mode === "edit") {
-      renameBranch(modal.id, n);
-    }
-    setModal(null);
-  };
+  const openAdd = () => setModal({ mode: "add" });
 
   const columns: TableColumn<Branch>[] = [
     { head: "Name", accessor: "name", component: (row) => <span className="font-medium">{row.name}</span> },
     {
       head: "Departments",
-      component: (row) => <span className="text-rcn-muted">{(row.departments || []).length} departments</span>,
+      component: (row) => (
+        <span className="text-rcn-muted">{row.department_count ?? 0} departments</span>
+      ),
     },
     {
       head: "Actions",
       thClassName: "text-right",
       tdClassName: "text-right",
       component: (row) => (
-        <Button variant="secondary" size="sm" onClick={() => openEdit(row.id, row.name)}>Edit</Button>
+        <Button variant="secondary" size="sm" onClick={() => setModal({ mode: "edit", id: row._id, name: row.name })}>
+          Edit
+        </Button>
       ),
     },
   ];
+
+  const handleBranchAddUpdateSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: [...BRANCHES_QUERY_KEY] });
+    setModal(null);
+  };
 
   return (
     <div>
@@ -76,62 +74,62 @@ export default function OrgPortalBranchesPage() {
           <h1 className="text-xl font-bold m-0">Branch</h1>
           <p className="text-sm text-rcn-muted m-0 mt-0.5">Create and manage branches for this organization.</p>
         </div>
-        <Button variant="primary" size="sm" onClick={openAdd}>+ Add Branch</Button>
+        <Button variant="primary" size="sm" onClick={openAdd}>
+          + Add Branch
+        </Button>
       </div>
 
       <div className="bg-rcn-card border border-rcn-border rounded-2xl shadow-rcn overflow-hidden">
         <div className="p-4">
-          <p className="text-xs text-rcn-muted mb-3">Branches belong to this organization only. Users may be assigned to multiple branches.</p>
+          <p className="text-xs text-rcn-muted mb-3">
+            Branches belong to this organization only. Users may be assigned to multiple branches.
+          </p>
           <div className="flex flex-col sm:flex-row gap-2 mb-3">
             <div className="flex-1 min-w-0">
-              <label className="sr-only" htmlFor="branch-search">Search branches</label>
-              <input
+              <label className="sr-only" htmlFor="branch-search">
+                Search branches
+              </label>
+              <DebouncedInput
                 id="branch-search"
-                type="search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                value={body.search}
+                onChange={(value) => setBody((prev) => ({ ...prev, search: value }))}
                 placeholder="Search by name or ID"
-                className="w-full px-2.5 py-2 text-sm rounded-xl border border-rcn-border bg-white focus:outline-none focus:ring-2 focus:ring-rcn-accent/30"
+                debounceMs={300}
               />
             </div>
-            {search && (
-              <Button variant="secondary" size="sm" onClick={() => setSearch("")}>
+            {body.search ? (
+              <Button variant="secondary" size="sm" onClick={() => setBody((prev) => ({ ...prev, search: "" }))}>
                 Clear
               </Button>
-            )}
+            ) : null}
           </div>
           <div className="border border-rcn-border rounded-xl overflow-hidden">
             <TableLayout<Branch>
               columns={columns}
-              data={filteredBrs}
+              data={branches}
+              body={body}
+              setBody={(patch) => setBody((prev) => ({ ...prev, ...patch }))}
               emptyMessage={
-                search.trim()
-                  ? 'No branches match your search.'
+                body.search.trim()
+                  ? "No branches match your search."
                   : 'No branches yet. Click "+ Add Branch" to create one.'
               }
+              loader={isLoading}
               wrapperClassName="min-w-[260px]"
-              getRowKey={(row) => row.id}
+              getRowKey={(row) => row._id}
             />
           </div>
         </div>
       </div>
 
-      <Modal isOpen={!!modal} onClose={() => setModal(null)} maxWidth="420px">
-        <div className="p-4">
-          <h3 className="font-bold m-0">{modal?.mode === "add" ? "Add Branch" : "Edit Branch"}</h3>
-          <label className="block text-xs text-rcn-muted mt-3 mb-1.5">Name</label>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Branch name"
-            className="w-full px-2.5 py-2 text-sm rounded-xl border border-rcn-border bg-white focus:outline-none focus:ring-2 focus:ring-rcn-accent/30"
-          />
-          <div className="flex gap-2 mt-4 justify-end">
-            <Button variant="secondary" size="sm" onClick={() => setModal(null)}>Cancel</Button>
-            <Button variant="primary" size="sm" onClick={handleSave}>Save</Button>
-          </div>
-        </div>
-      </Modal>
+      <BranchModal
+        isOpen={!!modal}
+        onClose={() => setModal(null)}
+        mode={modal?.mode ?? "add"}
+        branchId={modal?.mode === "edit" ? modal.id : undefined}
+        initialName={modal?.mode === "edit" ? modal.name : ""}
+        onSuccess={handleBranchAddUpdateSuccess}
+      />
     </div>
   );
 }

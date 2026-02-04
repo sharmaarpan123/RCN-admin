@@ -17,3 +17,18 @@ export const authVerifyOtpApi = (body: unknown) => AxiosInstance.post("/api/auth
 export const organizationVerifyOtpApi = (body: unknown) => AxiosInstance.post("/api/organization/verify-otp", body);
 
 export const adminVerifyOtpApi = (body: unknown) => AxiosInstance.post("/api/admin/verify-otp", body);
+
+export const createOrganizationUserApi = (body: unknown) =>
+  AxiosInstance.post("/api/organization/user", body);
+
+export const updateOrganizationUserApi = (userId: string, body: unknown) =>
+  AxiosInstance.put(`/api/organization/user/${userId}`, body);
+
+export const getOrganizationBranchesApi = (body: unknown) =>
+  AxiosInstance.get("/api/organization/branch" , { params: body });
+
+export const createOrganizationBranchApi = (body: { name: string }) =>
+  AxiosInstance.post(`/api/organization/branch`, body);
+
+export const updateOrganizationBranchApi = (branchId: string, body: { name: string }) =>
+  AxiosInstance.put(`/api/organization/branch/${branchId}`, body);

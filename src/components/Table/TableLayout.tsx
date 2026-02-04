@@ -23,7 +23,7 @@ export interface TableLayoutProps<T = object> {
   /** Loading state – shows loading row */
   loader?: boolean;
   /** Optional sort state (when using sortable columns) */
-  body?: TableSortState;
+  body?: { [key: string]: string } & TableSortState;
   /** Optional setState for sort (enables click-to-sort on sortKey columns) */
   setBody?: React.Dispatch<React.SetStateAction<TableSortState>>;
   /** Empty message when data is empty and not loading */

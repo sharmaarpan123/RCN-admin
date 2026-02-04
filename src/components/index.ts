@@ -6,6 +6,8 @@ export { default as Modal } from './Modal';
 export { default as CustomReactSelect, optionsFromStrings } from './CustomReactSelect';
 export { default as PhoneInputField } from './PhoneInputField';
 export type { PhoneInputFieldProps } from './PhoneInputField';
+export { DebouncedInput } from './DebouncedInput';
+export type { DebouncedInputProps } from './DebouncedInput';
 export { default as Autocomplete } from './Autocomplete';
 export type { AutocompleteProps, AddressResult } from './Autocomplete';
 export { TableLayout, TableActions } from './Table';
