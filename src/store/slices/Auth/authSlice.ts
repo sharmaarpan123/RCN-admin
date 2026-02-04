@@ -1,21 +1,53 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-interface User {
+
+interface OrganizationLocation {
+  type: string;
+  coordinates: number[];
+}
+interface OrganizationId {
+  _id: string;
   name: string;
+  email: string;
+  dial_code: string;
+  phone_number: string;
+  ein_number: string;
+  street: string;
+  location: OrganizationLocation;
+  city: string;
+  state: string;
+  country: string;
+  zip_code: string;
+  branches: unknown[];
+  users: unknown[];
+}
+
+export interface OrganizationUserType {
+  _id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  dial_code: string;
+  phone_number: string;
+  role_id: number;
+  organization_id: OrganizationId;
+  status: number;
+  device_token: string | null;
+  device_type: string | null;
 }
 
 interface authSliceState {
-  adminUser: User | null;  // user data
-  orgAdminUser: User | null;  // user data
-  staffUser: User | null;  // user data
+  loginOrgUser: OrganizationUserType | null;
   error: string | null;
+  token: string | null;
+  role: string | null;
   status: "idle" | "loading" | "success" | "error";
 }
 
 const initialState: authSliceState = {
-  adminUser: null,
-  orgAdminUser: null,
-  staffUser: null,
+  loginOrgUser: null,
+  token: null,
+  role: null,
   error: "",
   status: "idle",
 };
@@ -25,16 +57,16 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     loginSuccess(state, action) {
-      localStorage.setItem("authToken", action.payload.accessToken);
-      localStorage.setItem("role", action.payload.role);
-      document.cookie = `authorization=${action.payload.accessToken}; path=/;`;
-      document.cookie = `role=${action.payload.role}; path=/;`;
+      state.token = action.payload.token;
+      state.role = action.payload.role;
+      state.loginOrgUser = action.payload.organization;
     },
     logoutSuccess(state) {
       localStorage.removeItem("authToken");
       localStorage.removeItem("role");
       document.cookie = "authorization=; path=/;";
       document.cookie = "role=; path=/;";
+      state.loginOrgUser = null;
     },
   },
 

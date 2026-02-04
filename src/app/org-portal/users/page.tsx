@@ -72,7 +72,6 @@ export default function OrgPortalUsersPage() {
             placeholder="Search name or email…"
             className="flex-1 min-w-[140px] sm:flex-initial sm:w-48 px-2.5 py-2 text-sm rounded-xl border border-rcn-border bg-white focus:outline-none focus:ring-2 focus:ring-rcn-accent/30"
           />
-          <Button variant="secondary" size="sm" onClick={resetDemo}>Reset Demo</Button>
           <CustomNextLink href="/org-portal/users/add" variant="primary" size="sm">+ Add User</CustomNextLink>
         </div>
       </div>
