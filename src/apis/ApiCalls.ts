@@ -32,3 +32,12 @@ export const createOrganizationBranchApi = (body: { name: string }) =>
 
 export const updateOrganizationBranchApi = (branchId: string, body: { name: string }) =>
   AxiosInstance.put(`/api/organization/branch/${branchId}`, body);
+
+export const getOrganizationDepartmentsApi = (params: { branch_id: string }) =>
+  AxiosInstance.get("/api/organization/department", { params });
+
+export const createOrganizationDepartmentApi = (body: { name: string; branch_id: string }) =>
+  AxiosInstance.post("/api/organization/department", body);
+
+export const updateOrganizationDepartmentApi = (departmentId: string, body: { name: string; branch_id: string }) =>
+  AxiosInstance.put(`/api/organization/department/${departmentId}`, body);

@@ -1,95 +1,122 @@
 "use client";
 
-import { Button, Modal, TableLayout } from "@/components";
-import { useState } from "react";
+import { getOrganizationBranchesApi, getOrganizationDepartmentsApi } from "@/apis/ApiCalls";
 import type { TableColumn } from "@/components";
-import { toastSuccess } from "@/utils/toast";
-import { MOCK_ORG, uid, type Dept, type Branch } from "../mockData";
+import { Button, TableLayout, DebouncedInput } from "@/components";
+import { DepartmentModal } from "@/components/OrgComponent/Department";
+import { checkResponse } from "@/utils/commonFunc";
+import defaultQueryKeys from "@/utils/orgQueryKeys";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState, useMemo } from "react";
 
-type DeptRow = Dept & { branchName?: string };
+interface Branch {
+  _id: string;
+  name: string;
+  department_count?: number;
+}
+
+interface Department {
+  _id: string;
+  name: string;
+  branch_id?: string;
+}
+
+type DeptRow = Department & { branchName?: string };
+
+const BRANCHES_QUERY_KEY = defaultQueryKeys.branchList;
+const DEPARTMENTS_QUERY_KEY = defaultQueryKeys.departmentList;
 
 export default function OrgPortalDepartmentsPage() {
-  const [branches, setBranches] = useState<Branch[]>(MOCK_ORG.branches);
   const [branchFilter, setBranchFilter] = useState<string>("");
+  const [body, setBody] = useState<{ search: string }>({ search: "" });
   const [modal, setModal] = useState<
-    | { mode: "add"; branchId: string }
-    | { mode: "edit"; branchId: string; deptId: string; name: string }
+    | { mode: "add" }
+    | { mode: "edit"; departmentId: string; name: string }
     | null
   >(null);
-  const [name, setName] = useState("");
-  const [search, setSearch] = useState("");
+  const queryClient = useQueryClient();
 
-  const addDepartment = (branchId: string, name: string) => {
-    const n = (name || "").trim();
-    if (!n) return;
-    setBranches((prev) =>
-      prev.map((b) =>
-        b.id === branchId ? { ...b, departments: [...(b.departments || []), { id: uid("dp"), name: n }] } : b
-      )
-    );
-    toastSuccess("Department created. Department added.");
-  };
+  const { data: branchesData } = useQuery({
+    queryKey: [...BRANCHES_QUERY_KEY, ""],
+    queryFn: async () => {
+      try {
+        const res = await getOrganizationBranchesApi({ search: "" });
+        if (!checkResponse({ res })) return [];
+        return res.data;
+      } catch {
+        return [];
+      }
+    },
+  });
 
-  const renameDepartment = (branchId: string, deptId: string, name: string) => {
-    const n = (name || "").trim();
-    if (!n) return;
-    setBranches((prev) =>
-      prev.map((b) =>
-        b.id === branchId
-          ? { ...b, departments: (b.departments || []).map((dp) => (dp.id === deptId ? { ...dp, name: n } : dp)) }
-          : b
-      )
-    );
-    toastSuccess("Department updated. Department renamed.");
-  };
+  const branches: Branch[] = branchesData?.data ?? [];
+  const branchId = branchFilter || branches[0]?._id || "";
 
-  const findBranch = (id: string) => branches.find((b) => b.id === id) || null;
+  const { data: deptApiData, isLoading } = useQuery({
+    queryKey: [...DEPARTMENTS_QUERY_KEY, branchId],
+    queryFn: async () => {
+      if (!branchId) return { data: [] };
+      try {
+        const res = await getOrganizationDepartmentsApi({ branch_id: branchId });
+        if (!checkResponse({ res })) return { data: [] };
+        return res.data;
+      } catch {
+        return { data: [] };
+      }
+    },
+    enabled: !!branchId,
+  });
 
-  const branchId = branchFilter || branches[0]?.id || "";
-  const br = findBranch(branchId);
-  const depts = br?.departments ?? [];
-  const data: DeptRow[] = depts.map((dp) => ({ ...dp, branchName: br?.name }));
-  const searchLower = search.trim().toLowerCase();
+  const br = branches.find((b: Branch) => b._id === branchId) ?? null;
+  const data: DeptRow[] = useMemo(() => {
+    const list = deptApiData?.data ?? [];
+    const branchName = br?.name;
+    return list.map((dp: Department) => ({ ...dp, branchName }));
+  }, [deptApiData?.data, br?.name]);
+
+  const searchLower = body.search.trim().toLowerCase();
   const filteredData = searchLower
     ? data.filter(
         (row) =>
           (row.name ?? "").toLowerCase().includes(searchLower) ||
-          (row.id ?? "").toLowerCase().includes(searchLower) ||
+          (row._id ?? "").toLowerCase().includes(searchLower) ||
           (row.branchName ?? "").toLowerCase().includes(searchLower)
       )
     : data;
 
   const emptyMessage = !br
     ? "No branches yet. Create a branch first."
-    : search.trim()
+    : body.search.trim()
       ? "No departments match your search."
-      : "No departments in this branch. Click \"+ Add Department\" to create one.";
+      : 'No departments in this branch. Click "+ Add Department" to create one.';
 
   const openAdd = () => {
     if (!br) return;
-    setName("");
-    setModal({ mode: "add", branchId: br.id });
+    setModal({ mode: "add" });
   };
 
-  const openEdit = (bId: string, dId: string, currentName: string) => {
-    setName(currentName);
-    setModal({ mode: "edit", branchId: bId, deptId: dId, name: currentName });
+  const openEdit = (departmentId: string, name: string) => {
+    setModal({ mode: "edit", departmentId, name });
   };
 
-  const handleSave = () => {
-    const n = name.trim();
-    if (!n) return;
-    if (modal?.mode === "add") {
-      addDepartment(modal.branchId, n);
-    } else if (modal?.mode === "edit") {
-      renameDepartment(modal.branchId, modal.deptId, n);
-    }
+  const handleDepartmentSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: [...DEPARTMENTS_QUERY_KEY] });
     setModal(null);
   };
 
   const columns: TableColumn<DeptRow>[] = [
-    { head: "Name", accessor: "name", component: (row) => <span className="font-medium">{row.name}</span> },
-    { head: "Branch", accessor: "branchName", component: (row) => <span className="text-rcn-muted">{row.branchName ?? "—"}</span> },
+    {
+      head: "Name",
+      accessor: "name",
+      component: (row) => <span className="font-medium">{row.name}</span>,
+    },
+    {
+      head: "Branch",
+      accessor: "branchName",
+      component: (row) => (
+        <span className="text-rcn-muted">{row.branchName ?? "—"}</span>
+      ),
+    },
     {
       head: "Actions",
       thClassName: "text-right",
@@ -100,7 +127,7 @@ export default function OrgPortalDepartmentsPage() {
           size="sm"
           onClick={(e) => {
             e.stopPropagation();
-            if (br) openEdit(br.id, row.id, row.name);
+            openEdit(row._id, row.name);
           }}
         >
           Edit
@@ -114,7 +141,9 @@ export default function OrgPortalDepartmentsPage() {
       <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
         <div className="min-w-0">
           <h1 className="text-xl font-bold m-0">Department</h1>
-          <p className="text-sm text-rcn-muted m-0 mt-0.5">Create and manage departments under a branch.</p>
+          <p className="text-sm text-rcn-muted m-0 mt-0.5">
+            Create and manage departments under a branch.
+          </p>
         </div>
         <div className="flex gap-2 items-end flex-wrap">
           <div className="w-full sm:w-auto min-w-0">
@@ -125,11 +154,20 @@ export default function OrgPortalDepartmentsPage() {
               className="w-full sm:w-auto min-w-0 px-2.5 py-2 text-sm rounded-xl border border-rcn-border bg-white focus:outline-none focus:ring-2 focus:ring-rcn-accent/30"
             >
               {branches.map((b) => (
-                <option key={b.id} value={b.id}>{b.name}</option>
+                <option key={b._id} value={b._id}>
+                  {b.name}
+                </option>
               ))}
             </select>
           </div>
-          <Button variant="primary" size="md" onClick={openAdd} disabled={!br}>+ Add Department</Button>
+          <Button
+            variant="primary"
+            size="md"
+            onClick={openAdd}
+            disabled={!br}
+          >
+            + Add Department
+          </Button>
         </div>
       </div>
 
@@ -137,65 +175,52 @@ export default function OrgPortalDepartmentsPage() {
         <div className="p-4">
           <div className="flex flex-col sm:flex-row gap-2 mb-3">
             <div className="flex-1 min-w-0">
-              <label className="sr-only" htmlFor="dept-search">Search departments</label>
-              <input
+              <label className="sr-only" htmlFor="dept-search">
+                Search departments
+              </label>
+              <DebouncedInput
                 id="dept-search"
-                type="search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                value={body.search}
+                onChange={(value) => setBody((prev) => ({ ...prev, search: value }))}
                 placeholder="Search by name, ID, or branch"
-                className="w-full px-2.5 py-2 text-sm rounded-xl border border-rcn-border bg-white focus:outline-none focus:ring-2 focus:ring-rcn-accent/30"
+                debounceMs={300}
               />
             </div>
-            {search && (
-              <Button variant="secondary" size="sm" onClick={() => setSearch("")}>
+            {body.search ? (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setBody((prev) => ({ ...prev, search: "" }))}
+              >
                 Clear
               </Button>
-            )}
+            ) : null}
           </div>
           <div className="border border-rcn-border rounded-xl overflow-hidden">
             <TableLayout<DeptRow>
               columns={columns}
               data={filteredData}
+              body={body}
+              setBody={(patch) => setBody((prev) => ({ ...prev, ...patch }))}
               emptyMessage={emptyMessage}
+              loader={isLoading}
               wrapperClassName="min-w-[260px]"
-              getRowKey={(row) => row.id}
+              getRowKey={(row) => row._id}
             />
           </div>
         </div>
       </div>
 
-      <Modal isOpen={!!modal} onClose={() => setModal(null)} maxWidth="420px">
-        <div className="p-4">
-          <h3 className="font-bold m-0">{modal?.mode === "add" ? "Add Department" : "Edit Department"}</h3>
-          {modal?.mode === "add" && (
-            <>
-              <label className="block text-xs text-rcn-muted mt-3 mb-1.5">Branch</label>
-              <select
-                value={modal.branchId}
-                onChange={(e) => setModal({ mode: "add", branchId: e.target.value })}
-                className="w-full px-2.5 py-2 text-sm rounded-xl border border-rcn-border bg-white focus:outline-none focus:ring-2 focus:ring-rcn-accent/30 mb-2"
-              >
-                {branches.map((b) => (
-                  <option key={b.id} value={b.id}>{b.name}</option>
-                ))}
-              </select>
-            </>
-          )}
-          <label className="block text-xs text-rcn-muted mt-2 mb-1.5">Name</label>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Department name"
-            className="w-full px-2.5 py-2 text-sm rounded-xl border border-rcn-border bg-white focus:outline-none focus:ring-2 focus:ring-rcn-accent/30"
-          />
-          <div className="flex gap-2 mt-4 justify-end">
-            <Button variant="secondary" size="sm" onClick={() => setModal(null)}>Cancel</Button>
-            <Button variant="primary" size="sm" onClick={handleSave}>Save</Button>
-          </div>
-        </div>
-      </Modal>
-
+      <DepartmentModal
+        isOpen={!!modal}
+        onClose={() => setModal(null)}
+        mode={modal?.mode ?? "add"}
+        branchId={modal?.mode === "add" ? branchId : undefined}
+        departmentId={modal?.mode === "edit" ? modal.departmentId : undefined}
+        initialName={modal?.mode === "edit" ? modal.name : ""}
+        branches={branches}
+        onSuccess={handleDepartmentSuccess}
+      />
     </div>
   );
 }

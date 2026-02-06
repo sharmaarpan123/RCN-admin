@@ -56,23 +56,7 @@ export default function Header() {
               </div>
             </NextLink>
 
-            <nav className="hidden md:flex items-center gap-4.5" aria-label="Site">
-              <a href="#features" className="no-underline text-rcn-muted text-sm font-[650] px-2 py-2.5 rounded-[10px] hover:text-rcn-text hover:bg-[rgba(255,255,255,0.75)]">
-                Features
-              </a>
-              <a href="#how-it-works" className="no-underline text-rcn-muted text-sm font-[650] px-2 py-2.5 rounded-[10px] hover:text-rcn-text hover:bg-[rgba(255,255,255,0.75)]">
-                How it works
-              </a>
-              <a href="#security" className="no-underline text-rcn-muted text-sm font-[650] px-2 py-2.5 rounded-[10px] hover:text-rcn-text hover:bg-[rgba(255,255,255,0.75)]">
-                Security
-              </a>
-              <a href="#faq" className="no-underline text-rcn-muted text-sm font-[650] px-2 py-2.5 rounded-[10px] hover:text-rcn-text hover:bg-[rgba(255,255,255,0.75)]">
-                FAQ
-              </a>
-              <a href="#contact" className="no-underline text-rcn-muted text-sm font-[650] px-2 py-2.5 rounded-[10px] hover:text-rcn-text hover:bg-[rgba(255,255,255,0.75)]">
-                Contact
-              </a>
-            </nav>
+           
 
             <div className="flex gap-2.5 items-center">
             {/* <div className="hidden md:inline-flex gap-2.5 items-center"> */}
