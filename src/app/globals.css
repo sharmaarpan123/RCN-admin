@@ -83,14 +83,13 @@ select option {
   border-radius: 18px !important;
 }
 
-.rc-pagination {
-  .rc-pagination-item {
-    @apply bg-rcn-bg text-rcn-text;
-  }
-  .rc-pagination-item-active {
-    @apply bg-rcn-accent text-rcn-bg;
-  }
-  /* .rc-pagination-item-active {
-    @apply text-white;
-  } */
+
+.rc-pagination-item-active a {
+  color: white !important;
+  background-color: var(--color-rcn-accent) !important;
+}
+
+.rc-pagination-item:hover a {
+  background-color: #1f7a4b !important;
+  color: white !important;
 }

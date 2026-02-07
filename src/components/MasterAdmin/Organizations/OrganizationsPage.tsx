@@ -2,10 +2,10 @@
 
 import { getAdminOrganizationsApi } from "@/apis/ApiCalls";
 import Button from "@/components/Button";
-import { TableColumn } from "@/components/Table";
 import defaultQueryKeys from "@/utils/adminQueryKeys";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import adminOrgTableColumns from "./columns";
 import { MOCK_BRANCHES, MOCK_DEPARTMENTS, MOCK_ORG_USERS } from "./mockData";
 import { OrganizationsTable } from "./OrganizationsTable";
 import { OrgBranchesTab } from "./OrgBranchesTab";
@@ -13,7 +13,7 @@ import { OrgDeptsTab } from "./OrgDeptsTab";
 import { OrgModalContent } from "./OrgModal";
 import { OrgProfileTab } from "./OrgProfileTab";
 import { OrgUsersTab } from "./OrgUsersTab";
-import { BTN_SMALL_CLASS, type AdminOrganizationListItem, type OrgTableRow, type OrgUserRow } from "./types";
+import { AdminOrgModal, type AdminOrganizationListItem, type OrgUserRow } from "./types";
 import { useOrgBranchList, type BranchRecord } from "./useOrgBranchList";
 import { useOrgDeptList, type DeptRecord } from "./useOrgDeptList";
 import { useOrgUserList, type UserRecord } from "./useOrgUserList";
@@ -42,14 +42,14 @@ export function OrganizationsPage() {
   });
 
 
-  const [orgModal, setOrgModal] = useState<{ isOpen: boolean; mode: string; editId?: string | null }>({ isOpen: false, mode: "add", editId: null });
+  const [orgModal, setOrgModal] = useState<AdminOrgModal>({ isOpen: false, mode: "add", editId: null });
 
   const [branches, setBranches] = useState<BranchRecord[]>(MOCK_BRANCHES as BranchRecord[]);
   const [depts, setDepts] = useState<DeptRecord[]>(MOCK_DEPARTMENTS as DeptRecord[]);
   const [users, setUsers] = useState<UserRecord[]>(MOCK_ORG_USERS as UserRecord[]);
 
   const { data: orgsResponse, isLoading: orgsLoading, error: orgsError } = useQuery({
-    queryKey: [...defaultQueryKeys.organizationsList],
+    queryKey: [...defaultQueryKeys.organizationsList, orgListBody.page, orgListBody.search],
     queryFn: async () => {
       const res = await getAdminOrganizationsApi();
       return res.data as AdminOrganizationsApiResponse;
@@ -81,61 +81,6 @@ export function OrganizationsPage() {
   const openModal = (content: React.ReactNode) => setModalContent(content);
   const closeModal = () => setModalContent(null);
   const modal = { openModal, closeModal };
-
-
-
-
-  const orgTableColumns: TableColumn<OrgTableRow>[] = [
-    {
-      head: "Name",
-      component: (row) => (
-        <>
-          <b>{row.organization?.name ?? "—"}</b>
-          <div className="text-rcn-muted">{row.organization?.email ?? "—"}</div>
-        </>
-      ),
-    },
-    { head: "State", component: (row) => row.organization?.state ?? "—" },
-    { head: "Zip", component: (row) => <span className="font-mono">{row.organization?.zip_code ?? "—"}</span> },
-    { head: "City", component: (row) => row.organization?.city ?? "—" },
-    { head: "Street", component: (row) => row.organization?.street ?? "—" },
-    {
-      head: "Enabled",
-      component: (row) =>
-        row.status === 1 ? (
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">
-            Enabled
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#f3b8b8] bg-[#fff1f2] text-[#991b1b]">
-            Disabled
-          </span>
-        ),
-    },
-    {
-      head: "Actions",
-      component: (row) => (
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              setSelectedOrgId(row.organization?._id ?? row.organization_id);
-              setActiveTab("branches");
-              setTimeout(() => {
-                document.getElementById("org-modules-card")?.scrollIntoView({ behavior: "smooth", block: "start" });
-              }, 100);
-            }}
-            className={BTN_SMALL_CLASS}
-          >
-            Manage
-          </button>
-          <button type="button" onClick={() => setOrgModal(prev => ({ ...prev, isOpen: true, mode: "edit", editId: row.organization?._id ?? row.organization_id }))} className={BTN_SMALL_CLASS}>
-            Edit
-          </button>
-        </div>
-      ),
-    },
-  ];
 
   const {
     branchSearch,
@@ -237,10 +182,11 @@ export function OrganizationsPage() {
       />
 
       <OrganizationsTable
+        isLoading={orgsLoading}
         body={orgListBody}
         setBody={setOrgListBody}
         data={orgsList}
-        columns={orgTableColumns}
+        columns={adminOrgTableColumns({ setSelectedOrgId, setActiveTab, setOrgModal })}
         onNewOrg={() => setOrgModal(prev => ({ ...prev, isOpen: true, mode: "add" }))}
       />
 

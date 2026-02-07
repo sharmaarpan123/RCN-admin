@@ -60,6 +60,12 @@ export type DeptTableRow = {
 
 export type OrgModulesTab = "profile" | "branches" | "depts" | "users";
 
+export type AdminOrgModal = {
+  isOpen: boolean;
+  mode: string;
+  editId?: string | null;
+};
+
 /** Shared style classes for forms and buttons */
 export const INPUT_CLASS =
   "w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white text-sm outline-none focus:border-[#b9d7c5] focus:shadow-[0_0_0_3px_rgba(31,122,75,0.12)]";

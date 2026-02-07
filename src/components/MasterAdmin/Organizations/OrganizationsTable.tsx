@@ -1,18 +1,17 @@
 "use client";
 
-import React from "react";
-import { TableLayout } from "@/components";
-import { US_STATES } from "@/utils/database";
-import { INPUT_CLASS, BTN_PRIMARY_CLASS } from "./types";
-import type { OrgTableRow } from "./types";
 import type { TableColumn } from "@/components";
+import { DebouncedInput, TableLayout } from "@/components";
 import CustomPagination from "@/components/CustomPagination";
+import type { OrgTableRow } from "./types";
+import { BTN_PRIMARY_CLASS, INPUT_CLASS } from "./types";
 interface OrganizationsTableProps {
   body: {
     page: number;
     limit: number;
     search: string;
   };
+  isLoading: boolean;
   setBody: (v: { page: number; limit: number; search: string }) => void;
   data: OrgTableRow[];
   columns: TableColumn<OrgTableRow>[];
@@ -21,10 +20,10 @@ interface OrganizationsTableProps {
 
 export function OrganizationsTable({
   body,
+  isLoading,
   setBody,
   columns,
   data,
-
   onNewOrg,
 }: OrganizationsTableProps) {
   return (
@@ -44,10 +43,11 @@ export function OrganizationsTable({
       <div className="flex flex-wrap gap-2.5 items-end mt-3">
         <div className="flex flex-col gap-1.5 min-w-[260px] flex-1">
           <label className="text-xs text-rcn-muted">Search (Name or Location)</label>
-          <input
+
+          <DebouncedInput
             placeholder="Name, street, city, state, zip"
             value={body.search}
-            onChange={(e) => setBody({ ...body, search: e.target.value })}
+            onChange={(value) => setBody({ ...body, search: value })}
             className={INPUT_CLASS}
           />
         </div>
@@ -59,6 +59,7 @@ export function OrganizationsTable({
         <TableLayout<OrgTableRow>
           columns={columns}
           data={data}
+          loader={isLoading}
           variant="bordered"
           size="sm"
           emptyMessage="No organizations found."

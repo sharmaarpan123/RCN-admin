@@ -216,6 +216,7 @@ function buildUpdatePayload(data: OrgFormValues): unknown {
 }
 
 export type OrgModalOrg = {
+  _id: string;
   name?: string;
   phone?: string;
   email?: string;
@@ -238,7 +239,6 @@ export type OrgModalOrg = {
 };
 
 export interface OrgModalContentProps {
-  org?: OrgModalOrg | null;
   isOpen: boolean;
   orgId?: string;
   onClose: () => void;
@@ -259,6 +259,7 @@ function mapApiResponseToOrgModalOrg(raw: Record<string, unknown>): OrgModalOrg 
     || str(contact.phone_number)
     : "";
   return {
+    _id: str(org._id),
     name: str(org.name),
     email: str(org.email),
     phone: phone || str(org.phone),
@@ -313,24 +314,29 @@ export function OrgModalContent({
   orgId,
   isOpen,
   onClose,
+
   onDelete,
 }: OrgModalContentProps) {
   const queryClient = useQueryClient();
   const isEdit = Boolean(orgId);
 
-  console.log(orgId, "orgId")
 
+
+
+  // api is not working, so we are using the org from the props till it is fixed
   const { data: orgResponse, isLoading: orgLoading, error: orgError } = useQuery({
     queryKey: [...defaultQueryKeys.organizationDetail, orgId],
     queryFn: async () => {
       if (!orgId) return null;
       const res = await getAdminOrganizationApi(orgId);
-      const payload = res.data as { data?: unknown } | undefined;
+      const payload = res.data;
       const raw = payload?.data ?? res.data;
-      return raw as Record<string, unknown>;
+      return raw as OrgModalOrg;
     },
     enabled: isEdit && !!orgId,
   });
+
+  // const orgResponse = org;
 
   const fetchedOrg = useMemo((): OrgModalOrg | null => {
     if (!isEdit || !orgResponse) return null;
@@ -393,7 +399,7 @@ export function OrgModalContent({
   const onSubmit = (data: OrgFormValues) => {
     if (isEdit && orgId) {
       updateMutation.mutate({
-        organizationId: orgId,
+        organizationId: orgResponse?._id ?? "",
         payload: buildUpdatePayload(data),
       });
     } else {
