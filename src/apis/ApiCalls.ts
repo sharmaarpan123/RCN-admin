@@ -25,7 +25,10 @@ export const updateOrganizationUserApi = (userId: string, body: unknown) =>
   AxiosInstance.put(`/api/organization/user/${userId}`, body);
 
 export const getOrganizationBranchesApi = (body: unknown) =>
-  AxiosInstance.get("/api/organization/branch" , { params: body });
+  AxiosInstance.get("/api/organization/branch", { params: body });
+
+export const getOrganizationBranchApi = (branchId: string) =>
+  AxiosInstance.get(`/api/organization/branch/${branchId}`);
 
 export const createOrganizationBranchApi = (body: { name: string }) =>
   AxiosInstance.post(`/api/organization/branch`, body);
@@ -35,6 +38,9 @@ export const updateOrganizationBranchApi = (branchId: string, body: { name: stri
 
 export const getOrganizationDepartmentsApi = (params: { branch_id: string }) =>
   AxiosInstance.get("/api/organization/department", { params });
+
+export const getOrganizationDepartmentApi = (departmentId: string) =>
+  AxiosInstance.get(`/api/organization/department/${departmentId}`);
 
 export const createOrganizationDepartmentApi = (body: { name: string; branch_id: string }) =>
   AxiosInstance.post("/api/organization/department", body);

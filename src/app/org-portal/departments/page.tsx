@@ -31,7 +31,7 @@ export default function OrgPortalDepartmentsPage() {
   const [body, setBody] = useState<{ search: string }>({ search: "" });
   const [modal, setModal] = useState<
     | { mode: "add" }
-    | { mode: "edit"; departmentId: string; name: string }
+    | { mode: "edit"; departmentId: string; }
     | null
   >(null);
   const queryClient = useQueryClient();
@@ -77,11 +77,11 @@ export default function OrgPortalDepartmentsPage() {
   const searchLower = body.search.trim().toLowerCase();
   const filteredData = searchLower
     ? data.filter(
-        (row) =>
-          (row.name ?? "").toLowerCase().includes(searchLower) ||
-          (row._id ?? "").toLowerCase().includes(searchLower) ||
-          (row.branchName ?? "").toLowerCase().includes(searchLower)
-      )
+      (row) =>
+        (row.name ?? "").toLowerCase().includes(searchLower) ||
+        (row._id ?? "").toLowerCase().includes(searchLower) ||
+        (row.branchName ?? "").toLowerCase().includes(searchLower)
+    )
     : data;
 
   const emptyMessage = !br
@@ -95,8 +95,8 @@ export default function OrgPortalDepartmentsPage() {
     setModal({ mode: "add" });
   };
 
-  const openEdit = (departmentId: string, name: string) => {
-    setModal({ mode: "edit", departmentId, name });
+  const openEdit = (departmentId: string) => {
+    setModal({ mode: "edit", departmentId });
   };
 
   const handleDepartmentSuccess = () => {
@@ -127,7 +127,7 @@ export default function OrgPortalDepartmentsPage() {
           size="sm"
           onClick={(e) => {
             e.stopPropagation();
-            openEdit(row._id, row.name);
+            openEdit(row._id);
           }}
         >
           Edit
@@ -215,9 +215,7 @@ export default function OrgPortalDepartmentsPage() {
         isOpen={!!modal}
         onClose={() => setModal(null)}
         mode={modal?.mode ?? "add"}
-        branchId={modal?.mode === "add" ? branchId : undefined}
         departmentId={modal?.mode === "edit" ? modal.departmentId : undefined}
-        initialName={modal?.mode === "edit" ? modal.name : ""}
         branches={branches}
         onSuccess={handleDepartmentSuccess}
       />

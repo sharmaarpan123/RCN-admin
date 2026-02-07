@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
 import {
+  AVAILABLE_SERVICES,
   AddReceiverModal,
   AdditionalDetailsSection,
   AttachmentsSection,
+  DEMO_RECEIVERS,
   FormActionsSection,
   InsuranceInfoSection,
   NewReferralNav,
@@ -14,11 +15,10 @@ import {
   SenderFormHeader,
   SenderInfoSection,
   ServicesRequestedSection,
-  AVAILABLE_SERVICES,
-  DEMO_RECEIVERS,
   type InsuranceBlock,
   type Receiver,
 } from "@/components/staffComponents/newReferral";
+import { useEffect, useState } from "react";
 
 const SECTION_IDS = [
   "sender-form",

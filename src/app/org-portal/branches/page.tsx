@@ -127,7 +127,6 @@ export default function OrgPortalBranchesPage() {
         onClose={() => setModal(null)}
         mode={modal?.mode ?? "add"}
         branchId={modal?.mode === "edit" ? modal.id : undefined}
-        initialName={modal?.mode === "edit" ? modal.name : ""}
         onSuccess={handleBranchAddUpdateSuccess}
       />
     </div>
