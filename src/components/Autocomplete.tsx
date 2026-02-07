@@ -161,10 +161,10 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
       <GoogleAutocomplete
         onLoad={handleLoad}
         onPlaceChanged={handlePlaceChanged}
-        options={{
-          types: ["address"],
-          fields: ["address_components", "formatted_address", "geometry"],
-        }}
+        // options={{
+        //   types: ["address"],
+        //   fields: ["address_components", "formatted_address", "geometry"],
+        // }}
       >
         <input
           id={id}

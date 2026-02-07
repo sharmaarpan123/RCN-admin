@@ -3,14 +3,45 @@
 import { getAuthProfileApi } from "@/apis/ApiCalls";
 import type { AddressResult } from "@/components";
 import { Autocomplete, Button, PhoneInputField } from "@/components";
-import { checkResponse } from "@/utils/commonFunc";
+import { checkResponse, isValidEmail } from "@/utils/commonFunc";
 import { toastSuccess } from "@/utils/toast";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
 import * as yup from "yup";
-import { isValidEmail, type Org, type OrgAddress, type OrgContact } from "../mockData";
+import type { AuthProfileData } from "../types/profile";
+
+/** Organization address (form + API shape for this page). */
+export interface OrgAddress {
+  street: string;
+  apt: string;
+  city: string;
+  state: string;
+  zip: string;
+  lat?: number;
+  lng?: number;
+}
+
+/** Organization contact person (form shape for this page). */
+export interface OrgContact {
+  firstName: string;
+  lastName: string;
+  email: string;
+  tel: string;
+  fax: string;
+}
+
+/** Organization (form + mapped profile shape for this page). */
+export interface Org {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  ein: string;
+  address: OrgAddress;
+  contact: OrgContact;
+}
 
 const DEF_ADDR: OrgAddress = { street: "", apt: "", city: "", state: "", zip: "" };
 const DEF_CONTACT: OrgContact = { firstName: "", lastName: "", email: "", tel: "", fax: "" };
@@ -32,7 +63,9 @@ const orgSettingsSchema = yup.object({
     zip: yup
       .string()
       .trim()
-      .required("Zip is required.")
+      .required("Zip is required."),
+    lat: yup.number().required("Please select an address from the suggested dropdown."),
+    lng: yup.number().required("Please select an address from the suggested dropdown."),
   }),
   contact: yup.object({
     firstName: yup.string().trim().default(""),
@@ -60,14 +93,15 @@ const DEFAULT_ORG: Org = {
 };
 
 /** Maps GET /api/auth/profile response (data = user + organization) to Org shape. */
-function mapProfileToOrg(payload: Record<string, unknown> | null | undefined): Org {
-  if (!payload || typeof payload !== "object") return DEFAULT_ORG;
-  const org = (payload.organization as Record<string, unknown>) ?? {};
-  const user = payload; // logged-in user as contact person
+function mapProfileToOrg(payload: AuthProfileData | null | undefined): Org {
+  if (!payload?.organization) return DEFAULT_ORG;
+  const org = payload.organization;
+  const user = payload;
   const str = (v: unknown) => ((v ?? "") as string).toString().trim();
-  const dial = str(org.dial_code ?? payload.dial_code);
-  const phoneNum = str(org.phone_number ?? payload.phone_number);
-  const orgPhone = [dial, phoneNum].filter(Boolean).join(" ").trim() || str(org.phone) || str(payload.phone);
+  const coords = org.location?.coordinates;
+  const lat = coords != null && coords[1] != null ? Number(coords[1]) : null;
+  const lng = coords != null && coords[0] != null ? Number(coords[0]) : null;
+  const orgPhone = [org.dial_code, org.phone_number].filter(Boolean).map(String).join(" ").trim() || str(org.phone_number);
 
   return {
     id: str(org._id),
@@ -77,23 +111,22 @@ function mapProfileToOrg(payload: Record<string, unknown> | null | undefined): O
     ein: str(org.ein_number),
     address: {
       street: str(org.street),
-      apt: str((org as Record<string, unknown>).apt ?? (org as Record<string, unknown>).suite),
+      apt: str(org.apt ?? org.suite),
       city: str(org.city),
       state: str(org.state),
       zip: str(org.zip_code),
+      lat: lat ?? undefined,
+      lng: lng ?? undefined,
     },
     contact: {
       firstName: str(user.first_name),
       lastName: str(user.last_name),
       email: str(user.email),
-      tel: [str(user.dial_code), str(user.phone_number)].filter(Boolean).join(" ").trim() || str(user.phone_number),
+      tel: [user.dial_code, user.phone_number].filter(Boolean).map(String).join(" ").trim() || str(user.phone_number),
       fax: str(user.fax_number),
     },
   };
 }
-
-const profileToOrgPayload = (data: unknown): Record<string, unknown> =>
-  typeof data === "object" && data !== null ? (data as Record<string, unknown>) : {};
 
 export default function OrgPortalOrganizationSettingsPage() {
   const { data: profileResponse, isLoading: profileLoading } = useQuery({
@@ -105,11 +138,9 @@ export default function OrgPortalOrganizationSettingsPage() {
     },
   });
 
-  const profileData = profileResponse?.data ?? profileResponse;
-  const initialOrg = useMemo(
-    () => mapProfileToOrg(profileToOrgPayload(profileData)),
-    [profileData]
-  );
+  const profileData: AuthProfileData | undefined =
+    profileResponse?.data ?? (profileResponse as unknown as AuthProfileData | undefined);
+  const initialOrg = useMemo(() => mapProfileToOrg(profileData), [profileData]);
   const formKey = profileData != null ? "profile-loaded" : "profile-loading";
 
   return (
@@ -138,6 +169,8 @@ function orgToFormValues(org: Org): OrgSettingsFormValues {
       city: org.address?.city ?? "",
       state: org.address?.state ?? "",
       zip: org.address?.zip ?? "",
+      lat: org.address?.lat ? Number(org.address.lat) : 0,
+      lng: org.address?.lng ? Number(org.address.lng) : 0,
     },
     contact: {
       firstName: org.contact?.firstName ?? "",
@@ -167,16 +200,21 @@ function OrganizationSettingsForm({
     reset
   } = useForm<OrgSettingsFormValues>({
     defaultValues: formValues,
+
     resolver: yupResolver(orgSettingsSchema),
     values: formValues,
   });
 
   const handleAddressSelect = (address: AddressResult) => {
-    setValue("address.street", address.formatted_address, { shouldValidate: true });
-    setValue("address.city", address.city, { shouldValidate: true });
-    setValue("address.state", address.state, { shouldValidate: true });
-    setValue("address.zip", address.zip_code, { shouldValidate: true });
+    setValue("address.street", address.formatted_address, { shouldValidate: true, shouldDirty: true });
+    setValue("address.city", address.city, { shouldValidate: true, shouldDirty: true });
+    setValue("address.state", address.state, { shouldValidate: true, shouldDirty: true });
+    setValue("address.zip", address.zip_code, { shouldValidate: true, shouldDirty: true });
+    setValue("address.lat", address.latitude ? Number(address.latitude) : 0, { shouldValidate: true, shouldDirty: true });
+    setValue("address.lng", address.longitude ? Number(address.longitude) : 0, { shouldValidate: true, shouldDirty: true });
   };
+
+
 
   const onSubmit = (values: OrgSettingsFormValues) => {
     const updatedOrg: Org = {
@@ -265,32 +303,55 @@ function OrganizationSettingsForm({
                 hasError={!!(errors.address?.street ?? errors.address?.city ?? errors.address?.state ?? errors.address?.zip)}
               />
               <p className="text-xs text-rcn-muted mt-0.5 m-0">Select a suggestion to fill the fields below.</p>
+              {errors?.address?.lat && <p className="text-xs text-rcn-danger mt-1 m-0">{errors?.address?.lat?.message}</p>}
+
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs text-rcn-muted mb-1.5">Street <span className="text-rcn-danger">*</span></label>
-                <input {...register("address.street")} placeholder="e.g., 123 Main St" className={inputClass} />
+                <Controller
+                  name="address.street"
+                  control={control}
+                  render={({ field }) => (
+                    <input {...field} value={field.value ?? ""} placeholder="e.g., 123 Main St" className={inputClass} />
+                  )}
+                />
                 {errors.address?.street && <p className="text-xs text-rcn-danger mt-1 m-0">{errors.address.street.message}</p>}
               </div>
+
               <div>
                 <label className="block text-xs text-rcn-muted mb-1.5">City <span className="text-rcn-danger">*</span></label>
-                <input {...register("address.city")} placeholder="e.g., Chicago" className={inputClass} />
+                <Controller
+                  name="address.city"
+                  control={control}
+                  render={({ field }) => (
+                    <input {...field} value={field.value ?? ""} placeholder="e.g., Chicago" className={inputClass} />
+                  )}
+                />
                 {errors.address?.city && <p className="text-xs text-rcn-danger mt-1 m-0">{errors.address.city.message}</p>}
               </div>
-
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
-
               <div>
                 <label className="block text-xs text-rcn-muted mb-1.5">State <span className="text-rcn-danger">*</span></label>
-
-                <input {...register("address.state")} placeholder="e.g., Chicago" className={inputClass} />
-
+                <Controller
+                  name="address.state"
+                  control={control}
+                  render={({ field }) => (
+                    <input {...field} value={field.value ?? ""} placeholder="e.g., Chicago" className={inputClass} />
+                  )}
+                />
                 {errors.address?.state && <p className="text-xs text-rcn-danger mt-1 m-0">{errors.address.state.message}</p>}
               </div>
               <div>
                 <label className="block text-xs text-rcn-muted mb-1.5">Zip <span className="text-rcn-danger">*</span></label>
-                <input {...register("address.zip")} placeholder="e.g., 60601" inputMode="numeric" className={inputClass} />
+                <Controller
+                  name="address.zip"
+                  control={control}
+                  render={({ field }) => (
+                    <input {...field} value={field.value ?? ""} placeholder="e.g., 60601" inputMode="numeric" className={inputClass} />
+                  )}
+                />
                 {errors.address?.zip && <p className="text-xs text-rcn-danger mt-1 m-0">{errors.address.zip.message}</p>}
               </div>
             </div>

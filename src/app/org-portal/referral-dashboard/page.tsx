@@ -1,10 +1,10 @@
 "use client";
 
-import { Button, Modal, TableLayout } from "@/components";
-import { useState, useMemo } from "react";
 import type { TableColumn } from "@/components";
+import { Button, Modal, TableLayout } from "@/components";
 import { toastSuccess } from "@/utils/toast";
-import { MOCK_ORG, MOCK_REFERRALS_SENT, MOCK_REFERRALS_RECEIVED, uid, type Referral } from "../mockData";
+import { useMemo, useState } from "react";
+import { MOCK_ORG, MOCK_REFERRALS_RECEIVED, MOCK_REFERRALS_SENT, uid, type Referral } from "../mockData";
 
 type InboxRefMode = "sent" | "received";
 
@@ -69,21 +69,21 @@ export default function OrgPortalReferralDashboardPage() {
     () =>
       inboxRefMode === "received"
         ? [
-            { head: "Date", component: (r) => fmtDate(r.date) },
-            { head: "Patient", accessor: "patient" },
-            { head: "DOB", accessor: "dob" },
-            { head: "Service", accessor: "service" },
-            { head: "Sender", accessor: "senderOrg" },
-            { head: "Status", accessor: "status" },
-          ]
+          { head: "Date", component: (r) => fmtDate(r.date) },
+          { head: "Patient", accessor: "patient" },
+          { head: "DOB", accessor: "dob" },
+          { head: "Service", accessor: "service" },
+          { head: "Sender", accessor: "senderOrg" },
+          { head: "Status", accessor: "status" },
+        ]
         : [
-            { head: "Date", component: (r) => fmtDate(r.date) },
-            { head: "Patient", accessor: "patient" },
-            { head: "DOB", accessor: "dob" },
-            { head: "Service", accessor: "service" },
-            { head: "Receiver", accessor: "receiverOrg" },
-            { head: "Status", accessor: "status" },
-          ],
+          { head: "Date", component: (r) => fmtDate(r.date) },
+          { head: "Patient", accessor: "patient" },
+          { head: "DOB", accessor: "dob" },
+          { head: "Service", accessor: "service" },
+          { head: "Receiver", accessor: "receiverOrg" },
+          { head: "Status", accessor: "status" },
+        ],
     [inboxRefMode]
   );
 
@@ -152,7 +152,7 @@ export default function OrgPortalReferralDashboardPage() {
               onRowClick={(r) => setModal({ mode: inboxRefMode, r })}
             />
           </div>
-                 </div>
+        </div>
       </div>
 
       {modal && (

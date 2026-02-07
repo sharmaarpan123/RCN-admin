@@ -3,6 +3,10 @@ import { AxiosResponse } from "axios";
 import React from "react";
 import toast from "react-hot-toast";
 
+/** Returns true if the string looks like a valid email. */
+export const isValidEmail = (v: string): boolean =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((v || "").trim());
+
 // ✅ Helper to read cookies (works in browser)
 export const getCookie = (name: string): string | null => {
 

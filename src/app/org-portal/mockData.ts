@@ -26,6 +26,10 @@ export interface OrgAddress {
   city: string;
   state: string;
   zip: string;
+  /** Latitude from organization location (optional) */
+  lat?: number;
+  /** Longitude from organization location (optional) */
+  lng?: number;
 }
 
 export interface OrgContact {
@@ -116,65 +120,6 @@ export const MOCK_ORG: Org = {
     },
   ],
 };
-
-export const MOCK_USERS: OrgUser[] = [
-  {
-    id: "u-1",
-    firstName: "Mary",
-    lastName: "Johnson",
-    email: "mary.johnson@demo.com",
-    phone: "",
-    role: "Admin",
-    isAdmin: true,
-    isActive: true,
-    notes: "",
-    orgAssigned: true,
-    branchIds: ["br-1", "br-2"],
-    deptIds: ["dp-1", "dp-4"],
-  },
-  {
-    id: "u-2",
-    firstName: "David",
-    lastName: "Chen",
-    email: "david.chen@demo.com",
-    phone: "",
-    role: "User",
-    isAdmin: false,
-    isActive: true,
-    notes: "",
-    orgAssigned: true,
-    branchIds: ["br-2"],
-    deptIds: ["dp-4", "dp-5"],
-  },
-  {
-    id: "u-3",
-    firstName: "Aisha",
-    lastName: "Patel",
-    email: "aisha.patel@demo.com",
-    phone: "",
-    role: "Manager",
-    isAdmin: false,
-    isActive: false,
-    notes: "Inactive — left organization",
-    orgAssigned: true,
-    branchIds: ["br-1"],
-    deptIds: ["dp-2"],
-  },
-  {
-    id: "u-4",
-    firstName: "Unassigned",
-    lastName: "User",
-    email: "unassigned@demo.com",
-    phone: "",
-    role: "User",
-    isAdmin: false,
-    isActive: true,
-    notes: "User exists but not assigned here.",
-    orgAssigned: false,
-    branchIds: [],
-    deptIds: [],
-  },
-];
 
 export const MOCK_REFERRALS_SENT: Referral[] = [];
 export const MOCK_REFERRALS_RECEIVED: Referral[] = [];
