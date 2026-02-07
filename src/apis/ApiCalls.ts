@@ -6,6 +6,9 @@ export const organizationSignupApi = (body: unknown) =>
 export const authLoginApi = (body: unknown) =>
   AxiosInstance.post("/api/auth/login", body);
 
+export const getAuthProfileApi = () =>
+  AxiosInstance.get("/api/auth/profile");
+
 export const organizationLoginApi = (body: unknown) =>
   AxiosInstance.post("/api/organization/login", body);
 

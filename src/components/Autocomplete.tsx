@@ -13,7 +13,7 @@ export interface AddressResult {
   country: string;
   latitude: number | null;
   longitude: number | null;
-  formatted_address?: string;
+  formatted_address: string;
 }
 
 export interface AutocompleteProps {
@@ -56,9 +56,10 @@ function getShortComponent(
 }
 
 function parsePlaceResult(place: google.maps.places.PlaceResult): AddressResult {
+  console.log(place, "place")
   const streetNumber = getComponent(place, "street_number");
   const route = getComponent(place, "route");
-  const street = [streetNumber, route].filter(Boolean).join(" ").trim();
+  const street = [streetNumber, route].filter(Boolean).join(" ").trim() ?? "";
   const suite = getComponent(place, "subpremise");
   const city =
     getComponent(place, "locality") ||
@@ -67,8 +68,13 @@ function parsePlaceResult(place: google.maps.places.PlaceResult): AddressResult 
   const state = getShortComponent(place, "administrative_area_level_1");
   const zip_code = getComponent(place, "postal_code");
   const country = getShortComponent(place, "country") || getComponent(place, "country");
-  const lat = place.geometry?.location?.lat?.();
-  const lng = place.geometry?.location?.lng?.();
+  const lat = place.geometry?.location?.lat?.() ?? null;
+  const lng = place.geometry?.location?.lng?.() ?? null;
+  const formatted =
+    place.formatted_address ??
+    [street, city, state, zip_code, country]
+      .filter(Boolean)
+      .join(", ");
   return {
     street,
     suite,
@@ -78,7 +84,7 @@ function parsePlaceResult(place: google.maps.places.PlaceResult): AddressResult 
     country,
     latitude: lat != null ? lat : null,
     longitude: lng != null ? lng : null,
-    formatted_address: place.formatted_address,
+    formatted_address: formatted,
   };
 }
 
@@ -157,7 +163,7 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
         onPlaceChanged={handlePlaceChanged}
         options={{
           types: ["address"],
-           fields: ["address_components", "formatted_address", "geometry"],
+          fields: ["address_components", "formatted_address", "geometry"],
         }}
       >
         <input

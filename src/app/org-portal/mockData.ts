@@ -56,7 +56,7 @@ export interface Org {
   ein: string;
   address: OrgAddress;
   contact: OrgContact;
-  branches: Branch[];
+  branches?: Branch[];
 }
 
 export interface OrgUser {
