@@ -1,30 +1,31 @@
 /* eslint-disable react-hooks/immutability */
 "use client";
 
-import React, { useRef, useCallback } from "react";
+import {
+  adminLoginApi,
+  adminVerifyOtpApi,
+  authLoginApi,
+  authVerifyOtpApi,
+  organizationLoginApi,
+  organizationVerifyOtpApi,
+} from "@/apis/ApiCalls";
+import { AdminProfileData } from "@/app/master-admin/types/profile";
+import { AuthProfileData } from "@/app/org-portal/types/profile";
+import { loginSuccess } from "@/store/slices/Auth/authSlice";
+import { catchAsync, checkResponse } from "@/utils/commonFunc";
+import { loginRoles } from "@/utils/const";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { useMutation } from "@tanstack/react-query";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import React, { useCallback, useRef } from "react";
 import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
+import { useDispatch } from "react-redux";
 import * as yup from "yup";
-import { useMutation } from "@tanstack/react-query";
 import { toastSuccess } from "../../utils/toast";
 import Button from "../Button";
 import CustomNextLink from "../CustomNextLink";
 import Modal from "../Modal";
-import {
-  authLoginApi,
-  adminLoginApi,
-  organizationLoginApi,
-  authVerifyOtpApi,
-  organizationVerifyOtpApi,
-  adminVerifyOtpApi,
-} from "@/apis/ApiCalls";
-import { catchAsync, checkResponse } from "@/utils/commonFunc";
-import { loginRoles } from "@/utils/const";
-import type { AuthProfileData } from "@/app/org-portal/types/profile";
-import { loginSuccess } from "@/store/slices/Auth/authSlice";
-import { useDispatch } from "react-redux";
 
 export type LoginType = "user" | "org" | "admin";
 
@@ -74,8 +75,6 @@ const Login: React.FC = () => {
     setValue("loginType", type, { shouldValidate: true });
   };
 
-
-
   const closeOtpModal = useCallback(() => {
     setPendingOtp(null);
     setOtpDigits(Array(OTP_LENGTH).fill(""));
@@ -108,6 +107,7 @@ const Login: React.FC = () => {
     mutationFn: catchAsync(
       async ({ pending, otp }: { pending: PendingOtpData; otp: string }) => {
         const { loginType, user_id, redirectTo } = pending;
+        console.log(redirectTo, "redirectTo")
         const body =
           loginType === "admin"
             ? { user_id, otp }
@@ -124,16 +124,24 @@ const Login: React.FC = () => {
               ? await organizationVerifyOtpApi(body)
               : await adminVerifyOtpApi(body);
         if (checkResponse({ res, showSuccess: true })) {
-          const data = res?.data?.data as { accessToken: string; token: string; organization: AuthProfileData };
+          const data = res?.data?.data as {
+            accessToken?: string;
+            token?: string;
+            organization: AuthProfileData;
+            admin: AdminProfileData;
+          };
+          console.log(data, "data")
           const token = data?.accessToken ?? data?.token;
-          const role = loginRoles[data?.organization?.role_id as unknown as keyof typeof loginRoles];
-          if (role === "Organization") {
+          const user = data?.admin || data?.organization;
+          const role = loginRoles[user?.role_id as unknown as keyof typeof loginRoles];
+          if (role === "Organization" || role === "Admin" || role === "Super Admin") {
             localStorage.setItem("authToken", token || "");
             localStorage.setItem("role", role);
             document.cookie = `authorization=${token}; path=/;`;
             document.cookie = `role=${role}; path=/;`;
             dispatch(loginSuccess({ ...data, role }));
-            router.push(redirectTo); closeOtpModal();
+            router.push(redirectTo);
+            closeOtpModal();
           }
         }
       }
