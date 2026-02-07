@@ -1,12 +1,12 @@
 "use client";
 
-import { getOrganizationBranchesApi, getOrganizationDepartmentsApi } from "@/apis/ApiCalls";
+import { getOrganizationBranchesApi, getOrganizationDepartmentsApi, deleteOrganizationDepartmentApi } from "@/apis/ApiCalls";
 import type { TableColumn } from "@/components";
-import { Button, TableLayout, DebouncedInput } from "@/components";
+import { Button, TableLayout, DebouncedInput, TableActions, ConfirmModal } from "@/components";
 import { DepartmentModal } from "@/components/OrgComponent/Department";
-import { checkResponse } from "@/utils/commonFunc";
+import { catchAsync, checkResponse } from "@/utils/commonFunc";
 import defaultQueryKeys from "@/utils/orgQueryKeys";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
 
 interface Branch {
@@ -31,9 +31,10 @@ export default function OrgPortalDepartmentsPage() {
   const [body, setBody] = useState<{ search: string }>({ search: "" });
   const [modal, setModal] = useState<
     | { mode: "add" }
-    | { mode: "edit"; departmentId: string; }
+    | { mode: "edit"; departmentId: string }
     | null
   >(null);
+  const [deleteDept, setDeleteDept] = useState<{ id: string; name: string } | null>(null);
   const queryClient = useQueryClient();
 
   const { data: branchesData } = useQuery({
@@ -104,6 +105,20 @@ export default function OrgPortalDepartmentsPage() {
     setModal(null);
   };
 
+  const { isPending: isDeleting, mutate: deleteDeptMutation } = useMutation({
+    mutationFn: catchAsync(async (departmentId: string) => {
+      const res = await deleteOrganizationDepartmentApi(departmentId);
+      if (checkResponse({ res, showSuccess: true })) {
+        queryClient.invalidateQueries({ queryKey: [...DEPARTMENTS_QUERY_KEY] });
+        setDeleteDept(null);
+      }
+    }),
+  });
+
+  const handleConfirmDelete = () => {
+    if (deleteDept) deleteDeptMutation(deleteDept.id);
+  };
+
   const columns: TableColumn<DeptRow>[] = [
     {
       head: "Name",
@@ -122,16 +137,11 @@ export default function OrgPortalDepartmentsPage() {
       thClassName: "text-right",
       tdClassName: "text-right",
       component: (row) => (
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            openEdit(row._id);
-          }}
-        >
-          Edit
-        </Button>
+        <TableActions
+          onEditClick={() => openEdit(row._id)}
+          setDeleteModel={() => setDeleteDept({ id: row._id, name: row.name })}
+          className="justify-end"
+        />
       ),
     },
   ];
@@ -218,6 +228,15 @@ export default function OrgPortalDepartmentsPage() {
         departmentId={modal?.mode === "edit" ? modal.departmentId : undefined}
         branches={branches}
         onSuccess={handleDepartmentSuccess}
+      />
+
+      <ConfirmModal
+        type="delete"
+        isOpen={!!deleteDept}
+        onClose={() => setDeleteDept(null)}
+        onConfirm={handleConfirmDelete}
+        message={deleteDept ? `Are you sure you want to delete "${deleteDept.name}"?` : undefined}
+        confirmDisabled={isDeleting}
       />
     </div>
   );

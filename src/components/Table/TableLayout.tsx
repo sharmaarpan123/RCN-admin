@@ -72,7 +72,9 @@ function TableLayoutInner<T extends object>({
   return (
     <div className={`overflow-x-auto ${wrapperClassName}`.trim()}>
       <table
-        className={`w-full ${isBordered ? "border-separate border-spacing-0 overflow-hidden rounded-2xl border border-rcn-border" : "border-collapse"} ${textSize} ${tableClassName}`.trim()}
+        className={`w-full 
+          ${isBordered ? "border-separate border-spacing-0 overflow-hidden rounded-2xl border border-rcn-border" : "border-collapse"} 
+          ${textSize} ${tableClassName}`.trim()}
         role="grid"
         aria-readonly
       >
@@ -84,7 +86,8 @@ function TableLayoutInner<T extends object>({
                   return (
                     <th
                       key={key}
-                      className={`px-2 py-2 sm:px-3 sm:py-2.5 text-left text-xs uppercase tracking-wide font-semibold ${isBordered ? "border-b border-rcn-border text-rcn-dark-bg" : "text-rcn-muted"} ${item.thClassName ?? ""}`.trim()}
+                      className={`px-2 py-2 sm:px-3 sm:py-2.5 text-left text-xs uppercase tracking-wide font-semibold whitespace-nowrap 
+                         ${isBordered ? "border-b border-rcn-border text-rcn-dark-bg" : "text-rcn-muted"} `.trim()}
                     >
                       {item.headComponent(data, key, data)}
                     </th>
@@ -94,7 +97,10 @@ function TableLayoutInner<T extends object>({
                 return (
                   <th
                     key={key}
-                    className={`px-2 py-2 sm:px-3 sm:py-2.5 text-left text-xs uppercase tracking-wide font-semibold ${isBordered ? "border-b border-rcn-border text-rcn-dark-bg" : "text-rcn-muted"} ${item.thClassName ?? ""} ${isSortable ? "cursor-pointer select-none hover:text-rcn-accent" : ""}`.trim()}
+                    className={`px-2 py-2 sm:px-3 sm:py-2.5 text-left text-xs uppercase
+                       tracking-wide font-semibold
+                        ${isBordered ? "border-b border-rcn-border text-rcn-dark-bg" : "text-rcn-muted"} 
+                       ${item.thClassName ?? ""} ${isSortable ? "cursor-pointer select-none hover:text-rcn-accent" : ""}`.trim()}
                     onClick={() => {
                       if (isSortable && item.sortKey) handleSort(item.sortKey);
                     }}
@@ -121,7 +127,8 @@ function TableLayoutInner<T extends object>({
             data.map((row, rowIndex) => (
               <tr
                 key={getRowKey(row, rowIndex)}
-                className={`${isBordered ? "border-b border-rcn-border" : "border-t border-rcn-border/60"} hover:bg-rcn-accent/5 ${onRowClick ? "cursor-pointer" : ""}`}
+                className={`${isBordered ? "border-b border-rcn-border" : "border-t border-rcn-border/60"}
+                 hover:bg-rcn-accent/5 ${onRowClick ? "cursor-pointer" : ""}`}
                 onClick={() => onRowClick?.(row, rowIndex)}
               >
                 {columns?.length > 0 &&
@@ -130,7 +137,9 @@ function TableLayoutInner<T extends object>({
                       return (
                         <td
                           key={colIndex}
-                          className={`px-2.5 py-2.5 ${isBordered ? "border-b border-rcn-border text-xs align-top" : "sm:px-3 sm:py-2.5"} ${col.tdClassName ?? ""}`.trim()}
+                          className={`px-2.5 py-2.5
+                             ${isBordered ? "border-b border-rcn-border text-xs align-top" : "sm:px-3 sm:py-2.5"}
+                              ${col.tdClassName ?? ""}`.trim()}
                         >
                           {col.component(row, rowIndex, data)}
                         </td>
@@ -141,7 +150,8 @@ function TableLayoutInner<T extends object>({
                     return (
                       <td
                         key={colIndex}
-                        className={`px-2.5 py-2.5 ${isBordered ? "border-b border-rcn-border text-xs align-top" : "sm:px-3 sm:py-2.5"} ${col.tdClassName ?? ""}`.trim()}
+                        className={`px-2.5 py-2.5
+                           ${isBordered ? "border-b border-rcn-border text-xs align-top" : "sm:px-3 sm:py-2.5"} ${col.tdClassName ?? ""}`.trim()}
                       >
                         {value != null && value !== "" ? String(value) : "—"}
                       </td>
@@ -152,7 +162,8 @@ function TableLayoutInner<T extends object>({
           {loader && (
             <tr>
               <td colSpan={colCount} className="px-2 py-8 sm:px-3 text-center">
-                <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-rcn-border border-t-rcn-accent" aria-hidden />
+                <span className="inline-block h-5 w-5 animate-spin rounded-full border-2
+                 border-rcn-border border-t-rcn-accent" aria-hidden />
                 <p className="text-xs text-rcn-muted mt-2 mb-0">Loading…</p>
               </td>
             </tr>

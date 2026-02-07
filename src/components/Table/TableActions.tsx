@@ -4,8 +4,10 @@ import React from "react";
 import { Button, CustomNextLink } from "@/components";
 
 export interface TableActionsProps {
-  /** Edit page URL */
+  /** Edit page URL (link) */
   editUrl?: string;
+  /** Edit click handler (e.g. open modal); used when no editUrl */
+  onEditClick?: () => void;
   /** View page URL */
   viewLink?: string;
   /** Text for view button when using viewButtonText (optional; otherwise shows view icon) */
@@ -91,6 +93,7 @@ const UnblockIcon = () => (
 
 export function TableActions({
   editUrl,
+  onEditClick,
   viewLink,
   viewButtonText,
   setDeleteModel,
@@ -105,6 +108,23 @@ export function TableActions({
           <EditIcon />
           <span className="sr-only">Edit</span>
         </CustomNextLink>
+      )}
+      {onEditClick && !editUrl && (
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            onEditClick();
+          }}
+          className="inline-flex items-center gap-1 text-rcn-text hover:text-rcn-accent"
+          title="Edit"
+          aria-label="Edit"
+        >
+          <EditIcon />
+          <span className="sr-only">Edit</span>
+        </Button>
       )}
 
       {viewLink && (

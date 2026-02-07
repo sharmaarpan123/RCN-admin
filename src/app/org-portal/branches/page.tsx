@@ -1,12 +1,12 @@
 "use client";
 
-import { getOrganizationBranchesApi } from "@/apis/ApiCalls";
+import { getOrganizationBranchesApi, deleteOrganizationBranchApi } from "@/apis/ApiCalls";
 import type { TableColumn } from "@/components";
-import { Button, TableLayout, DebouncedInput } from "@/components";
+import { Button, TableLayout, DebouncedInput, TableActions, ConfirmModal } from "@/components";
 import { BranchModal } from "@/components/OrgComponent/Branch";
-import { checkResponse } from "@/utils/commonFunc";
+import { catchAsync, checkResponse } from "@/utils/commonFunc";
 import defaultQueryKeys from "@/utils/orgQueryKeys";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 interface Branch {
@@ -19,6 +19,7 @@ const BRANCHES_QUERY_KEY = defaultQueryKeys.branchList;
 
 export default function OrgPortalBranchesPage() {
   const [modal, setModal] = useState<{ mode: "add" } | { mode: "edit"; id: string; name: string } | null>(null);
+  const [deleteBranch, setDeleteBranch] = useState<{ id: string; name: string } | null>(null);
   const [body, setBody] = useState<{ search: string }>({ search: "" });
   const queryClient = useQueryClient();
 
@@ -42,6 +43,20 @@ export default function OrgPortalBranchesPage() {
 
   const openAdd = () => setModal({ mode: "add" });
 
+  const { isPending: isDeleting, mutate: deleteBranchMutation } = useMutation({
+    mutationFn: catchAsync(async (branchId: string) => {
+      const res = await deleteOrganizationBranchApi(branchId);
+      if (checkResponse({ res, showSuccess: true })) {
+        queryClient.invalidateQueries({ queryKey: [...BRANCHES_QUERY_KEY] });
+        setDeleteBranch(null);
+      }
+    }),
+  });
+
+  const handleConfirmDelete = () => {
+    if (deleteBranch) deleteBranchMutation(deleteBranch.id);
+  };
+
   const columns: TableColumn<Branch>[] = [
     { head: "Name", accessor: "name", component: (row) => <span className="font-medium">{row.name}</span> },
     {
@@ -52,12 +67,11 @@ export default function OrgPortalBranchesPage() {
     },
     {
       head: "Actions",
-      thClassName: "text-right",
-      tdClassName: "text-right",
       component: (row) => (
-        <Button variant="secondary" size="sm" onClick={() => setModal({ mode: "edit", id: row._id, name: row.name })}>
-          Edit
-        </Button>
+        <TableActions
+          onEditClick={() => setModal({ mode: "edit", id: row._id, name: row.name })}
+          setDeleteModel={() => setDeleteBranch({ id: row._id, name: row.name })}
+        />
       ),
     },
   ];
@@ -128,6 +142,15 @@ export default function OrgPortalBranchesPage() {
         mode={modal?.mode ?? "add"}
         branchId={modal?.mode === "edit" ? modal.id : undefined}
         onSuccess={handleBranchAddUpdateSuccess}
+      />
+
+      <ConfirmModal
+        type="delete"
+        isOpen={!!deleteBranch}
+        onClose={() => setDeleteBranch(null)}
+        onConfirm={handleConfirmDelete}
+        message={deleteBranch ? `Are you sure you want to delete "${deleteBranch.name}"?` : undefined}
+        confirmDisabled={isDeleting}
       />
     </div>
   );

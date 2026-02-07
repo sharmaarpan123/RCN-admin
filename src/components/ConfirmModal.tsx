@@ -35,6 +35,8 @@ interface ConfirmModalProps {
   message?: string;
   /** Optional override for confirm button label */
   confirmLabel?: string;
+  /** Optional disable confirm button (e.g. while submitting) */
+  confirmDisabled?: boolean;
 }
 
 const ConfirmModal: React.FC<ConfirmModalProps> = ({
@@ -45,6 +47,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
   title: titleOverride,
   message: messageOverride,
   confirmLabel: confirmLabelOverride,
+  confirmDisabled = false,
 }) => {
   const config = CONFIRM_CONFIG[type];
   const title = titleOverride ?? config.title;
@@ -58,10 +61,10 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
         <h3 className="font-bold text-lg m-0">{title}</h3>
         <p className="text-sm text-rcn-muted m-0 mt-2">{message}</p>
         <div className="flex gap-2 mt-5 justify-end">
-          <Button variant="secondary" size="sm" onClick={onClose}>
+          <Button variant="secondary" size="sm" onClick={onClose} disabled={confirmDisabled}>
             Cancel
           </Button>
-          <Button variant={confirmVariant} size="sm" onClick={onConfirm}>
+          <Button variant={confirmVariant} size="sm" onClick={onConfirm} disabled={confirmDisabled}>
             {confirmLabel}
           </Button>
         </div>
