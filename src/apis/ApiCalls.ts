@@ -21,6 +21,10 @@ export const organizationVerifyOtpApi = (body: unknown) => AxiosInstance.post("/
 
 export const adminVerifyOtpApi = (body: unknown) => AxiosInstance.post("/api/admin/verify-otp", body);
 
+/** GET /api/admin/organization — list organizations (admin). */
+export const getAdminOrganizationsApi = () =>
+  AxiosInstance.get("/api/admin/organization");
+
 export const getOrganizationUsersApi = (params?: { search?: string }) =>
   AxiosInstance.get("/api/organization/user", { params });
 
