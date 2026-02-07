@@ -1,50 +1,18 @@
 import { createSlice } from "@reduxjs/toolkit";
+import type { AuthProfileData } from "@/app/org-portal/types/profile";
 
+/** @deprecated Use AuthProfileData from @/app/org-portal/types/profile */
+export type OrganizationUserType = AuthProfileData;
 
-interface OrganizationLocation {
-  type: string;
-  coordinates: number[];
-}
-interface OrganizationId {
-  _id: string;
-  name: string;
-  email: string;
-  dial_code: string;
-  phone_number: string;
-  ein_number: string;
-  street: string;
-  location: OrganizationLocation;
-  city: string;
-  state: string;
-  country: string;
-  zip_code: string;
-  branches: unknown[];
-  users: unknown[];
-}
-
-export interface OrganizationUserType {
-  _id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  dial_code: string;
-  phone_number: string;
-  role_id: number;
-  organization_id: OrganizationId;
-  status: number;
-  device_token: string | null;
-  device_type: string | null;
-}
-
-interface authSliceState {
-  loginOrgUser: OrganizationUserType | null;
+interface AuthSliceState {
+  loginOrgUser: AuthProfileData | null;
   error: string | null;
   token: string | null;
   role: string | null;
   status: "idle" | "loading" | "success" | "error";
 }
 
-const initialState: authSliceState = {
+const initialState: AuthSliceState = {
   loginOrgUser: null,
   token: null,
   role: null,

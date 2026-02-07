@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/immutability */
 "use client";
 
-import React, { useEffect, useRef, useCallback } from "react";
+import React, { useRef, useCallback } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -22,7 +22,8 @@ import {
 } from "@/apis/ApiCalls";
 import { catchAsync, checkResponse } from "@/utils/commonFunc";
 import { loginRoles } from "@/utils/const";
-import { loginSuccess, OrganizationUserType } from "@/store/slices/Auth/authSlice";
+import type { AuthProfileData } from "@/app/org-portal/types/profile";
+import { loginSuccess } from "@/store/slices/Auth/authSlice";
 import { useDispatch } from "react-redux";
 
 export type LoginType = "user" | "org" | "admin";
@@ -123,7 +124,7 @@ const Login: React.FC = () => {
               ? await organizationVerifyOtpApi(body)
               : await adminVerifyOtpApi(body);
         if (checkResponse({ res, showSuccess: true })) {
-          const data = res?.data?.data as { accessToken: string; token: string; organization: OrganizationUserType };
+          const data = res?.data?.data as { accessToken: string; token: string; organization: AuthProfileData };
           const token = data?.accessToken ?? data?.token;
           const role = loginRoles[data?.organization?.role_id as unknown as keyof typeof loginRoles];
           if (role === "Organization") {
