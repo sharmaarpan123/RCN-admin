@@ -1,88 +1,32 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getAdminOrganizationsApi } from "@/apis/ApiCalls";
 import Button from "@/components/Button";
-import CustomReactSelect from "@/components/CustomReactSelect";
+import { TableColumn } from "@/components/Table";
+import defaultQueryKeys from "@/utils/adminQueryKeys";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useMemo, useState } from "react";
+import { MOCK_BRANCHES, MOCK_DEPARTMENTS, MOCK_ORG_USERS } from "./mockData";
 import { OrganizationsTable } from "./OrganizationsTable";
 import { OrgBranchesTab } from "./OrgBranchesTab";
 import { OrgDeptsTab } from "./OrgDeptsTab";
+import { OrgModalContent } from "./OrgModal";
 import { OrgProfileTab } from "./OrgProfileTab";
 import { OrgUsersTab } from "./OrgUsersTab";
-import type { OrgTableRow, OrgUserRow } from "./types";
-import { useOrganizationList, type OrgRecord } from "./useOrganizationList";
+import { BTN_SMALL_CLASS, type AdminOrganizationListItem, type OrgTableRow, type OrgUserRow } from "./types";
 import { useOrgBranchList, type BranchRecord } from "./useOrgBranchList";
 import { useOrgDeptList, type DeptRecord } from "./useOrgDeptList";
 import { useOrgUserList, type UserRecord } from "./useOrgUserList";
-import { MOCK_BRANCHES, MOCK_DEPARTMENTS, MOCK_ORG_USERS } from "./mockData";
-import { getAdminOrganizationsApi } from "@/apis/ApiCalls";
-import defaultQueryKeys from "@/utils/adminQueryKeys";
 
-/** Map nested organization object (API shape) to OrgRecord. */
-function mapApiOrgToRecord(
-  org: Record<string, unknown>,
-  primaryContact?: Record<string, unknown>
-): OrgRecord {
-  const id = (org.id ?? org._id ?? "").toString();
-  const str = (v: unknown) => (v ?? "").toString().trim();
-  const phone = [org.dial_code, org.phone_number].filter(Boolean).map(String).join(" ").trim() || str(org.phone_number);
-  const contact = (primaryContact ?? org.contact ?? {}) as Record<string, unknown>;
-  const contactTel = [contact.dial_code, contact.phone_number].filter(Boolean).map(String).join(" ").trim()
-    || str(contact.phone_number ?? contact.tel);
-  return {
-    id,
-    name: str(org.name),
-    phone: phone || str(org.phone),
-    email: str(org.email),
-    ein: str(org.ein_number ?? org.ein),
-    enabled: org.status !== undefined ? org.status === 1 : undefined,
-    walletCents: typeof org.wallet_cents === "number" ? org.wallet_cents : undefined,
-    referralCredits: typeof org.referral_credits === "number" ? org.referral_credits : undefined,
-    address: {
-      street: str(org.street),
-      suite: str(org.suite ?? org.apt),
-      city: str(org.city),
-      state: str(org.state),
-      zip: str(org.zip_code ?? org.zip),
-    },
-    contact: {
-      first: str(contact.first ?? contact.first_name),
-      last: str(contact.last ?? contact.last_name),
-      email: str(contact.email),
-      tel: contactTel,
-      fax: str(contact.fax ?? contact.fax_number),
-    },
-  };
-}
+/** Full API response from GET /api/admin/organization (use as-is). */
+type AdminOrganizationsApiResponse = {
+  success?: boolean;
+  message?: string;
+  data: AdminOrganizationListItem[];
+  meta?: unknown;
+};
 
-/**
- * API returns data = array of { _id, first_name, last_name, email, organization_id, organization: { ... } }.
- * Extract unique organizations by organization._id and map to OrgRecord[].
- */
-function parseOrganizationsResponse(data: unknown): OrgRecord[] {
-  const arr = Array.isArray(data) ? data : [];
-  const byOrgId = new Map<string, { org: Record<string, unknown>; contact?: Record<string, unknown> }>();
-  for (const row of arr as Record<string, unknown>[]) {
-    const org = row.organization as Record<string, unknown> | undefined;
-    if (!org) continue;
-    const orgId = (org._id ?? org.id ?? "").toString();
-    if (!orgId || byOrgId.has(orgId)) continue;
-    byOrgId.set(orgId, {
-      org,
-      contact: {
-        first_name: row.first_name,
-        last_name: row.last_name,
-        email: row.email,
-        dial_code: row.dial_code,
-        phone_number: row.phone_number,
-        fax_number: row.fax_number,
-      },
-    });
-  }
-  return Array.from(byOrgId.values()).map(({ org, contact }) =>
-    mapApiOrgToRecord(org, contact)
-  );
-}
+
 
 export function OrganizationsPage() {
   const queryClient = useQueryClient();
@@ -91,59 +35,107 @@ export function OrganizationsPage() {
   const [selectedOrgId, setSelectedOrgId] = useState("");
   const [activeTab, setActiveTab] = useState<"profile" | "branches" | "depts" | "users">("profile");
 
-   
+  const [orgListBody, setOrgListBody] = useState({
+    page: 1,
+    limit: 10,
+    search: ""
+  });
 
+
+  const [orgModal, setOrgModal] = useState<{ isOpen: boolean; mode: string; editId?: string | null }>({ isOpen: false, mode: "add", editId: null });
 
   const [branches, setBranches] = useState<BranchRecord[]>(MOCK_BRANCHES as BranchRecord[]);
   const [depts, setDepts] = useState<DeptRecord[]>(MOCK_DEPARTMENTS as DeptRecord[]);
   const [users, setUsers] = useState<UserRecord[]>(MOCK_ORG_USERS as UserRecord[]);
 
-  const { data: orgs, isLoading: orgsLoading, error: orgsError } = useQuery({
+  const { data: orgsResponse, isLoading: orgsLoading, error: orgsError } = useQuery({
     queryKey: [...defaultQueryKeys.organizationsList],
     queryFn: async () => {
       const res = await getAdminOrganizationsApi();
-      const payload = res.data as { data?: unknown } | undefined;
-      const raw = payload?.data ?? res.data;
-      return parseOrganizationsResponse(raw);
+      return res.data as AdminOrganizationsApiResponse;
     },
   });
 
-  const setOrgs = useCallback(
-    (updater: React.SetStateAction<OrgRecord[]>) => {
-      queryClient.setQueryData<OrgRecord[]>([...defaultQueryKeys.organizationsList], (prev) => {
-        const current = prev ?? [];
-        return typeof updater === "function" ? updater(current) : updater;
-      });
-    },
-    [queryClient]
-  );
 
-  const orgsList = orgs ?? [];
+  const orgsList = useMemo(() => orgsResponse?.data ?? [], [orgsResponse?.data]);
+
+  const orgsForSelect = useMemo(() => {
+    const seen = new Set<string>();
+    return orgsList
+      .filter((r) => {
+        const id = r.organization?._id ?? r.organization_id;
+        if (!id || seen.has(id)) return false;
+        seen.add(id);
+        return true;
+      })
+      .map((r) => ({
+        id: r.organization?._id ?? r.organization_id,
+        name: r.organization?.name ?? "",
+        address: {
+          state: r.organization?.state,
+          zip: r.organization?.zip_code,
+        },
+      }));
+  }, [orgsList]);
 
   const openModal = (content: React.ReactNode) => setModalContent(content);
   const closeModal = () => setModalContent(null);
   const modal = { openModal, closeModal };
 
-  const {
-    search,
-    setSearch,
-    stateFilter,
-    setStateFilter,
-    zipFilter,
-    setZipFilter,
-    filteredOrgs,
-    orgTableColumns,
-    openOrgModal,
-  } = useOrganizationList({
-    orgs: orgsList,
-    setOrgs,
-    setBranches: setBranches as React.Dispatch<React.SetStateAction<unknown[]>>,
-    setDepts: setDepts as React.Dispatch<React.SetStateAction<unknown[]>>,
-    setUsers: setUsers as React.Dispatch<React.SetStateAction<unknown[]>>,
-    modal,
-    setSelectedOrgId,
-    setActiveTab,
-  });
+
+
+
+  const orgTableColumns: TableColumn<OrgTableRow>[] = [
+    {
+      head: "Name",
+      component: (row) => (
+        <>
+          <b>{row.organization?.name ?? "—"}</b>
+          <div className="text-rcn-muted">{row.organization?.email ?? "—"}</div>
+        </>
+      ),
+    },
+    { head: "State", component: (row) => row.organization?.state ?? "—" },
+    { head: "Zip", component: (row) => <span className="font-mono">{row.organization?.zip_code ?? "—"}</span> },
+    { head: "City", component: (row) => row.organization?.city ?? "—" },
+    { head: "Street", component: (row) => row.organization?.street ?? "—" },
+    {
+      head: "Enabled",
+      component: (row) =>
+        row.status === 1 ? (
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">
+            Enabled
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#f3b8b8] bg-[#fff1f2] text-[#991b1b]">
+            Disabled
+          </span>
+        ),
+    },
+    {
+      head: "Actions",
+      component: (row) => (
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedOrgId(row.organization?._id ?? row.organization_id);
+              setActiveTab("branches");
+              setTimeout(() => {
+                document.getElementById("org-modules-card")?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }, 100);
+            }}
+            className={BTN_SMALL_CLASS}
+          >
+            Manage
+          </button>
+          <button type="button" onClick={() => setOrgModal(prev => ({ ...prev, isOpen: true, mode: "edit", editId: row.organization?._id ?? row.organization_id }))} className={BTN_SMALL_CLASS}>
+            Edit
+          </button>
+        </div>
+      ),
+    },
+  ];
 
   const {
     branchSearch,
@@ -155,7 +147,7 @@ export function OrganizationsPage() {
     branches,
     setBranches,
     setDepts: setDepts as React.Dispatch<React.SetStateAction<unknown[]>>,
-    orgs: orgsList,
+    orgs: orgsForSelect,
     selectedOrgId,
     modal,
   });
@@ -170,7 +162,7 @@ export function OrganizationsPage() {
     depts,
     setDepts,
     branches,
-    orgs: orgsList,
+    orgs: orgsForSelect,
     selectedOrgId,
     modal,
   });
@@ -184,14 +176,44 @@ export function OrganizationsPage() {
   } = useOrgUserList({
     users,
     setUsers,
-    orgs: orgsList,
+    orgs: orgsForSelect,
     selectedOrgId,
     modal,
   });
 
-  const selectedOrg = selectedOrgId ? (orgsList.find((o) => o.id === selectedOrgId) ?? null) : null;
+  const selectedOrgRow = selectedOrgId
+    ? orgsList.find(
+      (r) => (r.organization?._id ?? r.organization_id) === selectedOrgId
+    ) ?? null
+    : null;
 
-
+  const selectedOrg = selectedOrgRow
+    ? (() => {
+      const org = selectedOrgRow.organization;
+      const phone = ([org?.dial_code, org?.phone_number].filter(Boolean).join(" ").trim() || org?.phone_number) ?? "";
+      return {
+        name: org?.name,
+        email: org?.email,
+        phone,
+        ein: org?.ein_number,
+        enabled: selectedOrgRow.status === 1,
+        address: {
+          street: org?.street,
+          suite: org?.suite,
+          city: org?.city,
+          state: org?.state,
+          zip: org?.zip_code,
+        },
+        contact: {
+          first: selectedOrgRow.first_name,
+          last: selectedOrgRow.last_name,
+          email: selectedOrgRow.email,
+          tel: ([selectedOrgRow.dial_code, selectedOrgRow.phone_number].filter(Boolean).join(" ").trim() || selectedOrgRow.phone_number) ?? "",
+          fax: selectedOrgRow.fax_number,
+        },
+      };
+    })()
+    : null;
 
   return (
     <>
@@ -205,16 +227,21 @@ export function OrganizationsPage() {
           Failed to load organizations. Please try again.
         </div>
       )}
+
+
+
+      <OrgModalContent
+        isOpen={orgModal.isOpen}
+        orgId={orgModal.editId ?? undefined}
+        onClose={() => setOrgModal(prev => ({ ...prev, isOpen: false }))}
+      />
+
       <OrganizationsTable
-        search={search}
-        setSearch={setSearch}
-        stateFilter={stateFilter}
-        setStateFilter={setStateFilter}
-        zipFilter={zipFilter}
-        setZipFilter={setZipFilter}
-        filteredOrgs={filteredOrgs as OrgTableRow[]}
+        body={orgListBody}
+        setBody={setOrgListBody}
+        data={orgsList}
         columns={orgTableColumns}
-        onNewOrg={openOrgModal}
+        onNewOrg={() => setOrgModal(prev => ({ ...prev, isOpen: true, mode: "add" }))}
       />
 
       <div
@@ -297,7 +324,7 @@ export function OrganizationsPage() {
               <OrgProfileTab
                 selectedOrg={selectedOrg ?? null}
                 selectedOrgId={selectedOrgId}
-                onEditOrg={openOrgModal}
+                onEditOrg={() => setOrgModal(prev => ({ ...prev, isOpen: true, mode: "edit", editId: selectedOrgId }))}
               />
             )}
             {activeTab === "branches" && (

@@ -25,6 +25,18 @@ export const adminVerifyOtpApi = (body: unknown) => AxiosInstance.post("/api/adm
 export const getAdminOrganizationsApi = () =>
   AxiosInstance.get("/api/admin/organization");
 
+/** GET /api/admin/organization/:id — get single organization (admin). */
+export const getAdminOrganizationApi = (organizationId: string) =>
+  AxiosInstance.get(`/api/admin/organization/${organizationId}`);
+
+/** POST /api/admin/organization — create organization (admin). */
+export const createAdminOrganizationApi = (body: unknown) =>
+  AxiosInstance.post("/api/admin/organization", body);
+
+/** PUT /api/admin/organization/:id — update organization (admin). */
+export const updateAdminOrganizationApi = (organizationId: string, body: unknown) =>
+  AxiosInstance.put(`/api/admin/organization/${organizationId}`, body);
+
 export const getOrganizationUsersApi = (params?: { search?: string }) =>
   AxiosInstance.get("/api/organization/user", { params });
 

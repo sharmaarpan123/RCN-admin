@@ -1,11 +1,38 @@
-/** Row types for Organizations page tables */
-export type OrgTableRow = {
-  id: string;
-  name: string;
-  email: string;
-  address: { state?: string; zip?: string; city?: string; street?: string };
-  enabled?: boolean;
+/** Raw item from GET /api/admin/organization response (use as-is, no shaping). */
+export type AdminOrganizationListItem = {
+  _id: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  dial_code?: string;
+  phone_number?: string;
+  fax_number?: string;
+  role_id?: number;
+  organization_id: string;
+  status?: number;
+  organization?: {
+    _id: string;
+    name?: string;
+    email?: string;
+    dial_code?: string;
+    phone_number?: string;
+    ein_number?: string;
+    street?: string;
+    suite?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    zip_code?: string;
+    latitude?: string;
+    longitude?: string;
+    location?: { type?: string; coordinates?: number[] };
+    branches?: unknown[];
+    users?: unknown[];
+  };
 };
+
+/** Row type for organizations table when using raw API response. */
+export type OrgTableRow = AdminOrganizationListItem;
 
 export type OrgUserRow = {
   id: string;

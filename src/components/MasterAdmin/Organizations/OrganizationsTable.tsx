@@ -6,28 +6,25 @@ import { US_STATES } from "@/utils/database";
 import { INPUT_CLASS, BTN_PRIMARY_CLASS } from "./types";
 import type { OrgTableRow } from "./types";
 import type { TableColumn } from "@/components";
-
+import CustomPagination from "@/components/CustomPagination";
 interface OrganizationsTableProps {
-  search: string;
-  setSearch: (v: string) => void;
-  stateFilter: string;
-  setStateFilter: (v: string) => void;
-  zipFilter: string;
-  setZipFilter: (v: string) => void;
-  filteredOrgs: OrgTableRow[];
+  body: {
+    page: number;
+    limit: number;
+    search: string;
+  };
+  setBody: (v: { page: number; limit: number; search: string }) => void;
+  data: OrgTableRow[];
   columns: TableColumn<OrgTableRow>[];
   onNewOrg: () => void;
 }
 
 export function OrganizationsTable({
-  search,
-  setSearch,
-  stateFilter,
-  setStateFilter,
-  zipFilter,
-  setZipFilter,
-  filteredOrgs,
+  body,
+  setBody,
   columns,
+  data,
+
   onNewOrg,
 }: OrganizationsTableProps) {
   return (
@@ -49,46 +46,32 @@ export function OrganizationsTable({
           <label className="text-xs text-rcn-muted">Search (Name or Location)</label>
           <input
             placeholder="Name, street, city, state, zip"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={body.search}
+            onChange={(e) => setBody({ ...body, search: e.target.value })}
             className={INPUT_CLASS}
           />
         </div>
-        <div className="flex flex-col gap-1.5 min-w-[120px]">
-          <label className="text-xs text-rcn-muted">State</label>
-          <select
-            value={stateFilter}
-            onChange={(e) => setStateFilter(e.target.value)}
-            className={INPUT_CLASS}
-          >
-            {US_STATES.map((s) => (
-              <option key={s} value={s}>
-                {s === "" ? "All" : s}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="flex flex-col gap-1.5 min-w-[120px]">
-          <label className="text-xs text-rcn-muted">Zip</label>
-          <input
-            placeholder="Zip"
-            value={zipFilter}
-            onChange={(e) => setZipFilter(e.target.value)}
-            className={INPUT_CLASS}
-          />
-        </div>
+
+
       </div>
 
       <div className="overflow-auto mt-3">
         <TableLayout<OrgTableRow>
           columns={columns}
-          data={filteredOrgs}
+          data={data}
           variant="bordered"
           size="sm"
           emptyMessage="No organizations found."
-          getRowKey={(o) => o.id}
+          getRowKey={(o) => o.organization?._id ?? o.organization_id}
         />
       </div>
+
+      <CustomPagination
+        total={100}
+        pageSize={body.limit}
+        current={body.page}
+        onChange={(page) => setBody({ ...body, page })}
+      />
     </div>
   );
 }
