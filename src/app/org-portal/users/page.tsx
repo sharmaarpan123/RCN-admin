@@ -1,11 +1,11 @@
 "use client";
 
-import { getOrganizationUsersApi } from "@/apis/ApiCalls";
+import { getOrganizationUsersApi, deleteOrganizationUserApi } from "@/apis/ApiCalls";
 import { CustomNextLink, TableLayout, TableActions, type TableColumn, type TableSortState } from "@/components";
-import { DebouncedInput } from "@/components";
-import { checkResponse } from "@/utils/commonFunc";
+import { DebouncedInput, ConfirmModal } from "@/components";
+import { catchAsync, checkResponse } from "@/utils/commonFunc";
 import defaultQueryKeys from "@/utils/orgQueryKeys";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
 
 interface OrgUserRow {
@@ -31,6 +31,8 @@ const USERS_QUERY_KEY = defaultQueryKeys.userList;
 export default function OrgPortalUsersPage() {
   const [search, setSearch] = useState("");
   const [body, setBody] = useState<TableSortState>({ order: 1 });
+  const [deleteUser, setDeleteUser] = useState<{ id: string; name: string } | null>(null);
+  const queryClient = useQueryClient();
 
   const { data: apiData, isLoading } = useQuery({
     queryKey: [...USERS_QUERY_KEY, search],
@@ -45,10 +47,24 @@ export default function OrgPortalUsersPage() {
     },
   });
 
+  const { isPending: isDeleting, mutate: deleteUserMutation } = useMutation({
+    mutationFn: catchAsync(async (userId: string) => {
+      const res = await deleteOrganizationUserApi(userId);
+      if (checkResponse({ res, showSuccess: true })) {
+        queryClient.invalidateQueries({ queryKey: [...USERS_QUERY_KEY] });
+        setDeleteUser(null);
+      }
+    }),
+  });
+
+  const handleConfirmDelete = () => {
+    if (deleteUser) deleteUserMutation(deleteUser.id);
+  };
+
   const columns: TableColumn<OrgUserRow>[] = useMemo(
     () => [
-      { head: "Name",    component: (u) => <span className="font-medium">{userDisplayName(u)}</span> },
-      { head: "Email", accessor: "email",    component: (u) => <span className="text-rcn-muted">{u.email || "—"}</span> },
+      { head: "Name", component: (u) => <span className="font-medium">{userDisplayName(u)}</span> },
+      { head: "Email", accessor: "email", component: (u) => <span className="text-rcn-muted">{u.email || "—"}</span> },
       { head: "Role", component: (u) => (u.is_admin ? "Admin" : (u.role || "User")) },
       { head: "Status", component: (u) => (u.is_active !== false ? "Active" : "Inactive") },
       { head: "Assigned", component: (u) => (u.org_assigned ? "Yes" : "No") },
@@ -60,6 +76,7 @@ export default function OrgPortalUsersPage() {
             viewLink={`/org-portal/users/${u._id}`}
             viewButtonText="View"
             editUrl={`/org-portal/users/${u._id}/edit`}
+            setDeleteModel={() => setDeleteUser({ id: u._id, name: userDisplayName(u) })}
           />
         ),
       },
@@ -96,7 +113,7 @@ export default function OrgPortalUsersPage() {
           <div className="border border-rcn-border rounded-xl overflow-hidden">
             <TableLayout<OrgUserRow>
               columns={columns}
-              data={apiData?.data}
+              data={apiData?.data ?? []}
               body={body as TableSortState & Record<string, string>}
               setBody={setBody}
               emptyMessage={search.trim() ? "No users match your search." : "No users yet. Add a user to get started."}
@@ -107,6 +124,15 @@ export default function OrgPortalUsersPage() {
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        type="delete"
+        isOpen={!!deleteUser}
+        onClose={() => setDeleteUser(null)}
+        onConfirm={handleConfirmDelete}
+        message={deleteUser ? `Are you sure you want to delete "${deleteUser.name}"?` : undefined}
+        confirmDisabled={isDeleting}
+      />
     </div>
   );
 }

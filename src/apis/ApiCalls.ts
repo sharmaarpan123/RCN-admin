@@ -30,6 +30,9 @@ export const createOrganizationUserApi = (body: unknown) =>
 export const updateOrganizationUserApi = (userId: string, body: unknown) =>
   AxiosInstance.put(`/api/organization/user/${userId}`, body);
 
+export const deleteOrganizationUserApi = (userId: string) =>
+  AxiosInstance.delete(`/api/organization/user/${userId}`);
+
 export const getOrganizationBranchesApi = (body: unknown) =>
   AxiosInstance.get("/api/organization/branch", { params: body });
 
