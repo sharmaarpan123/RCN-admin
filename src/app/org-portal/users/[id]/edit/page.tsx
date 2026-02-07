@@ -1,73 +1,55 @@
 "use client";
 
-import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { getOrganizationBranchesApi, getOrganizationDepartmentsApi } from "@/apis/ApiCalls";
 import { CustomNextLink } from "@/components";
-import { UserForm } from "@/components/OrgComponent/UsersModule";
-import { toastSuccess, toastError } from "@/utils/toast";
-import { MOCK_USERS, MOCK_ORG, userDisplayName, type OrgUser, type Branch } from "../../../mockData";
+import { UserForm, type BranchWithDepts } from "@/components/OrgComponent/UsersModule";
+import { checkResponse } from "@/utils/commonFunc";
+import defaultQueryKeys from "@/utils/orgQueryKeys";
+import { toastSuccess } from "@/utils/toast";
+import { useQuery } from "@tanstack/react-query";
+import { useParams, useRouter } from "next/navigation";
 
 export default function OrgPortalUserEditPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const [users] = useState(MOCK_USERS);
-  const [branches] = useState<Branch[]>(MOCK_ORG.branches);
-  const user = users.find((u) => u.id === params.id);
+  const userId = params.id;
 
-  if (!user) {
+  const { data: branchesWithDepts, isLoading: isLoadingBranches } = useQuery({
+    queryKey: [...defaultQueryKeys.branchList, "with-departments"],
+    queryFn: async () => {
+      const res = await getOrganizationBranchesApi({ search: "" });
+      if (!checkResponse({ res })) return [];
+      const list = res.data?.data ?? [];
+      const withDepts: BranchWithDepts[] = await Promise.all(
+        list.map(async (b: { _id: string; name: string }) => {
+          const dRes = await getOrganizationDepartmentsApi({ branch_id: b._id });
+          const departments = checkResponse({ res: dRes }) ? (dRes.data?.data ?? []) : [];
+          return {
+            _id: b._id,
+            name: b.name,
+            departments: departments.map((d: { _id: string; name: string }) => ({ _id: d._id, name: d.name })),
+          };
+        })
+      );
+      return withDepts;
+    },
+  });
+
+  const handleSave = () => {
+    toastSuccess("User profile updated.");
+    router.push("/org-portal/users");
+  };
+
+  if (!userId) {
     return (
       <div>
         <CustomNextLink href="/org-portal/users" variant="ghost" size="sm">
           ← User list
         </CustomNextLink>
-        <p className="mt-4 text-rcn-muted">User not found.</p>
+        <p className="mt-4 text-rcn-muted">Invalid user.</p>
       </div>
     );
   }
-
-  const initial = {
-    firstName: user.firstName ?? "",
-    lastName: user.lastName ?? "",
-    email: user.email ?? "",
-    dialCode: (user as { dial_code?: string }).dial_code ?? "1",
-    phone: user.phone ?? "",
-    faxNumber: (user as { fax_number?: string }).fax_number ?? "",
-    role: user.role ?? "User",
-    isAdmin: user.isAdmin ?? false,
-    isActive: user.isActive ?? true,
-    notes: user.notes ?? "",
-    branchIds: user.branchIds ?? [],
-    deptIds: user.deptIds ?? [],
-  };
-
-  const handleSave = () => {
-    toastSuccess("User profile updated.");
-    setTimeout(() => router.push("/org-portal/users"), 1000);
-  };
-
-  const handleToggleActive = () => {
-    toastSuccess(user.isActive ? "User deactivated" : "User activated.");
-  };
-
-  const handleRemoveFromOrg = () => {
-    if (!user.orgAssigned) {
-      toastError("User is already unassigned in this organization.");
-      return;
-    }
-    toastSuccess("User unassigned from this organization.");
-  };
-
-  const handleDelete = () => {
-    if (
-      window.prompt(`Type DELETE to permanently delete ${userDisplayName(user)}:`)?.trim().toUpperCase() !==
-      "DELETE"
-    ) {
-      toastError("Delete not confirmed.");
-      return;
-    }
-    toastSuccess("User permanently deleted.");
-    setTimeout(() => router.push("/org-portal/users"), 1000);
-  };
 
   return (
     <div>
@@ -77,16 +59,14 @@ export default function OrgPortalUserEditPage() {
         </CustomNextLink>
       </div>
       <UserForm
-        key={user.id}
         mode="edit"
-        user={user}
-        branches={branches}
-        initial={initial}
+        userId={userId}
+        branches={branchesWithDepts ?? []}
         onSave={handleSave}
-        onToggleActive={handleToggleActive}
-        onRemoveFromOrg={handleRemoveFromOrg}
-        onDelete={handleDelete}
       />
+      {isLoadingBranches && (
+        <p className="text-rcn-muted text-sm mt-2">Loading branches…</p>
+      )}
     </div>
   );
 }

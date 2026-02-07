@@ -1,2 +1,2 @@
 export { UserForm } from "./UserForm";
-export type { UserFormData } from "./UserForm";
+export type { UserFormData, BranchWithDepts } from "./UserForm";

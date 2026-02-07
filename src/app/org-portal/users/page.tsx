@@ -1,53 +1,65 @@
 "use client";
 
+import { getOrganizationUsersApi } from "@/apis/ApiCalls";
 import { CustomNextLink, TableLayout, TableActions, type TableColumn, type TableSortState } from "@/components";
+import { DebouncedInput } from "@/components";
+import { checkResponse } from "@/utils/commonFunc";
+import defaultQueryKeys from "@/utils/orgQueryKeys";
+import { useQuery } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
 
-import { MOCK_USERS, userDisplayName, type OrgUser } from "../mockData";
+interface OrgUserRow {
+  _id: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  is_admin?: boolean;
+  is_active?: boolean;
+  org_assigned?: boolean;
+  role?: string;
+}
+
+function userDisplayName(u: OrgUserRow): string {
+  const first = (u.first_name ?? "").trim();
+  const last = (u.last_name ?? "").trim();
+  if (first || last) return [first, last].filter(Boolean).join(" ");
+  return (u.email ?? "").trim() || "—";
+}
+
+const USERS_QUERY_KEY = defaultQueryKeys.userList;
 
 export default function OrgPortalUsersPage() {
-  const [users, setUsers] = useState<OrgUser[]>(MOCK_USERS);
   const [search, setSearch] = useState("");
-  const [body, setBody] = useState<TableSortState>({ sort: "name", order: 1 });
+  const [body, setBody] = useState<TableSortState>({ order: 1 });
 
+  const { data: apiData, isLoading } = useQuery({
+    queryKey: [...USERS_QUERY_KEY, search],
+    queryFn: async () => {
+      try {
+        const res = await getOrganizationUsersApi({ search });
+        if (!checkResponse({ res })) return { data: [] };
+        return res.data;
+      } catch {
+        return { data: [] };
+      }
+    },
+  });
 
-
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    let list = users;
-    if (q) {
-      list = users.filter((u) => {
-        const name = userDisplayName(u).toLowerCase();
-        const email = (u.email || "").toLowerCase();
-        return name.includes(q) || email.includes(q);
-      });
-    }
-    const sortKey = body.sort;
-    const dir = body.order ?? 1;
-    if (!sortKey) return list;
-    return [...list].sort((a, b) => {
-      const an = sortKey === "name" ? userDisplayName(a) : (a[sortKey as keyof OrgUser] ?? "");
-      const bn = sortKey === "name" ? userDisplayName(b) : (b[sortKey as keyof OrgUser] ?? "");
-      const cmp = String(an).localeCompare(String(bn), undefined, { sensitivity: "base" });
-      return dir === -1 ? -cmp : cmp;
-    });
-  }, [users, search, body.sort, body.order]);
-
-  const columns: TableColumn<OrgUser>[] = useMemo(
+  const columns: TableColumn<OrgUserRow>[] = useMemo(
     () => [
-      { head: "Name", sortKey: "name", component: (u) => <span className="font-medium">{userDisplayName(u)}</span> },
-      { head: "Email", accessor: "email", sortKey: "email", component: (u) => <span className="text-rcn-muted">{u.email || "—"}</span> },
-      { head: "Role", component: (u) => (u.isAdmin ? "Admin" : (u.role || "User")) },
-      { head: "Status", component: (u) => (u.isActive ? "Active" : "Inactive") },
-      { head: "Assigned", component: (u) => (u.orgAssigned ? "Yes" : "No") },
+      { head: "Name",    component: (u) => <span className="font-medium">{userDisplayName(u)}</span> },
+      { head: "Email", accessor: "email",    component: (u) => <span className="text-rcn-muted">{u.email || "—"}</span> },
+      { head: "Role", component: (u) => (u.is_admin ? "Admin" : (u.role || "User")) },
+      { head: "Status", component: (u) => (u.is_active !== false ? "Active" : "Inactive") },
+      { head: "Assigned", component: (u) => (u.org_assigned ? "Yes" : "No") },
       {
         head: "Actions",
         tdClassName: "text-left whitespace-nowrap",
         component: (u) => (
           <TableActions
-            viewLink={`/org-portal/users/${u.id}`}
+            viewLink={`/org-portal/users/${u._id}`}
             viewButtonText="View"
-            editUrl={`/org-portal/users/${u.id}/edit`}
+            editUrl={`/org-portal/users/${u._id}/edit`}
           />
         ),
       },
@@ -63,26 +75,37 @@ export default function OrgPortalUsersPage() {
           <p className="text-sm text-rcn-muted m-0 mt-0.5">View users and assign branches & departments. Add or edit via pages.</p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search name or email…"
-            className="flex-1 min-w-[140px] sm:flex-initial sm:w-48 px-2.5 py-2 text-sm rounded-xl border border-rcn-border bg-white focus:outline-none focus:ring-2 focus:ring-rcn-accent/30"
-          />
-          <CustomNextLink href="/org-portal/users/add" variant="primary" size="sm">+ Add User</CustomNextLink>
+          <div className="flex-1 min-w-[140px] sm:flex-initial sm:w-48">
+            <label className="sr-only" htmlFor="user-search">Search users</label>
+            <DebouncedInput
+              id="user-search"
+              value={search}
+              onChange={setSearch}
+              placeholder="Search name or email…"
+              debounceMs={300}
+            />
+          </div>
+          <CustomNextLink href="/org-portal/users/add" variant="primary" size="sm">
+            + Add User
+          </CustomNextLink>
         </div>
       </div>
 
       <div className="bg-rcn-card border border-rcn-border rounded-2xl shadow-rcn overflow-hidden">
-        <TableLayout<OrgUser>
-          columns={columns}
-          data={filtered}
-          body={body}
-          setBody={setBody}
-          emptyMessage="No users found."
-          wrapperClassName="min-w-[640px]"
-          getRowKey={(u) => u.id}
-        />
+        <div className="p-4">
+          <div className="border border-rcn-border rounded-xl overflow-hidden">
+            <TableLayout<OrgUserRow>
+              columns={columns}
+              data={apiData?.data}
+              body={body as TableSortState & Record<string, string>}
+              setBody={setBody}
+              emptyMessage={search.trim() ? "No users match your search." : "No users yet. Add a user to get started."}
+              loader={isLoading}
+              wrapperClassName="min-w-[260px]"
+              getRowKey={(u) => u._id}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

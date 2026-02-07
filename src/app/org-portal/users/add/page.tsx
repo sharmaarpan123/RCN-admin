@@ -1,18 +1,38 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { getOrganizationBranchesApi, getOrganizationDepartmentsApi } from "@/apis/ApiCalls";
 import { CustomNextLink } from "@/components";
-import { UserForm } from "@/components/OrgComponent/UsersModule";
-import { toastSuccess } from "@/utils/toast";
-import { MOCK_ORG, type Branch } from "../../mockData";
+import { UserForm, type BranchWithDepts } from "@/components/OrgComponent/UsersModule";
+import { checkResponse } from "@/utils/commonFunc";
+import defaultQueryKeys from "@/utils/orgQueryKeys";
+import { useQuery } from "@tanstack/react-query";
 
 export default function OrgPortalUserAddPage() {
-  const [branches] = useState<Branch[]>(MOCK_ORG.branches);
   const router = useRouter();
 
+  const { data: branchesWithDepts, isLoading } = useQuery({
+    queryKey: [...defaultQueryKeys.branchList, "with-departments"],
+    queryFn: async () => {
+      const res = await getOrganizationBranchesApi({ search: "" });
+      if (!checkResponse({ res })) return [];
+      const list = res.data?.data ?? [];
+      const withDepts: BranchWithDepts[] = await Promise.all(
+        list.map(async (b: { _id: string; name: string }) => {
+          const dRes = await getOrganizationDepartmentsApi({ branch_id: b._id });
+          const departments = checkResponse({ res: dRes }) ? (dRes.data?.data ?? []) : [];
+          return {
+            _id: b._id,
+            name: b.name,
+            departments: departments.map((d: { _id: string; name: string }) => ({ _id: d._id, name: d.name })),
+          };
+        })
+      );
+      return withDepts;
+    },
+  });
+
   const handleSave = () => {
-    toastSuccess("User created.");
     router.push("/org-portal/users");
   };
 
@@ -23,7 +43,14 @@ export default function OrgPortalUserAddPage() {
           ← User list
         </CustomNextLink>
       </div>
-        <UserForm mode="add" branches={branches} onSave={handleSave} />
+      <UserForm
+        mode="add"
+        branches={branchesWithDepts ?? []}
+        onSave={handleSave}
+      />
+      {isLoading && (
+        <p className="text-rcn-muted text-sm mt-2">Loading branches…</p>
+      )}
     </div>
   );
 }
