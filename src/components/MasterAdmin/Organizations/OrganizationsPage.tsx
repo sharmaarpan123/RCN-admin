@@ -62,18 +62,6 @@ export function OrganizationsPage() {
 
   const orgsList = useMemo(() => orgsResponse?.data ?? [], [orgsResponse?.data]);
 
-  /** Branch list for depts dropdown and branch modal only (default body). Tab has its own fetch with body. */
-  type AdminBranchesApiResponse = { success?: boolean; message?: string; data: AdminBranchListItem[]; meta?: unknown };
-  const { data: branchesResponse } = useQuery({
-    queryKey: [...defaultQueryKeys.organizationBranchesList, selectedOrg],
-    queryFn: async () => {
-      const res = await getAdminOrganizationBranchesApi(selectedOrg?.organization_id ?? "", { page: 1, limit: 500, search: "" });
-      return res.data as AdminBranchesApiResponse;
-    },
-    enabled: !!selectedOrg,
-  });
-
-  const branchesList = useMemo(() => branchesResponse?.data ?? [], [branchesResponse?.data]);
 
   const invalidateDepts = () =>
     queryClient.invalidateQueries({ queryKey: defaultQueryKeys.organizationDepartmentList });
@@ -185,7 +173,7 @@ export function OrganizationsPage() {
         onClose={() => setOrgModal((prev) => ({ ...prev, isOpen: false }))}
       />
 
-      {branchModal.isOpen && (() => {
+      {/* {branchModal.isOpen && (() => {
         const row = branchModal.branchId ? branchesList.find((b) => b._id === branchModal.branchId) ?? null : null;
         const branch = row ? { id: row._id, name: row.name, orgId: row.organization_id } : null;
         const targetOrgId = branch?.orgId ?? branchModal.presetOrgId ?? selectedOrg?.organization_id ?? "";
@@ -201,7 +189,7 @@ export function OrganizationsPage() {
             onDelete={row ? () => deleteBranch(row._id) : undefined}
           />
         );
-      })()}
+      })()} */}
 
       <OrganizationsTable
         isLoading={orgsLoading}
