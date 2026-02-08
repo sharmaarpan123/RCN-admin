@@ -45,17 +45,46 @@ export type OrgUserRow = {
   enabled?: boolean;
 };
 
-export type BranchTableRow = {
-  id: string;
-  name: string;
-  enabled?: boolean;
+/** Raw item from GET /api/admin/organization/branch/:organizationId (use as-is). */
+export type AdminBranchListItem = {
+  _id: string;
+  name?: string;
+  organization_id?: string;
+  status?: number;
+  departments?: unknown[];
+  [key: string]: unknown;
 };
 
-export type DeptTableRow = {
-  id: string;
-  name: string;
-  branchId: string;
-  enabled?: boolean;
+/** Embedded branch object (e.g. branch_id in department response). */
+export type AdminBranchEmbedded = {
+  _id: string;
+  name?: string;
+  organization_id?: string;
+  status?: number;
+  credits_used?: number;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+/** Row type for branches table when using raw API response. */
+export type BranchTableRow = AdminBranchListItem;
+
+/** Raw item from GET /api/admin/organization/department/:orgId/:branchId (use as-is). */
+export type AdminDepartmentListItem = {
+  _id: string;
+  name?: string;
+  organization_id?: string;
+  branch_id?: AdminBranchEmbedded;
+  status?: number;
+  [key: string]: unknown;
+};
+
+export type DeptTableRow = AdminDepartmentListItem
+
+export type BranchListBody = {
+  page: number;
+  limit: number;
+  search: string;
 };
 
 export type OrgModulesTab = "profile" | "branches" | "depts" | "users";

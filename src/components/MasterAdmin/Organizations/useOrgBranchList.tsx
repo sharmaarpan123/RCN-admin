@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { toastSuccess, toastError } from "@/utils/toast";
 import { TableColumn } from "@/components";
-import type { BranchTableRow } from "./types";
+import type { BranchTableRow, AdminBranchListItem } from "./types";
 import { BTN_SMALL_CLASS } from "./types";
 import { BranchModalContent } from "./BranchModal";
 
@@ -14,23 +14,18 @@ export type OrgBranchListModalControl = {
   closeModal: () => void;
 };
 
-export type BranchRecord = { id: string; orgId: string; name: string; enabled?: boolean };
-
 export interface UseOrgBranchListParams {
-  branches: BranchRecord[];
-  setBranches: React.Dispatch<React.SetStateAction<BranchRecord[]>>;
+  branches: AdminBranchListItem[];
+  refetchBranches: () => void;
   setDepts: React.Dispatch<React.SetStateAction<unknown[]>>;
   orgs: { id: string; name: string }[];
   selectedOrgId: string;
   modal: OrgBranchListModalControl;
 }
 
-const uid = (prefix: string) =>
-  `${prefix}_${Math.random().toString(16).slice(2)}${Math.random().toString(16).slice(2)}`;
-
 export function useOrgBranchList({
   branches,
-  setBranches,
+  refetchBranches,
   setDepts,
   orgs,
   selectedOrgId,
@@ -40,13 +35,14 @@ export function useOrgBranchList({
   const [branchSearch, setBranchSearch] = useState("");
 
   const getFilteredBranches = useMemo(
-    () => () => {
+    () => (): BranchTableRow[] => {
       if (!selectedOrgId) return [];
       const q = safeLower(branchSearch);
       return branches.filter((b) => {
-        if (b.orgId !== selectedOrgId) return false;
+        const orgId = b.organization_id ?? "";
+        if (orgId !== selectedOrgId) return false;
         if (!q) return true;
-        const hay = safeLower(b.name + " " + b.id);
+        const hay = safeLower((b.name ?? "") + " " + b._id);
         return hay.includes(q);
       });
     },
@@ -60,35 +56,30 @@ export function useOrgBranchList({
       toastError("Branch name required.");
       return;
     }
-    const obj: BranchRecord = {
-      id: branchId ?? uid("br"),
-      orgId,
-      name,
-      enabled: branchId ? branches.find((b) => b.id === branchId)?.enabled ?? true : true,
-    };
-    if (branchId) {
-      setBranches(branches.map((b) => (b.id === branchId ? obj : b)));
-    } else {
-      setBranches([...branches, obj]);
-    }
+    // TODO: call create/update branch API when available; then refetch
     closeModal();
+    refetchBranches();
     toastSuccess("Branch saved.");
   };
 
   const deleteBranch = (branchId: string) => {
     if (!confirm("Delete this branch?")) return;
-    setBranches(branches.filter((b) => b.id !== branchId));
     setDepts((prev: unknown[]) => (prev as { branchId: string }[]).filter((d) => d.branchId !== branchId));
     closeModal();
+    refetchBranches();
     toastSuccess("Branch deleted.");
   };
 
-  const toggleBranch = (branchId: string) => {
-    setBranches(branches.map((b) => (b.id === branchId ? { ...b, enabled: !b.enabled } : b)));
+  const toggleBranch = (_branchId: string) => {
+    // TODO: call toggle branch API when available; then refetch
+    refetchBranches();
   };
 
   const openBranchModal = (branchId?: string, presetOrgId?: string) => {
-    const branch = branchId ? branches.find((b) => b.id === branchId) ?? null : null;
+    const row = branchId ? branches.find((b) => b._id === branchId) ?? null : null;
+    const branch = row
+      ? { id: row._id, name: row.name, orgId: row.organization_id }
+      : null;
     const targetOrgId = branch?.orgId ?? presetOrgId ?? selectedOrgId ?? "";
     openModal(
       <BranchModalContent
@@ -98,7 +89,7 @@ export function useOrgBranchList({
         orgs={orgs}
         onClose={closeModal}
         onSave={() => saveBranch(branchId)}
-        onDelete={branch ? () => deleteBranch(branch.id) : undefined}
+        onDelete={row ? () => deleteBranch(row._id) : undefined}
       />
     );
   };
@@ -108,15 +99,15 @@ export function useOrgBranchList({
       head: "Branch",
       component: (b) => (
         <>
-          <b>{b.name}</b>{" "}
-          <span className="text-rcn-muted font-mono text-[11px]">({b.id})</span>
+          <b>{b.name ?? "—"}</b>{" "}
+          <span className="text-rcn-muted font-mono text-[11px]">({b._id})</span>
         </>
       ),
     },
     {
       head: "Status",
       component: (b) =>
-        b.enabled ? (
+        (b.status === 1) ? (
           <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">
             Enabled
           </span>
@@ -130,10 +121,10 @@ export function useOrgBranchList({
       head: "Actions",
       component: (b) => (
         <div className="flex gap-2">
-          <button type="button" onClick={() => toggleBranch(b.id)} className={BTN_SMALL_CLASS}>
+          <button type="button" onClick={() => toggleBranch(b._id)} className={BTN_SMALL_CLASS}>
             Toggle
           </button>
-          <button type="button" onClick={() => openBranchModal(b.id)} className={BTN_SMALL_CLASS}>
+          <button type="button" onClick={() => openBranchModal(b._id)} className={BTN_SMALL_CLASS}>
             Edit
           </button>
         </div>

@@ -1,39 +1,34 @@
 "use client";
 
 import React from "react";
+import type { AdminOrganizationListItem } from "./types";
 import { BTN_CLASS } from "./types";
 
 interface OrgProfileTabProps {
-  selectedOrg: {
-    name?: string;
-    email?: string;
-    phone?: string;
-    ein?: string;
-    enabled?: boolean;
-    address?: {
-      street?: string;
-      suite?: string;
-      city?: string;
-      state?: string;
-      zip?: string;
-    };
-    contact?: {
-      first?: string;
-      last?: string;
-      email?: string;
-      tel?: string;
-      fax?: string;
-    };
-  } | null;
+  selectedOrgRow: AdminOrganizationListItem | null;
   selectedOrgId: string;
   onEditOrg: (orgId: string) => void;
 }
 
+function formatOrgPhone(row: AdminOrganizationListItem | null): string {
+  if (!row?.organization) return "—";
+  const org = row.organization;
+  const tel = [org.dial_code, org.phone_number].filter(Boolean).join(" ").trim() || org.phone_number;
+  return tel ?? "—";
+}
+
+function formatContactPhone(row: AdminOrganizationListItem | null): string {
+  if (!row) return "—";
+  const tel = [row.dial_code, row.phone_number].filter(Boolean).join(" ").trim() || row.phone_number;
+  return tel ?? "—";
+}
+
 export function OrgProfileTab({
-  selectedOrg,
+  selectedOrgRow,
   selectedOrgId,
   onEditOrg,
 }: OrgProfileTabProps) {
+  const org = selectedOrgRow?.organization;
   return (
     <div>
       <div className="grid grid-cols-2 gap-4">
@@ -41,24 +36,21 @@ export function OrgProfileTab({
           <h3 className="text-sm font-semibold m-0 mb-2">Organization Details</h3>
           <div className="text-xs space-y-1">
             <div>
-              <b>Name:</b> {selectedOrg?.name}
+              <b>Name:</b> {org?.name ?? "—"}
             </div>
             <div>
-              <b>Email:</b> {selectedOrg?.email || "—"}
+              <b>Email:</b> {org?.email ?? "—"}
             </div>
             <div>
-              <b>Phone:</b> {selectedOrg?.phone || "—"}
+              <b>Phone:</b> {formatOrgPhone(selectedOrgRow)}
             </div>
             <div>
-              <b>EIN:</b> {selectedOrg?.ein || "—"}
+              <b>EIN:</b> {org?.ein_number ?? "—"}
             </div>
             <div className="mt-2">
-              <b>Address:</b> {selectedOrg?.address?.street || "—"}
-              {selectedOrg?.address?.suite
-                ? `, ${selectedOrg.address.suite}`
-                : ""}
-              , {selectedOrg?.address?.city || ""}, {selectedOrg?.address?.state || ""}{" "}
-              {selectedOrg?.address?.zip || ""}
+              <b>Address:</b> {org?.street ?? "—"}
+              {org?.suite ? `, ${org.suite}` : ""}
+              , {org?.city ?? ""}, {org?.state ?? ""} {org?.zip_code ?? ""}
             </div>
           </div>
         </div>
@@ -68,17 +60,16 @@ export function OrgProfileTab({
           <div className="text-xs space-y-1">
             <div>
               <b>Contact:</b>{" "}
-              {`${selectedOrg?.contact?.first || ""} ${selectedOrg?.contact?.last || ""}`.trim() ||
-                "—"}
+              {[selectedOrgRow?.first_name, selectedOrgRow?.last_name].filter(Boolean).join(" ").trim() || "—"}
             </div>
             <div>
-              <b>Email:</b> {selectedOrg?.contact?.email || "—"}
+              <b>Email:</b> {selectedOrgRow?.email ?? "—"}
             </div>
             <div>
-              <b>Tel:</b> {selectedOrg?.contact?.tel || "—"}
+              <b>Tel:</b> {formatContactPhone(selectedOrgRow)}
             </div>
             <div>
-              <b>Fax:</b> {selectedOrg?.contact?.fax || "—"}
+              <b>Fax:</b> {selectedOrgRow?.fax_number ?? "—"}
             </div>
           </div>
         </div>

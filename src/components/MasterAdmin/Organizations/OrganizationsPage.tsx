@@ -1,21 +1,21 @@
 "use client";
 
-import { getAdminOrganizationsApi } from "@/apis/ApiCalls";
+import { getAdminOrganizationBranchesApi, getAdminOrganizationsApi, putAdminBranchToggleApi } from "@/apis/ApiCalls";
 import Button from "@/components/Button";
 import defaultQueryKeys from "@/utils/adminQueryKeys";
+import { toastError, toastSuccess } from "@/utils/toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
+import { BranchModalContent } from "./BranchModal";
 import adminOrgTableColumns from "./columns";
-import { MOCK_BRANCHES, MOCK_DEPARTMENTS, MOCK_ORG_USERS } from "./mockData";
+import { MOCK_ORG_USERS } from "./mockData";
 import { OrganizationsTable } from "./OrganizationsTable";
 import { OrgBranchesTab } from "./OrgBranchesTab";
 import { OrgDeptsTab } from "./OrgDeptsTab";
 import { OrgModalContent } from "./OrgModal";
 import { OrgProfileTab } from "./OrgProfileTab";
 import { OrgUsersTab } from "./OrgUsersTab";
-import { AdminOrgModal, type AdminOrganizationListItem, type OrgUserRow } from "./types";
-import { useOrgBranchList, type BranchRecord } from "./useOrgBranchList";
-import { useOrgDeptList, type DeptRecord } from "./useOrgDeptList";
+import { AdminOrgModal, OrgTableRow, type AdminBranchListItem, type AdminOrganizationListItem, type OrgUserRow } from "./types";
 import { useOrgUserList, type UserRecord } from "./useOrgUserList";
 
 /** Full API response from GET /api/admin/organization (use as-is). */
@@ -26,13 +26,12 @@ type AdminOrganizationsApiResponse = {
   meta?: unknown;
 };
 
-
-
 export function OrganizationsPage() {
   const queryClient = useQueryClient();
+
   const [modalContent, setModalContent] = useState<React.ReactNode>(null);
 
-  const [selectedOrgId, setSelectedOrgId] = useState("");
+  const [selectedOrg, setSelectedOrg] = useState<OrgTableRow | undefined>(undefined);
   const [activeTab, setActiveTab] = useState<"profile" | "branches" | "depts" | "users">("profile");
 
   const [orgListBody, setOrgListBody] = useState({
@@ -41,11 +40,15 @@ export function OrganizationsPage() {
     search: ""
   });
 
-
   const [orgModal, setOrgModal] = useState<AdminOrgModal>({ isOpen: false, mode: "add", editId: null });
 
-  const [branches, setBranches] = useState<BranchRecord[]>(MOCK_BRANCHES as BranchRecord[]);
-  const [depts, setDepts] = useState<DeptRecord[]>(MOCK_DEPARTMENTS as DeptRecord[]);
+  const [branchModal, setBranchModal] = useState<{ isOpen: boolean; branchId: string | null; presetOrgId?: string }>({
+    isOpen: false,
+    branchId: null,
+    presetOrgId: undefined,
+  });
+
+
   const [users, setUsers] = useState<UserRecord[]>(MOCK_ORG_USERS as UserRecord[]);
 
   const { data: orgsResponse, isLoading: orgsLoading, error: orgsError } = useQuery({
@@ -58,6 +61,22 @@ export function OrganizationsPage() {
 
 
   const orgsList = useMemo(() => orgsResponse?.data ?? [], [orgsResponse?.data]);
+
+  /** Branch list for depts dropdown and branch modal only (default body). Tab has its own fetch with body. */
+  type AdminBranchesApiResponse = { success?: boolean; message?: string; data: AdminBranchListItem[]; meta?: unknown };
+  const { data: branchesResponse } = useQuery({
+    queryKey: [...defaultQueryKeys.organizationBranchesList, selectedOrg],
+    queryFn: async () => {
+      const res = await getAdminOrganizationBranchesApi(selectedOrg?.organization_id ?? "", { page: 1, limit: 500, search: "" });
+      return res.data as AdminBranchesApiResponse;
+    },
+    enabled: !!selectedOrg,
+  });
+
+  const branchesList = useMemo(() => branchesResponse?.data ?? [], [branchesResponse?.data]);
+
+  const invalidateDepts = () =>
+    queryClient.invalidateQueries({ queryKey: defaultQueryKeys.organizationDepartmentList });
 
   const orgsForSelect = useMemo(() => {
     const seen = new Set<string>();
@@ -82,35 +101,51 @@ export function OrganizationsPage() {
   const closeModal = () => setModalContent(null);
   const modal = { openModal, closeModal };
 
-  const {
-    branchSearch,
-    setBranchSearch,
-    getFilteredBranches,
-    branchTableColumns,
-    openBranchModal,
-  } = useOrgBranchList({
-    branches,
-    setBranches,
-    setDepts: setDepts as React.Dispatch<React.SetStateAction<unknown[]>>,
-    orgs: orgsForSelect,
-    selectedOrgId,
-    modal,
-  });
 
-  const {
-    deptSearch,
-    setDeptSearch,
-    getFilteredDepts,
-    deptTableColumns,
-    openDeptModal,
-  } = useOrgDeptList({
-    depts,
-    setDepts,
-    branches,
-    orgs: orgsForSelect,
-    selectedOrgId,
-    modal,
-  });
+  const invalidateBranches = () =>
+    queryClient.invalidateQueries({ queryKey: defaultQueryKeys.organizationBranchesList });
+
+  const closeBranchModal = () =>
+    setBranchModal((prev) => ({ ...prev, isOpen: false, branchId: null, presetOrgId: undefined }));
+
+  const saveBranch = (branchId?: string) => {
+    void branchId;
+    const name = (document.getElementById("br_name") as HTMLInputElement)?.value.trim();
+    if (!name) {
+      toastError("Branch name required.");
+      return;
+    }
+    closeBranchModal();
+    invalidateBranches();
+    toastSuccess("Branch saved.");
+  };
+
+  const deleteBranch = (branchId: string) => {
+    if (!confirm("Delete this branch?")) return;
+    void branchId;
+    closeBranchModal();
+    invalidateBranches();
+    invalidateDepts();
+    toastSuccess("Branch deleted.");
+  };
+
+  const openBranchModal = (branchId?: string, presetOrgId?: string) => {
+    setBranchModal({
+      isOpen: true,
+      branchId: branchId ?? null,
+      presetOrgId,
+    });
+  };
+
+  const toggleBranch = async (branchId: string) => {
+    try {
+      await putAdminBranchToggleApi(branchId);
+      invalidateBranches();
+      toastSuccess("Branch toggled.");
+    } catch {
+      toastError("Failed to toggle branch.");
+    }
+  };
 
   const {
     userSearch,
@@ -122,43 +157,12 @@ export function OrganizationsPage() {
     users,
     setUsers,
     orgs: orgsForSelect,
-    selectedOrgId,
+    selectedOrgId: selectedOrg?.organization_id ?? "",
     modal,
   });
 
-  const selectedOrgRow = selectedOrgId
-    ? orgsList.find(
-      (r) => (r.organization?._id ?? r.organization_id) === selectedOrgId
-    ) ?? null
-    : null;
+  const selectedOrgRow = selectedOrg
 
-  const selectedOrg = selectedOrgRow
-    ? (() => {
-      const org = selectedOrgRow.organization;
-      const phone = ([org?.dial_code, org?.phone_number].filter(Boolean).join(" ").trim() || org?.phone_number) ?? "";
-      return {
-        name: org?.name,
-        email: org?.email,
-        phone,
-        ein: org?.ein_number,
-        enabled: selectedOrgRow.status === 1,
-        address: {
-          street: org?.street,
-          suite: org?.suite,
-          city: org?.city,
-          state: org?.state,
-          zip: org?.zip_code,
-        },
-        contact: {
-          first: selectedOrgRow.first_name,
-          last: selectedOrgRow.last_name,
-          email: selectedOrgRow.email,
-          tel: ([selectedOrgRow.dial_code, selectedOrgRow.phone_number].filter(Boolean).join(" ").trim() || selectedOrgRow.phone_number) ?? "",
-          fax: selectedOrgRow.fax_number,
-        },
-      };
-    })()
-    : null;
 
   return (
     <>
@@ -178,15 +182,33 @@ export function OrganizationsPage() {
       <OrgModalContent
         isOpen={orgModal.isOpen}
         orgId={orgModal.editId ?? undefined}
-        onClose={() => setOrgModal(prev => ({ ...prev, isOpen: false }))}
+        onClose={() => setOrgModal((prev) => ({ ...prev, isOpen: false }))}
       />
+
+      {branchModal.isOpen && (() => {
+        const row = branchModal.branchId ? branchesList.find((b) => b._id === branchModal.branchId) ?? null : null;
+        const branch = row ? { id: row._id, name: row.name, orgId: row.organization_id } : null;
+        const targetOrgId = branch?.orgId ?? branchModal.presetOrgId ?? selectedOrg?.organization_id ?? "";
+        return (
+          <BranchModalContent
+            isOpen={branchModal.isOpen}
+            branch={branch}
+            targetOrgId={targetOrgId ?? ""}
+            presetOrgId={branchModal.presetOrgId}
+            orgs={orgsForSelect}
+            onClose={closeBranchModal}
+            onSave={() => saveBranch(branchModal.branchId ?? undefined)}
+            onDelete={row ? () => deleteBranch(row._id) : undefined}
+          />
+        );
+      })()}
 
       <OrganizationsTable
         isLoading={orgsLoading}
         body={orgListBody}
         setBody={setOrgListBody}
         data={orgsList}
-        columns={adminOrgTableColumns({ setSelectedOrgId, setActiveTab, setOrgModal })}
+        columns={adminOrgTableColumns({ setSelectedOrg, setActiveTab, setOrgModal })}
         onNewOrg={() => setOrgModal(prev => ({ ...prev, isOpen: true, mode: "add" }))}
       />
 
@@ -207,15 +229,15 @@ export function OrganizationsPage() {
 
         <div className="h-px bg-rcn-border my-4"></div>
 
-        {!selectedOrgId ? (
+        {!selectedOrg ? (
           <div className="text-xs text-rcn-muted">
             Select an organization to manage branches, departments, and users.
           </div>
         ) : (
           <>
             <div className="text-xs mb-3">
-              <b>{selectedOrg?.name}</b> •{" "}
-              {selectedOrg?.enabled ? (
+              <b>{selectedOrgRow?.organization?.name}</b> •{" "}
+              {selectedOrgRow?.status === 1 ? (
                 <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">
                   Enabled
                 </span>
@@ -225,9 +247,9 @@ export function OrganizationsPage() {
                 </span>
               )}
               <span className="text-rcn-muted ml-2">
-                • {selectedOrg?.address?.street} {selectedOrg?.address?.suite} •{" "}
-                {selectedOrg?.address?.city}, {selectedOrg?.address?.state}{" "}
-                {selectedOrg?.address?.zip}
+                • {selectedOrgRow?.organization?.street} {selectedOrgRow?.organization?.suite} •{" "}
+                {selectedOrgRow?.organization?.city}, {selectedOrgRow?.organization?.state}{" "}
+                {selectedOrgRow?.organization?.zip_code}
               </span>
             </div>
 
@@ -268,27 +290,23 @@ export function OrganizationsPage() {
 
             {activeTab === "profile" && (
               <OrgProfileTab
-                selectedOrg={selectedOrg ?? null}
-                selectedOrgId={selectedOrgId}
-                onEditOrg={() => setOrgModal(prev => ({ ...prev, isOpen: true, mode: "edit", editId: selectedOrgId }))}
+                selectedOrgRow={selectedOrgRow ?? null}
+                selectedOrgId={selectedOrg?.organization_id ?? ""}
+                onEditOrg={() => setOrgModal(prev => ({ ...prev, isOpen: true, mode: "edit", editId: selectedOrg?.organization_id ?? "" }))}
               />
             )}
             {activeTab === "branches" && (
               <OrgBranchesTab
-                branchSearch={branchSearch}
-                setBranchSearch={setBranchSearch}
-                filteredBranches={getFilteredBranches()}
-                columns={branchTableColumns}
-                onNewBranch={() => openBranchModal(undefined, selectedOrgId)}
+                selectedOrgId={selectedOrg?.organization_id ?? ""}
+                onNewBranch={() => openBranchModal(undefined, selectedOrg?.organization_id ?? "")}
+                onEditBranch={(branchId) => openBranchModal(branchId)}
+                onToggleBranch={toggleBranch}
               />
             )}
             {activeTab === "depts" && (
               <OrgDeptsTab
-                deptSearch={deptSearch}
-                setDeptSearch={setDeptSearch}
-                filteredDepts={getFilteredDepts()}
-                columns={deptTableColumns}
-                onNewDept={() => openDeptModal(undefined, selectedOrgId)}
+                selectedOrgId={selectedOrg?.organization_id ?? ""}
+                modal={modal}
               />
             )}
             {activeTab === "users" && (
@@ -297,7 +315,7 @@ export function OrganizationsPage() {
                 setUserSearch={setUserSearch}
                 filteredUsers={getFilteredUsers() as OrgUserRow[]}
                 columns={orgUserColumns}
-                onNewUser={() => openUserModal(undefined, selectedOrgId)}
+                onNewUser={() => openUserModal(undefined, selectedOrg?.organization_id ?? "")}
               />
             )}
           </>

@@ -37,6 +37,18 @@ export const createAdminOrganizationApi = (body: unknown) =>
 export const updateAdminOrganizationApi = (organizationId: string, body: unknown) =>
   AxiosInstance.put(`/api/admin/organization/${organizationId}`, body);
 
+/** GET /api/admin/organization/branch/:organizationId — list branches for an organization (admin). */
+export const getAdminOrganizationBranchesApi = (organizationId: string, body: unknown) =>
+  AxiosInstance.get(`/api/admin/organization/branch/${organizationId}`, { params: body });
+
+/** PUT /api/admin/branch/toggle/:branchId — toggle branch status (admin). */
+export const putAdminBranchToggleApi = (branchId: string) =>
+  AxiosInstance.put(`/api/admin/branch/toggle/${branchId}`);
+
+/** GET /api/admin/organization/department/:organizationId/:branchId — list departments (admin). */
+export const getAdminOrganizationDepartmentsApi = (organizationId: string) =>
+  AxiosInstance.get(`/api/admin/organization/department/${organizationId}`);
+
 export const getOrganizationUsersApi = (params?: { search?: string }) =>
   AxiosInstance.get("/api/organization/user", { params });
 

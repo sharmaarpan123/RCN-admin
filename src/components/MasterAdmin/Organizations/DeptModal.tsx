@@ -1,14 +1,13 @@
 "use client";
 
 import React from "react";
-import { INPUT_CLASS, BTN_CLASS, BTN_PRIMARY_CLASS } from "./types";
+import { INPUT_CLASS, BTN_CLASS, BTN_PRIMARY_CLASS, AdminDepartmentListItem } from "./types";
+import { Modal } from "@/components";
+
 
 interface DeptModalContentProps {
-  dept: { id: string; name?: string; orgId?: string; branchId?: string } | null;
-  targetOrgId: string;
-  presetOrgId?: string;
-  orgs: { id: string; name: string }[];
-  branches: { id: string; name: string; orgId: string }[];
+  dept: AdminDepartmentListItem | null;
+  isOpen: boolean;
   onClose: () => void;
   onSave: () => void;
   onDelete?: () => void;
@@ -16,27 +15,17 @@ interface DeptModalContentProps {
 
 export function DeptModalContent({
   dept,
-  targetOrgId,
-  presetOrgId,
-  orgs,
-  branches,
   onClose,
   onSave,
+  isOpen,
   onDelete,
 }: DeptModalContentProps) {
-  const orgBranches = branches.filter((b) => b.orgId === targetOrgId);
 
-  const handleOrgChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const dpBranchSelect = document.getElementById("dp_branch") as HTMLSelectElement;
-    if (dpBranchSelect) {
-      const filtered = branches.filter((b) => b.orgId === e.target.value);
-      dpBranchSelect.innerHTML = filtered
-        .map((b) => `<option value="${b.id}">${b.name}</option>`)
-        .join("");
-    }
-  };
+
+
 
   return (
+    <Modal isOpen={isOpen} onClose={onClose}>
     <div>
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold m-0">
@@ -54,7 +43,7 @@ export function DeptModalContent({
           <label className="text-xs text-rcn-muted block mb-1.5">
             Organization
           </label>
-          <select
+          {/* <select
             id="dp_org"
             defaultValue={targetOrgId}
             className={INPUT_CLASS}
@@ -66,21 +55,21 @@ export function DeptModalContent({
                 {o.name}
               </option>
             ))}
-          </select>
+          </select> */}
         </div>
         <div>
           <label className="text-xs text-rcn-muted block mb-1.5">Branch</label>
-          <select
+          {/* <select
             id="dp_branch"
             defaultValue={dept?.branchId || ""}
             className={INPUT_CLASS}
           >
             {orgBranches.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.name}
+              <option key={b._id} value={b._id}>
+                {b.name ?? ""}
               </option>
             ))}
-          </select>
+          </select> */}
         </div>
       </div>
 
@@ -112,5 +101,6 @@ export function DeptModalContent({
         </button>
       </div>
     </div>
+    </Modal>
   );
 }

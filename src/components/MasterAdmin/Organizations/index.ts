@@ -12,6 +12,5 @@ export * from "./types";
 
 export { useOrganizations } from "./useOrganizations";
 export { useOrgBranchList } from "./useOrgBranchList";
-export { useOrgDeptList } from "./useOrgDeptList";
 export { useOrgUserList } from "./useOrgUserList";
 export { UserModalContent } from "./UserModal";
