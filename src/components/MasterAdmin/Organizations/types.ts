@@ -34,6 +34,27 @@ export type AdminOrganizationListItem = {
 /** Row type for organizations table when using raw API response. */
 export type OrgTableRow = AdminOrganizationListItem;
 
+/** Raw item from GET /api/admin/organization/user/:organizationId list (use as-is). */
+export type AdminOrganizationUserListItem = {
+  _id: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  dial_code?: string;
+  phone_number?: string;
+  fax_number?: string;
+  role_id?: number;
+  organization_id?: string;
+  status?: number;
+  notes?: string;
+  branches?: unknown[];
+  departments?: unknown[];
+  createdAt?: string;
+  updatedAt?: string;
+  [key: string]: unknown;
+};
+
+/** @deprecated Use AdminOrganizationUserListItem for table rows. */
 export type OrgUserRow = {
   id: string;
   name: string;

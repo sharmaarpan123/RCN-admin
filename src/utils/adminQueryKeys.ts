@@ -7,6 +7,7 @@ const defaultQueryKeys = {
     organizationBranchesList: ["admin", "organization", "branches" , "list"],
     organizationDepartmentList: ["admin", "organization", "departments" , "list"],
     organizationUsersList: ["admin", "organization", "users", "list"],
+    organizationUser: ["admin", "organization", "user", "detail"],
     cmsList: ["admin", "cms", "list"],
     cmsDetail: ["admin", "cms", "detail"],
 };

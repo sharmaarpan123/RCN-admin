@@ -284,7 +284,6 @@ export function OrganizationsPage() {
             {activeTab === "users" && (
               <OrgUsersTab
                 selectedOrgId={selectedOrg?.organization_id ?? ""}
-                modal={modal}
                 invalidateUsers={invalidateUsers}
               />
             )}

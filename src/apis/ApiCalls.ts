@@ -66,12 +66,16 @@ export const getAdminOrganizationDepartmentsApi = (organizationId: string) =>
   AxiosInstance.get(`/api/admin/organization/department/${organizationId}`);
 
 /** GET /api/admin/organization/user — list organization users (admin). Params: organization_id. */
-export const getAdminOrganizationUsersApi = (organizationId: string,) =>
-  AxiosInstance.get("/api/admin/organization/user/" + organizationId);
+export const getAdminOrganizationUsersApi = (organizationId: string, body: unknown) =>
+  AxiosInstance.get("/api/admin/organization/user/" + organizationId, { params: body });
 
 /** GET /api/admin/organization/user/:userId — get single organization user (admin). */
 export const getAdminOrganizationUserApi = (userId: string) =>
   AxiosInstance.get(`/api/admin/organization/user/${userId}`);
+
+/** POST /api/admin/organization/user/:organization_id — create organization user (admin). */
+export const createAdminOrganizationUserApi = (organizationId: string, body: unknown) =>
+  AxiosInstance.post(`/api/admin/organization/user/${organizationId}`, body);
 
 /** PUT /api/admin/department/toggle/:departmentId — toggle department status (admin). */
 export const putAdminDepartmentToggleApi = (departmentId: string) =>
@@ -80,12 +84,14 @@ export const putAdminDepartmentToggleApi = (departmentId: string) =>
 export const getOrganizationUsersApi = (params?: { search?: string }) =>
   AxiosInstance.get("/api/organization/user", { params });
 
+/** GET /api/organization/user/:userId — get organization user detail. */
 export const getOrganizationUserApi = (userId: string) =>
   AxiosInstance.get(`/api/organization/user/${userId}`);
 
 export const createOrganizationUserApi = (body: unknown) =>
   AxiosInstance.post("/api/organization/user", body);
 
+/** PUT /api/organization/user/:userId — update organization user (body: first_name, last_name, dial_code, phone_number, fax_number, notes, etc.). */
 export const updateOrganizationUserApi = (userId: string, body: unknown) =>
   AxiosInstance.put(`/api/organization/user/${userId}`, body);
 
