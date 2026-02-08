@@ -8,15 +8,13 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { BranchModalContent } from "./BranchModal";
 import adminOrgTableColumns from "./columns";
-import { MOCK_ORG_USERS } from "./mockData";
 import { OrganizationsTable } from "./OrganizationsTable";
 import { OrgBranchesTab } from "./OrgBranchesTab";
 import { OrgDeptsTab } from "./OrgDeptsTab";
 import { OrgModalContent } from "./OrgModal";
 import { OrgProfileTab } from "./OrgProfileTab";
 import { OrgUsersTab } from "./OrgUsersTab";
-import { AdminOrgModal, OrgTableRow, type AdminBranchListItem, type AdminOrganizationListItem, type OrgUserRow } from "./types";
-import { useOrgUserList, type UserRecord } from "./useOrgUserList";
+import { AdminOrgModal, OrgTableRow, type AdminOrganizationListItem } from "./types";
 
 /** Full API response from GET /api/admin/organization (use as-is). */
 type AdminOrganizationsApiResponse = {
@@ -53,9 +51,6 @@ export function OrganizationsPage() {
     presetOrgId: undefined,
     branch: null,
   });
-
-
-  const [users, setUsers] = useState<UserRecord[]>(MOCK_ORG_USERS as UserRecord[]);
 
   const { data: orgsResponse, isLoading: orgsLoading, error: orgsError } = useQuery({
     queryKey: [...defaultQueryKeys.organizationsList, orgListBody.page, orgListBody.search],
@@ -108,6 +103,9 @@ export function OrganizationsPage() {
   const invalidateOrgs = () =>
     queryClient.invalidateQueries({ queryKey: defaultQueryKeys.organizationsList });
 
+  const invalidateUsers = () =>
+    queryClient.invalidateQueries({ queryKey: defaultQueryKeys.organizationUsersList });
+
   const toggleBranch = async (branchId: string) => {
     try {
       await putAdminBranchToggleApi(branchId);
@@ -139,20 +137,6 @@ export function OrganizationsPage() {
       toastError("Failed to delete organization.");
     }
   };
-
-  const {
-    userSearch,
-    setUserSearch,
-    getFilteredUsers,
-    orgUserColumns,
-    openUserModal,
-  } = useOrgUserList({
-    users,
-    setUsers,
-    // orgs: orgsForSelect,
-    selectedOrgId: selectedOrg?.organization_id ?? "",
-    modal,
-  });
 
   const selectedOrgRow = selectedOrg
 
@@ -299,11 +283,9 @@ export function OrganizationsPage() {
             )}
             {activeTab === "users" && (
               <OrgUsersTab
-                userSearch={userSearch}
-                setUserSearch={setUserSearch}
-                filteredUsers={getFilteredUsers() as OrgUserRow[]}
-                columns={orgUserColumns}
-                onNewUser={() => openUserModal(undefined, selectedOrg?.organization_id ?? "")}
+                selectedOrgId={selectedOrg?.organization_id ?? ""}
+                modal={modal}
+                invalidateUsers={invalidateUsers}
               />
             )}
           </>

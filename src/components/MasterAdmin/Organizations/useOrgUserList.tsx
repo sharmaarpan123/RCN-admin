@@ -1,13 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { deleteOrganizationUserApi } from "@/apis/ApiCalls";
 import { toastSuccess, toastError } from "@/utils/toast";
-import { TableColumn } from "@/components";
-import type { OrgUserRow } from "./types";
-import { BTN_SMALL_CLASS } from "./types";
 import { UserModalContent } from "./UserModal";
-
-const safeLower = (s: unknown) => (s ?? "").toString().toLowerCase();
 
 export type OrgUserListModalControl = {
   openModal: (content: React.ReactNode) => void;
@@ -32,9 +27,10 @@ export type UserRecord = {
 export interface UseOrgUserListParams {
   users: UserRecord[];
   setUsers: React.Dispatch<React.SetStateAction<UserRecord[]>>;
-  // orgs: { id: string; name: string }[];
   selectedOrgId: string;
   modal: OrgUserListModalControl;
+  /** Call after save/delete so the users list (e.g. from API) refetches. */
+  invalidateUsers?: () => void;
 }
 
 const uid = (prefix: string) =>
@@ -43,28 +39,11 @@ const uid = (prefix: string) =>
 export function useOrgUserList({
   users,
   setUsers,
-  // orgs,
   selectedOrgId,
   modal,
+  invalidateUsers,
 }: UseOrgUserListParams) {
   const { openModal, closeModal } = modal;
-  const [userSearch, setUserSearch] = useState("");
-
-  const getFilteredUsers = useMemo(
-    () => () => {
-      if (!selectedOrgId) return [];
-      const q = safeLower(userSearch);
-      return users.filter((u) => {
-        if (u.orgId !== selectedOrgId) return false;
-        if (!q) return true;
-        const hay = safeLower(
-          [u.name, u.email, u.role, u.phone, u.notes].filter(Boolean).join(" ")
-        );
-        return hay.includes(q);
-      });
-    },
-    [users, selectedOrgId, userSearch]
-  );
 
   const saveUser = (userId?: string) => {
     const firstName = (document.getElementById("u_first") as HTMLInputElement)?.value.trim();
@@ -141,107 +120,35 @@ export function useOrgUserList({
       setUsers([...users, obj]);
     }
     closeModal();
+    invalidateUsers?.();
     toastSuccess("User saved.");
   };
 
-  const deleteUser = (userId: string) => {
+  const deleteUser = async (userId: string) => {
     if (!confirm("Delete this user?")) return;
-    setUsers(users.filter((u) => u.id !== userId));
-    closeModal();
-    toastSuccess("User deleted.");
+    try {
+      await deleteOrganizationUserApi(userId);
+      closeModal();
+      invalidateUsers?.();
+      toastSuccess("User deleted.");
+    } catch {
+      toastError("Failed to delete user.");
+    }
   };
 
-  const openUserModal = (userId?: string, presetOrgId?: string) => {
-    const user = userId ? users.find((u) => u.id === userId) ?? null : null;
+  const openUserModal = (user?: UserRecord | null, presetOrgId?: string) => {
     const targetOrgId = user?.orgId ?? presetOrgId ?? selectedOrgId ?? "";
     openModal(
       <UserModalContent
-        user={user}
+        user={user ?? null}
         targetOrgId={targetOrgId}
         presetOrgId={presetOrgId}
-        // orgs={orgs}
         onClose={closeModal}
-        onSave={() => saveUser(userId)}
+        onSave={() => saveUser(user?.id)}
         onDelete={user ? () => deleteUser(user.id) : undefined}
       />
     );
   };
 
-  const orgUserColumns: TableColumn<OrgUserRow>[] = [
-    {
-      head: "Name",
-      component: (u) => (
-        <>
-          <b>{u.name}</b>{" "}
-          <span className="text-rcn-muted font-mono text-[11px]">({u.id})</span>
-        </>
-      ),
-    },
-    { head: "Email", component: (u) => <span className="font-mono">{u.email ?? ""}</span> },
-    {
-      head: "Role",
-      component: (u) =>
-        u.role === "ORG_ADMIN"
-          ? "Organization Admin"
-          : u.role === "STAFF"
-            ? "Staff"
-            : (u.role ?? ""),
-    },
-    {
-      head: "Access",
-      component: (u) =>
-        u.adminCap ? (
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">
-            Admin capabilities
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-rcn-border bg-rcn-bg">
-            Active user
-          </span>
-        ),
-    },
-    { head: "Reset", component: (u) => <>{u.resetIntervalDays ?? "—"} days</> },
-    {
-      head: "MFA",
-      component: (u) =>
-        u.mfaEmail ? (
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">
-            On
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-rcn-border bg-rcn-bg">
-            Off
-          </span>
-        ),
-    },
-    {
-      head: "Status",
-      component: (u) =>
-        u.enabled ? (
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">
-            Enabled
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#f3b8b8] bg-[#fff1f2] text-[#991b1b]">
-            Disabled
-          </span>
-        ),
-    },
-    {
-      head: "Actions",
-      component: (u) => (
-        <button type="button" onClick={() => openUserModal(u.id)} className={BTN_SMALL_CLASS}>
-          Edit
-        </button>
-      ),
-    },
-  ];
-
-  return {
-    userSearch,
-    setUserSearch,
-    getFilteredUsers,
-    orgUserColumns,
-    openUserModal,
-  };
+  return { openUserModal };
 }

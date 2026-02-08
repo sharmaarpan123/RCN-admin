@@ -65,6 +65,14 @@ export const putAdminBranchToggleApi = (branchId: string) =>
 export const getAdminOrganizationDepartmentsApi = (organizationId: string) =>
   AxiosInstance.get(`/api/admin/organization/department/${organizationId}`);
 
+/** GET /api/admin/organization/user — list organization users (admin). Params: organization_id. */
+export const getAdminOrganizationUsersApi = (organizationId: string,) =>
+  AxiosInstance.get("/api/admin/organization/user/" + organizationId);
+
+/** GET /api/admin/organization/user/:userId — get single organization user (admin). */
+export const getAdminOrganizationUserApi = (userId: string) =>
+  AxiosInstance.get(`/api/admin/organization/user/${userId}`);
+
 /** PUT /api/admin/department/toggle/:departmentId — toggle department status (admin). */
 export const putAdminDepartmentToggleApi = (departmentId: string) =>
   AxiosInstance.put(`/api/admin/department/toggle/${departmentId}`);
