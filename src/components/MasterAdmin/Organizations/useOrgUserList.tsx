@@ -32,7 +32,7 @@ export type UserRecord = {
 export interface UseOrgUserListParams {
   users: UserRecord[];
   setUsers: React.Dispatch<React.SetStateAction<UserRecord[]>>;
-  orgs: { id: string; name: string }[];
+  // orgs: { id: string; name: string }[];
   selectedOrgId: string;
   modal: OrgUserListModalControl;
 }
@@ -43,7 +43,7 @@ const uid = (prefix: string) =>
 export function useOrgUserList({
   users,
   setUsers,
-  orgs,
+  // orgs,
   selectedOrgId,
   modal,
 }: UseOrgUserListParams) {
@@ -159,7 +159,7 @@ export function useOrgUserList({
         user={user}
         targetOrgId={targetOrgId}
         presetOrgId={presetOrgId}
-        orgs={orgs}
+        // orgs={orgs}
         onClose={closeModal}
         onSave={() => saveUser(userId)}
         onDelete={user ? () => deleteUser(user.id) : undefined}

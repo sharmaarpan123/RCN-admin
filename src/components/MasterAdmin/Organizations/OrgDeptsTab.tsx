@@ -1,9 +1,9 @@
 "use client";
 
-import { getAdminOrganizationDepartmentsApi } from "@/apis/ApiCalls";
+import { getAdminOrganizationDepartmentsApi, putAdminDepartmentToggleApi } from "@/apis/ApiCalls";
 import { DebouncedInput, TableColumn, TableLayout } from "@/components";
 import defaultQueryKeys from "@/utils/adminQueryKeys";
-import { checkResponse } from "@/utils/commonFunc";
+import { catchAsync, checkResponse } from "@/utils/commonFunc";
 import { toastError, toastSuccess } from "@/utils/toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -62,10 +62,11 @@ export function OrgDeptsTab({
     toastSuccess("Department deleted.");
   };
 
-  const toggleDept = (deptId: string) => {
-    void deptId; // reserved for toggle API
+  const toggleDept = catchAsync(async (deptId: string) => {
+    const res = await putAdminDepartmentToggleApi(deptId);
+    if (!checkResponse({ res })) return
     invalidateDepts();
-  };
+  });
 
   const openDeptModal = (deptId: string) => {
     setDeptModal({ isOpen: true, deptId: deptId, });
@@ -90,7 +91,7 @@ export function OrgDeptsTab({
     {
       head: "Status",
       component: (d) =>
-        d.enabled ? (
+        d.status == 1 ? (
           <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">
             Enabled
           </span>

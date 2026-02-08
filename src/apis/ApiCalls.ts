@@ -37,17 +37,33 @@ export const createAdminOrganizationApi = (body: unknown) =>
 export const updateAdminOrganizationApi = (organizationId: string, body: unknown) =>
   AxiosInstance.put(`/api/admin/organization/${organizationId}`, body);
 
+/** PUT /api/admin/organization/toggle/:organizationId — toggle organization status (admin). */
+export const putAdminOrganizationToggleApi = (organizationId: string) =>
+  AxiosInstance.put(`/api/admin/organization/toggle/${organizationId}`);
+
 /** GET /api/admin/organization/branch/:organizationId — list branches for an organization (admin). */
 export const getAdminOrganizationBranchesApi = (organizationId: string, body: unknown) =>
   AxiosInstance.get(`/api/admin/organization/branch/${organizationId}`, { params: body });
+
+/** POST /api/admin/organization/branch/:organizationId — create branch (admin). */
+export const createAdminOrganizationBranchApi = (organizationId: string, body: { name: string }) =>
+  AxiosInstance.post(`/api/admin/organization/branch/${organizationId}`, body);
+
+/** PUT /api/admin/organization/branch/:branchId — update branch (admin). */
+export const updateAdminOrganizationBranchApi = (branchId: string, body: { name: string }) =>
+  AxiosInstance.put(`/api/admin/branch/${branchId}`, body);
 
 /** PUT /api/admin/branch/toggle/:branchId — toggle branch status (admin). */
 export const putAdminBranchToggleApi = (branchId: string) =>
   AxiosInstance.put(`/api/admin/branch/toggle/${branchId}`);
 
-/** GET /api/admin/organization/department/:organizationId/:branchId — list departments (admin). */
+/** GET /api/admin/organization/department/:organizationId — list departments (admin). */
 export const getAdminOrganizationDepartmentsApi = (organizationId: string) =>
   AxiosInstance.get(`/api/admin/organization/department/${organizationId}`);
+
+/** PUT /api/admin/department/toggle/:departmentId — toggle department status (admin). */
+export const putAdminDepartmentToggleApi = (departmentId: string) =>
+  AxiosInstance.put(`/api/admin/department/toggle/${departmentId}`);
 
 export const getOrganizationUsersApi = (params?: { search?: string }) =>
   AxiosInstance.get("/api/organization/user", { params });

@@ -20,7 +20,7 @@ interface UserModalContentProps {
   } | null;
   targetOrgId: string;
   presetOrgId?: string;
-  orgs: { id: string; name: string }[];
+  // orgs: { id: string; name: string }[];
   onClose: () => void;
   onSave: () => void;
   onDelete?: () => void;
@@ -30,7 +30,7 @@ export function UserModalContent({
   user,
   targetOrgId,
   presetOrgId,
-  orgs,
+  // orgs,
   onClose,
   onSave,
   onDelete,
@@ -114,11 +114,11 @@ export function UserModalContent({
               disabled={!!presetOrgId}
             >
               <option value="">— None —</option>
-              {orgs.map((o) => (
+              {/* {orgs.map((o) => (
                 <option key={o.id} value={o.id}>
                   {o.name}
                 </option>
-              ))}
+              ))} */}
             </select>
           </div>
         </div>

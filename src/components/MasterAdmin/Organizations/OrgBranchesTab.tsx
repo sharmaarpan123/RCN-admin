@@ -13,7 +13,7 @@ import { BTN_CLASS, BTN_PRIMARY_CLASS } from "./types";
 interface OrgBranchesTabProps {
   selectedOrgId: string;
   onNewBranch: () => void;
-  onEditBranch: (branchId: string) => void;
+  onEditBranch: (branch: { _id: string; name?: string }) => void;
   onToggleBranch: (branchId: string) => void;
 }
 

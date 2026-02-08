@@ -6,10 +6,12 @@ const adminOrgTableColumns = ({
   setSelectedOrg,
   setActiveTab,
   setOrgModal,
+  onToggleOrganization,
 }: {
   setSelectedOrg: (org: OrgTableRow) => void;
   setActiveTab: Dispatch<SetStateAction<"depts" | "branches" | "users" | "profile">>;
   setOrgModal: Dispatch<SetStateAction<AdminOrgModal>>;
+  onToggleOrganization: (organizationId: string) => void;
 }) => [
     {
       head: "Name",
@@ -39,37 +41,47 @@ const adminOrgTableColumns = ({
     },
     {
       head: "Actions",
-      component: (row: OrgTableRow) => (
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              setSelectedOrg(row);
-              setActiveTab("branches");
-              setTimeout(() => {
-                document.getElementById("org-modules-card")?.scrollIntoView({ behavior: "smooth", block: "start" });
-              }, 100);
-            }}
-            className={BTN_SMALL_CLASS}
-          >
-            Manage
-          </button>
-          <button
-            type="button"
-            onClick={() =>
-              setOrgModal((prev) => ({
-                ...prev,
-                isOpen: true,
-                mode: "edit",
-                editId: row.organization?._id ?? row.organization_id,
-              }))
-            }
-            className={BTN_SMALL_CLASS}
-          >
-            Edit
-          </button>
-        </div>
-      ),
+      component: (row: OrgTableRow) => {
+        const orgId = row.organization?._id ?? row.organization_id ?? "";
+        return (
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => onToggleOrganization(row?._id)}
+              className={BTN_SMALL_CLASS}
+            >
+              Toggle
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedOrg(row);
+                setActiveTab("branches");
+                setTimeout(() => {
+                  document.getElementById("org-modules-card")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }, 100);
+              }}
+              className={BTN_SMALL_CLASS}
+            >
+              Manage
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setOrgModal((prev) => ({
+                  ...prev,
+                  isOpen: true,
+                  mode: "edit",
+                  editId: orgId,
+                }))
+              }
+              className={BTN_SMALL_CLASS}
+            >
+              Edit
+            </button>
+          </div>
+        );
+      },
     },
   ];
 
@@ -78,7 +90,7 @@ const adminBranchTableColumns = ({
   openBranchModal,
 }: {
   onToggleBranch: (branchId: string) => void;
-  openBranchModal: (branchId: string) => void;
+  openBranchModal: (branch: { _id: string; name?: string }) => void;
 }): TableColumn<BranchTableRow>[] => [
     {
       head: "Branch",
@@ -109,7 +121,7 @@ const adminBranchTableColumns = ({
           <button type="button" onClick={() => onToggleBranch(b._id)} className={BTN_SMALL_CLASS}>
             Toggle
           </button>
-          <button type="button" onClick={() => openBranchModal(b._id)} className={BTN_SMALL_CLASS}>
+          <button type="button" onClick={() => openBranchModal(b)} className={BTN_SMALL_CLASS}>
             Edit
           </button>
         </div>

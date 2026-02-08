@@ -1,6 +1,6 @@
 "use client";
 
-import { getAdminOrganizationBranchesApi, getAdminOrganizationsApi, putAdminBranchToggleApi } from "@/apis/ApiCalls";
+import { getAdminOrganizationsApi, putAdminBranchToggleApi, putAdminOrganizationToggleApi } from "@/apis/ApiCalls";
 import Button from "@/components/Button";
 import defaultQueryKeys from "@/utils/adminQueryKeys";
 import { toastError, toastSuccess } from "@/utils/toast";
@@ -42,10 +42,16 @@ export function OrganizationsPage() {
 
   const [orgModal, setOrgModal] = useState<AdminOrgModal>({ isOpen: false, mode: "add", editId: null });
 
-  const [branchModal, setBranchModal] = useState<{ isOpen: boolean; branchId: string | null; presetOrgId?: string }>({
+  const [branchModal, setBranchModal] = useState<{
+    isOpen: boolean;
+    branchId: string | null;
+    presetOrgId?: string;
+    branch: { _id: string; name?: string } | null;
+  }>({
     isOpen: false,
     branchId: null,
     presetOrgId: undefined,
+    branch: null,
   });
 
 
@@ -66,25 +72,6 @@ export function OrganizationsPage() {
   const invalidateDepts = () =>
     queryClient.invalidateQueries({ queryKey: defaultQueryKeys.organizationDepartmentList });
 
-  const orgsForSelect = useMemo(() => {
-    const seen = new Set<string>();
-    return orgsList
-      .filter((r) => {
-        const id = r.organization?._id ?? r.organization_id;
-        if (!id || seen.has(id)) return false;
-        seen.add(id);
-        return true;
-      })
-      .map((r) => ({
-        id: r.organization?._id ?? r.organization_id,
-        name: r.organization?.name ?? "",
-        address: {
-          state: r.organization?.state,
-          zip: r.organization?.zip_code,
-        },
-      }));
-  }, [orgsList]);
-
   const openModal = (content: React.ReactNode) => setModalContent(content);
   const closeModal = () => setModalContent(null);
   const modal = { openModal, closeModal };
@@ -94,18 +81,10 @@ export function OrganizationsPage() {
     queryClient.invalidateQueries({ queryKey: defaultQueryKeys.organizationBranchesList });
 
   const closeBranchModal = () =>
-    setBranchModal((prev) => ({ ...prev, isOpen: false, branchId: null, presetOrgId: undefined }));
+    setBranchModal((prev) => ({ ...prev, isOpen: false, branchId: null, presetOrgId: undefined, branch: null }));
 
-  const saveBranch = (branchId?: string) => {
-    void branchId;
-    const name = (document.getElementById("br_name") as HTMLInputElement)?.value.trim();
-    if (!name) {
-      toastError("Branch name required.");
-      return;
-    }
-    closeBranchModal();
+  const saveBranch = () => {
     invalidateBranches();
-    toastSuccess("Branch saved.");
   };
 
   const deleteBranch = (branchId: string) => {
@@ -117,13 +96,17 @@ export function OrganizationsPage() {
     toastSuccess("Branch deleted.");
   };
 
-  const openBranchModal = (branchId?: string, presetOrgId?: string) => {
+  const openBranchModal = (branch?: { _id: string; name?: string } | null, presetOrgId?: string) => {
     setBranchModal({
       isOpen: true,
-      branchId: branchId ?? null,
+      branchId: branch?._id ?? null,
       presetOrgId,
+      branch: branch ?? null,
     });
   };
+
+  const invalidateOrgs = () =>
+    queryClient.invalidateQueries({ queryKey: defaultQueryKeys.organizationsList });
 
   const toggleBranch = async (branchId: string) => {
     try {
@@ -132,6 +115,16 @@ export function OrganizationsPage() {
       toastSuccess("Branch toggled.");
     } catch {
       toastError("Failed to toggle branch.");
+    }
+  };
+
+  const toggleOrganization = async (organizationId: string) => {
+    try {
+      await putAdminOrganizationToggleApi(organizationId);
+      invalidateOrgs();
+      toastSuccess("Organization status toggled.");
+    } catch {
+      toastError("Failed to toggle organization.");
     }
   };
 
@@ -144,7 +137,7 @@ export function OrganizationsPage() {
   } = useOrgUserList({
     users,
     setUsers,
-    orgs: orgsForSelect,
+    // orgs: orgsForSelect,
     selectedOrgId: selectedOrg?.organization_id ?? "",
     modal,
   });
@@ -173,30 +166,24 @@ export function OrganizationsPage() {
         onClose={() => setOrgModal((prev) => ({ ...prev, isOpen: false }))}
       />
 
-      {/* {branchModal.isOpen && (() => {
-        const row = branchModal.branchId ? branchesList.find((b) => b._id === branchModal.branchId) ?? null : null;
-        const branch = row ? { id: row._id, name: row.name, orgId: row.organization_id } : null;
-        const targetOrgId = branch?.orgId ?? branchModal.presetOrgId ?? selectedOrg?.organization_id ?? "";
-        return (
-          <BranchModalContent
-            isOpen={branchModal.isOpen}
-            branch={branch}
-            targetOrgId={targetOrgId ?? ""}
-            presetOrgId={branchModal.presetOrgId}
-            orgs={orgsForSelect}
-            onClose={closeBranchModal}
-            onSave={() => saveBranch(branchModal.branchId ?? undefined)}
-            onDelete={row ? () => deleteBranch(row._id) : undefined}
-          />
-        );
-      })()} */}
+
+      <BranchModalContent
+        key={branchModal.branch?._id ?? "new"}
+        isOpen={branchModal.isOpen}
+        branch={branchModal.branch}
+        selectedOrgId={selectedOrg?.organization_id ?? ""}
+        selectedOrgName={selectedOrg?.organization?.name}
+        onClose={closeBranchModal}
+        onSave={saveBranch}
+      />
+
 
       <OrganizationsTable
         isLoading={orgsLoading}
         body={orgListBody}
         setBody={setOrgListBody}
         data={orgsList}
-        columns={adminOrgTableColumns({ setSelectedOrg, setActiveTab, setOrgModal })}
+        columns={adminOrgTableColumns({ setSelectedOrg, setActiveTab, setOrgModal, onToggleOrganization: toggleOrganization })}
         onNewOrg={() => setOrgModal(prev => ({ ...prev, isOpen: true, mode: "add" }))}
       />
 
@@ -223,7 +210,7 @@ export function OrganizationsPage() {
           </div>
         ) : (
           <>
-            <div className="text-xs mb-3">
+            <div className="text-xs mb-3 flex flex-wrap items-center gap-2">
               <b>{selectedOrgRow?.organization?.name}</b> •{" "}
               {selectedOrgRow?.status === 1 ? (
                 <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">
@@ -234,7 +221,8 @@ export function OrganizationsPage() {
                   Disabled
                 </span>
               )}
-              <span className="text-rcn-muted ml-2">
+            
+              <span className="text-rcn-muted">
                 • {selectedOrgRow?.organization?.street} {selectedOrgRow?.organization?.suite} •{" "}
                 {selectedOrgRow?.organization?.city}, {selectedOrgRow?.organization?.state}{" "}
                 {selectedOrgRow?.organization?.zip_code}
@@ -286,8 +274,8 @@ export function OrganizationsPage() {
             {activeTab === "branches" && (
               <OrgBranchesTab
                 selectedOrgId={selectedOrg?.organization_id ?? ""}
-                onNewBranch={() => openBranchModal(undefined, selectedOrg?.organization_id ?? "")}
-                onEditBranch={(branchId) => openBranchModal(branchId)}
+                onNewBranch={() => openBranchModal(null, selectedOrg?.organization_id ?? "")}
+                onEditBranch={(branch) => openBranchModal(branch)}
                 onToggleBranch={toggleBranch}
               />
             )}
