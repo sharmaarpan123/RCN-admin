@@ -41,6 +41,10 @@ export const updateAdminOrganizationApi = (organizationId: string, body: unknown
 export const putAdminOrganizationToggleApi = (organizationId: string) =>
   AxiosInstance.put(`/api/admin/organization/toggle/${organizationId}`);
 
+/** DELETE /api/admin/organization/:id — delete organization (admin). */
+export const deleteAdminOrganizationApi = (organizationId: string) =>
+  AxiosInstance.delete(`/api/admin/organization/${organizationId}`);
+
 /** GET /api/admin/organization/branch/:organizationId — list branches for an organization (admin). */
 export const getAdminOrganizationBranchesApi = (organizationId: string, body: unknown) =>
   AxiosInstance.get(`/api/admin/organization/branch/${organizationId}`, { params: body });

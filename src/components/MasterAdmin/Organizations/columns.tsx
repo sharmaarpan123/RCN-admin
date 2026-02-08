@@ -7,11 +7,13 @@ const adminOrgTableColumns = ({
   setActiveTab,
   setOrgModal,
   onToggleOrganization,
+  onDeleteOrganization,
 }: {
   setSelectedOrg: (org: OrgTableRow) => void;
   setActiveTab: Dispatch<SetStateAction<"depts" | "branches" | "users" | "profile">>;
   setOrgModal: Dispatch<SetStateAction<AdminOrgModal>>;
   onToggleOrganization: (organizationId: string) => void;
+  onDeleteOrganization: (organizationId: string) => void;
 }) => [
     {
       head: "Name",
@@ -78,6 +80,13 @@ const adminOrgTableColumns = ({
               className={BTN_SMALL_CLASS}
             >
               Edit
+            </button>
+            <button
+              type="button"
+              onClick={() => onDeleteOrganization(row?._id)}
+              className={`${BTN_SMALL_CLASS} text-red-600 hover:text-red-700 border-red-200 hover:border-red-300`}
+            >
+              Delete
             </button>
           </div>
         );

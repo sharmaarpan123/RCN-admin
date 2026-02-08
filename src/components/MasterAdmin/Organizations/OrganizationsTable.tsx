@@ -32,13 +32,13 @@ export function OrganizationsTable({
         <div>
           <h3 className="m-0 text-sm font-semibold">Organizations</h3>
           <p className="text-xs text-rcn-muted mt-1 mb-0">
-            Manage organizations and their address info (state + zip included).
+
           </p>
         </div>
         <button onClick={onNewOrg} className={BTN_PRIMARY_CLASS}>
           + New Organization
         </button>
-      </div>
+      </div>Manage organizations
 
       <div className="flex flex-wrap gap-2.5 items-end mt-3">
         <div className="flex flex-col gap-1.5 min-w-[260px] flex-1">
@@ -67,12 +67,12 @@ export function OrganizationsTable({
         />
       </div>
 
-      <CustomPagination
+      {/* <CustomPagination
         total={100}
         pageSize={body.limit}
         current={body.page}
         onChange={(page) => setBody({ ...body, page })}
-      />
+      /> */}
     </div>
   );
 }

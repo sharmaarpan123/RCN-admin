@@ -1,6 +1,6 @@
 "use client";
 
-import { getAdminOrganizationsApi, putAdminBranchToggleApi, putAdminOrganizationToggleApi } from "@/apis/ApiCalls";
+import { deleteAdminOrganizationApi, getAdminOrganizationsApi, putAdminBranchToggleApi, putAdminOrganizationToggleApi } from "@/apis/ApiCalls";
 import Button from "@/components/Button";
 import defaultQueryKeys from "@/utils/adminQueryKeys";
 import { toastError, toastSuccess } from "@/utils/toast";
@@ -128,6 +128,18 @@ export function OrganizationsPage() {
     }
   };
 
+  const deleteOrganization = async (organizationId: string) => {
+    if (!confirm("Delete this organization? This action cannot be undone.")) return;
+    try {
+      await deleteAdminOrganizationApi(organizationId);
+      if (selectedOrg?.organization_id === organizationId) setSelectedOrg(undefined);
+      invalidateOrgs();
+      toastSuccess("Organization deleted.");
+    } catch {
+      toastError("Failed to delete organization.");
+    }
+  };
+
   const {
     userSearch,
     setUserSearch,
@@ -183,7 +195,7 @@ export function OrganizationsPage() {
         body={orgListBody}
         setBody={setOrgListBody}
         data={orgsList}
-        columns={adminOrgTableColumns({ setSelectedOrg, setActiveTab, setOrgModal, onToggleOrganization: toggleOrganization })}
+        columns={adminOrgTableColumns({ setSelectedOrg, setActiveTab, setOrgModal, onToggleOrganization: toggleOrganization, onDeleteOrganization: deleteOrganization })}
         onNewOrg={() => setOrgModal(prev => ({ ...prev, isOpen: true, mode: "add" }))}
       />
 
