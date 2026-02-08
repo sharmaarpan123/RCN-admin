@@ -93,3 +93,19 @@ export const updateOrganizationDepartmentApi = (departmentId: string, body: { na
 
 export const deleteOrganizationDepartmentApi = (departmentId: string) =>
   AxiosInstance.delete(`/api/organization/department/${departmentId}`);
+
+/** GET /api/admin/cms — list CMS pages (admin). */
+export const getAdminCmsListApi = () =>
+  AxiosInstance.get("/api/admin/cms");
+
+/** GET /api/admin/cms/:id — get single CMS page (admin). */
+export const getAdminCmsByIdApi = (id: string) =>
+  AxiosInstance.get(`/api/admin/cms/${id}`);
+
+/** POST /api/admin/cms — create CMS page (admin). */
+export const createAdminCmsApi = (body: unknown) =>
+  AxiosInstance.post("/api/admin/cms", body);
+
+/** PUT /api/admin/cms/:id — update CMS page (admin). */
+export const updateAdminCmsApi = (id: string, body: unknown) =>
+  AxiosInstance.put(`/api/admin/cms/${id}`, body);

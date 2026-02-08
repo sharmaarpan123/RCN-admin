@@ -82,6 +82,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
           requiresPermission: true
         },
         {
+          path: '/master-admin/content-page',
+          label: 'Content (CMS)',
+          view: 'cms',
+          requiresPermission: true
+        },
+        {
           path: '/master-admin/financial',
           label: 'Financials',
           view: 'financials',

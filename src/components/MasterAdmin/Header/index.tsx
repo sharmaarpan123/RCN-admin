@@ -27,6 +27,10 @@ const titleMap = {
     title: 'Banner Management',
     subtitle: 'Create and manage promotional banners across the platform.'
   },
+  contentPage: {
+    title: 'Content (CMS)',
+    subtitle: 'Add and edit CMS pages (e.g. About, Terms, Privacy).'
+  },
   financial: {
     title: 'Financial',
     subtitle: 'View financial reports, invoices, and transactions.'
@@ -52,6 +56,7 @@ const pages =
   systemAccess: '/master-admin/system-access',
   paymentSettings: '/master-admin/payment-settings',
   banners: '/master-admin/banners',
+  contentPage: '/master-admin/content-page',
   financial: '/master-admin/financial',
   reports: '/master-admin/reports',
   audit: '/master-admin/audit',
