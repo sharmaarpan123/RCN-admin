@@ -78,10 +78,10 @@ export function UserModalContent({
   targetOrgId,
   onClose,
   onSave,
-  isPending  , 
+  isPending,
 }: UserModalContentProps) {
 
-  const { data: apiUser  , isLoading} = useQuery({
+  const { data: apiUser, isLoading } = useQuery({
     queryKey: [...defaultQueryKeys.organizationUser, userId],
     queryFn: async () => {
       if (!userId) return null;
@@ -232,7 +232,7 @@ export function UserModalContent({
             <div className="text-xs text-rcn-muted">Changes apply immediately.</div>
             <div className="flex gap-2">
               <Button variant="primary" type="submit" disabled={isPending || isLoading}>
-                {isPending || isLoading ? "Saving…" : "Save"}
+                {isPending ? "Saving…" : isLoading ? "Loading..." : "Save"}
               </Button>
             </div>
           </div>

@@ -1,7 +1,11 @@
 "use client";
 
-import { getAdminOrganizationDepartmentsApi, putAdminDepartmentToggleApi } from "@/apis/ApiCalls";
-import { DebouncedInput, TableColumn, TableLayout } from "@/components";
+import {
+  getAdminOrganizationDepartmentsApi,
+  putAdminDepartmentToggleApi,
+  deleteOrganizationDepartmentApi,
+} from "@/apis/ApiCalls";
+import { Button, DebouncedInput, TableColumn, TableLayout } from "@/components";
 import defaultQueryKeys from "@/utils/adminQueryKeys";
 import { catchAsync, checkResponse } from "@/utils/commonFunc";
 import { toastError, toastSuccess } from "@/utils/toast";
@@ -43,23 +47,21 @@ export function OrgDeptsTab({
 
   const deptsList = data ?? [];
 
-  const saveDept = () => {
-    const name = (document.getElementById("dp_name") as HTMLInputElement)?.value.trim();
-    if (!name) {
-      toastError("Department name required.");
-      return;
-    }
+  const handleDeptSaved = () => {
     setDeptModal({ isOpen: false, deptId: null });
     invalidateDepts();
-    toastSuccess("Department saved.");
   };
 
-  const deleteDept = (deptId: string) => {
-    void deptId; // reserved for delete API
+  const deleteDept = async (deptId: string) => {
     if (!confirm("Delete this department?")) return;
-    setDeptModal({ isOpen: false, deptId: null });
-    invalidateDepts();
-    toastSuccess("Department deleted.");
+    try {
+      await deleteOrganizationDepartmentApi(deptId);
+      setDeptModal({ isOpen: false, deptId: null });
+      invalidateDepts();
+      toastSuccess("Department deleted.");
+    } catch {
+      toastError("Failed to delete department.");
+    }
   };
 
   const toggleDept = catchAsync(async (deptId: string) => {
@@ -122,10 +124,11 @@ export function OrgDeptsTab({
     <div>
       <DeptModalContent
         dept={dept}
+        selectedOrgId={selectedOrgId}
         isOpen={deptModal.isOpen}
         onClose={() => setDeptModal({ isOpen: false, deptId: null })}
-        onSave={() => saveDept()}
-        onDelete={dept ? () => deleteDept(dept?._id ?? "") : undefined}
+        onSave={handleDeptSaved}
+        onDelete={dept ? () => deleteDept(dept._id) : undefined}
       />
       <div className="flex justify-between items-center mb-3">
         <div>
@@ -133,6 +136,15 @@ export function OrgDeptsTab({
           <p className="text-xs text-rcn-muted mt-1 mb-0">
             Enable/disable departments within the selected organization.
           </p>
+        </div>
+        <div>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setDeptModal({ isOpen: true, deptId: null })}
+          >
+            + New Department
+          </Button>
         </div>
       </div>
 
@@ -147,9 +159,9 @@ export function OrgDeptsTab({
             debounceMs={300}
           />
         </div>
-        <button onClick={() => setDeptSearch("")} className={BTN_CLASS}>
+        <Button variant="secondary" onClick={() => setDeptSearch("")} className={BTN_CLASS}>
           Clear
-        </button>
+        </Button>
       </div>
 
       <div className="overflow-auto">

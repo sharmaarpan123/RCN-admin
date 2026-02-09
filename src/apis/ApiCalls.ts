@@ -65,6 +65,13 @@ export const putAdminBranchToggleApi = (branchId: string) =>
 export const getAdminOrganizationDepartmentsApi = (organizationId: string) =>
   AxiosInstance.get(`/api/admin/organization/department/${organizationId}`);
 
+/** POST /api/admin/organization/department/:organizationId — create department (admin). */
+export const createAdminOrganizationDepartmentApi = (
+  organizationId: string,
+  body: { name: string; branch_id: string }
+) =>
+  AxiosInstance.post(`/api/admin/organization/department/${organizationId}`, body);
+
 /** GET /api/admin/organization/user — list organization users (admin). Params: organization_id. */
 export const getAdminOrganizationUsersApi = (organizationId: string, body: unknown) =>
   AxiosInstance.get("/api/admin/organization/user/" + organizationId, { params: body });
