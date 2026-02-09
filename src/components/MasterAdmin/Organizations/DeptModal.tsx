@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Modal } from "@/components";
+import { Button, Modal } from "@/components";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
@@ -16,8 +16,6 @@ import { catchAsync, checkResponse } from "@/utils/commonFunc";
 import { toastError } from "@/utils/toast";
 import {
   INPUT_CLASS,
-  BTN_CLASS,
-  BTN_PRIMARY_CLASS,
   type AdminDepartmentListItem,
   type AdminBranchListItem,
 } from "./types";
@@ -158,9 +156,9 @@ export function DeptModalContent({
           <h3 className="text-lg font-semibold m-0">
             {dept ? "Edit" : "New"} Department
           </h3>
-          <button type="button" onClick={handleClose} className={BTN_CLASS}>
+          <Button type="button" variant="secondary" size="sm" onClick={handleClose}>
             Close
-          </button>
+          </Button>
         </div>
 
         <div className="h-px bg-rcn-border my-4" />
@@ -209,21 +207,19 @@ export function DeptModalContent({
 
           <div className="flex justify-end gap-2">
             {dept && onDelete && (
-              <button
+              <Button
                 type="button"
+                variant="secondary"
+                size="sm"
                 onClick={onDelete}
-                className="border border-rcn-danger bg-white px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-rcn-danger text-sm hover:bg-rcn-danger hover:text-white transition-colors"
+                className="border-rcn-danger text-rcn-danger hover:bg-rcn-danger hover:text-white"
               >
                 Delete
-              </button>
+              </Button>
             )}
-            <button
-              type="submit"
-              className={BTN_PRIMARY_CLASS}
-              disabled={isSaving}
-            >
+            <Button type="submit" variant="primary" size="sm" disabled={isSaving}>
               {isSaving ? "Saving…" : "Save"}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

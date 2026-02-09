@@ -329,6 +329,7 @@ export function OrgModalContent({
     queryFn: async () => {
       if (!orgId) return null;
       const res = await getAdminOrganizationApi(orgId);
+      if (!checkResponse({ res })) return null;
       const payload = res.data;
       const raw = payload?.data ?? res.data;
       return raw as OrgModalOrg;

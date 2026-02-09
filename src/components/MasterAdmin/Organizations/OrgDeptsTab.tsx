@@ -13,7 +13,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { DeptModalContent } from "./DeptModal";
 import type { DeptTableRow } from "./types";
-import { AdminDepartmentListItem, BTN_CLASS, BTN_SMALL_CLASS } from "./types";
+import { AdminDepartmentListItem } from "./types";
 
 interface OrgDeptsTabProps {
   selectedOrgId: string;
@@ -107,12 +107,12 @@ export function OrgDeptsTab({
       head: "Actions",
       component: (d) => (
         <div className="flex gap-2">
-          <button type="button" onClick={() => toggleDept(d._id)} className={BTN_SMALL_CLASS}>
+          <Button variant="secondary" size="sm" onClick={() => toggleDept(d._id)}>
             Toggle
-          </button>
-          <button type="button" onClick={() => openDeptModal(d._id)} className={BTN_SMALL_CLASS}>
+          </Button>
+          <Button variant="secondary" size="sm" onClick={() => openDeptModal(d._id)}>
             Edit
-          </button>
+          </Button>
         </div>
       ),
     },
@@ -159,7 +159,7 @@ export function OrgDeptsTab({
             debounceMs={300}
           />
         </div>
-        <Button variant="secondary" onClick={() => setDeptSearch("")} className={BTN_CLASS}>
+        <Button variant="secondary" size="sm" onClick={() => setDeptSearch("")}>
           Clear
         </Button>
       </div>

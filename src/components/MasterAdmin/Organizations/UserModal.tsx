@@ -4,7 +4,7 @@ import { Button, Modal, PhoneInputField } from "@/components";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
-import { BTN_CLASS, BTN_PRIMARY_CLASS, INPUT_CLASS } from "./types";
+import { INPUT_CLASS } from "./types";
 import { checkResponse } from "@/utils/commonFunc";
 import { getOrganizationUserApi } from "@/apis/ApiCalls";
 import { useQuery } from "@tanstack/react-query";
@@ -122,9 +122,9 @@ export function UserModalContent({
           <h3 className="text-lg font-semibold m-0">
             {mode === "edit" ? "Edit" : "New"} User
           </h3>
-          <button type="button" onClick={onClose} className={BTN_CLASS}>
+          <Button type="button" variant="secondary" size="sm" onClick={onClose}>
             Close
-          </button>
+          </Button>
         </div>
 
         <div className="h-px bg-rcn-border my-4"></div>

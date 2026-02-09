@@ -1,14 +1,14 @@
 "use client";
 
 import type { TableColumn } from "@/components";
-import { DebouncedInput, TableLayout } from "@/components";
+import { Button, DebouncedInput, TableLayout } from "@/components";
 import { getAdminOrganizationBranchesApi } from "@/apis/ApiCalls";
 import defaultQueryKeys from "@/utils/adminQueryKeys";
+import { checkResponse } from "@/utils/commonFunc";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { adminBranchTableColumns } from "./columns";
 import type { AdminBranchListItem, BranchListBody, BranchTableRow } from "./types";
-import { BTN_CLASS, BTN_PRIMARY_CLASS } from "./types";
 
 interface OrgBranchesTabProps {
   selectedOrgId: string;
@@ -31,6 +31,7 @@ export function OrgBranchesTab({
     queryKey: [...defaultQueryKeys.organizationBranchesList, selectedOrgId, body.page, body.search],
     queryFn: async () => {
       const res = await getAdminOrganizationBranchesApi(selectedOrgId, body);
+      if (!checkResponse({ res })) return { data: [] } as AdminBranchesApiResponse;
       return res.data as AdminBranchesApiResponse;
     },
     enabled: !!selectedOrgId,
@@ -55,9 +56,9 @@ export function OrgBranchesTab({
             Enable/disable branches within the selected organization.
           </p>
         </div>
-        <button type="button" onClick={onNewBranch} className={BTN_PRIMARY_CLASS}>
+        <Button variant="primary" size="sm" onClick={onNewBranch}>
           + New Branch
-        </button>
+        </Button>
       </div>
 
       <div className="flex gap-3 items-end mb-3">
@@ -71,9 +72,9 @@ export function OrgBranchesTab({
             debounceMs={300}
           />
         </div>
-        <button onClick={() => setBody((prev) => ({ ...prev, search: "" }))} className={BTN_CLASS}>
+        <Button variant="secondary" size="sm" onClick={() => setBody((prev) => ({ ...prev, search: "" }))}>
           Clear
-        </button>
+        </Button>
       </div>
 
       <div className="overflow-auto">

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import Modal from "@/components/Modal";
+import { Button, Modal } from "@/components";
 import {
   createAdminOrganizationBranchApi,
   updateAdminOrganizationBranchApi,
@@ -9,7 +9,7 @@ import {
 import { catchAsync, checkResponse } from "@/utils/commonFunc";
 import { useMutation } from "@tanstack/react-query";
 import { toastError } from "@/utils/toast";
-import { INPUT_CLASS, BTN_CLASS, BTN_PRIMARY_CLASS } from "./types";
+import { INPUT_CLASS } from "./types";
 
 export type BranchForModal = { _id: string; name?: string } | null;
 
@@ -88,9 +88,9 @@ export function BranchModalContent({
           <h3 className="text-lg font-semibold m-0">
             {branch ? "Edit Branch" : "New Branch"}
           </h3>
-          <button type="button" onClick={onClose} className={BTN_CLASS}>
+          <Button variant="secondary" size="sm" type="button" onClick={onClose}>
             Close
-          </button>
+          </Button>
         </div>
 
         <div className="h-px bg-rcn-border my-4" />
@@ -122,14 +122,9 @@ export function BranchModalContent({
         <div className="h-px bg-rcn-border my-4" />
 
         <div className="flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={handleSave}
-            className={BTN_PRIMARY_CLASS}
-            disabled={isSaving}
-          >
+          <Button variant="primary" size="sm" type="button" onClick={handleSave} disabled={isSaving}>
             {isSaving ? "Saving…" : "Save"}
-          </button>
+          </Button>
         </div>
       </div>
     </Modal>

@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction } from "react";
-import { TableColumn } from "@/components";
-import { AdminOrgModal, BTN_SMALL_CLASS, OrgTableRow, BranchTableRow } from "./types";
+import { Button, TableColumn } from "@/components";
+import { AdminOrgModal, OrgTableRow, BranchTableRow } from "./types";
 
 const adminOrgTableColumns = ({
   setSelectedOrg,
@@ -46,16 +46,13 @@ const adminOrgTableColumns = ({
       component: (row: OrgTableRow) => {
         const orgId = row.organization?._id ?? row.organization_id ?? "";
         return (
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => onToggleOrganization(row?._id)}
-              className={BTN_SMALL_CLASS}
-            >
+          <div className="flex gap-2 flex-wrap">
+            <Button variant="secondary" size="sm" onClick={() => onToggleOrganization(row?._id)}>
               Toggle
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={() => {
                 setSelectedOrg(row);
                 setActiveTab("branches");
@@ -63,12 +60,12 @@ const adminOrgTableColumns = ({
                   document.getElementById("org-modules-card")?.scrollIntoView({ behavior: "smooth", block: "start" });
                 }, 100);
               }}
-              className={BTN_SMALL_CLASS}
             >
               Manage
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={() =>
                 setOrgModal((prev) => ({
                   ...prev,
@@ -77,17 +74,17 @@ const adminOrgTableColumns = ({
                   editId: row?._id,
                 }))
               }
-              className={BTN_SMALL_CLASS}
             >
               Edit
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={() => onDeleteOrganization(row?._id)}
-              className={`${BTN_SMALL_CLASS} text-red-600 hover:text-red-700 border-red-200 hover:border-red-300`}
+              className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
             >
               Delete
-            </button>
+            </Button>
           </div>
         );
       },
@@ -127,12 +124,12 @@ const adminBranchTableColumns = ({
       head: "Actions",
       component: (b) => (
         <div className="flex gap-2">
-          <button type="button" onClick={() => onToggleBranch(b._id)} className={BTN_SMALL_CLASS}>
+          <Button variant="secondary" size="sm" onClick={() => onToggleBranch(b._id)}>
             Toggle
-          </button>
-          <button type="button" onClick={() => openBranchModal(b)} className={BTN_SMALL_CLASS}>
+          </Button>
+          <Button variant="secondary" size="sm" onClick={() => openBranchModal(b)}>
             Edit
-          </button>
+          </Button>
         </div>
       ),
     },

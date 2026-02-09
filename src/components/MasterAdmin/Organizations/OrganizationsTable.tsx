@@ -1,10 +1,9 @@
 "use client";
 
 import type { TableColumn } from "@/components";
-import { DebouncedInput, TableLayout } from "@/components";
-import CustomPagination from "@/components/CustomPagination";
+import { Button, DebouncedInput, TableLayout } from "@/components";
 import type { OrgTableRow } from "./types";
-import { BTN_PRIMARY_CLASS, INPUT_CLASS } from "./types";
+import { INPUT_CLASS } from "./types";
 interface OrganizationsTableProps {
   body: {
     page: number;
@@ -31,14 +30,12 @@ export function OrganizationsTable({
       <div className="flex justify-between items-start flex-wrap gap-3">
         <div>
           <h3 className="m-0 text-sm font-semibold">Organizations</h3>
-          <p className="text-xs text-rcn-muted mt-1 mb-0">
-
-          </p>
+          <p className="text-xs text-rcn-muted mt-1 mb-0">Manage organizations.</p>
         </div>
-        <button onClick={onNewOrg} className={BTN_PRIMARY_CLASS}>
+        <Button variant="primary" size="sm" onClick={onNewOrg}>
           + New Organization
-        </button>
-      </div>Manage organizations
+        </Button>
+      </div>
 
       <div className="flex flex-wrap gap-2.5 items-end mt-3">
         <div className="flex flex-col gap-1.5 min-w-[260px] flex-1">

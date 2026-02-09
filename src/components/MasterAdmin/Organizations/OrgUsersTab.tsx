@@ -15,7 +15,7 @@ import { toastError, toastSuccess } from "@/utils/toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
 import type { AdminOrganizationUserListItem } from "./types";
-import { BTN_PRIMARY_CLASS, BTN_SMALL_CLASS, INPUT_CLASS } from "./types";
+import { INPUT_CLASS } from "./types";
 import { UserModalContent, type UserModalFormValues } from "./UserModal";
 import ConfirmModal from "@/components/ConfirmModal";
 
@@ -122,6 +122,7 @@ export function OrgUsersTab({
     queryKey: [...defaultQueryKeys.organizationUsersList, selectedOrgId, body.search],
     queryFn: async () => {
       const res = await getAdminOrganizationUsersApi(selectedOrgId, { ...body });
+      if (!checkResponse({ res })) return { data: [] } as AdminOrganizationUsersApiResponse;
       return res.data as AdminOrganizationUsersApiResponse;
     },
     enabled: !!selectedOrgId,
@@ -162,25 +163,26 @@ export function OrgUsersTab({
         head: "Actions",
         component: (u) => (
           <div className="flex gap-2">
-            <button
-              type="button"
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={() => setUserModal({ isOpen: true, userId: u._id, mode: "edit" })}
-              className={BTN_SMALL_CLASS}
             >
               Edit
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={() => setDeleteUserModal({ isOpen: true, userId: u._id })}
-              className={`${BTN_SMALL_CLASS} text-red-600 hover:text-red-700 border-red-200 hover:border-red-300`}
+              className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
             >
               Delete
-            </button>
+            </Button>
           </div>
         ),
       },
     ],
-    [deleteUserConfirmation]
+    []
   );
 
   return (
@@ -208,13 +210,9 @@ export function OrgUsersTab({
             Create and manage users within the selected organization.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setUserModal({ isOpen: true, userId: null, mode: "create" })}
-          className={BTN_PRIMARY_CLASS}
-        >
+        <Button variant="primary" size="sm" onClick={() => setUserModal({ isOpen: true, userId: null, mode: "create" })}>
           + New User
-        </button>
+        </Button>
       </div>
 
       <div className="flex gap-3 items-end mb-3">

@@ -3,6 +3,7 @@
 import { deleteAdminOrganizationApi, getAdminOrganizationsApi, putAdminBranchToggleApi, putAdminOrganizationToggleApi } from "@/apis/ApiCalls";
 import Button from "@/components/Button";
 import defaultQueryKeys from "@/utils/adminQueryKeys";
+import { catchAsync, checkResponse } from "@/utils/commonFunc";
 import { toastError, toastSuccess } from "@/utils/toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
@@ -56,6 +57,7 @@ export function OrganizationsPage() {
     queryKey: [...defaultQueryKeys.organizationsList, orgListBody.page, orgListBody.search],
     queryFn: async () => {
       const res = await getAdminOrganizationsApi();
+      if (!checkResponse({ res })) return { data: [] } as AdminOrganizationsApiResponse;
       return res.data as AdminOrganizationsApiResponse;
     },
   });
@@ -95,39 +97,32 @@ export function OrganizationsPage() {
   const invalidateUsers = () =>
     queryClient.invalidateQueries({ queryKey: defaultQueryKeys.organizationUsersList });
 
-  const toggleBranch = async (branchId: string) => {
-    try {
-      await putAdminBranchToggleApi(branchId);
-      invalidateBranches();
-      toastSuccess("Branch toggled.");
-    } catch {
-      toastError("Failed to toggle branch.");
-    }
-  };
+  const runToggleBranch = catchAsync(async (branchId: string) => {
+    const res = await putAdminBranchToggleApi(branchId);
+    if (checkResponse({ res, showSuccess: true })) invalidateBranches();
+  });
 
-  const toggleOrganization = async (organizationId: string) => {
-    try {
-      await putAdminOrganizationToggleApi(organizationId);
-      invalidateOrgs();
-      toastSuccess("Organization status toggled.");
-    } catch {
-      toastError("Failed to toggle organization.");
-    }
-  };
+  const toggleBranch = (branchId: string) => runToggleBranch(branchId);
 
-  const deleteOrganization = async (organizationId: string) => {
+  const runToggleOrganization = catchAsync(async (organizationId: string) => {
+    const res = await putAdminOrganizationToggleApi(organizationId);
+    if (checkResponse({ res, showSuccess: true })) invalidateOrgs();
+  });
+
+  const toggleOrganization = (organizationId: string) => runToggleOrganization(organizationId);
+
+  const deleteOrganization = (organizationId: string) => {
     if (!confirm("Delete this organization? This action cannot be undone.")) return;
-    try {
-      await deleteAdminOrganizationApi(organizationId);
-      if (selectedOrg?.organization_id === organizationId) setSelectedOrg(undefined);
-      invalidateOrgs();
-      toastSuccess("Organization deleted.");
-    } catch {
-      toastError("Failed to delete organization.");
-    }
+    catchAsync(async () => {
+      const res = await deleteAdminOrganizationApi(organizationId);
+      if (checkResponse({ res, showSuccess: true })) {
+        if (selectedOrg?.organization_id === organizationId) setSelectedOrg(undefined);
+        invalidateOrgs();
+      }
+    })();
   };
 
-  const selectedOrgRow = selectedOrg
+  const selectedOrgRow = selectedOrg;
 
 
   return (
