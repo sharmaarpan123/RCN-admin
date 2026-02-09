@@ -1,203 +1,173 @@
 "use client";
-import React, { useState } from 'react';
-import { TableLayout, type TableColumn, Modal } from '../../../components';
-import { toastSuccess, toastError } from '../../../utils/toast';
-import { MOCK_SYSTEM_ADMINS } from './mockData';
 
-const safeLower = (s: any) => (s || "").toString().toLowerCase();
-const roleLabel = (r: string) => {
-  if (r === "SYSTEM_ADMIN") return "System Admin";
-  if (r === "ORG_ADMIN") return "Organization Admin";
-  if (r === "STAFF") return "Staff";
-  return r;
-};
+import {
+  createAdminUserApi,
+  deleteAdminUserApi,
+  getAdminUserByIdApi,
+  getAdminRolesApi,
+  getAdminUsersApi,
+  updateAdminUserApi,
+} from "@/apis/ApiCalls";
+import {
+  Button,
+  ConfirmModal,
+  DebouncedInput,
+  Modal,
+  PhoneInputField,
+  TableLayout,
+} from "@/components";
+import type { TableColumn } from "@/components";
+import defaultQueryKeys from "@/utils/adminQueryKeys";
+import { catchAsync, checkResponse } from "@/utils/commonFunc";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { useMemo, useState } from "react";
+import { useForm } from "react-hook-form";
+import * as yup from "yup";
+import type { AdminUser } from "./types";
+import { INPUT_CLASS } from "./types";
 
-const uid = (prefix = "id") => {
-  return prefix + "_" + Math.random().toString(16).slice(2) + Math.random().toString(16).slice(2);
-};
+type UsersApiResponse = { success?: boolean; data?: AdminUser[]; message?: string };
+type RolesApiResponse = { success?: boolean; data?: { id?: number; _id?: string; name?: string }[] };
 
-const UserPanel: React.FC = () => {
-  // Mock data state
-  const [users, setUsers] = useState(MOCK_SYSTEM_ADMINS);
+const safeLower = (s: unknown) => (s ?? "").toString().toLowerCase();
 
-  const [search, setSearch] = useState('');
-  const [enabledFilter, setEnabledFilter] = useState('');
-  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
-  const [editingUserId, setEditingUserId] = useState<string | null>(null);
+export default function SystemAccessPage() {
+  const queryClient = useQueryClient();
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editUser, setEditUser] = useState<AdminUser | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null);
 
-  const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
+  const { data: usersResponse, isLoading: usersLoading } = useQuery({
+    queryKey: defaultQueryKeys.adminUsersList,
+    queryFn: async () => {
+      const res = await getAdminUsersApi();
+      if (!checkResponse({ res })) return { data: [] } as UsersApiResponse;
+      return (res?.data ?? { data: [] }) as UsersApiResponse;
+    },
+  });
 
-  const systemAdmins = users.filter((u: any) => u.role === 'SYSTEM_ADMIN');
-  
-  type MasterAdminRow = { id: string; name: string; firstName?: string; lastName?: string; email: string; phone?: string; role: string; adminCap?: boolean; resetIntervalDays?: number; mfaEmail?: boolean; enabled?: boolean };
-  const systemAccessColumns: TableColumn<MasterAdminRow>[] = [
+  const { data: rolesResponse } = useQuery({
+    queryKey: defaultQueryKeys.rolesList,
+    queryFn: async () => {
+      const res = await getAdminRolesApi();
+      if (!checkResponse({ res })) return { data: [] } as RolesApiResponse;
+      return (res?.data ?? { data: [] }) as RolesApiResponse;
+    },
+  });
+
+  const users = useMemo(() => (usersResponse?.data ?? []) as AdminUser[], [usersResponse]);
+  const roles = useMemo(
+    () => (rolesResponse?.data ?? []) as { id?: number; name?: string }[],
+    [rolesResponse]
+  );
+
+  const filtered = useMemo(() => {
+    const searchLower = safeLower(search);
+    return users.filter((u) => {
+      const hay = [
+        u.first_name,
+        u.last_name,
+        u.email,
+        u.dial_code,
+        u.phone_number,
+      ]
+        .map(safeLower)
+        .join(" ");
+      const okSearch = !search.trim() || hay.includes(searchLower);
+      const okStatus =
+        !statusFilter ||
+        String(u.status) === statusFilter;
+      return okSearch && okStatus;
+    });
+  }, [users, search, statusFilter]);
+
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: defaultQueryKeys.adminUsersList });
+  };
+
+  const openNew = () => {
+    setEditUser(null);
+    setModalOpen(true);
+  };
+
+  const openEdit = (u: AdminUser) => {
+    setEditUser(u);
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setEditUser(null);
+  };
+
+  const handleDelete = () => {
+    const user = deleteTarget;
+    setDeleteTarget(null);
+    if (!user?._id) return;
+    catchAsync(async () => {
+      const res = await deleteAdminUserApi(user._id);
+      if (checkResponse({ res, showSuccess: true })) invalidate();
+    })();
+  };
+
+  const getRoleName = (u: AdminUser) =>
+    u.role?.name ?? (roles.find((r) => r.id === u.role_id)?.name ?? String(u.role_id ?? "—"));
+
+  const columns: TableColumn<AdminUser>[] = [
     {
       head: "Name",
       component: (u) => (
         <>
-          <b>{u.name}</b>
-          <div className="text-rcn-muted">{u.firstName} {u.lastName}</div>
+          <b>{(u.first_name ?? "") + " " + (u.last_name ?? "")}</b>
+          <div className="text-rcn-muted text-xs">{u.email ?? "—"}</div>
         </>
       ),
     },
-    { head: "Email", accessor: "email", tdClassName: "font-mono" },
-    { head: "Phone", component: (u) => <span className="font-mono">{u.phone || '—'}</span> },
-    { head: "Role", component: (u) => roleLabel(u.role) },
+    { head: "Email", component: (u) => <span className="font-mono text-xs">{u.email ?? "—"}</span> },
     {
-      head: "Access",
-      component: (u) =>
-        u.adminCap ? (
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">Admin capabilities</span>
-        ) : (
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border border-rcn-border bg-[#f8fcf9]">Active user</span>
-        ),
-    },
-    { head: "Reset", component: (u) => <>{u.resetIntervalDays || '—'} days</> },
-    {
-      head: "MFA",
-      component: (u) =>
-        u.mfaEmail ? (
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">On</span>
-        ) : (
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border border-rcn-border bg-[#f8fcf9]">Off</span>
-        ),
-    },
-    {
-      head: "Enabled",
-      component: (u) =>
-        u.enabled ? (
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">Enabled</span>
-        ) : (
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#f3b8b8] bg-[#fff1f2] text-[#991b1b]">Disabled</span>
-        ),
-    },
-    {
-      head: "",
+      head: "Phone",
       component: (u) => (
-        <button
-          type="button"
-          onClick={() => openUserModal(u.id)}
-          className="border border-rcn-border bg-white px-2.5 py-2 rounded-xl text-xs font-semibold hover:border-[#c9ddd0]"
-        >
-          Edit
-        </button>
+        <span className="font-mono text-xs">
+          {[u.dial_code, u.phone_number].filter(Boolean).join(" ") || "—"}
+        </span>
+      ),
+    },
+    { head: "Role", component: (u) => getRoleName(u) },
+    {
+      head: "Status",
+      component: (u) =>
+        u.status === 1 ? (
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">
+            Enabled
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#f3b8b8] bg-[#fff1f2] text-[#991b1b]">
+            Disabled
+          </span>
+        ),
+    },
+    {
+      head: "Actions",
+      component: (u) => (
+        <div className="flex gap-2">
+          <Button variant="secondary" size="sm" onClick={() => openEdit(u)}>
+            Edit
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setDeleteTarget(u)}
+            className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
+          >
+            Delete
+          </Button>
+        </div>
       ),
     },
   ];
-
-  const filtered = systemAdmins.filter((u: any) => {
-    const searchLower = safeLower(search);
-    const hay = [u.name, u.firstName, u.lastName, u.email, u.phone, u.role, u.notes]
-      .map(safeLower).join(' ');
-    const okQ = !search || hay.includes(searchLower);
-    const okEn = !enabledFilter || String(!!u.enabled) === enabledFilter;
-    return okQ && okEn;
-  });
-
-  const inputClass = "w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white text-sm outline-none focus:border-[#b9d7c5] focus:shadow-[0_0_0_3px_rgba(31,122,75,0.12)]";
-  const btnClass = "border border-rcn-border bg-white px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-rcn-text text-sm hover:border-[#c9ddd0] transition-colors";
-  const btnPrimaryClass = "bg-rcn-accent border-rcn-accent text-white px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-sm hover:bg-rcn-accent-dark transition-colors";
-
-  const closeUserModal = () => {
-    setActiveTab('profile');
-    setIsUserModalOpen(false);
-    setEditingUserId(null);
-  };
-
-  const openUserModal = (userId: string | null = null) => {
-    setEditingUserId(userId ?? null);
-    setActiveTab('profile');
-    setIsUserModalOpen(true);
-  };
-
-  const user = editingUserId ? users.find((u: any) => u.id === editingUserId) : null;
-  const isEdit = !!user;
-
-  const handleSaveUser = (userId: string | null) => {
-    const firstName = (document.getElementById('u_first') as HTMLInputElement)?.value.trim();
-    const lastName = (document.getElementById('u_last') as HTMLInputElement)?.value.trim();
-    const email = (document.getElementById('u_email') as HTMLInputElement)?.value.trim().toLowerCase();
-    const phone = (document.getElementById('u_phone') as HTMLInputElement)?.value.trim();
-    const adminCap = (document.getElementById('u_access') as HTMLSelectElement)?.value === 'ADMIN';
-    const enabled = (document.getElementById('u_enabled') as HTMLSelectElement)?.value === 'true';
-    const notes = (document.getElementById('u_notes') as HTMLTextAreaElement)?.value.trim();
-    const resetIntervalDays = parseInt((document.getElementById('u_reset') as HTMLInputElement)?.value || '30', 10);
-    const mfaEmail = (document.getElementById('u_mfa') as HTMLSelectElement)?.value === 'true';
-    const forceChangeNextLogin = (document.getElementById('u_force') as HTMLInputElement)?.checked;
-    const newPass = (document.getElementById('u_newpass') as HTMLInputElement)?.value;
-    const confPass = (document.getElementById('u_confpass') as HTMLInputElement)?.value;
-
-    if (!firstName) { toastError('First Name required.'); return; }
-    if (!lastName) { toastError('Last Name required.'); return; }
-    if (!email) { toastError('Email required.'); return; }
-    if (!email.includes('@')) { toastError('Invalid email.'); return; }
-
-    if (!userId && users.some((u: any) => u.email.toLowerCase() === email)) {
-      toastError('Email already exists.');
-      return;
-    }
-
-    const existing = userId ? users.find((u: any) => u.id === userId) : null;
-    let password = existing?.password || 'Admin123!';
-    let passwordChangedAt = existing?.passwordChangedAt || '';
-
-    if (newPass || confPass) {
-      if (newPass.length < 8) { toastError('Password must be at least 8 characters.'); return; }
-      if (newPass !== confPass) { toastError('Passwords do not match.'); return; }
-      password = newPass;
-      passwordChangedAt = new Date().toISOString();
-    }
-
-    const permissions = {
-      referralDashboard: (document.getElementById('perm_dashboard') as HTMLInputElement)?.checked ?? true,
-      userPanel: (document.getElementById('perm_userpanel') as HTMLInputElement)?.checked ?? true,
-      paymentAdjustmentSettings: (document.getElementById('perm_payments') as HTMLInputElement)?.checked ?? true,
-      bannerManagement: (document.getElementById('perm_banners') as HTMLInputElement)?.checked ?? true,
-      financials: (document.getElementById('perm_financials') as HTMLInputElement)?.checked ?? true,
-      reports: (document.getElementById('perm_reports') as HTMLInputElement)?.checked ?? true,
-      auditLog: (document.getElementById('perm_audit') as HTMLInputElement)?.checked ?? true,
-      settings: (document.getElementById('perm_settings') as HTMLInputElement)?.checked ?? true,
-    };
-
-    const userObj: any = {
-      id: userId || uid('u'),
-      firstName,
-      lastName,
-      name: `${firstName} ${lastName}`.trim(),
-      email,
-      phone,
-      notes,
-      role: 'SYSTEM_ADMIN',
-      orgId: null,
-      adminCap,
-      enabled,
-      resetIntervalDays,
-      mfaEmail,
-      password,
-      passwordChangedAt,
-      forceChangeNextLogin,
-      permissions,
-      branchIds: [],
-      deptIds: [],
-    };
-
-    if (existing) {
-      setUsers(users.map((u) => (u.id === userId ? userObj : u)));
-    } else {
-      setUsers([...users, userObj]);
-    }
-
-    closeUserModal();
-    toastSuccess('User saved.');
-  };
-
-  const handleDeleteUser = (userId: string) => {
-    if (!window.confirm('Delete this user?')) return;
-
-    setUsers(users.filter((u: any) => u.id !== userId));
-    closeUserModal();
-    toastSuccess('User deleted.');
-  };
 
   return (
     <>
@@ -209,46 +179,58 @@ const UserPanel: React.FC = () => {
               Master Admin users belong only to this Admin Panel and have no affiliation with any organization.
             </p>
           </div>
-          <button onClick={() => openUserModal()} className={btnPrimaryClass}>+ New Master Admin User</button>
+          <Button variant="primary" size="sm" onClick={openNew}>
+            + New Master Admin User
+          </Button>
         </div>
 
         <div className="flex flex-wrap gap-2.5 items-end mt-3">
           <div className="flex flex-col gap-1.5 min-w-[280px] flex-1">
             <label className="text-xs text-rcn-muted">Search</label>
-            <input
+            <DebouncedInput
               placeholder="Name, email, phone..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className={`${inputClass} ring-2 ring-[#b9d7c5]/30 border-[#b9d7c5]/60`}
+              onChange={setSearch}
+              className={INPUT_CLASS}
               aria-label="Search master admin users"
             />
           </div>
-
           <div className="flex flex-col gap-1.5 min-w-[120px]">
             <label className="text-xs text-rcn-muted">Status</label>
-            <select value={enabledFilter} onChange={(e) => setEnabledFilter(e.target.value)} className={inputClass}>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className={INPUT_CLASS}
+            >
               <option value="">All</option>
-              <option value="true">Enabled</option>
-              <option value="false">Disabled</option>
+              <option value="1">Enabled</option>
+              <option value="0">Disabled</option>
             </select>
           </div>
-
-          <div className="flex flex-col gap-1.5 min-w-[120px]">
-            <label className="text-xs text-rcn-muted opacity-0 pointer-events-none">-</label>
-            <button className={btnClass} onClick={() => { setSearch(''); setEnabledFilter(''); }}>
-              Clear
-            </button>
-          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => {
+              setSearch("");
+              setStatusFilter("");
+            }}
+          >
+            Clear
+          </Button>
         </div>
 
         <div className="mt-3">
-          <TableLayout<MasterAdminRow>
-            columns={systemAccessColumns}
+          {usersLoading && (
+            <p className="text-xs text-rcn-muted mb-2">Loading users…</p>
+          )}
+          <TableLayout<AdminUser>
+            columns={columns}
             data={filtered}
+            loader={usersLoading}
             variant="bordered"
             size="sm"
             emptyMessage="No master admin users found."
-            getRowKey={(row) => row.id}
+            getRowKey={(row) => row._id}
           />
         </div>
 
@@ -257,203 +239,275 @@ const UserPanel: React.FC = () => {
         </p>
       </div>
 
-      <Modal isOpen={isUserModalOpen} onClose={closeUserModal} maxWidth="900px">
-        <div>
-          <div className="flex justify-between items-center mb-4">
-            <div>
-              <h3 className="text-lg font-semibold m-0">{isEdit ? 'Edit' : 'New'} Master Admin User</h3>
-              <p className="text-sm text-rcn-muted mt-1 mb-0">Master Admin users belong only to this Admin Panel and have no affiliation with any organization.</p>
-            </div>
-            <button onClick={closeUserModal} className={btnClass}>Close</button>
-          </div>
+      <ConfirmModal
+        type="delete"
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        title="Delete user"
+        message={
+          deleteTarget
+            ? `Are you sure you want to delete ${[deleteTarget.first_name, deleteTarget.last_name].filter(Boolean).join(" ") || deleteTarget.email}? This action cannot be undone.`
+            : "Are you sure you want to delete this user?"
+        }
+      />
 
-          <div className="border-b border-rcn-border mb-4"></div>
-
-          <div className="flex gap-2 mb-4">
-            <button
-              onClick={() => setActiveTab('profile')}
-              className={`px-4 py-2 rounded-full text-sm font-bold transition-colors ${
-                activeTab === 'profile'
-                  ? 'bg-rcn-accent text-white border border-rcn-accent'
-                  : 'bg-[#f6fbf7] border border-rcn-border hover:border-[#b9d7c5]'
-              }`}
-            >
-              User Profile
-            </button>
-            <button
-              onClick={() => setActiveTab('password')}
-              className={`px-4 py-2 rounded-full text-sm font-bold transition-colors ${
-                activeTab === 'password'
-                  ? 'bg-rcn-accent text-white border border-rcn-accent'
-                  : 'bg-[#f6fbf7] border border-rcn-border hover:border-[#b9d7c5]'
-              }`}
-            >
-              Manage Password
-            </button>
-          </div>
-
-          {activeTab === 'profile' && (
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <div className="grid grid-cols-2 gap-3 mb-3">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs text-rcn-muted font-semibold">First Name</label>
-                    <input id="u_first" defaultValue={user?.firstName || ''} className={inputClass} />
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs text-rcn-muted font-semibold">Last Name</label>
-                    <input id="u_last" defaultValue={user?.lastName || ''} className={inputClass} />
-                  </div>
-                </div>
-                <div className="flex flex-col gap-1.5 mb-3">
-                  <label className="text-xs text-rcn-muted font-semibold">Email</label>
-                  <input id="u_email" type="email" defaultValue={user?.email || ''} className={inputClass} />
-                </div>
-                <div className="flex flex-col gap-1.5 mb-3">
-                  <label className="text-xs text-rcn-muted font-semibold">Phone (optional)</label>
-                  <input id="u_phone" defaultValue={user?.phone || ''} placeholder="(optional)" className={inputClass} />
-                </div>
-                <div className="flex flex-col gap-1.5 mb-3">
-                  <label className="text-xs text-rcn-muted font-semibold">Role</label>
-                  <input type="text" value="System Admin" readOnly className={inputClass} />
-                </div>
-                <div className="flex flex-col gap-1.5 mb-3">
-                  <label className="text-xs text-rcn-muted font-semibold">Organization</label>
-                  <input type="text" value="— (Master Admin only)" readOnly className={inputClass} />
-                </div>
-              </div>
-              <div>
-                <div className="flex flex-col gap-1.5 mb-3">
-                  <label className="text-xs text-rcn-muted font-semibold">Access</label>
-                  <select id="u_access" defaultValue={user?.adminCap ? 'ADMIN' : 'ACTIVE'} className={inputClass}>
-                    <option value="ACTIVE">Active user</option>
-                    <option value="ADMIN">Admin capabilities</option>
-                  </select>
-                </div>
-                <div className="flex flex-col gap-1.5 mb-3">
-                  <label className="text-xs text-rcn-muted font-semibold">Active user status</label>
-                  <select id="u_enabled" defaultValue={String(user?.enabled ?? true)} className={inputClass}>
-                    <option value="true">Active</option>
-                    <option value="false">Disabled</option>
-                  </select>
-                </div>
-                <div className="bg-[#fbfefc] border border-rcn-border rounded-xl p-3 mb-3">
-                  <h4 className="text-sm font-semibold m-0 mb-2">Module Access</h4>
-                  <p className="text-xs text-rcn-muted mb-3">Control which Admin Panel modules this user can access.</p>
-                  <div className="flex flex-wrap gap-2">
-                    <label className="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs border border-rcn-border bg-white hover:border-[#b9d7c5] cursor-pointer">
-                      <input type="checkbox" id="perm_dashboard" defaultChecked={user?.permissions?.referralDashboard ?? true} />
-                      Referral Dashboard
-                    </label>
-                    <label className="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs border border-rcn-border bg-white hover:border-[#b9d7c5] cursor-pointer">
-                      <input type="checkbox" id="perm_userpanel" defaultChecked={user?.permissions?.userPanel ?? true} />
-                      User Panel
-                    </label>
-                    <label className="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs border border-rcn-border bg-white hover:border-[#b9d7c5] cursor-pointer">
-                      <input type="checkbox" id="perm_payments" defaultChecked={user?.permissions?.paymentAdjustmentSettings ?? true} />
-                      Payment Settings
-                    </label>
-                    <label className="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs border border-rcn-border bg-white hover:border-[#b9d7c5] cursor-pointer">
-                      <input type="checkbox" id="perm_banners" defaultChecked={user?.permissions?.bannerManagement ?? true} />
-                      Banner Management
-                    </label>
-                    <label className="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs border border-rcn-border bg-white hover:border-[#b9d7c5] cursor-pointer">
-                      <input type="checkbox" id="perm_financials" defaultChecked={user?.permissions?.financials ?? true} />
-                      Financials
-                    </label>
-                    <label className="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs border border-rcn-border bg-white hover:border-[#b9d7c5] cursor-pointer">
-                      <input type="checkbox" id="perm_reports" defaultChecked={user?.permissions?.reports ?? true} />
-                      Reports
-                    </label>
-                    <label className="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs border border-rcn-border bg-white hover:border-[#b9d7c5] cursor-pointer">
-                      <input type="checkbox" id="perm_audit" defaultChecked={user?.permissions?.auditLog ?? true} />
-                      Audit Log
-                    </label>
-                    <label className="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs border border-rcn-border bg-white hover:border-[#b9d7c5] cursor-pointer">
-                      <input type="checkbox" id="perm_settings" defaultChecked={user?.permissions?.settings ?? true} />
-                      Settings
-                    </label>
-                  </div>
-                  <div className="border-t border-rcn-border my-2"></div>
-                  <p className="text-xs text-rcn-muted m-0">Tip: Enable User Panel only if this Master Admin should manage other Master Admin users.</p>
-                </div>
-                <div className="flex flex-col gap-1.5 mb-3">
-                  <label className="text-xs text-rcn-muted font-semibold">Notes (optional)</label>
-                  <textarea id="u_notes" defaultValue={user?.notes || ''} placeholder="Optional notes..." rows={3} className={inputClass} />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs text-rcn-muted font-semibold">Current Assignments (read-only)</label>
-                  <textarea value="Branches: —\nDepartments: —" readOnly rows={2} className={inputClass} />
-                </div>
-                <p className="text-xs text-rcn-muted mt-2 mb-0">Master Admin users are not attached to branches/departments.</p>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'password' && (
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <div className="flex flex-col gap-1.5 mb-3">
-                  <label className="text-xs text-rcn-muted font-semibold">New Password</label>
-                  <input
-                    id="u_newpass"
-                    type="password"
-                    placeholder={user ? 'Leave blank to keep current password' : 'Default is Admin123!'}
-                    className={inputClass}
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5 mb-3">
-                  <label className="text-xs text-rcn-muted font-semibold">Confirm Password</label>
-                  <input id="u_confpass" type="password" placeholder="Confirm new password" className={inputClass} />
-                </div>
-                <label className="inline-flex items-center gap-2 mt-2 cursor-pointer">
-                  <input type="checkbox" id="u_force" defaultChecked={user?.forceChangeNextLogin ?? !user} />
-                  <span className="text-sm">Force change at next login</span>
-                </label>
-                <p className="text-xs text-rcn-muted mt-3 mb-0">Passwords are stored locally in your browser for demo purposes only.</p>
-              </div>
-              <div>
-                <div className="flex flex-col gap-1.5 mb-3">
-                  <label className="text-xs text-rcn-muted font-semibold">Password Reset Interval (days)</label>
-                  <input id="u_reset" type="number" min={1} step={1} defaultValue={user?.resetIntervalDays || 30} className={inputClass} />
-                </div>
-                <div className="flex flex-col gap-1.5 mb-3">
-                  <label className="text-xs text-rcn-muted font-semibold">Email Multi-Factor Authentication (MFA)</label>
-                  <select id="u_mfa" defaultValue={String(user?.mfaEmail ?? false)} className={inputClass}>
-                    <option value="true">Enabled</option>
-                    <option value="false">Disabled</option>
-                  </select>
-                </div>
-                <div className="flex flex-col gap-1.5 mb-3">
-                  <label className="text-xs text-rcn-muted font-semibold">Last Password Change</label>
-                  <input type="text" readOnly value={user?.passwordChangedAt || '—'} className={inputClass} />
-                </div>
-                <p className="text-xs text-rcn-muted mt-3 mb-0">To set a password for a new user, enter it above and Save (or keep default).</p>
-              </div>
-            </div>
-          )}
-
-          <div className="border-t border-rcn-border my-4"></div>
-          <div className="flex justify-between items-center">
-            <p className="text-xs text-rcn-muted m-0">Changes apply immediately.</p>
-            <div className="flex gap-2">
-              {isEdit && editingUserId && (
-                <button
-                  onClick={() => handleDeleteUser(editingUserId)}
-                  className="bg-white border border-[#f0c0c0] text-rcn-danger px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-sm hover:bg-[#fff1f2] transition-colors"
-                >
-                  Delete
-                </button>
-              )}
-              <button onClick={() => handleSaveUser(editingUserId)} className={btnPrimaryClass}>
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
+      <Modal isOpen={modalOpen} onClose={closeModal} maxWidth="560px">
+        <SystemAccessUserForm
+          key={editUser?._id ?? "new"}
+          userId={editUser?._id ?? null}
+          roles={roles}
+          onClose={closeModal}
+          onSuccess={() => {
+            invalidate();
+            closeModal();
+          }}
+        />
       </Modal>
     </>
   );
+}
+
+/** Form values for create/edit master admin user */
+const adminUserFormSchema = yup.object({
+  first_name: yup.string().trim().required("First name is required."),
+  last_name: yup.string().trim().required("Last name is required."),
+  email: yup
+    .string()
+    .trim()
+    .required("Email is required.")
+    .email("Please enter a valid email."),
+  dial_code: yup.string().trim().optional().default(""),
+  phone_number: yup.string().trim().optional().default(""),
+  role_id: yup.number().required("Role is required."),
+  status: yup.number().oneOf([0, 1]).required().default(1),
+  password: yup.string().trim().default(""),
+});
+
+export type AdminUserFormValues = yup.InferType<typeof adminUserFormSchema>;
+
+const defaultFormValues: AdminUserFormValues = {
+  first_name: "",
+  last_name: "",
+  email: "",
+  dial_code: "",
+  phone_number: "",
+  role_id: 0,
+  status: 1,
+  password: "",
 };
 
-export default UserPanel;
+/** Form for create (password required) and edit (fetched by id, status, no password). */
+function SystemAccessUserForm({
+  userId,
+  roles,
+  onClose,
+  onSuccess,
+}: {
+  userId: string | null;
+  roles: { id?: number; name?: string }[];
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const isEdit = !!userId;
+
+  const { data: apiUser, isLoading } = useQuery({
+    queryKey: [...defaultQueryKeys.adminUserDetail, userId],
+    queryFn: async () => {
+      if (!userId) return null;
+      const res = await getAdminUserByIdApi(userId);
+      if (!checkResponse({ res })) return null;
+      const body = res.data as { success?: boolean; data?: AdminUser } | AdminUser;
+      const user = typeof body === "object" && body && "data" in body ? (body as { data?: AdminUser }).data : (body as AdminUser);
+      return user ?? null;
+    },
+    enabled: !!userId,
+  });
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    setError,
+    formState: { errors },
+  } = useForm<AdminUserFormValues>({
+    defaultValues: defaultFormValues,
+    resolver: yupResolver(adminUserFormSchema),
+    values: apiUser
+      ? {
+          ...defaultFormValues,
+          first_name: apiUser.first_name ?? "",
+          last_name: apiUser.last_name ?? "",
+          email: apiUser.email ?? "",
+          dial_code: apiUser.dial_code ?? "",
+          phone_number: apiUser.phone_number ?? "",
+          role_id: apiUser.role_id ?? roles[0]?.id ?? 0,
+          status: apiUser.status ?? 1,
+        }
+      : { ...defaultFormValues, role_id: roles[0]?.id ?? 0 },
+  });
+
+  const dialCode = watch("dial_code");
+  const phoneNumber = watch("phone_number");
+  const phoneValue = (dialCode ?? "") + (phoneNumber ?? "").replace(/\D/g, "");
+
+  const handlePhoneChange = (value: string, country: { dialCode: string }) => {
+    const code = String(country?.dialCode ?? "1");
+    setValue("dial_code", code, { shouldValidate: true });
+    setValue("phone_number", value.slice(code.length) || "", { shouldValidate: true });
+  };
+
+  const createMutation = useMutation({
+    mutationFn: catchAsync(async (data: AdminUserFormValues) => {
+      const res = await createAdminUserApi({
+        first_name: data.first_name,
+        last_name: data.last_name,
+        email: data.email,
+        phone_number: data.phone_number || undefined,
+        dial_code: data.dial_code || undefined,
+        password: (data.password ?? "").trim(),
+        role_id: data.role_id,
+      });
+      if (checkResponse({ res, showSuccess: true })) onSuccess();
+    }),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: catchAsync(async (data: AdminUserFormValues) => {
+      if (!userId) return;
+      const res = await updateAdminUserApi(userId, {
+        first_name: data.first_name,
+        last_name: data.last_name,
+        email: data.email,
+        phone_number: data.phone_number || undefined,
+        dial_code: data.dial_code || undefined,
+        status: data.status,
+        role_id: data.role_id,
+      });
+      if (checkResponse({ res, showSuccess: true })) onSuccess();
+    }),
+  });
+
+  const isSaving = createMutation.isPending || updateMutation.isPending;
+
+  const onSave = (data: AdminUserFormValues) => {
+    if (!isEdit) {
+      const pwd = (data.password ?? "").trim();
+      if (pwd.length < 8) {
+        setError("password", { message: "Password is required (min 8 characters)." });
+        return;
+      }
+    }
+    if (isEdit) {
+      updateMutation.mutate(data);
+    } else {
+      createMutation.mutate(data);
+    }
+  };
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold m-0">
+          {isEdit ? "Edit" : "New"} Master Admin User
+        </h3>
+        <Button variant="secondary" size="sm" onClick={onClose}>
+          Close
+        </Button>
+      </div>
+      <div className="h-px bg-rcn-border my-4" />
+      <form onSubmit={handleSubmit(onSave)} className="space-y-4">
+        {isEdit && isLoading && (
+          <p className="text-xs text-rcn-muted mb-2">Loading user…</p>
+        )}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs text-rcn-muted font-semibold block mb-1.5">First Name</label>
+            <input {...register("first_name")} className={INPUT_CLASS} />
+            {errors.first_name && (
+              <p className="text-xs text-red-600 mt-1">{errors.first_name.message}</p>
+            )}
+          </div>
+          <div>
+            <label className="text-xs text-rcn-muted font-semibold block mb-1.5">Last Name</label>
+            <input {...register("last_name")} className={INPUT_CLASS} />
+            {errors.last_name && (
+              <p className="text-xs text-red-600 mt-1">{errors.last_name.message}</p>
+            )}
+          </div>
+        </div>
+        <div>
+          <label className="text-xs text-rcn-muted font-semibold block mb-1.5">Email</label>
+          <input {...register("email")} type="email" className={INPUT_CLASS} />
+          {errors.email && (
+            <p className="text-xs text-red-600 mt-1">{errors.email.message}</p>
+          )}
+        </div>
+        <div>
+          <label className="text-xs text-rcn-muted font-semibold block mb-1.5">Phone (optional)</label>
+          <PhoneInputField
+            value={phoneValue}
+            onChange={handlePhoneChange}
+            hasError={!!errors.phone_number}
+            placeholder="(optional)"
+          />
+          {errors.phone_number && (
+            <p className="text-xs text-red-600 mt-1">{errors.phone_number.message}</p>
+          )}
+        </div>
+        <div>
+          <label className="text-xs text-rcn-muted font-semibold block mb-1.5">Role</label>
+          <select {...register("role_id", { setValueAs: (v) => Number(v) })} className={INPUT_CLASS}>
+            {roles.map((r) => (
+              <option key={r.id ?? r.name} value={r.id ?? 0}>
+                {r.name ?? `Role ${r.id}`}
+              </option>
+            ))}
+            {roles.length === 0 && <option value={0}>— No roles —</option>}
+          </select>
+          {errors.role_id && (
+            <p className="text-xs text-red-600 mt-1">{errors.role_id.message}</p>
+          )}
+        </div>
+        {!isEdit && (
+          <div>
+            <label className="text-xs text-rcn-muted font-semibold block mb-1.5">Password</label>
+            <input
+              {...register("password")}
+              type="password"
+              className={INPUT_CLASS}
+              placeholder="Min 8 characters"
+            />
+            {errors.password && (
+              <p className="text-xs text-red-600 mt-1">{errors.password.message}</p>
+            )}
+          </div>
+        )}
+        {isEdit && (
+          <div>
+            <label className="text-xs text-rcn-muted font-semibold block mb-1.5">Status</label>
+            <select {...register("status", { setValueAs: (v) => Number(v) })} className={INPUT_CLASS}>
+              <option value={1}>Enabled</option>
+              <option value={0}>Disabled</option>
+            </select>
+          </div>
+        )}
+        <div className="h-px bg-rcn-border my-4" />
+        <div className="flex gap-2 justify-end">
+          <Button type="button" variant="secondary" size="sm" onClick={onClose} disabled={isSaving}>
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            variant="primary"
+            size="sm"
+            disabled={isSaving || (isEdit && isLoading)}
+          >
+            {isSaving ? "Saving…" : isEdit && isLoading ? "Loading…" : isEdit ? "Update" : "Create"}
+          </Button>
+        </div>
+      </form>
+    </div>
+  );
+}

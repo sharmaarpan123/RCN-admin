@@ -173,3 +173,40 @@ export const updateAdminRoleApi = (roleId: string | number, body: { name: string
 /** DELETE /api/admin/roles/:id — delete role (admin). */
 export const deleteAdminRoleApi = (roleId: string | number) =>
   AxiosInstance.delete(`/api/admin/roles/${roleId}`);
+
+/** GET /api/admin/user — list master admin users. */
+export const getAdminUsersApi = () =>
+  AxiosInstance.get("/api/admin/user");
+
+/** GET /api/admin/user/:id — get master admin user by id. */
+export const getAdminUserByIdApi = (userId: string) =>
+  AxiosInstance.get(`/api/admin/user/${userId}`);
+
+/** POST /api/admin/user — create master admin user. Body: first_name, last_name, email, phone_number, dial_code, password, role_id. */
+export const createAdminUserApi = (body: {
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone_number?: string;
+  dial_code?: string;
+  password: string;
+  role_id: number;
+}) => AxiosInstance.post("/api/admin/user", body);
+
+/** PUT /api/admin/user/:id — update master admin user. Body: first_name, last_name, email, phone_number, dial_code, status, role_id. */
+export const updateAdminUserApi = (
+  userId: string,
+  body: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone_number?: string;
+    dial_code?: string;
+    status: number;
+    role_id: number;
+  }
+) => AxiosInstance.put(`/api/admin/user/${userId}`, body);
+
+/** DELETE /api/admin/user/:id — delete master admin user. */
+export const deleteAdminUserApi = (userId: string) =>
+  AxiosInstance.delete(`/api/admin/user/${userId}`);
