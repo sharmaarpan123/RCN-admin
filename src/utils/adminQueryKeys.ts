@@ -15,6 +15,9 @@ const defaultQueryKeys = {
     adminUsersList: ["admin", "system-users", "list"],
     adminUserDetail: ["admin", "system-user", "detail"],
     paymentSettings: ["admin", "payment-settings"],
+    bannersList: ["admin", "banners", "list"],
+    contactList: ["admin", "contact", "list"],
+    contactDetail: ["admin", "contact", "detail"],
 };
 
 export default defaultQueryKeys;

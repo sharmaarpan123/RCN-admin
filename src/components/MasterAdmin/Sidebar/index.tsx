@@ -110,6 +110,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
           label: 'Audit Log',
           view: 'audit',
           requiresPermission: true
+        },
+        {
+          path: '/master-admin/contact',
+          label: 'Contact Queries',
+          view: 'contact',
+          requiresPermission: true
         }
       ]
     },

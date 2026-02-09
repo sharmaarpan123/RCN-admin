@@ -223,3 +223,38 @@ export const getAdminPaymentSettingsApi = () =>
 
 /** PUT /api/admin/payment-settings — update payment settings (admin). */
 export const updateAdminPaymentSettingsApi = (body: unknown) => AxiosInstance.put("/api/admin/payment-settings", body);
+
+/** POST /api/users/profile/picture/upload — upload profile/banner image (common). FormData with key "file". */
+export const uploadProfilePictureApi = (file: File) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  return AxiosInstance.post("/api/users/profile/picture/upload", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+};
+
+/** GET /api/admin/banners — list banners (admin). */
+export const getAdminBannersApi = () => AxiosInstance.get("/api/admin/banners");
+
+/** POST /api/admin/banners — create banner (admin). */
+export const createAdminBannerApi = (body: unknown) => AxiosInstance.post("/api/admin/banners", body);
+
+/** PUT /api/admin/banners/:id — update banner (admin). */
+export const updateAdminBannerApi = (bannerId: string, body: Record<string, unknown>) =>
+  AxiosInstance.put(`/api/admin/banners/${bannerId}`, body);
+
+/** DELETE /api/admin/banners/:id — delete banner (admin). Optional body e.g. { organization_id }. */
+export const deleteAdminBannerApi = (bannerId: string, body?: { organization_id?: string }) =>
+  AxiosInstance.delete(`/api/admin/banners/${bannerId}`, body ? { data: body } : undefined);
+
+/** GET /api/admin/contact — list contact queries with pagination (admin). */
+export const getAdminContactListApi = (params: { page: number; limit: number }) =>
+  AxiosInstance.get("/api/admin/contact", { params });
+
+/** GET /api/admin/contact/:id — get single contact query detail (admin). */
+export const getAdminContactDetailApi = (contactId: string) =>
+  AxiosInstance.get(`/api/admin/contact/${contactId}`);
+
+/** DELETE /api/admin/contact/:id — delete contact query (admin). */
+export const deleteAdminContactApi = (contactId: string) =>
+  AxiosInstance.delete(`/api/admin/contact/${contactId}`);
