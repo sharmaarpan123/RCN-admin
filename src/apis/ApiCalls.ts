@@ -48,6 +48,12 @@ export const putAdminOrganizationToggleApi = (organizationId: string) =>
 export const deleteAdminOrganizationApi = (organizationId: string) =>
   AxiosInstance.delete(`/api/admin/organization/${organizationId}`);
 
+/** POST /api/admin/organization/:organizationId/wallet/topup — top up organization wallet (admin). */
+export const postAdminOrganizationWalletTopupApi = (
+  organizationId: string,
+  body: { amount: number }
+) => AxiosInstance.post(`/api/admin/organization/${organizationId}/wallet/topup`, body);
+
 /** GET /api/admin/organization/branch/:organizationId — list branches for an organization (admin). */
 export const getAdminOrganizationBranchesApi = (organizationId: string, body: unknown) =>
   AxiosInstance.get(`/api/admin/organization/branch/${organizationId}`, { params: body });
@@ -210,3 +216,10 @@ export const updateAdminUserApi = (
 /** DELETE /api/admin/user/:id — delete master admin user. */
 export const deleteAdminUserApi = (userId: string) =>
   AxiosInstance.delete(`/api/admin/user/${userId}`);
+
+/** GET /api/admin/payment-settings — get payment settings (admin). */
+export const getAdminPaymentSettingsApi = () =>
+  AxiosInstance.get("/api/admin/payment-settings");
+
+/** PUT /api/admin/payment-settings — update payment settings (admin). */
+export const updateAdminPaymentSettingsApi = (body: unknown) => AxiosInstance.put("/api/admin/payment-settings", body);

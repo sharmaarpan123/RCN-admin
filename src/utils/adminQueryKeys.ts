@@ -14,6 +14,7 @@ const defaultQueryKeys = {
     assignablePermissions: ["admin", "permissions", "assignable"],
     adminUsersList: ["admin", "system-users", "list"],
     adminUserDetail: ["admin", "system-user", "detail"],
+    paymentSettings: ["admin", "payment-settings"],
 };
 
 export default defaultQueryKeys;
