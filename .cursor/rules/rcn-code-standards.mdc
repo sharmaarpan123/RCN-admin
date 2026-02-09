@@ -1,0 +1,44 @@
+---
+description: RCN project code standards — APIs, forms, buttons, toasts
+alwaysApply: true
+---
+
+# RCN Code Standards
+
+Use these patterns consistently across the repo.
+
+## Buttons
+- Use the shared **Button** from `@/components` (or `@/components/Button`).
+- Prefer `variant="primary" | "secondary" | "tab" | "ghost"` and `size="sm" | "md"`.
+- Do **not** use raw `<button>` with `BTN_CLASS` / `BTN_PRIMARY_CLASS` / `BTN_SMALL_CLASS` from types; use `<Button variant="..." size="sm">`.
+
+## API & data loading
+- **Queries (useQuery):** Call `checkResponse({ res })` in the `queryFn`. On failure return a safe fallback (e.g. `[]` or `{ data: [] }` or `null`) so the UI does not break.
+- **Mutations (create/update/delete/toggle):** Wrap the API call in **catchAsync** from `@/utils/commonFunc`, then use **checkResponse({ res, showSuccess: true })** on the response; on success invalidate queries and close modals as needed. Let catchAsync handle error toasts.
+- **API definitions:** Keep all HTTP calls in `src/apis/ApiCalls.ts` using `AxiosInstance` from `@/apis/Axios`.
+
+## Toasts
+- Use **toastSuccess** and **toastError** from `@/utils/toast`. Prefer server message via `checkResponse({ showSuccess: true })` for success when possible.
+
+## Forms
+- Use **react-hook-form** with **yup** and **yupResolver** from `@hookform/resolvers/yup`.
+- **Phone fields (international):** Store **dial_code** and **phone_number** (national number only) in form state. Use **PhoneInputField** with:
+  - `value = (dialCode ?? "") + (phoneNumber ?? "").replace(/\D/g, "")`
+  - `onChange`: `(value, country) => setValue("dial_code", country.dialCode); setValue("phone_number", value.slice(country.dialCode.length) || "")`
+- Do not parse a single "phone" string in submit; send `dial_code` and `phone_number` separately to the API.
+
+## Query keys
+- Admin: **defaultQueryKeys** from `@/utils/adminQueryKeys`.
+- Org portal: **defaultQueryKeys** from `@/utils/orgQueryKeys`.
+- Invalidate after mutations with `queryClient.invalidateQueries({ queryKey: ... })`.
+
+## Shared UI
+- **Modal:** from `@/components` (or `@/components/Modal`).
+- **TableLayout, DebouncedInput, Autocomplete, ConfirmModal, CustomNextLink:** from `@/components` or their direct paths as used in the project.
+- **INPUT_CLASS** and similar style constants may live in local `types` or a shared const file; use them for inputs when present.
+
+## File layout
+- **Components:** under `src/components/` (e.g. MasterAdmin, OrgComponent, shared).
+- **Pages:** under `src/app/` (Next.js App Router).
+- **API layer:** `src/apis/ApiCalls.ts` + `src/apis/Axios.ts`.
+- **Utils:** `src/utils/commonFunc.ts` (checkResponse, catchAsync, isValidEmail), `src/utils/toast.ts`, `src/utils/adminQueryKeys.ts`, `src/utils/orgQueryKeys.ts`.
