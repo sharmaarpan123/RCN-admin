@@ -59,6 +59,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
           requiresPermission: false
         },
         {
+          path: '/master-admin/roles-permissions',
+          label: 'Roles & Permissions',
+          view: 'roles',
+          requiresPermission: true
+        },
+        {
           path: '/master-admin/system-access',
           label: 'Master Admin Users',
           view: 'userpanel',

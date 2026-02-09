@@ -10,6 +10,8 @@ const defaultQueryKeys = {
     organizationUser: ["admin", "organization", "user", "detail"],
     cmsList: ["admin", "cms", "list"],
     cmsDetail: ["admin", "cms", "detail"],
+    rolesList: ["admin", "roles", "list"],
+    assignablePermissions: ["admin", "permissions", "assignable"],
 };
 
 export default defaultQueryKeys;

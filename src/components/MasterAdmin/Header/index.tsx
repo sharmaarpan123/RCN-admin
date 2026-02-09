@@ -15,6 +15,10 @@ const titleMap = {
     title: 'Organizations',
     subtitle: 'Manage organizations, branches, departments, and users.'
   },
+  rolesPermissions: {
+    title: 'Roles & Permissions',
+    subtitle: 'Create and manage roles and assign permissions.'
+  },
   systemAccess: {
     title: 'Master Admin Users',
     subtitle: 'Manage system administrators and access control.'
@@ -53,6 +57,7 @@ const pages =
 {
   dashboard: '/master-admin/dashboard',
   organizations: '/master-admin/organizations',
+  rolesPermissions: '/master-admin/roles-permissions',
   systemAccess: '/master-admin/system-access',
   paymentSettings: '/master-admin/payment-settings',
   banners: '/master-admin/banners',

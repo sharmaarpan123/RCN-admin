@@ -153,3 +153,23 @@ export const createAdminCmsApi = (body: unknown) =>
 /** PUT /api/admin/cms/:id — update CMS page (admin). */
 export const updateAdminCmsApi = (id: string, body: unknown) =>
   AxiosInstance.put(`/api/admin/cms/${id}`, body);
+
+/** GET /api/admin/permissions/assignable — list assignable permissions (admin). */
+export const getAdminAssignablePermissionsApi = () =>
+  AxiosInstance.get("/api/admin/permissions/assignable");
+
+/** GET /api/admin/roles — list roles (admin). */
+export const getAdminRolesApi = () =>
+  AxiosInstance.get("/api/admin/roles");
+
+/** POST /api/admin/roles — create role (admin). Body: { name, permission_ids }. */
+export const createAdminRoleApi = (body: { name: string; permission_ids: string[] }) =>
+  AxiosInstance.post("/api/admin/roles", body);
+
+/** PUT /api/admin/roles/:id — update role (admin). Body: { name, permission_ids }. */
+export const updateAdminRoleApi = (roleId: string | number, body: { name: string; permission_ids: string[] }) =>
+  AxiosInstance.put(`/api/admin/roles/${roleId}`, body);
+
+/** DELETE /api/admin/roles/:id — delete role (admin). */
+export const deleteAdminRoleApi = (roleId: string | number) =>
+  AxiosInstance.delete(`/api/admin/roles/${roleId}`);
