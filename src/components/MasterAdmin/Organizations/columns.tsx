@@ -44,9 +44,8 @@ const adminOrgTableColumns = ({
     {
       head: "Actions",
       component: (row: OrgTableRow) => {
-        const orgId = row.organization?._id ?? row.organization_id ?? "";
-        return (
-          <div className="flex gap-2 flex-wrap">
+         return (
+          <div className="flex gap-2">
             <Button variant="secondary" size="sm" onClick={() => onToggleOrganization(row?._id)}>
               Toggle
             </Button>
