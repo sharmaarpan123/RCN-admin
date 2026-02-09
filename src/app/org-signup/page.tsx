@@ -1,38 +1,19 @@
 "use client";
-import React from "react";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
-import { useMutation } from "@tanstack/react-query";
-import { catchAsync, checkResponse } from "@/utils/commonFunc";
 import { organizationSignupApi } from "@/apis/ApiCalls";
+import type { AddressResult } from "@/components";
+import { Autocomplete, PhoneInputField } from "@/components";
 import Button from "@/components/Button";
 import CustomNextLink from "@/components/CustomNextLink";
-import { PhoneInputField, Autocomplete } from "@/components";
-import type { AddressResult } from "@/components";
+import { catchAsync, checkResponse } from "@/utils/commonFunc";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { useMutation } from "@tanstack/react-query";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import React from "react";
+import { useForm } from "react-hook-form";
+import * as yup from "yup";
 
-// US States list
-const US_STATES = [
-  { abbr: "AL", name: "Alabama" }, { abbr: "AK", name: "Alaska" }, { abbr: "AZ", name: "Arizona" },
-  { abbr: "AR", name: "Arkansas" }, { abbr: "CA", name: "California" }, { abbr: "CO", name: "Colorado" },
-  { abbr: "CT", name: "Connecticut" }, { abbr: "DE", name: "Delaware" }, { abbr: "FL", name: "Florida" },
-  { abbr: "GA", name: "Georgia" }, { abbr: "HI", name: "Hawaii" }, { abbr: "ID", name: "Idaho" },
-  { abbr: "IL", name: "Illinois" }, { abbr: "IN", name: "Indiana" }, { abbr: "IA", name: "Iowa" },
-  { abbr: "KS", name: "Kansas" }, { abbr: "KY", name: "Kentucky" }, { abbr: "LA", name: "Louisiana" },
-  { abbr: "ME", name: "Maine" }, { abbr: "MD", name: "Maryland" }, { abbr: "MA", name: "Massachusetts" },
-  { abbr: "MI", name: "Michigan" }, { abbr: "MN", name: "Minnesota" }, { abbr: "MS", name: "Mississippi" },
-  { abbr: "MO", name: "Missouri" }, { abbr: "MT", name: "Montana" }, { abbr: "NE", name: "Nebraska" },
-  { abbr: "NV", name: "Nevada" }, { abbr: "NH", name: "New Hampshire" }, { abbr: "NJ", name: "New Jersey" },
-  { abbr: "NM", name: "New Mexico" }, { abbr: "NY", name: "New York" }, { abbr: "NC", name: "North Carolina" },
-  { abbr: "ND", name: "North Dakota" }, { abbr: "OH", name: "Ohio" }, { abbr: "OK", name: "Oklahoma" },
-  { abbr: "OR", name: "Oregon" }, { abbr: "PA", name: "Pennsylvania" }, { abbr: "RI", name: "Rhode Island" },
-  { abbr: "SC", name: "South Carolina" }, { abbr: "SD", name: "South Dakota" }, { abbr: "TN", name: "Tennessee" },
-  { abbr: "TX", name: "Texas" }, { abbr: "UT", name: "Utah" }, { abbr: "VT", name: "Vermont" },
-  { abbr: "VA", name: "Virginia" }, { abbr: "WA", name: "Washington" }, { abbr: "WV", name: "West Virginia" },
-  { abbr: "WI", name: "Wisconsin" }, { abbr: "WY", name: "Wyoming" }, { abbr: "DC", name: "District of Columbia" },
-];
+
 
 const DEFAULT_DIAL_CODE = "1";
 
@@ -87,7 +68,6 @@ const defaultValues: Omit<OrgSignupFormValues, "latitude" | "longitude"> & { lat
 };
 
 function buildPayload(data: OrgSignupFormValues): unknown {
-  const stateEntry = US_STATES.find((s) => s.abbr === data.state);
   const s = (v: string | undefined) => (v ?? "").trim() || undefined;
   const digits = (v: string | undefined, max = 15) => (v ?? "").replace(/\D/g, "").slice(0, max) || undefined;
   return {
@@ -102,7 +82,7 @@ function buildPayload(data: OrgSignupFormValues): unknown {
     latitude: data.latitude ?? 0,
     longitude: data.longitude ?? 0,
     city: s(data.city),
-    state: stateEntry?.name ?? data.state ?? "",
+    state: s(data.state),
     country: data.country ?? "USA",
     zip_code: data.zip_code ?? "",
     user_first_name: s(data.user_first_name),
@@ -373,12 +353,7 @@ const OrgSignup: React.FC = () => {
                       <label className="text-xs text-rcn-muted block mb-1.5">
                         State <span className="text-rcn-danger">*</span>
                       </label>
-                      <select {...register("state")} className={inputClass("state")}>
-                        <option value="">Select State</option>
-                        {US_STATES.map((s) => (
-                          <option key={s.abbr} value={s.abbr}>{s.name}</option>
-                        ))}
-                      </select>
+                      <input {...register("state")} type="text" placeholder="State" className={inputClass("state")} />
                       {errorMsg("state")}
                     </div>
                   </div>

@@ -1,16 +1,18 @@
 "use client";
 
-import { getAuthProfileApi } from "@/apis/ApiCalls";
+import { getAuthProfileApi, updateOrganizationProfileApi } from "@/apis/ApiCalls";
 import type { AddressResult } from "@/components";
 import { Autocomplete, Button, PhoneInputField } from "@/components";
 import { checkResponse, isValidEmail } from "@/utils/commonFunc";
-import { toastSuccess } from "@/utils/toast";
+import { toastError, toastSuccess } from "@/utils/toast";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
 import * as yup from "yup";
 import type { AuthProfileData } from "../types/profile";
+
+const DEFAULT_DIAL_CODE = "1";
 
 /** Organization address (form + API shape for this page). */
 export interface OrgAddress {
@@ -28,7 +30,8 @@ export interface OrgContact {
   firstName: string;
   lastName: string;
   email: string;
-  tel: string;
+  dial_code: string;
+  phone_number: string;
   fax: string;
 }
 
@@ -36,7 +39,8 @@ export interface OrgContact {
 export interface Org {
   id: string;
   name: string;
-  phone: string;
+  dial_code: string;
+  phone_number: string;
   email: string;
   ein: string;
   address: OrgAddress;
@@ -44,11 +48,19 @@ export interface Org {
 }
 
 const DEF_ADDR: OrgAddress = { street: "", apt: "", city: "", state: "", zip: "" };
-const DEF_CONTACT: OrgContact = { firstName: "", lastName: "", email: "", tel: "", fax: "" };
+const DEF_CONTACT: OrgContact = {
+  firstName: "",
+  lastName: "",
+  email: "",
+  dial_code: DEFAULT_DIAL_CODE,
+  phone_number: "",
+  fax: "",
+};
 
 const orgSettingsSchema = yup.object({
   name: yup.string().trim().default(""),
-  phone: yup.string().trim().required("Organization Phone is required."),
+  dial_code: yup.string().trim().optional().default(DEFAULT_DIAL_CODE),
+  phone_number: yup.string().trim().required("Organization Phone is required."),
   email: yup
     .string()
     .trim()
@@ -75,7 +87,8 @@ const orgSettingsSchema = yup.object({
       .trim()
       .default("")
       .test("email", "Please enter a valid Contact Person Email (or leave blank).", (v) => !v || isValidEmail(v)),
-    tel: yup.string().trim().default(""),
+    dial_code: yup.string().trim().optional().default(DEFAULT_DIAL_CODE),
+    phone_number: yup.string().trim().default(""),
     fax: yup.string().trim().default(""),
   }),
 });
@@ -85,7 +98,8 @@ type OrgSettingsFormValues = yup.InferType<typeof orgSettingsSchema>;
 const DEFAULT_ORG: Org = {
   id: "",
   name: "",
-  phone: "",
+  dial_code: DEFAULT_DIAL_CODE,
+  phone_number: "",
   email: "",
   ein: "",
   address: { ...DEF_ADDR },
@@ -98,15 +112,16 @@ function mapProfileToOrg(payload: AuthProfileData | null | undefined): Org {
   const org = payload.organization;
   const user = payload;
   const str = (v: unknown) => ((v ?? "") as string).toString().trim();
+
   const coords = org.location?.coordinates;
   const lat = coords != null && coords[1] != null ? Number(coords[1]) : null;
   const lng = coords != null && coords[0] != null ? Number(coords[0]) : null;
-  const orgPhone = [org.dial_code, org.phone_number].filter(Boolean).map(String).join(" ").trim() || str(org.phone_number);
 
   return {
     id: str(org._id),
     name: str(org.name),
-    phone: orgPhone,
+    dial_code: str(org.dial_code) || DEFAULT_DIAL_CODE,
+    phone_number: str(org.phone_number),
     email: str(org.email),
     ein: str(org.ein_number),
     address: {
@@ -122,7 +137,8 @@ function mapProfileToOrg(payload: AuthProfileData | null | undefined): Org {
       firstName: str(user.first_name),
       lastName: str(user.last_name),
       email: str(user.email),
-      tel: [user.dial_code, user.phone_number].filter(Boolean).map(String).join(" ").trim() || str(user.phone_number),
+      dial_code: str(user.dial_code) || DEFAULT_DIAL_CODE,
+      phone_number: str(user.phone_number),
       fax: str(user.fax_number),
     },
   };
@@ -160,7 +176,8 @@ const inputClass =
 function orgToFormValues(org: Org): OrgSettingsFormValues {
   return {
     name: org.name ?? "",
-    phone: org.phone ?? "",
+    dial_code: org.dial_code ?? DEFAULT_DIAL_CODE,
+    phone_number: org.phone_number ?? "",
     email: org.email ?? "",
     ein: org.ein ?? "",
     address: {
@@ -176,7 +193,8 @@ function orgToFormValues(org: Org): OrgSettingsFormValues {
       firstName: org.contact?.firstName ?? "",
       lastName: org.contact?.lastName ?? "",
       email: org.contact?.email ?? "",
-      tel: org.contact?.tel ?? "",
+      dial_code: org.contact?.dial_code ?? DEFAULT_DIAL_CODE,
+      phone_number: org.contact?.phone_number ?? "",
       fax: org.contact?.fax ?? "",
     },
   };
@@ -189,6 +207,7 @@ function OrganizationSettingsForm({
   initialOrg: Org;
   profileLoading: boolean;
 }) {
+  const queryClient = useQueryClient();
   const formValues = useMemo(() => orgToFormValues(initialOrg), [initialOrg]);
 
   const {
@@ -196,14 +215,32 @@ function OrganizationSettingsForm({
     control,
     handleSubmit,
     setValue,
-    formState: { errors },
-    reset
+    watch,
+    formState: { errors, isSubmitting },
   } = useForm<OrgSettingsFormValues>({
     defaultValues: formValues,
-
     resolver: yupResolver(orgSettingsSchema),
     values: formValues,
   });
+
+  const dialCode = watch("dial_code");
+  const phoneNumber = watch("phone_number");
+  const contactDialCode = watch("contact.dial_code");
+  const contactPhoneNumber = watch("contact.phone_number");
+  const orgPhoneValue = (dialCode ?? "") + (phoneNumber ?? "").replace(/\D/g, "");
+  const contactPhoneValue = (contactDialCode ?? "") + (contactPhoneNumber ?? "").replace(/\D/g, "");
+
+  const handleOrgPhoneChange = (value: string, country: { dialCode: string }) => {
+    const code = String(country?.dialCode ?? DEFAULT_DIAL_CODE);
+    setValue("dial_code", code, { shouldValidate: true });
+    setValue("phone_number", value.slice(code.length) || "", { shouldValidate: true });
+  };
+
+  const handleContactPhoneChange = (value: string, country: { dialCode: string }) => {
+    const code = String(country?.dialCode ?? DEFAULT_DIAL_CODE);
+    setValue("contact.dial_code", code, { shouldValidate: true });
+    setValue("contact.phone_number", value.slice(code.length) || "", { shouldValidate: true });
+  };
 
   const handleAddressSelect = (address: AddressResult) => {
     setValue("address.street", address.formatted_address, { shouldValidate: true, shouldDirty: true });
@@ -214,32 +251,35 @@ function OrganizationSettingsForm({
     setValue("address.lng", address.longitude ? Number(address.longitude) : 0, { shouldValidate: true, shouldDirty: true });
   };
 
-
-
-  const onSubmit = (values: OrgSettingsFormValues) => {
-    const updatedOrg: Org = {
-      ...initialOrg,
-      name: (values.name || "").trim() || "Main Organization",
-      phone: (values.phone ?? "").trim(),
-      email: (values.email ?? "").trim(),
-      ein: (values.ein ?? "").trim(),
-      address: {
-        street: (values.address?.street ?? "").trim(),
-        apt: (values.address?.apt ?? "").trim(),
-        city: (values.address?.city ?? "").trim(),
-        state: (values.address?.state ?? "").trim(),
-        zip: (values.address?.zip ?? "").trim(),
-      },
-      contact: {
-        firstName: (values.contact?.firstName ?? "").trim(),
-        lastName: (values.contact?.lastName ?? "").trim(),
-        email: (values.contact?.email ?? "").trim(),
-        tel: (values.contact?.tel ?? "").trim(),
-        fax: (values.contact?.fax ?? "").trim(),
-      },
+  const onSubmit = async (values: OrgSettingsFormValues) => {
+    const body = {
+      name: (values.name || "").trim() || undefined,
+      dial_code: (values.dial_code ?? "").trim() || DEFAULT_DIAL_CODE,
+      phone_number: (values.phone_number ?? "").trim().replace(/\D/g, "") || undefined,
+      ein_number: (values.ein ?? "").trim() || undefined,
+      street: (values.address?.street ?? "").trim() || undefined,
+      suite: (values.address?.apt ?? "").trim() || undefined,
+      city: (values.address?.city ?? "").trim() || undefined,
+      state: (values.address?.state ?? "").trim() || undefined,
+      country: "USA",
+      zip_code: (values.address?.zip ?? "").trim() || undefined,
+      latitude: values.address?.lat ? Number(values.address.lat) : undefined,
+      longitude: values.address?.lng ? Number(values.address.lng) : undefined,
+      user_first_name: (values.contact?.firstName ?? "").trim() || undefined,
+      user_last_name: (values.contact?.lastName ?? "").trim() || undefined,
+      user_dial_code: (values.contact?.dial_code ?? "").trim() || DEFAULT_DIAL_CODE,
+      user_phone_number: (values.contact?.phone_number ?? "").trim().replace(/\D/g, "") || undefined,
+      user_fax_number: (values.contact?.fax ?? "").trim() || undefined,
     };
-    reset(orgToFormValues(updatedOrg));
-    toastSuccess("Need api !");
+    try {
+      const res = await updateOrganizationProfileApi(body);
+      if (checkResponse({ res })) {
+        toastSuccess("Organization profile updated.");
+        await queryClient.invalidateQueries({ queryKey: ["auth", "profile"] });
+      }
+    } catch {
+      toastError("Failed to update organization profile.");
+    }
   };
 
   return (
@@ -269,20 +309,13 @@ function OrganizationSettingsForm({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs text-rcn-muted mb-1.5">Organization Phone <span className="text-rcn-danger">*</span></label>
-              <Controller
-                name="phone"
-                control={control}
-                render={({ field }) => (
-                  <PhoneInputField
-                    value={field.value ?? ""}
-                    onChange={field.onChange}
-                    country="us"
-                    placeholder="(312) 555-0100"
-                    hasError={!!errors.phone}
-                  />
-                )}
+              <PhoneInputField
+                value={orgPhoneValue}
+                onChange={handleOrgPhoneChange}
+                hasError={!!errors.phone_number}
+                placeholder="(312) 555-0100"
               />
-              {errors.phone && <p className="text-xs text-rcn-danger mt-1 m-0">{errors.phone.message}</p>}
+              {errors.phone_number && <p className="text-xs text-rcn-danger mt-1 m-0">{errors.phone_number.message}</p>}
             </div>
             <div>
               <label className="block text-xs text-rcn-muted mb-1.5">Organization Email <span className="text-rcn-danger">*</span></label>
@@ -375,19 +408,13 @@ function OrganizationSettingsForm({
               </div>
               <div>
                 <label className="block text-xs text-rcn-muted mb-1.5">Tel</label>
-                <Controller
-                  name="contact.tel"
-                  control={control}
-                  render={({ field }) => (
-                    <PhoneInputField
-                      value={field.value ?? ""}
-                      onChange={field.onChange}
-                      country="us"
-                      placeholder="(312) 555-0102"
-                      hasError={!!errors.contact?.tel}
-                    />
-                  )}
+                <PhoneInputField
+                  value={contactPhoneValue}
+                  onChange={handleContactPhoneChange}
+                  hasError={!!errors.contact?.phone_number}
+                  placeholder="(312) 555-0102"
                 />
+                {errors.contact?.phone_number && <p className="text-xs text-rcn-danger mt-1 m-0">{errors.contact.phone_number.message}</p>}
               </div>
               <div className="md:col-span-2">
                 <label className="block text-xs text-rcn-muted mb-1.5">Fax</label>
@@ -397,7 +424,9 @@ function OrganizationSettingsForm({
           </div>
         </div>
         <div className="p-4 flex justify-end">
-          <Button type="submit" variant="primary" size="sm" className="w-full sm:w-auto shrink-0">Save Organization</Button>
+          <Button type="submit" variant="primary" size="sm" className="w-full sm:w-auto shrink-0" disabled={isSubmitting}>
+            {isSubmitting ? "Saving…" : "Save Organization"}
+          </Button>
         </div>
       </form>
     </div>

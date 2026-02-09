@@ -9,6 +9,9 @@ export const authLoginApi = (body: unknown) =>
 export const getAuthProfileApi = () =>
   AxiosInstance.get("/api/auth/profile");
 
+/** PUT /api/organization/profile — update organization and contact (org portal). */
+export const updateOrganizationProfileApi = (body: unknown) => AxiosInstance.put("/api/organization/profile", body);
+
 export const organizationLoginApi = (body: unknown) =>
   AxiosInstance.post("/api/organization/login", body);
 

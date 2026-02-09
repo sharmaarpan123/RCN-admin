@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import {
   getOrganizationUserApi,
@@ -14,6 +14,8 @@ import { Button, CustomNextLink, PhoneInputField } from "@/components";
 import { catchAsync, checkResponse } from "@/utils/commonFunc";
 import defaultQueryKeys from "@/utils/orgQueryKeys";
 import { toastError, toastSuccess } from "@/utils/toast";
+
+const DEFAULT_DIAL_CODE = "1";
 
 const inputClass =
   "w-full px-2.5 py-2 text-sm rounded-xl border border-rcn-border bg-white focus:outline-none focus:ring-2 focus:ring-rcn-accent/30";
@@ -26,8 +28,8 @@ const userFormSchema = yup.object({
     .trim()
     .required("Email is required.")
     .email("Please enter a valid email."),
-  dialCode: yup.string().trim().default("1"),
-  phone: yup.string().trim().default(""),
+  dialCode: yup.string().trim().optional().default(DEFAULT_DIAL_CODE),
+  phone_number: yup.string().trim().default(""),
   faxNumber: yup.string().trim().default(""),
 
 
@@ -55,9 +57,8 @@ export type UserFormData = {
   lastName: string;
   email: string;
   dialCode: string;
-  phone: string;
+  phone_number: string;
   faxNumber: string;
-
   isActive: boolean;
   notes: string;
   branchIds: string[];
@@ -75,12 +76,14 @@ type UserFormProps = {
 };
 
 function mapApiUserToFormValues(data: Record<string, unknown>): UserFormValues {
+  const dialCode = (data.dial_code as string) ?? DEFAULT_DIAL_CODE;
+  const phoneNumber = ((data.phone_number as string) ?? "").replace(/\D/g, "").trim();
   return {
     firstName: (data.first_name as string) ?? "",
     lastName: (data.last_name as string) ?? "",
     email: (data.email as string) ?? "",
-    dialCode: (data.dial_code as string) ?? "1",
-    phone: [((data.dial_code as string) ?? ""), ((data.phone_number as string) ?? "").replace(/\D/g, "")].join("").trim() || "",
+    dialCode,
+    phone_number: phoneNumber,
     faxNumber: (data.fax_number as string) ?? "",
     isActive: data.is_active !== false,
     notes: (data.notes as string) ?? "",
@@ -117,7 +120,6 @@ export function UserForm({
 
   const {
     register,
-    control,
     handleSubmit,
     formState: { errors },
     watch,
@@ -127,8 +129,8 @@ export function UserForm({
       firstName: "",
       lastName: "",
       email: "",
-      dialCode: "1",
-      phone: "",
+      dialCode: DEFAULT_DIAL_CODE,
+      phone_number: "",
       faxNumber: "",
       isActive: true,
       notes: "",
@@ -140,6 +142,16 @@ export function UserForm({
     resolver: yupResolver(userFormSchema),
     values: isEdit && formValuesFromApi ? formValuesFromApi : undefined,
   });
+
+  const dialCode = watch("dialCode");
+  const phoneNumber = watch("phone_number");
+  const phoneValue = (dialCode ?? "") + (phoneNumber ?? "").replace(/\D/g, "");
+
+  const handlePhoneChange = (value: string, country: { dialCode: string }) => {
+    const code = String(country?.dialCode ?? DEFAULT_DIAL_CODE);
+    setValue("dialCode", code, { shouldValidate: true });
+    setValue("phone_number", value.slice(code.length) || "", { shouldValidate: true });
+  };
 
   const branchIds = watch("branchIds") ?? [];
   const deptIds = watch("deptIds") ?? [];
@@ -191,8 +203,8 @@ export function UserForm({
     const firstName = values.firstName.trim();
     const lastName = values.lastName.trim();
     const email = values.email.trim().toLowerCase();
-    const dialCode = values.dialCode?.trim() || "1";
-    const phone = (values.phone ?? "").trim().replace(/\D/g, "");
+    const dialCode = values.dialCode?.trim() || DEFAULT_DIAL_CODE;
+    const phone_number = (values.phone_number ?? "").trim().replace(/\D/g, "");
     const faxNumber = (values.faxNumber ?? "").trim();
     const notes = (values.notes ?? "").trim();
 
@@ -205,7 +217,7 @@ export function UserForm({
           email,
           dial_code: dialCode,
           password: values.password,
-          phone_number: phone,
+          phone_number: phone_number,
           fax_number: faxNumber || undefined,
           notes: notes || undefined,
         },
@@ -218,7 +230,7 @@ export function UserForm({
           first_name: firstName,
           last_name: lastName,
           dial_code: dialCode,
-          phone_number: phone,
+          phone_number: phone_number,
           fax_number: faxNumber || undefined,
           notes: notes || undefined,
           branch_ids: values.branchIds,
@@ -369,25 +381,15 @@ export function UserForm({
             )}
             <div>
               <label className="block text-xs text-rcn-muted mb-1">Phone number</label>
-              <Controller
-                control={control}
-                name="phone"
-                render={({ field }) => (
-                  <PhoneInputField
-                    value={field.value}
-                    onChange={(value, country) => {
-                      field.onChange(value);
-                      setValue("dialCode", country.dialCode);
-                    }}
-                    country="us"
-                    placeholder="9876543210"
-                    hasError={!!errors.phone}
-                    inputProps={{ disabled: isLoading }}
-                  />
-                )}
+              <PhoneInputField
+                value={phoneValue}
+                onChange={handlePhoneChange}
+                placeholder="9876543210"
+                hasError={!!errors.phone_number}
+                inputProps={{ disabled: isLoading }}
               />
-              {errors.phone && (
-                <p className="text-red-500 text-xs mt-0.5">{errors.phone.message}</p>
+              {errors.phone_number && (
+                <p className="text-red-500 text-xs mt-0.5">{errors.phone_number.message}</p>
               )}
             </div>
             <div>
