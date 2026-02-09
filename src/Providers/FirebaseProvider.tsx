@@ -41,8 +41,7 @@ export const FirebaseProvider = ({
     clearNotification,
     requestPermission,
     getFCMToken,
-    callData,
-    clearCallData,
+  
   } = useFirebaseMessaging();
 
   const value = {
@@ -53,8 +52,7 @@ export const FirebaseProvider = ({
     clearNotification,
     requestPermission,
     getFCMToken,
-    callData,
-    clearCallData,
+   
   };
 
   return (

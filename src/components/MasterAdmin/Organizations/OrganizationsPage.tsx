@@ -63,10 +63,6 @@ export function OrganizationsPage() {
 
   const orgsList = useMemo(() => orgsResponse?.data ?? [], [orgsResponse?.data]);
 
-
-  const invalidateDepts = () =>
-    queryClient.invalidateQueries({ queryKey: defaultQueryKeys.organizationDepartmentList });
-
   const openModal = (content: React.ReactNode) => setModalContent(content);
   const closeModal = () => setModalContent(null);
   const modal = { openModal, closeModal };
@@ -82,14 +78,7 @@ export function OrganizationsPage() {
     invalidateBranches();
   };
 
-  const deleteBranch = (branchId: string) => {
-    if (!confirm("Delete this branch?")) return;
-    void branchId;
-    closeBranchModal();
-    invalidateBranches();
-    invalidateDepts();
-    toastSuccess("Branch deleted.");
-  };
+
 
   const openBranchModal = (branch?: { _id: string; name?: string } | null, presetOrgId?: string) => {
     setBranchModal({
@@ -154,8 +143,6 @@ export function OrganizationsPage() {
         </div>
       )}
 
-
-
       <OrgModalContent
         isOpen={orgModal.isOpen}
         orgId={orgModal.editId ?? undefined}
@@ -179,7 +166,11 @@ export function OrganizationsPage() {
         body={orgListBody}
         setBody={setOrgListBody}
         data={orgsList}
-        columns={adminOrgTableColumns({ setSelectedOrg, setActiveTab, setOrgModal, onToggleOrganization: toggleOrganization, onDeleteOrganization: deleteOrganization })}
+        columns={adminOrgTableColumns({
+          setSelectedOrg, setActiveTab, setOrgModal,
+          onToggleOrganization: toggleOrganization,
+          onDeleteOrganization: deleteOrganization
+        })}
         onNewOrg={() => setOrgModal(prev => ({ ...prev, isOpen: true, mode: "add" }))}
       />
 
@@ -217,7 +208,7 @@ export function OrganizationsPage() {
                   Disabled
                 </span>
               )}
-            
+
               <span className="text-rcn-muted">
                 • {selectedOrgRow?.organization?.street} {selectedOrgRow?.organization?.suite} •{" "}
                 {selectedOrgRow?.organization?.city}, {selectedOrgRow?.organization?.state}{" "}
@@ -263,8 +254,6 @@ export function OrganizationsPage() {
             {activeTab === "profile" && (
               <OrgProfileTab
                 selectedOrgRow={selectedOrgRow ?? null}
-                selectedOrgId={selectedOrg?.organization_id ?? ""}
-                onEditOrg={() => setOrgModal(prev => ({ ...prev, isOpen: true, mode: "edit", editId: selectedOrg?.organization_id ?? "" }))}
               />
             )}
             {activeTab === "branches" && (

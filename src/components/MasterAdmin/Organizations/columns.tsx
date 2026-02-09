@@ -74,7 +74,7 @@ const adminOrgTableColumns = ({
                   ...prev,
                   isOpen: true,
                   mode: "edit",
-                  editId: orgId,
+                  editId: row?._id,
                 }))
               }
               className={BTN_SMALL_CLASS}

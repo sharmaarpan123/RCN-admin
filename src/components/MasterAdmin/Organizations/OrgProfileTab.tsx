@@ -2,12 +2,11 @@
 
 import React from "react";
 import type { AdminOrganizationListItem } from "./types";
-import { BTN_CLASS } from "./types";
+
 
 interface OrgProfileTabProps {
   selectedOrgRow: AdminOrganizationListItem | null;
-  selectedOrgId: string;
-  onEditOrg: (orgId: string) => void;
+
 }
 
 function formatOrgPhone(row: AdminOrganizationListItem | null): string {
@@ -25,8 +24,7 @@ function formatContactPhone(row: AdminOrganizationListItem | null): string {
 
 export function OrgProfileTab({
   selectedOrgRow,
-  selectedOrgId,
-  onEditOrg,
+
 }: OrgProfileTabProps) {
   const org = selectedOrgRow?.organization;
   return (
@@ -75,11 +73,7 @@ export function OrgProfileTab({
         </div>
       </div>
 
-      <div className="flex justify-end mt-4">
-        <button onClick={() => onEditOrg(selectedOrgId)} className={BTN_CLASS}>
-          Edit Organization
-        </button>
-      </div>
+     
     </div>
   );
 }

@@ -10,7 +10,4 @@ export { OrgProfileTab } from "./OrgProfileTab";
 export { OrgUsersTab } from "./OrgUsersTab";
 export * from "./types";
 
-export { useOrganizations } from "./useOrganizations";
-export { useOrgBranchList } from "./useOrgBranchList";
-export { useOrgUserList } from "./useOrgUserList";
 export { UserModalContent } from "./UserModal";

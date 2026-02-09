@@ -411,38 +411,18 @@ export function OrgModalContent({
   const inputCn = (hasError?: boolean) =>
     `${inputClass} ${hasError ? "border-red-500" : ""}`.trim();
 
-  if (isEdit && orgLoading) {
-    return (
-      <div>
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold m-0">Edit Organization</h3>
-          <Button variant="secondary" onClick={onClose}>
-            Close
-          </Button>
-        </div>
-        <div className="h-px bg-rcn-border my-4" />
-        <p className="text-sm text-rcn-muted m-0">Loading organization…</p>
-      </div>
-    );
-  }
 
-  if (isEdit && orgError) {
-    return (
-      <div>
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold m-0">Edit Organization</h3>
-          <Button variant="secondary" onClick={onClose}>
-            Close
-          </Button>
-        </div>
-        <div className="h-px bg-rcn-border my-4" />
-        <p className="text-sm text-red-500 m-0">Failed to load organization. Please try again.</p>
-      </div>
-    );
-  }
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
+      {isEdit && orgLoading && (<div className="bg-white border border-rcn-border rounded-rcn-lg shadow-rcn p-4 mb-4 text-sm text-rcn-muted">
+        Loading organization…
+      </div>)}
+      {isEdit && orgError && (
+        <div className="bg-white border border-rcn-border rounded-rcn-lg shadow-rcn p-4 mb-4 text-sm text-red-600">
+          Failed to load organization. Please try again.
+        </div>
+      )}
       <div>
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold m-0">
