@@ -566,7 +566,7 @@ function SystemAccessUserForm({
               </div>
               <button
                 type="button"
-                className="inline-flex items-center"
+                className="inline-flex items-center shrink-0"
                 onClick={() => {
                   setAllowPasswordEdit((v) => !v);
                   setShowPassword(false);
@@ -575,17 +575,15 @@ function SystemAccessUserForm({
                 aria-label="Toggle password editing"
               >
                 <span
-                  className={`w-9 h-5 rounded-full border transition-colors ${
+                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-rcn-brand focus-visible:ring-offset-2 ${
                     allowPasswordEdit
-                      ? "bg-rcn-primary/90 border-rcn-primary"
-                      : "bg-white border-rcn-border"
+                      ? "border-rcn-brand bg-rcn-brand"
+                      : "border-rcn-border bg-rcn-border"
                   }`}
                 >
                   <span
-                    className={`block w-4 h-4 bg-white rounded-full shadow transform transition-transform mt-0.5 ${
-                      allowPasswordEdit
-                        ? "translate-x-4 border border-rcn-primary"
-                        : "translate-x-0.5 border border-rcn-border"
+                    className={`absolute   left-0.5 h-4 w-4 rounded-full  shadow-sm transition-transform duration-200 ease-in-out ${
+                      allowPasswordEdit ? "translate-x-4 bg-white" : "translate-x-0 bg-rcn-brand"
                     }`}
                   />
                 </span>

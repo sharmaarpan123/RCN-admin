@@ -284,13 +284,13 @@ function ReceiverRow({
     : "";
 
   return (
-    <tr className="border-b border-rcn-border last:border-b-0">
-      <td className="py-2.5 pr-2 align-top">
+    <div className="grid grid-cols-[1fr_minmax(180px,1fr)_minmax(180px,1fr)_auto] gap-2 border-b border-rcn-border last:border-b-0 py-2.5 px-2 items-start">
+      <div className="min-w-0">
         <p className="m-0 text-sm font-medium text-rcn-text wrap-break-word">
           {row.organizationName}
         </p>
-      </td>
-      <td className="py-2.5 px-2 align-top min-w-[180px]">
+      </div>
+      <div className="min-w-[180px]">
         <CustomReactSelect
           value={typeof branchValue === "string" ? branchValue : branchValue.value}
           onChange={(value) => {
@@ -303,8 +303,8 @@ function ReceiverRow({
           isClearable
           maxMenuHeight={220}
         />
-      </td>
-      <td className="py-2.5 px-2 align-top min-w-[180px]">
+      </div>
+      <div className="min-w-[180px]">
         <CustomReactSelect
           value={typeof departmentValue === "string" ? departmentValue : departmentValue.value}
           onChange={(value) => {
@@ -318,8 +318,8 @@ function ReceiverRow({
           maxMenuHeight={220}
           isDisabled={!row.branchId}
         />
-      </td>
-      <td className="py-2.5 pl-2 align-top w-10">
+      </div>
+      <div className="w-24 shrink-0">
         <Button
           type="button"
           variant="ghost"
@@ -329,8 +329,8 @@ function ReceiverRow({
         >
           Remove
         </Button>
-      </td>
-    </tr>
+      </div>
+    </div>
   );
 }
 
@@ -356,35 +356,23 @@ function ReceiverRowsTable({
 
   return (
     <div className="overflow-x-auto rounded-xl border border-rcn-border mb-3">
-      <table className="w-full text-left border-collapse">
-        <thead>
-          <tr className="bg-slate-50 border-b border-rcn-border">
-            <th className="px-2 py-2.5 text-xs font-semibold text-rcn-muted uppercase tracking-wider">
-              Organization
-            </th>
-            <th className="px-2 py-2.5 text-xs font-semibold text-rcn-muted uppercase tracking-wider">
-              Branch
-            </th>
-            <th className="px-2 py-2.5 text-xs font-semibold text-rcn-muted uppercase tracking-wider">
-              Department
-            </th>
-            <th className="px-2 py-2.5 text-xs font-semibold text-rcn-muted uppercase tracking-wider w-24">
-              Action
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {receiverRows.map((row) => (
-            <ReceiverRow
-              key={row.organizationId}
-              row={row}
-              updateRowBranch={updateRowBranch}
-              updateRowDepartment={updateRowDepartment}
-              removeRow={removeRow}
-            />
-          ))}
-        </tbody>
-      </table>
+      <div className="min-w-[600px] rounded-xl ">
+        <div className="grid grid-cols-[1fr_minmax(180px,1fr)_minmax(180px,1fr)_auto] gap-2 bg-slate-50 border-b border-rcn-border px-2 py-2.5 text-xs font-semibold text-rcn-muted uppercase tracking-wider items-center">
+          <div>Organization</div>
+          <div>Branch</div>
+          <div>Department</div>
+          <div className="w-24 shrink-0">Action</div>
+        </div>
+        {receiverRows.map((row) => (
+          <ReceiverRow
+            key={row.organizationId}
+            row={row}
+            updateRowBranch={updateRowBranch}
+            updateRowDepartment={updateRowDepartment}
+            removeRow={removeRow}
+          />
+        ))}
+      </div>
     </div>
   );
 }
