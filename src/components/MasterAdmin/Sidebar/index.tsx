@@ -82,6 +82,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
           requiresPermission: true
         },
         {
+          path: '/master-admin/services',
+          label: 'Service Specialities',
+          view: 'services',
+          requiresPermission: true
+        },
+        {
           path: '/master-admin/banners',
           label: 'Banner Management',
           view: 'banners',

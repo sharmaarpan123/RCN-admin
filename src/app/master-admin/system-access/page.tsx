@@ -281,7 +281,33 @@ const adminUserFormSchema = yup.object({
   phone_number: yup.string().trim().optional().default(""),
   role_id: yup.number().required("Role is required."),
   status: yup.number().oneOf([0, 1]).required().default(1),
-  password: yup.string().trim().default(""),
+  password: yup
+    .string()
+    .trim()
+    .default("")
+    .test(
+      "password-rules",
+      "Password is required (min 8 characters).",
+      function (value) {
+        const ctx = this.options?.context as { isEdit?: boolean; allowPasswordEdit?: boolean } | undefined;
+        const isEdit = !!ctx?.isEdit;
+        const allowPasswordEdit = !!ctx?.allowPasswordEdit;
+        const pwd = (value ?? "").trim();
+
+        // Create: always required, min 8 chars
+        if (!isEdit) {
+          return pwd.length >= 8;
+        }
+
+        // Edit + toggle ON: required, min 8 chars
+        if (isEdit && allowPasswordEdit) {
+          return pwd.length >= 8;
+        }
+
+        // Edit + toggle OFF: ignore password validation
+        return true;
+      }
+    ),
 });
 
 export type AdminUserFormValues = yup.InferType<typeof adminUserFormSchema>;
@@ -310,6 +336,8 @@ function SystemAccessUserForm({
   onSuccess: () => void;
 }) {
   const isEdit = !!userId;
+  const [showPassword, setShowPassword] = useState(false);
+  const [allowPasswordEdit, setAllowPasswordEdit] = useState(false);
 
   const { data: apiUser, isLoading } = useQuery({
     queryKey: [...defaultQueryKeys.adminUserDetail, userId],
@@ -330,10 +358,12 @@ function SystemAccessUserForm({
     setValue,
     watch,
     setError,
+    clearErrors,
     formState: { errors },
   } = useForm<AdminUserFormValues>({
     defaultValues: defaultFormValues,
     resolver: yupResolver(adminUserFormSchema),
+    context: { isEdit, allowPasswordEdit },
     values: apiUser
       ? {
           ...defaultFormValues,
@@ -376,12 +406,15 @@ function SystemAccessUserForm({
   const updateMutation = useMutation({
     mutationFn: catchAsync(async (data: AdminUserFormValues) => {
       if (!userId) return;
+      const trimmedPassword = (data.password ?? "").trim();
       const res = await updateAdminUserApi(userId, {
         first_name: data.first_name,
         last_name: data.last_name,
         email: data.email,
         phone_number: data.phone_number || undefined,
         dial_code: data.dial_code || undefined,
+        // Only send password when toggle is enabled and a value is provided
+        password: allowPasswordEdit && trimmedPassword ? trimmedPassword : undefined,
         status: data.status,
         role_id: data.role_id,
       });
@@ -392,17 +425,21 @@ function SystemAccessUserForm({
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
   const onSave = (data: AdminUserFormValues) => {
-    if (!isEdit) {
-      const pwd = (data.password ?? "").trim();
-      if (pwd.length < 8) {
-        setError("password", { message: "Password is required (min 8 characters)." });
-        return;
-      }
-    }
+    const pwd = (data.password ?? "").trim();
+
+    const finalData: AdminUserFormValues = {
+      ...data,
+      password: isEdit
+        ? allowPasswordEdit
+          ? pwd
+          : ""
+        : pwd,
+    };
+
     if (isEdit) {
-      updateMutation.mutate(data);
+      updateMutation.mutate(finalData);
     } else {
-      createMutation.mutate(data);
+      createMutation.mutate(finalData);
     }
   };
 
@@ -473,25 +510,142 @@ function SystemAccessUserForm({
         {!isEdit && (
           <div>
             <label className="text-xs text-rcn-muted font-semibold block mb-1.5">Password</label>
-            <input
-              {...register("password")}
-              type="password"
-              className={INPUT_CLASS}
-              placeholder="Min 8 characters"
-            />
+            <div className="relative">
+              <input
+                {...register("password")}
+                type={showPassword ? "text" : "password"}
+                className={`${INPUT_CLASS} pr-10`}
+                placeholder="Min 8 characters"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute inset-y-0 right-2 flex items-center text-rcn-muted hover:text-rcn-primary text-xs"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    className="w-4 h-4"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fill="currentColor"
+                      d="M12 5c-7.633 0-11 7-11 7s1.677 3.233 5 5.292L3.293 19 4.707 20.414 21 4.121 19.586 2.707 16.08 6.214C14.905 5.54 13.568 5 12 5Zm0 3a3 3 0 0 1 3 3c0 .472-.11.918-.305 1.314L13.686 11.3A1.999 1.999 0 0 0 12.7 10.314L10.686 8.3C11.082 8.11 11.528 8 12 8Zm-4 3a3 3 0 0 1 3-3c.17 0 .337.013.5.037L7.037 12.5A2.99 2.99 0 0 1 8 11Zm-6.004-.002C3.003 10.317 6.083 7 12 7c1.264 0 2.402.223 3.432.586l-1.61 1.61A5.002 5.002 0 0 0 7 11a4.98 4.98 0 0 0 .787 2.707l-1.45 1.45C3.753 13.813 2.28 11.928 1.996 10.998ZM12 17c-1.568 0-2.905-.54-4.08-1.214L9.92 13.786C10.595 14.46 11.932 15 13.5 15c1.548 0 2.868-.523 3.96-1.256l1.45 1.45C18.247 16.187 16.774 18.072 12 18c-1.264 0-2.402-.223-3.432-.586l1.61-1.61A5.002 5.002 0 0 0 17 13a4.98 4.98 0 0 0-.787-2.707l1.45-1.45C20.247 10.187 21.72 12.072 22.004 13.002 20.997 13.683 17.917 17 12 17Z"
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    className="w-4 h-4"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fill="currentColor"
+                      d="M12 5C5.373 5 2 12 2 12s3.373 7 10 7 10-7 10-7-3.373-7-10-7Zm0 2c1.568 0 2.905.54 4.08 1.214C17.91 9.442 19.048 10.94 19.8 12c-.752 1.06-1.89 2.558-3.72 3.786C14.905 16.46 13.568 17 12 17s-2.905-.54-4.08-1.214C6.09 14.558 4.952 13.06 4.2 12c.752-1.06 1.89-2.558 3.72-3.786C9.095 7.54 10.432 7 12 7Zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"
+                    />
+                  </svg>
+                )}
+              </button>
+            </div>
             {errors.password && (
               <p className="text-xs text-red-600 mt-1">{errors.password.message}</p>
             )}
           </div>
         )}
         {isEdit && (
-          <div>
-            <label className="text-xs text-rcn-muted font-semibold block mb-1.5">Status</label>
-            <select {...register("status", { setValueAs: (v) => Number(v) })} className={INPUT_CLASS}>
-              <option value={1}>Enabled</option>
-              <option value={0}>Disabled</option>
-            </select>
-          </div>
+          <>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs text-rcn-muted font-semibold mb-0">Password</p>
+                <p className="text-[11px] text-rcn-muted mt-0.5">
+                  For security, the current password is not shown. Enable this to set a new password.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="inline-flex items-center"
+                onClick={() => {
+                  setAllowPasswordEdit((v) => !v);
+                  setShowPassword(false);
+                }}
+                aria-pressed={allowPasswordEdit}
+                aria-label="Toggle password editing"
+              >
+                <span
+                  className={`w-9 h-5 rounded-full border transition-colors ${
+                    allowPasswordEdit
+                      ? "bg-rcn-primary/90 border-rcn-primary"
+                      : "bg-white border-rcn-border"
+                  }`}
+                >
+                  <span
+                    className={`block w-4 h-4 bg-white rounded-full shadow transform transition-transform mt-0.5 ${
+                      allowPasswordEdit
+                        ? "translate-x-4 border border-rcn-primary"
+                        : "translate-x-0.5 border border-rcn-border"
+                    }`}
+                  />
+                </span>
+              </button>
+            </div>
+            {allowPasswordEdit && (
+              <div className="mt-2">
+                <div className="relative">
+                  <input
+                    {...register("password")}
+                    type={showPassword ? "text" : "password"}
+                    className={`${INPUT_CLASS} pr-10`}
+                    placeholder="New password (min 8 characters)"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute inset-y-0 right-2 flex items-center text-rcn-muted hover:text-rcn-primary text-xs"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        className="w-4 h-4"
+                        aria-hidden="true"
+                      >
+                        <path
+                          fill="currentColor"
+                          d="M12 5c-7.633 0-11 7-11 7s1.677 3.233 5 5.292L3.293 19 4.707 20.414 21 4.121 19.586 2.707 16.08 6.214C14.905 5.54 13.568 5 12 5Zm0 3a3 3 0 0 1 3 3c0 .472-.11.918-.305 1.314L13.686 11.3A1.999 1.999 0 0 0 12.7 10.314L10.686 8.3C11.082 8.11 11.528 8 12 8Zm-4 3a3 3 0 0 1 3-3c.17 0 .337.013.5.037L7.037 12.5A2.99 2.99 0 0 1 8 11Zm-6.004-.002C3.003 10.317 6.083 7 12 7c1.264 0 2.402.223 3.432.586l-1.61 1.61A5.002 5.002 0 0 0 7 11a4.98 4.98 0 0 0 .787 2.707l-1.45 1.45C3.753 13.813 2.28 11.928 1.996 10.998ZM12 17c-1.568 0-2.905-.54-4.08-1.214L9.92 13.786C10.595 14.46 11.932 15 13.5 15c1.548 0 2.868-.523 3.96-1.256l1.45 1.45C18.247 16.187 16.774 18.072 12 18c-1.264 0-2.402-.223-3.432-.586l1.61-1.61A5.002 5.002 0 0 0 17 13a4.98 4.98 0 0 0-.787-2.707l1.45-1.45C20.247 10.187 21.72 12.072 22.004 13.002 20.997 13.683 17.917 17 12 17Z"
+                        />
+                      </svg>
+                    ) : (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        className="w-4 h-4"
+                        aria-hidden="true"
+                      >
+                        <path
+                          fill="currentColor"
+                          d="M12 5C5.373 5 2 12 2 12s3.373 7 10 7 10-7 10-7-3.373-7-10-7Zm0 2c1.568 0 2.905.54 4.08 1.214C17.91 9.442 19.048 10.94 19.8 12c-.752 1.06-1.89 2.558-3.72 3.786C14.905 16.46 13.568 17 12 17s-2.905-.54-4.08-1.214C6.09 14.558 4.952 13.06 4.2 12c.752-1.06 1.89-2.558 3.72-3.786C9.095 7.54 10.432 7 12 7Zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"
+                        />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="text-xs text-red-600 mt-1">{errors.password.message}</p>
+                )}
+              </div>
+            )}
+            <div>
+              <label className="text-xs text-rcn-muted font-semibold block mb-1.5">Status</label>
+              <select {...register("status", { setValueAs: (v) => Number(v) })} className={INPUT_CLASS}>
+                <option value={1}>Enabled</option>
+                <option value={0}>Disabled</option>
+              </select>
+            </div>
+          </>
         )}
         <div className="h-px bg-rcn-border my-4" />
         <div className="flex gap-2 justify-end">

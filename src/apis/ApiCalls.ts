@@ -208,7 +208,7 @@ export const createAdminUserApi = (body: {
   role_id: number;
 }) => AxiosInstance.post("/api/admin/user", body);
 
-/** PUT /api/admin/user/:id — update master admin user. Body: first_name, last_name, email, phone_number, dial_code, status, role_id. */
+/** PUT /api/admin/user/:id — update master admin user. Body: first_name, last_name, email, phone_number, dial_code, status, role_id, optional password. */
 export const updateAdminUserApi = (
   userId: string,
   body: {
@@ -219,6 +219,7 @@ export const updateAdminUserApi = (
     dial_code?: string;
     status: number;
     role_id: number;
+    password?: string;
   }
 ) => AxiosInstance.put(`/api/admin/user/${userId}`, body);
 
@@ -267,6 +268,30 @@ export const getAdminContactDetailApi = (contactId: string) =>
 /** DELETE /api/admin/contact/:id — delete contact query (admin). */
 export const deleteAdminContactApi = (contactId: string) =>
   AxiosInstance.delete(`/api/admin/contact/${contactId}`);
+
+// ——— Admin services / specialities ———
+
+/** GET /api/admin/specialities — list services/specialities (admin). */
+export const getAdminSpecialitiesApi = () =>
+  AxiosInstance.get("/api/admin/specialities");
+
+/** POST /api/admin/specialities — create service/speciality (admin). */
+export const createAdminSpecialityApi = (body: { name: string; user_id?: string }) =>
+  AxiosInstance.post("/api/admin/specialities", body);
+
+/** PUT /api/admin/specialities/:id — update service/speciality (admin). */
+export const updateAdminSpecialityApi = (
+  id: string,
+  body: { name: string; user_id?: string }
+) => AxiosInstance.put(`/api/admin/specialities/${id}`, body);
+
+/** GET /api/admin/specialities/:id — get single service/speciality (admin). */
+export const getAdminSpecialityByIdApi = (id: string) =>
+  AxiosInstance.get(`/api/admin/specialities/${id}`);
+
+/** DELETE /api/admin/specialities/:id — delete service/speciality (admin). */
+export const deleteAdminSpecialityApi = (id: string) =>
+  AxiosInstance.delete(`/api/admin/specialities/${id}`);
 
 // ——— Staff portal (users) ———
 

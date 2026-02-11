@@ -16,6 +16,8 @@ const defaultQueryKeys = {
     adminUserDetail: ["admin", "system-user", "detail"],
     paymentSettings: ["admin", "payment-settings"],
     bannersList: ["admin", "banners", "list"],
+    specialitiesList: ["admin", "specialities", "list"],
+    specialityDetail: ["admin", "speciality", "detail"],
     contactList: ["admin", "contact", "list"],
     contactDetail: ["admin", "contact", "detail"],
     statesList: ["states", "list"],
