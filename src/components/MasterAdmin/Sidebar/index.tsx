@@ -83,7 +83,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
         },
         {
           path: '/master-admin/services',
-          label: 'Service Specialities',
+          label: 'Services',
           view: 'services',
           requiresPermission: true
         },

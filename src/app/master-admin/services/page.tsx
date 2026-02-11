@@ -159,9 +159,9 @@ export default function ServicesPage() {
       <div className="bg-white border border-rcn-border rounded-rcn-lg shadow-rcn p-4">
         <div className="flex justify-between items-start flex-wrap gap-3">
           <div>
-            <h3 className="m-0 text-sm font-semibold">Service Specialities</h3>
+            <h3 className="m-0 text-sm font-semibold">Services</h3>
             <p className="text-xs text-rcn-muted mt-1 mb-0">
-              Manage service specialities available in the system.
+              Manage service  available in the system.
             </p>
           </div>
           <Button variant="primary" size="sm" onClick={openNew}>
