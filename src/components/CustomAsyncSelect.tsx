@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import AsyncSelect, { type MultiValue } from "react-select/async";
+import type { MultiValue } from "react-select";
+import AsyncSelect from "react-select/async";
 import { twMerge } from "tailwind-merge";
 
 export interface RcnSelectOption {
