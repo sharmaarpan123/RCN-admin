@@ -58,12 +58,14 @@ export default function OrgPortalUserEditPage() {
           ← User list
         </CustomNextLink>
       </div>
-      <UserForm
-        mode="edit"
-        userId={userId}
-        branches={branchesWithDepts ?? []}
-        onSave={handleSave}
-      />
+      {
+        userId && <UserForm
+          mode="edit"
+          userId={userId}
+          branches={branchesWithDepts ?? []}
+          onSave={handleSave}
+        />
+      }
       {isLoadingBranches && (
         <p className="text-rcn-muted text-sm mt-2">Loading branches…</p>
       )}

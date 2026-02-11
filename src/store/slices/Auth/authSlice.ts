@@ -1,14 +1,21 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { AuthProfileData } from "@/app/org-portal/types/profile";
 import type { AdminProfileData } from "@/app/master-admin/types/profile";
+import type { StaffProfileData } from "@/app/staff-portal/types/profile";
 
-/** Logged-in user: org (with organization) or admin (no organization). */
-export type LoggedInUser = AuthProfileData | AdminProfileData;
+/** Logged-in user: org (AuthProfileData), admin (AdminProfileData), or staff (StaffProfileData). */
+export type LoggedInUser = AuthProfileData | AdminProfileData | StaffProfileData;
 
 export type OrganizationUserType = AuthProfileData;
+export type StaffUserType = StaffProfileData;
+
+export interface LoginSuccessPayload {
+  token: string | null;
+  role: string | null;
+  loginUser: LoggedInUser | null;
+}
 
 interface AuthSliceState {
-  /** Org user (AuthProfileData) or admin user (AdminProfileData) depending on role. */
   loginUser: LoggedInUser | null;
   error: string | null;
   token: string | null;
@@ -28,10 +35,10 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    loginSuccess(state, action) {
+    loginSuccess(state, action: { payload: LoginSuccessPayload }) {
       state.token = action.payload.token;
       state.role = action.payload.role;
-      state.loginUser = action.payload.organization;
+      state.loginUser = action.payload.loginUser;
     },
     logoutSuccess(state) {
       localStorage.removeItem("authToken");

@@ -3,6 +3,22 @@ export interface Receiver {
   state: string;
 }
 
+/** One selected receiver: organization + branch + department (for staff referral). */
+export interface ReceiverRow {
+  organizationId: string;
+  organizationName: string;
+  branchId: string | null;
+  branchName: string | null;
+  departmentId: string | null;
+  departmentName: string | null;
+}
+
+/** Option shape for org/branch/department selects. */
+export interface OrgBranchDeptOption {
+  value: string;
+  label: string;
+}
+
 export interface InsuranceBlock {
   id: number;
   payer: string;

@@ -11,6 +11,7 @@ import {
 } from "@/apis/ApiCalls";
 import { AdminProfileData } from "@/app/master-admin/types/profile";
 import { AuthProfileData } from "@/app/org-portal/types/profile";
+import type { StaffProfileData } from "@/app/staff-portal/types/profile";
 import { loginSuccess } from "@/store/slices/Auth/authSlice";
 import { catchAsync, checkResponse } from "@/utils/commonFunc";
 import { loginRoles } from "@/utils/const";
@@ -127,19 +128,23 @@ const Login: React.FC = () => {
           const data = res?.data?.data as {
             accessToken?: string;
             token?: string;
-            organization: AuthProfileData;
-            admin: AdminProfileData;
+            organization?: AuthProfileData;
+            admin?: AdminProfileData;
+            user?: StaffProfileData;
           };
-          console.log(data, "data")
-          const token = data?.accessToken ?? data?.token;
-          const user = data?.admin || data?.organization;
-          const role = loginRoles[user?.role_id as unknown as keyof typeof loginRoles];
-          if (role === "Organization" || role === "Admin" || role === "Super Admin") {
+          const token = data?.accessToken ?? data?.token ?? null;
+          const loginUser =
+            (loginType === "user" ? data?.user : loginType === "org" ? data?.organization : data?.admin) ??
+            null;
+          const role = loginUser
+            ? loginRoles[loginUser.role_id as keyof typeof loginRoles]
+            : null;
+          if (role && ["Organization", "Admin", "Super Admin", "Staff"].includes(role)) {
             localStorage.setItem("authToken", token || "");
             localStorage.setItem("role", role);
             document.cookie = `authorization=${token}; path=/;`;
             document.cookie = `role=${role}; path=/;`;
-            dispatch(loginSuccess({ ...data, role }));
+            dispatch(loginSuccess({ token, role, loginUser }));
             router.push(redirectTo);
             closeOtpModal();
           }

@@ -4,6 +4,7 @@ export { default as ConfirmModal } from './ConfirmModal';
 export { default as CustomNextLink } from './CustomNextLink';
 export { default as Modal } from './Modal';
 export { default as CustomReactSelect, optionsFromStrings } from './CustomReactSelect';
+export { default as CustomAsyncSelect } from './CustomAsyncSelect';
 export { default as PhoneInputField } from './PhoneInputField';
 export type { PhoneInputFieldProps } from './PhoneInputField';
 export { DebouncedInput } from './DebouncedInput';

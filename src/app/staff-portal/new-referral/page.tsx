@@ -5,7 +5,6 @@ import {
   AddReceiverModal,
   AdditionalDetailsSection,
   AttachmentsSection,
-  DEMO_RECEIVERS,
   FormActionsSection,
   InsuranceInfoSection,
   NewReferralNav,
@@ -17,6 +16,7 @@ import {
   ServicesRequestedSection,
   type InsuranceBlock,
   type Receiver,
+  type ReceiverRow,
 } from "@/components/staffComponents/newReferral";
 import { useEffect, useState } from "react";
 
@@ -34,10 +34,8 @@ const SECTION_IDS = [
 ];
 
 export default function NewReferralPage() {
-  const [receivers, setReceivers] = useState<Receiver[]>(DEMO_RECEIVERS);
   const [stateFilter, setStateFilter] = useState("ALL");
-  const [receiverSearch, setReceiverSearch] = useState("");
-  const [selectedReceivers, setSelectedReceivers] = useState<string[]>([]);
+  const [receiverRows, setReceiverRows] = useState<ReceiverRow[]>([]);
   const [availableServices, setAvailableServices] = useState<string[]>(AVAILABLE_SERVICES);
   const [requestedServices, setRequestedServices] = useState<string[]>([]);
   const [insuranceBlocks, setInsuranceBlocks] = useState<InsuranceBlock[]>([
@@ -70,21 +68,8 @@ export default function NewReferralPage() {
   const [pcpEmail, setPcpEmail] = useState("");
   const [pcpNpi, setPcpNpi] = useState("");
 
-  const [selectedAvailableReceivers, setSelectedAvailableReceivers] = useState<string[]>([]);
-  const [selectedSelectedReceivers, setSelectedSelectedReceivers] = useState<string[]>([]);
   const [selectedAvailableServices, setSelectedAvailableServices] = useState<string[]>([]);
   const [selectedRequestedServices, setSelectedRequestedServices] = useState<string[]>([]);
-
-  const filteredReceivers = receivers
-    .filter((r) => stateFilter === "ALL" || r.state === stateFilter)
-    .filter((r) => !selectedReceivers.includes(r.name))
-    .filter(
-      (r) =>
-        !receiverSearch || r.name.toLowerCase().includes(receiverSearch.toLowerCase())
-    )
-    .sort((a, b) => a.name.localeCompare(b.name));
-
-  const availableReceiversList = filteredReceivers.map((r) => r.name);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -128,7 +113,18 @@ export default function NewReferralPage() {
   };
 
   const handleAddReceiver = (receiver: Receiver) => {
-    setReceivers((prev) => [...prev, receiver]);
+    // Optional: add custom receiver row when "Add Referral Receiver (if not listed)" is used
+    setReceiverRows((prev) => [
+      ...prev,
+      {
+        organizationId: `custom-${receiver.name}-${Date.now()}`,
+        organizationName: receiver.name,
+        branchId: null,
+        branchName: null,
+        departmentId: null,
+        departmentName: null,
+      },
+    ]);
   };
 
   const handleSubmit = () => {
@@ -153,16 +149,8 @@ export default function NewReferralPage() {
         <SelectReceiverSection
           stateFilter={stateFilter}
           setStateFilter={setStateFilter}
-          receiverSearch={receiverSearch}
-          setReceiverSearch={setReceiverSearch}
-          selectedReceivers={selectedReceivers}
-          setSelectedReceivers={setSelectedReceivers}
-          availableReceiversList={availableReceiversList}
-          selectedAvailableReceivers={selectedAvailableReceivers}
-          setSelectedAvailableReceivers={setSelectedAvailableReceivers}
-          selectedSelectedReceivers={selectedSelectedReceivers}
-          setSelectedSelectedReceivers={setSelectedSelectedReceivers}
-          filteredReceivers={filteredReceivers}
+          receiverRows={receiverRows}
+          setReceiverRows={setReceiverRows}
           onOpenAddReceiver={() => setReceiverModalOpen(true)}
         />
 

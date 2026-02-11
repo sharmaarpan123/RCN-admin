@@ -111,6 +111,12 @@ export const createOrganizationUserApi = (body: unknown) =>
 export const updateOrganizationUserApi = (userId: string, body: unknown) =>
   AxiosInstance.put(`/api/organization/user/${userId}`, body);
 
+/** PUT /api/organization/user/branch/:userId — update user's branch & department assignment. Body: [{ branch_id, department_ids }, ...]. */
+export const updateOrganizationUserBranchApi = (
+  userId: string,
+  body: { branch_id: string; department_ids: string[] }[]
+) => AxiosInstance.put(`/api/organization/user/branch/${userId}`, body);
+
 export const deleteOrganizationUserApi = (userId: string) =>
   AxiosInstance.delete(`/api/organization/user/${userId}`);
 
@@ -258,3 +264,17 @@ export const getAdminContactDetailApi = (contactId: string) =>
 /** DELETE /api/admin/contact/:id — delete contact query (admin). */
 export const deleteAdminContactApi = (contactId: string) =>
   AxiosInstance.delete(`/api/admin/contact/${contactId}`);
+
+// ——— Staff portal (users) ———
+
+/** GET /api/users/organizations — list organizations for staff (e.g. referral receivers). Params: state, optional search. */
+export const getStaffOrganizationsApi = (params: { state?: string; search?: string }) =>
+  AxiosInstance.get("/api/users/organizations", { params });
+
+/** POST /api/users/branches/by-organizations — get branches for given organization ids. */
+export const postStaffBranchesByOrganizationsApi = (body: { organization_ids: string[] }) =>
+  AxiosInstance.post("/api/users/branches/by-organizations", body);
+
+/** POST /api/users/departments/by-branches — get departments for given branch ids. */
+export const postStaffDepartmentsByBranchesApi = (body: { branch_ids: string[] }) =>
+  AxiosInstance.post("/api/users/departments/by-branches", body);

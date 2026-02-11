@@ -11,6 +11,7 @@ import {
   updateOrganizationUserApi,
 } from "@/apis/ApiCalls";
 import { Button, CustomNextLink, PhoneInputField } from "@/components";
+import { UserBranchDepartmentAssign } from "./UserBranchDepartmentAssign";
 import { catchAsync, checkResponse } from "@/utils/commonFunc";
 import defaultQueryKeys from "@/utils/orgQueryKeys";
 import { toastError, toastSuccess } from "@/utils/toast";
@@ -35,8 +36,6 @@ const userFormSchema = yup.object({
 
   isActive: yup.boolean().default(true),
   notes: yup.string().trim().default(""),
-  branchIds: yup.array().of(yup.string().required()).default([]),
-  deptIds: yup.array().of(yup.string().required()).default([]),
   password: yup.string().default(""),
   confirmPassword: yup
     .string()
@@ -61,8 +60,6 @@ export type UserFormData = {
   faxNumber: string;
   isActive: boolean;
   notes: string;
-  branchIds: string[];
-  deptIds: string[];
 };
 
 type UserFormProps = {
@@ -75,32 +72,17 @@ type UserFormProps = {
   onDelete?: () => void;
 };
 
-function mapApiUserToFormValues(data: Record<string, unknown>): UserFormValues {
-  const dialCode = (data.dial_code as string) ?? DEFAULT_DIAL_CODE;
-  const phoneNumber = ((data.phone_number as string) ?? "").replace(/\D/g, "").trim();
-  return {
-    firstName: (data.first_name as string) ?? "",
-    lastName: (data.last_name as string) ?? "",
-    email: (data.email as string) ?? "",
-    dialCode,
-    phone_number: phoneNumber,
-    faxNumber: (data.fax_number as string) ?? "",
-    isActive: data.is_active !== false,
-    notes: (data.notes as string) ?? "",
-    branchIds: Array.isArray(data.branch_ids) ? (data.branch_ids as string[]) : [],
-    deptIds: Array.isArray(data.department_ids) ? (data.department_ids as string[]) : [],
-    password: "",
-    confirmPassword: "",
-  };
-}
+
 
 export function UserForm({
   mode,
   userId,
-  branches,
+  branches: _branches,
   onSave
 }: UserFormProps) {
   const isEdit = mode === "edit";
+
+
 
   const { data: userData, isLoading: isLoadingUser } = useQuery({
     queryKey: [...defaultQueryKeys.user, userId],
@@ -112,11 +94,10 @@ export function UserForm({
       if (Array.isArray(d?.data)) return (d.data[0] as Record<string, unknown>) ?? null;
       return (d?.data ?? d) as Record<string, unknown> | null;
     },
-    enabled: isEdit && !!userId,
+
   });
 
   const apiUser = userData && typeof userData === "object" ? (userData as Record<string, unknown>) : null;
-  const formValuesFromApi: UserFormValues | null = apiUser ? mapApiUserToFormValues(apiUser) : null;
 
   const {
     register,
@@ -134,13 +115,22 @@ export function UserForm({
       faxNumber: "",
       isActive: true,
       notes: "",
-      branchIds: [],
-      deptIds: [],
       password: "",
       confirmPassword: "",
     },
     resolver: yupResolver(userFormSchema),
-    values: isEdit && formValuesFromApi ? formValuesFromApi : undefined,
+    values: {
+      firstName: (userData?.first_name as string) ?? "",
+      lastName: (userData?.last_name as string) ?? "",
+      email: (userData?.email as string) ?? "",
+      dialCode: (userData?.dial_code as string) ?? DEFAULT_DIAL_CODE,
+      phone_number: userData?.phone_number ? ((userData?.phone_number as string) ?? "").replace(/\D/g, "").trim() : "",
+      faxNumber: (userData?.fax_number as string) ?? "",
+      isActive: userData?.is_active !== false,
+      notes: (userData?.notes as string) ?? "",
+      password: "",
+      confirmPassword: "",
+    },
   });
 
   const dialCode = watch("dialCode");
@@ -151,20 +141,6 @@ export function UserForm({
     const code = String(country?.dialCode ?? DEFAULT_DIAL_CODE);
     setValue("dialCode", code, { shouldValidate: true });
     setValue("phone_number", value.slice(code.length) || "", { shouldValidate: true });
-  };
-
-  const branchIds = watch("branchIds") ?? [];
-  const deptIds = watch("deptIds") ?? [];
-  const branchIdSet = new Set(branchIds);
-  const deptIdSet = new Set(deptIds);
-
-  const toggleBranch = (id: string) => {
-    const next = branchIdSet.has(id) ? branchIds.filter((b) => b !== id) : [...branchIds, id];
-    setValue("branchIds", next, { shouldValidate: true });
-  };
-  const toggleDept = (id: string) => {
-    const next = deptIdSet.has(id) ? deptIds.filter((d) => d !== id) : [...deptIds, id];
-    setValue("deptIds", next, { shouldValidate: true });
   };
 
   const { isPending, mutate } = useMutation({
@@ -233,8 +209,6 @@ export function UserForm({
           phone_number: phone_number,
           fax_number: faxNumber || undefined,
           notes: notes || undefined,
-          branch_ids: values.branchIds,
-          department_ids: values.deptIds,
         },
       });
     }
@@ -254,7 +228,7 @@ export function UserForm({
   };
 
   const isLoading = isEdit && isLoadingUser;
-  const canSubmit = !isEdit || (isEdit && !!formValuesFromApi);
+  const canSubmit = !isEdit || (isEdit);
 
   return (
     <div className="bg-rcn-card border border-rcn-border rounded-2xl shadow-rcn overflow-hidden">
@@ -265,8 +239,8 @@ export function UserForm({
               {isEdit ? "Edit User detail" : "Add User"}
             </h1>
             <p className="text-sm text-rcn-muted m-0 mt-1">
-              {isEdit && formValuesFromApi
-                ? `${formValuesFromApi.firstName} ${formValuesFromApi.lastName}`
+              {isEdit
+                ? `${apiUser?.first_name} ${apiUser?.last_name}`
                 : "Create a new user and assign branches & departments."}
             </p>
           </div>
@@ -415,65 +389,11 @@ export function UserForm({
             </div>
           </div>
 
-          <div className="border-t border-rcn-border mt-6 pt-6">
-            <h2 className="font-bold text-sm m-0 mb-2">Assign Branch & Department</h2>
-            <p className="text-xs text-rcn-muted m-0 mb-3">Select branches and departments for this user.</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-xs text-rcn-muted mb-1.5">Branches</label>
-                <div className="border border-rcn-border rounded-xl p-3 max-h-40 overflow-auto space-y-1">
-                  {branches.map((b) => (
-                    <label key={b._id} className="flex items-center gap-2 py-1 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={branchIdSet.has(b._id)}
-                        onChange={() => toggleBranch(b._id)}
-                        className="rounded border-rcn-border"
-                        disabled={isLoading}
-                      />
-                      <span className="text-sm">{b.name}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs text-rcn-muted mb-1.5">Departments (by branch)</label>
-                <div className="border border-rcn-border rounded-xl p-3 max-h-40 overflow-auto space-y-2">
-                  {branchIds.map((brId) => {
-                    const br = branches.find((b) => b._id === brId);
-                    if (!br) return null;
-                    return (
-                      <div key={br._id}>
-                        <p className="text-xs font-bold text-rcn-accent m-0 mb-1">{br.name}</p>
-                        {(br.departments ?? []).map((d) => (
-                          <label key={d._id} className="flex items-center gap-2 py-0.5 ml-2 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={deptIdSet.has(d._id)}
-                              onChange={() => toggleDept(d._id)}
-                              className="rounded border-rcn-border"
-                              disabled={isLoading}
-                            />
-                            <span className="text-sm">{d.name}</span>
-                          </label>
-                        ))}
-                      </div>
-                    );
-                  })}
-                  {!branchIds.length && (
-                    <p className="text-xs text-rcn-muted m-0">Select branches to see departments.</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
           {isEdit && isLoadingUser && (
             <p className="text-rcn-muted text-sm mt-4">Loading user…</p>
           )}
 
-          <div className="flex flex-col sm:flex-row flex-wrap gap-2 mt-6 pt-6 border-t border-rcn-border justify-between">
-
+          <div className="flex flex-col sm:flex-row flex-wrap gap-2 mt-6 pt-6 border-rcn-border justify-between">
             <div className="flex flex-wrap gap-2">
               <Button type="submit" variant="primary" size="sm" disabled={isPending || isLoading}>
                 {isPending ? "Saving…" : "Save"}
@@ -483,6 +403,17 @@ export function UserForm({
               </CustomNextLink>
             </div>
           </div>
+
+          {isEdit && userId && (
+            <UserBranchDepartmentAssign
+              key={apiUser ? `${userId}-loaded` : `${userId}-loading`}
+              userId={userId}
+              initialBranchIds={Array.isArray(apiUser?.branch_ids) ? (apiUser.branch_ids as string[]) : []}
+              initialDeptIds={Array.isArray(apiUser?.department_ids) ? (apiUser.department_ids as string[]) : []}
+              onSave={onSave}
+              disabled={isLoading}
+            />
+          )}
         </form>
       </div>
     </div>

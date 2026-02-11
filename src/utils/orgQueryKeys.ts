@@ -5,6 +5,7 @@ const defaultQueryKeys = {
   department: ["organization", "department", "detail"],
   userList: ["organization", "users", "list"],
   user: ["organization", "user", "detail"],
+  userDetailForAssignBranches: ["organization", "user", "detail", "assign", "branches"],
 };
 
 export default defaultQueryKeys;
