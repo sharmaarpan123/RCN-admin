@@ -1,120 +1,31 @@
 "use client";
 
 import type { AxiosResponse } from "axios";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
-import { Button, ConfirmModal, TableLayout, type TableColumn, Modal } from "@/components";
+import { Button, ConfirmModal, TableLayout, type TableColumn } from "@/components";
 import Image from "next/image";
 import {
   getAdminBannersApi,
-  createAdminBannerApi,
-  updateAdminBannerApi,
   deleteAdminBannerApi,
   getAdminOrganizationsApi,
-  uploadProfilePictureApi,
 } from "@/apis/ApiCalls";
 import defaultQueryKeys from "@/utils/adminQueryKeys";
 import { catchAsync, checkResponse } from "@/utils/commonFunc";
-import { toastError, toastWarning } from "@/utils/toast";
+import { toastWarning } from "@/utils/toast";
 import type { AdminOrganizationListItem } from "@/components/MasterAdmin/Organizations/types";
-
-const PLACEMENTS = ["right_sidebar", "header_strip", "login_right"] as const;
-const PLACEMENT_OPTIONS = [
-  { value: "right_sidebar", label: "Right Sidebar" },
-  { value: "header_strip", label: "Header Strip" },
-  { value: "login_right", label: "Login Right" },
-];
-
-const SCOPES = ["organization_specific", "global"] as const;
-const SCOPE_OPTIONS = [
-  { value: "organization_specific", label: "Organization-specific" },
-  { value: "global", label: "Global" },
-];
-
-/** Banner as returned from API (use as-is). */
-type ApiBanner = {
-  _id?: string;
-  id?: string;
-  name: string;
-  link_url?: string;
-  placement: string;
-  scope: string;
-  organization_id?: string | null;
-  status: number;
-  start_date?: string | null;
-  end_date?: string | null;
-  image_url?: string | null;
-  alt_text?: string | null;
-  notes?: string | null;
-  created_at?: string;
-  updated_at?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  __v?: number;
-};
-
-const todayEnd = () => new Date(new Date().setHours(23, 59, 59, 999));
-
-const bannerFormSchema = yup.object({
-  name: yup.string().trim().required("Banner name is required."),
-  link_url: yup.string().trim().optional().default(""),
-  placement: yup.string().oneOf([...PLACEMENTS]).required().default("right_sidebar"),
-  scope: yup.string().oneOf([...SCOPES]).required().default("global"),
-  organization_id: yup.string().trim().optional().default(""),
-  status: yup.number().oneOf([0, 1]).required().default(1),
-  start_date: yup
-    .string()
-    .trim()
-    .optional()
-    .default("")
-    .test(
-      "start-after-today",
-      "Start date must be after today.",
-      (value) => !value || new Date(value) > todayEnd()
-    ),
-  end_date: yup
-    .string()
-    .trim()
-    .optional()
-    .default("")
-    .test(
-      "end-after-start",
-      "End date must be after start date.",
-      function (value) {
-        if (!value) return true;
-        const start = this.parent.start_date as string | undefined;
-        if (!start) return true;
-        return new Date(value) > new Date(start);
-      }
-    ),
-  image_url: yup.string().trim().optional().default(""),
-  alt_text: yup.string().trim().optional().default(""),
-  notes: yup.string().trim().optional().default(""),
-});
-
-type BannerFormValues = yup.InferType<typeof bannerFormSchema>;
-
-const defaultFormValues: BannerFormValues = {
-  name: "",
-  link_url: "",
-  placement: "right_sidebar",
-  scope: "global",
-  organization_id: "",
-  status: 1,
-  start_date: "",
-  end_date: "",
-  image_url: "",
-  alt_text: "",
-  notes: "",
-};
+import {
+  BannerModal,
+  type ApiBanner,
+  getBannerId,
+  isInDateRange,
+  placementLabel,
+  INPUT_CLASS,
+  PLACEMENT_OPTIONS,
+  SCOPE_OPTIONS,
+} from "@/components/MasterAdmin/Banner";
 
 const safeLower = (s: unknown) => (s ?? "").toString().toLowerCase();
-
-const inputClass =
-  "w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white text-sm outline-none focus:border-[#b9d7c5] focus:shadow-[0_0_0_3px_rgba(31,122,75,0.12)]";
 
 type BannersApiResponse = { success?: boolean; data?: ApiBanner[] };
 type OrganizationsApiResponse = { success?: boolean; data?: AdminOrganizationListItem[] };
@@ -133,18 +44,6 @@ const Banners: React.FC = () => {
   const [isBannerModalOpen, setIsBannerModalOpen] = useState(false);
   const [editingBannerId, setEditingBannerId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ApiBanner | null>(null);
-  const [uploadingImage, setUploadingImage] = useState(false);
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    setValue,
-    formState: { errors },
-  } = useForm<BannerFormValues>({
-    resolver: yupResolver(bannerFormSchema),
-    defaultValues: defaultFormValues,
-  });
 
   const { data: bannersResponse, isLoading } = useQuery({
     queryKey: defaultQueryKeys.bannersList,
@@ -179,26 +78,6 @@ const Banners: React.FC = () => {
 
   const invalidateBanners = () =>
     queryClient.invalidateQueries({ queryKey: defaultQueryKeys.bannersList });
-
-  const placementLabel = (p: string) => {
-    const o = PLACEMENT_OPTIONS.find((x) => x.value === p);
-    return o ? o.label : p.replace(/_/g, " ");
-  };
-
-  const getBannerId = (b: ApiBanner) => b._id ?? b.id ?? "";
-
-  const isInDateRange = (b: ApiBanner) => {
-    const now = new Date();
-    if (b.start_date) {
-      const start = new Date(b.start_date);
-      if (now < start) return false;
-    }
-    if (b.end_date) {
-      const end = new Date(b.end_date);
-      if (now > end) return false;
-    }
-    return true;
-  };
 
   const filtered = useMemo(() => {
     return banners.filter((b: ApiBanner) => {
@@ -237,29 +116,6 @@ const Banners: React.FC = () => {
     [banners, editingBannerId]
   );
 
-  const bannerToFormValues = (b: ApiBanner): BannerFormValues => ({
-    name: b.name ?? "",
-    link_url: b.link_url ?? "",
-    placement: (b.placement ?? "right_sidebar") as BannerFormValues["placement"],
-    scope: (b.scope ?? "global") as BannerFormValues["scope"],
-    organization_id: b.organization_id ?? "",
-    status: b.status ?? 1,
-    start_date: b.start_date ? String(b.start_date).slice(0, 16) : "",
-    end_date: b.end_date ? String(b.end_date).slice(0, 16) : "",
-    image_url: b.image_url ?? "",
-    alt_text: b.alt_text ?? "",
-    notes: b.notes ?? "",
-  });
-
-  useEffect(() => {
-    if (!isBannerModalOpen) return;
-    if (editingBanner) {
-      reset(bannerToFormValues(editingBanner));
-    } else {
-      reset(defaultFormValues);
-    }
-  }, [isBannerModalOpen, editingBanner, reset]);
-
   const closeBannerModal = () => {
     setIsBannerModalOpen(false);
     setEditingBannerId(null);
@@ -269,61 +125,6 @@ const Banners: React.FC = () => {
     setEditingBannerId(bannerId ?? null);
     setIsBannerModalOpen(true);
   };
-
-  const createMutation = useMutation<AxiosResponse | void, Error, BannerFormValues>({
-    mutationFn: catchAsync(async (data) => {
-      return createAdminBannerApi({
-        name: data.name.trim(),
-        link_url: data.link_url?.trim() ?? "",
-        placement: data.placement,
-        scope: data.scope,
-        organization_id:
-          data.scope === "organization_specific" && data.organization_id
-            ? data.organization_id
-            : null,
-        status: data.status,
-        start_date: data.start_date?.trim() || undefined,
-        end_date: data.end_date?.trim() || undefined,
-        image_url: data.image_url?.trim() || undefined,
-        alt_text: data.alt_text?.trim() || undefined,
-        notes: data.notes?.trim() || undefined,
-      });
-    }),
-    onSuccess: (res) => {
-      if (res && checkResponse({ res, showSuccess: true })) {
-        invalidateBanners();
-        closeBannerModal();
-      }
-    },
-  });
-
-  const updateMutation = useMutation<AxiosResponse | void, Error, BannerFormValues>({
-    mutationFn: catchAsync(async (data) => {
-      if (!editingBannerId) throw new Error("No banner selected.");
-      return updateAdminBannerApi(editingBannerId, {
-        name: data.name.trim(),
-        link_url: data.link_url?.trim() ?? "",
-        placement: data.placement,
-        scope: data.scope,
-        organization_id:
-          data.scope === "organization_specific" && data.organization_id
-            ? data.organization_id
-            : null,
-        status: data.status,
-        start_date: data.start_date?.trim() || undefined,
-        end_date: data.end_date?.trim() || undefined,
-        image_url: data.image_url?.trim() || undefined,
-        alt_text: data.alt_text?.trim() || undefined,
-        notes: data.notes?.trim() || undefined,
-      });
-    }),
-    onSuccess: (res) => {
-      if (res && checkResponse({ res, showSuccess: true })) {
-        invalidateBanners();
-        closeBannerModal();
-      }
-    },
-  });
 
   const deleteMutation = useMutation<AxiosResponse | void, Error, string>({
     mutationFn: catchAsync(async (bannerId) => {
@@ -338,34 +139,9 @@ const Banners: React.FC = () => {
     },
   });
 
-  const onBannerFormSubmit = (data: BannerFormValues) => {
-    if (editingBannerId) updateMutation.mutate(data);
-    else createMutation.mutate(data);
-  };
-
   const handleDeleteClick = (b: ApiBanner) => setDeleteTarget(b);
   const confirmDelete = () => {
     if (deleteTarget) deleteMutation.mutate(getBannerId(deleteTarget));
-  };
-
-  const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploadingImage(true);
-    try {
-      const res = await uploadProfilePictureApi(file);
-      const url =
-        (res?.data as { data?: { url?: string }; url?: string })?.data?.url ??
-        (res?.data as { url?: string })?.url ??
-        "";
-      if (url) setValue("image_url", url);
-      else toastError("Upload succeeded but no image URL returned.");
-    } catch {
-      // catchAsync/toast handled by upload
-    } finally {
-      setUploadingImage(false);
-      e.target.value = "";
-    }
   };
 
   const bannerColumns: TableColumn<ApiBanner>[] = [
@@ -490,7 +266,7 @@ const Banners: React.FC = () => {
               placeholder="Search..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className={inputClass}
+              className={INPUT_CLASS}
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -498,7 +274,7 @@ const Banners: React.FC = () => {
             <select
               value={placementFilter}
               onChange={(e) => setPlacementFilter(e.target.value)}
-              className={inputClass}
+              className={INPUT_CLASS}
             >
               <option value="">All Placements</option>
               {PLACEMENT_OPTIONS.map((p) => (
@@ -513,7 +289,7 @@ const Banners: React.FC = () => {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className={inputClass}
+              className={INPUT_CLASS}
             >
               <option value="">All</option>
               <option value="active">Active</option>
@@ -528,7 +304,7 @@ const Banners: React.FC = () => {
             <select
               value={scopeFilter}
               onChange={(e) => setScopeFilter(e.target.value)}
-              className={inputClass}
+              className={INPUT_CLASS}
             >
               <option value="">All Scopes</option>
               {SCOPE_OPTIONS.map((s) => (
@@ -543,7 +319,7 @@ const Banners: React.FC = () => {
             <select
               value={orgFilter}
               onChange={(e) => setOrgFilter(e.target.value)}
-              className={inputClass}
+              className={INPUT_CLASS}
             >
               <option value="">— Select Organization —</option>
               {orgsList.map((o) => (
@@ -573,182 +349,20 @@ const Banners: React.FC = () => {
         </div>
       </div>
 
-      <Modal isOpen={isBannerModalOpen} onClose={closeBannerModal} maxWidth="720px">
-        <form onSubmit={handleSubmit(onBannerFormSubmit)}>
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold m-0">
-              {editingBanner ? "Edit Banner" : "New Banner"}
-            </h3>
-            <Button type="button" variant="secondary" size="sm" onClick={closeBannerModal}>
-              Close
-            </Button>
-          </div>
-          <div className="h-px bg-rcn-border mb-4" />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs text-rcn-muted font-semibold mb-1.5">Banner Name *</label>
-              <input
-                type="text"
-                {...register("name")}
-                placeholder="e.g. Summer Promo"
-                className={inputClass}
-              />
-              {errors.name && (
-                <p className="text-xs text-red-600 mt-1">{errors.name.message}</p>
-              )}
-            </div>
-            <div>
-              <label className="block text-xs text-rcn-muted font-semibold mb-1.5">Link URL</label>
-              <input
-                type="url"
-                {...register("link_url")}
-                placeholder="https://..."
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-rcn-muted font-semibold mb-1.5">Placement</label>
-              <select {...register("placement")} className={inputClass}>
-                {PLACEMENT_OPTIONS.map((p) => (
-                  <option key={p.value} value={p.value}>
-                    {p.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs text-rcn-muted font-semibold mb-1.5">Scope</label>
-              <select {...register("scope")} className={inputClass}>
-                {SCOPE_OPTIONS.map((s) => (
-                  <option key={s.value} value={s.value}>
-                    {s.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
-                Organization (if scoped)
-              </label>
-              <select {...register("organization_id")} className={inputClass}>
-                <option value="">— None (Global) —</option>
-                {orgsList.map((o) => (
-                  <option key={o.organization_id ?? o._id} value={o.organization_id ?? o._id}>
-                    {o.organization?.name} ({o.organization?.state} {o.organization?.zip_code})
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs text-rcn-muted font-semibold mb-1.5">Status</label>
-              <select {...register("status", { valueAsNumber: true })} className={inputClass}>
-                <option value={1}>Active</option>
-                <option value={0}>Inactive</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
-                Start Date (optional)
-              </label>
-              <input
-                type="datetime-local"
-                {...register("start_date")}
-                className={inputClass}
-              />
-              {errors.start_date && (
-                <p className="text-xs text-red-600 mt-1">{errors.start_date.message}</p>
-              )}
-            </div>
-            <div>
-              <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
-                End Date (optional)
-              </label>
-              <input
-                type="datetime-local"
-                {...register("end_date")}
-                className={inputClass}
-              />
-              {errors.end_date && (
-                <p className="text-xs text-red-600 mt-1">{errors.end_date.message}</p>
-              )}
-            </div>
-            <div>
-              <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
-                Image (upload or URL)
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageFileChange}
-                  disabled={uploadingImage}
-                  className={inputClass}
-                />
-              </div>
-              <input
-                type="url"
-                {...register("image_url")}
-                placeholder="https://... or upload above"
-                className={inputClass + " mt-1.5"}
-              />
-              {uploadingImage && (
-                <p className="text-xs text-rcn-muted mt-1">Uploading…</p>
-              )}
-            </div>
-            <div>
-              <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
-                Alt Text (optional)
-              </label>
-              <input
-                type="text"
-                {...register("alt_text")}
-                placeholder="Accessibility description"
-                className={inputClass}
-              />
-            </div>
-          </div>
-          <div className="mt-4">
-            <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
-              Notes (optional)
-            </label>
-            <textarea
-              rows={2}
-              {...register("notes")}
-              className={inputClass}
-              placeholder="Internal notes..."
-            />
-          </div>
-
-          <div className="h-px bg-rcn-border my-4" />
-          <div className="flex justify-between items-center">
-            <p className="text-xs text-rcn-muted m-0">Changes apply after Save.</p>
-            <div className="flex gap-2">
-              {editingBanner && (
-                <Button
-                  type="button"
-                  variant="danger"
-                  size="sm"
-                  onClick={() => {
-                    setDeleteTarget(editingBanner);
-                    closeBannerModal();
-                  }}
-                >
-                  Delete
-                </Button>
-              )}
-              <Button
-                type="submit"
-                variant="primary"
-                size="sm"
-                disabled={createMutation.isPending || updateMutation.isPending}
-              >
-                {createMutation.isPending || updateMutation.isPending ? "Saving…" : "Save"}
-              </Button>
-            </div>
-          </div>
-        </form>
-      </Modal>
+      <BannerModal
+        isOpen={isBannerModalOpen}
+        onClose={closeBannerModal}
+        editingBanner={editingBanner}
+        orgsList={orgsList}
+        onSuccess={() => {
+          invalidateBanners();
+          closeBannerModal();
+        }}
+        onDeleteClick={(b) => {
+          setDeleteTarget(b);
+          closeBannerModal();
+        }}
+      />
 
       <ConfirmModal
         type="delete"

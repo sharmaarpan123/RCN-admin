@@ -73,7 +73,6 @@ const PaymentSettings: React.FC = () => {
   const [directFeeById, setDirectFeeById] = useState<Record<string, number>>({});
   const [creditFeeById, setCreditFeeById] = useState<Record<string, number>>({});
   const [creditPrice, setCreditPrice] = useState(5);
-  const [directBaseAmount, setDirectBaseAmount] = useState(5);
   const [creditThresholdAmount, setCreditThresholdAmount] = useState<number>(10);
   const [creditThresholdPercentOff, setCreditThresholdPercentOff] = useState(10);
   const [autoSendInvoice, setAutoSendInvoice] = useState(true);
@@ -118,7 +117,6 @@ const PaymentSettings: React.FC = () => {
       setDirectFeeById(directFees);
       setCreditFeeById(creditFees);
       setCreditPrice(d.credit_price ?? 5);
-      setDirectBaseAmount(d.direct_base_amount ?? 5);
       setCreditThresholdAmount(d.credit_threshold_amount ?? 10);
       setCreditThresholdPercentOff(d.credit_threshold_percent_off ?? 10);
       setAutoSendInvoice(d.auto_send_invoice ?? false);
@@ -148,7 +146,7 @@ const PaymentSettings: React.FC = () => {
           is_active: methodsById[m.id] ?? m.is_active,
         })),
         direct: {
-          base_amount: directBaseAmount,
+          base_amount: 5,
           methods: direct.map((m) => ({
             payment_method_id: m.id,
             processing_fee_percent: directFeeById[m.id] ?? m.processing_fee_percent ?? 0,
@@ -391,7 +389,7 @@ const PaymentSettings: React.FC = () => {
                 </label>
                 <input
                   type="text"
-                  readOnly
+                  
                   value={`${(creditFeeById[previewMethodId])}`}
                   className={inputClass}
                   onChange={(e) => setCreditFeeById((prev) => ({ ...prev, [previewMethodId]: parseFloat(e.target.value) || 0 }))}
