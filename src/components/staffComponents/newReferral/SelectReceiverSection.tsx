@@ -5,10 +5,10 @@ import { useQuery } from "@tanstack/react-query";
 import CustomAsyncSelect from "@/components/CustomAsyncSelect";
 import CustomReactSelect from "@/components/CustomReactSelect";
 import { SectionHeader } from "./SectionHeader";
-import { US_STATES } from "./types";
 import type { OrgBranchDeptOption, ReceiverRow } from "./types";
 import {
   getStaffOrganizationsApi,
+  getStatesApi,
   postStaffBranchesByOrganizationsApi,
   postStaffDepartmentsByBranchesApi,
 } from "@/apis/ApiCalls";
@@ -48,11 +48,33 @@ export function SelectReceiverSection({
     label: r.organizationName,
   }));
 
+  const { data: stateOptionsFromApi = [] } = useQuery({
+    queryKey: ["states"],
+    queryFn: async () => {
+      const res = await getStatesApi();
+      if (!checkResponse({ res })) return [];
+      const data = res.data?.data ?? res.data;
+      const list = Array.isArray(data) ? data : [];
+      return list
+        .map((item: { name?: string; abbreviation?: string }) => {
+          const value = item.abbreviation;
+          const label = item.name;
+          return value != null && label != null ? { value: String(value), label: String(label) } : null;
+        })
+        .filter((x): x is OrgBranchDeptOption => x != null);
+    },
+  });
+
+  const stateFilterOptions: OrgBranchDeptOption[] = [
+    { value: "ALL", label: "All States" },
+    ...stateOptionsFromApi,
+  ];
+
   const loadOrganizationOptions = useCallback(
     (inputValue: string) => {
       const stateParam =
         stateFilter && stateFilter !== "ALL"
-          ? US_STATES.find((s) => s.value === stateFilter)?.label ?? stateFilter
+          ? stateOptionsFromApi.find((s) => s.value === stateFilter)?.label ?? stateFilter
           : "";
       return getStaffOrganizationsApi({
         ...(stateParam && { state: stateParam }),
@@ -66,7 +88,7 @@ export function SelectReceiverSection({
         })
         .catch(() => []);
     },
-    [stateFilter]
+    [stateFilter, stateOptionsFromApi]
   );
 
   const handleOrganizationChange = useCallback(
@@ -155,7 +177,7 @@ export function SelectReceiverSection({
           <CustomReactSelect
             value={stateFilter}
             onChange={setStateFilter}
-            options={US_STATES}
+            options={stateFilterOptions}
             placeholder="Select state..."
             aria-label="State (business location)"
             isClearable={false}

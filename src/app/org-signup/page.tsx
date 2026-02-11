@@ -1,12 +1,15 @@
 "use client";
-import { organizationSignupApi } from "@/apis/ApiCalls";
+import { getStatesApi, organizationSignupApi } from "@/apis/ApiCalls";
 import type { AddressResult } from "@/components";
 import { Autocomplete, PhoneInputField } from "@/components";
 import Button from "@/components/Button";
 import CustomNextLink from "@/components/CustomNextLink";
+import CustomReactSelect from "@/components/CustomReactSelect";
+import type { RcnSelectOption } from "@/components/CustomReactSelect";
+import defaultQueryKeys from "@/utils/adminQueryKeys";
 import { catchAsync, checkResponse } from "@/utils/commonFunc";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React from "react";
@@ -112,6 +115,22 @@ const OrgSignup: React.FC = () => {
   const phoneNumber = watch("phone_number");
   const userDialCode = watch("user_dial_code");
   const userPhoneNumber = watch("user_phone_number");
+  const stateValue = watch("state");
+
+  const { data: stateOptions = [] } = useQuery({
+    queryKey: [...defaultQueryKeys.statesList],
+    queryFn: async () => {
+      const res = await getStatesApi();
+      if (!checkResponse({ res })) return [];
+      const data = res.data?.data ?? res.data;
+      const list = Array.isArray(data) ? data : [];
+      return list.map((item: { name?: string; abbreviation?: string }) => {
+        const value = item.name;
+        const label = item.name;
+        return value != null && label != null ? { value: String(value), label: String(label) } : null;
+      }).filter((x): x is RcnSelectOption => x != null);
+    },
+  });
 
   const orgPhoneValue = (dialCode ?? "") + (phoneNumber ?? "").replace(/\D/g, "");
   const userPhoneValue = (userDialCode ?? "") + (userPhoneNumber ?? "").replace(/\D/g, "");
@@ -132,7 +151,6 @@ const OrgSignup: React.FC = () => {
     setValue("street", address.street, { shouldValidate: true });
     setValue("suite", address.suite, { shouldValidate: true });
     setValue("city", address.city, { shouldValidate: true });
-    setValue("state", address.state, { shouldValidate: true });
     setValue("zip_code", address.zip_code, { shouldValidate: true });
     if (address.latitude) setValue("latitude", address.latitude, { shouldValidate: true });
     if (address.longitude) setValue("longitude", address.longitude, { shouldValidate: true });
@@ -353,7 +371,16 @@ const OrgSignup: React.FC = () => {
                       <label className="text-xs text-rcn-muted block mb-1.5">
                         State <span className="text-rcn-danger">*</span>
                       </label>
-                      <input {...register("state")} type="text" placeholder="State" className={inputClass("state")} />
+                      <CustomReactSelect
+                        value={stateValue ?? ""}
+                        onChange={(value) => setValue("state", value ?? "", { shouldValidate: true })}
+                        options={stateOptions}
+                        placeholder="Select state..."
+                        aria-label="State"
+                        isClearable
+                        maxMenuHeight={280}
+                        controlClassName={errors.state ? "!border-rcn-danger" : undefined}
+                      />
                       {errorMsg("state")}
                     </div>
                   </div>

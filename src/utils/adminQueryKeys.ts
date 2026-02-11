@@ -18,6 +18,7 @@ const defaultQueryKeys = {
     bannersList: ["admin", "banners", "list"],
     contactList: ["admin", "contact", "list"],
     contactDetail: ["admin", "contact", "detail"],
+    statesList: ["states", "list"],
 };
 
 export default defaultQueryKeys;

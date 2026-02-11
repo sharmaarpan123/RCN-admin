@@ -1,8 +1,10 @@
 "use client";
 
-import { getAuthProfileApi, updateOrganizationProfileApi } from "@/apis/ApiCalls";
+import { getAuthProfileApi, getStatesApi, updateOrganizationProfileApi } from "@/apis/ApiCalls";
 import type { AddressResult } from "@/components";
 import { Autocomplete, Button, PhoneInputField } from "@/components";
+import CustomReactSelect from "@/components/CustomReactSelect";
+import type { RcnSelectOption } from "@/components/CustomReactSelect";
 import { checkResponse, isValidEmail } from "@/utils/commonFunc";
 import { toastError, toastSuccess } from "@/utils/toast";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -11,6 +13,7 @@ import { useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
 import * as yup from "yup";
 import type { AuthProfileData } from "../types/profile";
+import defaultQueryKeys from "@/utils/adminQueryKeys";
 
 const DEFAULT_DIAL_CODE = "1";
 
@@ -245,11 +248,27 @@ function OrganizationSettingsForm({
   const handleAddressSelect = (address: AddressResult) => {
     setValue("address.street", address.formatted_address, { shouldValidate: true, shouldDirty: true });
     setValue("address.city", address.city, { shouldValidate: true, shouldDirty: true });
-    setValue("address.state", address.state, { shouldValidate: true, shouldDirty: true });
     setValue("address.zip", address.zip_code, { shouldValidate: true, shouldDirty: true });
     setValue("address.lat", address.latitude ? Number(address.latitude) : 0, { shouldValidate: true, shouldDirty: true });
     setValue("address.lng", address.longitude ? Number(address.longitude) : 0, { shouldValidate: true, shouldDirty: true });
   };
+
+  const { data: stateOptions = [] } = useQuery({
+    queryKey: [...defaultQueryKeys.statesList],
+    queryFn: async () => {
+      const res = await getStatesApi();
+      if (!checkResponse({ res })) return [];
+      const data = res.data?.data ?? res.data;
+      const list = Array.isArray(data) ? data : [];
+      return list
+        .map((item: { name?: string; abbreviation?: string }) => {
+          const value = item.name;
+          const label = item.name;
+          return value != null && label != null ? { value: String(value), label: String(label) } : null;
+        })
+        .filter((x): x is RcnSelectOption => x != null);
+    },
+  });
 
   const onSubmit = async (values: OrgSettingsFormValues) => {
     const body = {
@@ -371,7 +390,16 @@ function OrganizationSettingsForm({
                   name="address.state"
                   control={control}
                   render={({ field }) => (
-                    <input {...field} value={field.value ?? ""} placeholder="e.g., Chicago" className={inputClass} />
+                    <CustomReactSelect
+                      value={field.value ?? ""}
+                      onChange={(value) => field.onChange(value ?? "")}
+                      options={stateOptions}
+                      placeholder="Select state..."
+                      aria-label="State"
+                      isClearable
+                      maxMenuHeight={280}
+                      controlClassName={errors.address?.state ? "!border-red-500" : undefined}
+                    />
                   )}
                 />
                 {errors.address?.state && <p className="text-xs text-rcn-danger mt-1 m-0">{errors.address.state.message}</p>}

@@ -3,6 +3,9 @@ import AxiosInstance from "@/apis/Axios";
 export const organizationSignupApi = (body: unknown) =>
   AxiosInstance.post("/api/organization/signup", body);
 
+/** GET /api/states — list states (e.g. for org signup address). */
+export const getStatesApi = () => AxiosInstance.get("/api/states");
+
 export const authLoginApi = (body: unknown) =>
   AxiosInstance.post("/api/auth/login", body);
 

@@ -8,10 +8,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createAdminOrganizationApi,
   getAdminOrganizationApi,
+  getStatesApi,
   updateAdminOrganizationApi,
 } from "@/apis/ApiCalls";
 import { Button, PhoneInputField, Autocomplete, Modal } from "@/components";
+import CustomReactSelect from "@/components/CustomReactSelect";
 import type { AddressResult } from "@/components";
+import type { RcnSelectOption } from "@/components/CustomReactSelect";
 import { catchAsync, checkResponse, isValidEmail } from "@/utils/commonFunc";
 import defaultQueryKeys from "@/utils/adminQueryKeys";
 
@@ -365,7 +368,6 @@ export function OrgModalContent({
     setValue("address.street", address.formatted_address, { shouldValidate: true, shouldDirty: true });
     setValue("address.suite", address.suite, { shouldValidate: true, shouldDirty: true });
     setValue("address.city", address.city, { shouldValidate: true, shouldDirty: true });
-    setValue("address.state", address.state, { shouldValidate: true, shouldDirty: true });
     setValue("address.zip_code", address.zip_code, { shouldValidate: true, shouldDirty: true });
     if (address.latitude != null) {
       setValue("address.latitude", address.latitude, { shouldValidate: true, shouldDirty: true });
@@ -411,6 +413,23 @@ export function OrgModalContent({
   const isPending = createMutation.isPending || updateMutation.isPending;
   const inputCn = (hasError?: boolean) =>
     `${inputClass} ${hasError ? "border-red-500" : ""}`.trim();
+
+  const { data: stateOptions = [] } = useQuery({
+    queryKey: [...defaultQueryKeys.statesList],
+    queryFn: async () => {
+      const res = await getStatesApi();
+      if (!checkResponse({ res })) return [];
+      const data = res.data?.data ?? res.data;
+      const list = Array.isArray(data) ? data : [];
+      return list
+        .map((item: { name?: string; abbreviation?: string }) => {
+          const value = item.name;
+          const label = item.name;
+          return value != null && label != null ? { value: String(value), label: String(label) } : null;
+        })
+        .filter((x): x is RcnSelectOption => x != null);
+    },
+  });
 
 
 
@@ -593,7 +612,16 @@ export function OrgModalContent({
                       name="address.state"
                       control={control}
                       render={({ field }) => (
-                        <input {...field} value={field.value ?? ""} className={inputCn(!!errors.address?.state)} />
+                        <CustomReactSelect
+                          value={field.value ?? ""}
+                          onChange={(value) => field.onChange(value ?? "")}
+                          options={stateOptions}
+                          placeholder="Select state..."
+                          aria-label="State"
+                          isClearable
+                          maxMenuHeight={280}
+                          controlClassName={errors.address?.state ? "!border-red-500" : undefined}
+                        />
                       )}
                     />
                     {errors.address?.state && (
