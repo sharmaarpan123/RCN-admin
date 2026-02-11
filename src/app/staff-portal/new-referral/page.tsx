@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  AVAILABLE_SERVICES,
   AddReceiverModal,
   AdditionalDetailsSection,
   AttachmentsSection,
@@ -36,7 +35,6 @@ const SECTION_IDS = [
 export default function NewReferralPage() {
   const [stateFilter, setStateFilter] = useState("ALL");
   const [receiverRows, setReceiverRows] = useState<ReceiverRow[]>([]);
-  const [availableServices, setAvailableServices] = useState<string[]>(AVAILABLE_SERVICES);
   const [requestedServices, setRequestedServices] = useState<string[]>([]);
   const [insuranceBlocks, setInsuranceBlocks] = useState<InsuranceBlock[]>([
     { id: 1, payer: "", policy: "", planGroup: "" },
@@ -155,8 +153,6 @@ export default function NewReferralPage() {
         />
 
         <ServicesRequestedSection
-          availableServices={availableServices}
-          setAvailableServices={setAvailableServices}
           requestedServices={requestedServices}
           setRequestedServices={setRequestedServices}
           selectedAvailableServices={selectedAvailableServices}

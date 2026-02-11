@@ -1,7 +1,11 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import Button from "@/components/Button";
+import { getStaffSpecialitiesApi } from "@/apis/ApiCalls";
+import { checkResponse } from "@/utils/commonFunc";
+import defaultQueryKeys from "@/utils/staffQueryKeys";
 import { SectionHeader } from "./SectionHeader";
 
 const moveBtnBase =
@@ -10,8 +14,6 @@ const moveBtnActive =
   "!bg-rcn-bg !border-rcn-border hover:!border-rcn-brand/50 hover:!bg-[#e5f2ea] hover:!ring-2 hover:!ring-rcn-brand/15";
 
 interface ServicesRequestedSectionProps {
-  availableServices: string[];
-  setAvailableServices: React.Dispatch<React.SetStateAction<string[]>>;
   requestedServices: string[];
   setRequestedServices: React.Dispatch<React.SetStateAction<string[]>>;
   selectedAvailableServices: string[];
@@ -25,8 +27,6 @@ interface ServicesRequestedSectionProps {
 }
 
 export function ServicesRequestedSection({
-  availableServices,
-  setAvailableServices,
   requestedServices,
   setRequestedServices,
   selectedAvailableServices,
@@ -38,6 +38,25 @@ export function ServicesRequestedSection({
   additionalNotes,
   setAdditionalNotes,
 }: ServicesRequestedSectionProps) {
+  const { data: specialitiesResponse } = useQuery({
+    queryKey: defaultQueryKeys.specialitiesList,
+    queryFn: async () => {
+      const res = await getStaffSpecialitiesApi({ page: 1, limit: 100 });
+      if (!checkResponse({ res })) return null;
+      return res.data;
+    },
+  });
+
+  const specialitiesList = useMemo(() => {
+    const raw = specialitiesResponse as { data?: { _id: string; name: string; user_id: string | null }[] } | undefined;
+    return Array.isArray(raw?.data) ? raw.data : [];
+  }, [specialitiesResponse]);
+
+  const availableServices = useMemo(
+    () => specialitiesList.filter((item) => !requestedServices.includes(item.name)).map((item) => item.name),
+    [specialitiesList, requestedServices]
+  );
+
   const toggleAvailableService = (service: string) => {
     setSelectedAvailableServices((prev) =>
       prev.includes(service) ? prev.filter((s) => s !== service) : [...prev, service]
@@ -54,14 +73,12 @@ export function ServicesRequestedSection({
     if (direction === "right" || direction === "allRight") {
       const toAdd = direction === "allRight" ? availableServices : selectedAvailableServices;
       if (toAdd.length === 0) return;
-      setAvailableServices((prev) => prev.filter((s) => !toAdd.includes(s)));
       setRequestedServices((prev) => [...new Set([...prev, ...toAdd])]);
       setSelectedAvailableServices([]);
     } else {
       const toRemove = direction === "allLeft" ? requestedServices : selectedRequestedServices;
       if (toRemove.length === 0) return;
       setRequestedServices((prev) => prev.filter((s) => !toRemove.includes(s)));
-      setAvailableServices((prev) => [...new Set([...prev, ...toRemove])]);
       setSelectedRequestedServices([]);
     }
   };

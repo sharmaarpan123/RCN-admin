@@ -153,7 +153,7 @@ export function SelectReceiverSection({
   return (
     <section
       id="select-receiver"
-      className="bg-white border border-rcn-border rounded-2xl shadow-rcn p-4.5 mb-3.5 overflow-hidden relative"
+      className="bg-white border border-rcn-border rounded-2xl shadow-rcn p-4.5 mb-3.5  relative"
     >
       <SectionHeader
         title="Select the Referral Receiver"
@@ -355,7 +355,7 @@ function ReceiverRowsTable({
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-rcn-border mb-3">
+    <div className="rounded-xl border border-rcn-border mb-3">
       <div className="min-w-[600px] rounded-xl ">
         <div className="grid grid-cols-[1fr_minmax(180px,1fr)_minmax(180px,1fr)_auto] gap-2 bg-slate-50 border-b border-rcn-border px-2 py-2.5 text-xs font-semibold text-rcn-muted uppercase tracking-wider items-center">
           <div>Organization</div>

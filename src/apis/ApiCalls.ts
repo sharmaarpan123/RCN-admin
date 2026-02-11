@@ -306,3 +306,7 @@ export const postStaffBranchesByOrganizationsApi = (body: { organization_ids: st
 /** POST /api/users/departments/by-branches — get departments for given branch ids. */
 export const postStaffDepartmentsByBranchesApi = (body: { branch_ids: string[] }) =>
   AxiosInstance.post("/api/users/departments/by-branches", body);
+
+/** GET /api/users/specialities — list specialities/services for staff (e.g. referral form). Params: page, limit. */
+export const getStaffSpecialitiesApi = (params?: { page?: number; limit?: number }) =>
+  AxiosInstance.get("/api/users/specialities", { params });
