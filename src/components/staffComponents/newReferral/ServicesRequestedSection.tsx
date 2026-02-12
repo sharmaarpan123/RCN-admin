@@ -81,7 +81,7 @@ export function ServicesRequestedSection() {
       if (toRemoveIds.length === 0) return;
       setValue(
         "speciality_ids",
-        speciality_ids.filter((id) => !toRemoveIds.includes(id)),
+        speciality_ids.filter((id) => !toRemoveIds.includes(id as string)),
         { shouldValidate: true }
       );
       setSelectedRequestedIds([]);
@@ -128,11 +128,10 @@ export function ServicesRequestedSection() {
                     role="option"
                     aria-selected={isSelected}
                     onClick={() => toggleAvailable(item._id)}
-                    className={`px-2.5 py-2 rounded-lg cursor-pointer border transition-colors ${
-                      isSelected
+                    className={`px-2.5 py-2 rounded-lg cursor-pointer border transition-colors ${isSelected
                         ? "bg-rcn-brand/15 border-rcn-brand/40 text-rcn-text"
                         : "border-transparent hover:bg-slate-50 text-rcn-text"
-                    }`}
+                      }`}
                   >
                     <p className="m-0 text-sm font-normal break-words">{item.name}</p>
                   </div>
@@ -221,11 +220,10 @@ export function ServicesRequestedSection() {
                     role="option"
                     aria-selected={isSelected}
                     onClick={() => toggleRequested(item._id)}
-                    className={`px-2.5 py-2 rounded-lg cursor-pointer border transition-colors ${
-                      isSelected
+                    className={`px-2.5 py-2 rounded-lg cursor-pointer border transition-colors ${isSelected
                         ? "bg-rcn-brand/15 border-rcn-brand/40 text-rcn-text"
                         : "border-transparent hover:bg-slate-50 text-rcn-text"
-                    }`}
+                      }`}
                   >
                     <p className="m-0 text-sm font-normal break-words">{item.name}</p>
                   </div>
