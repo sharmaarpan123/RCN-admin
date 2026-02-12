@@ -1,9 +1,12 @@
 import React from 'react';
 import Button from '../../Button';
 import { usePathname } from 'next/navigation';
+import { AdminProfileData } from '@/app/master-admin/types/profile';
 
 interface HeaderProps {
   setIsMobileMenuOpen: (isOpen: boolean) => void;
+  profile: AdminProfileData | null;
+  loading: boolean;
 }
 
 const titleMap = {
@@ -68,11 +71,15 @@ const pages =
   settings: '/master-admin/settings',
 };
 
-const Header: React.FC<HeaderProps> = ({ setIsMobileMenuOpen }) => {
+const Header: React.FC<HeaderProps> = ({ setIsMobileMenuOpen, profile, loading }) => {
   const pathname = usePathname();
   const page = Object.keys(pages).find(page => pathname?.startsWith(pages[page as keyof typeof pages]));
   const title = titleMap[page as keyof typeof titleMap]?.title || 'Admin Dashboard';
   const subtitle = titleMap[page as keyof typeof titleMap]?.subtitle || "";
+
+  const getInitials = (firstName: string, lastName: string) => {
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  };
 
 
   return (
@@ -91,7 +98,19 @@ const Header: React.FC<HeaderProps> = ({ setIsMobileMenuOpen }) => {
         <h2 className="m-0 text-lg font-bold">{title}</h2>
         <p className="mt-1 mb-0 text-rcn-muted text-sm">{subtitle}</p>
       </div>
-      <div className="flex gap-2.5 items-center justify-end"></div>
+      <div className="flex gap-2.5 items-center justify-end">
+        {!loading && profile && (
+          <div className="flex items-center gap-3">
+            <div className="text-right hidden sm:block">
+              <p className="m-0 text-sm font-medium">{profile.first_name} {profile.last_name}</p>
+              <p className="m-0 text-xs text-rcn-muted">{profile.email}</p>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-medium">
+              {getInitials(profile.first_name, profile.last_name)}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
