@@ -18,6 +18,8 @@ const defaultQueryKeys = {
     bannersList: ["admin", "banners", "list"],
     specialitiesList: ["admin", "specialities", "list"],
     specialityDetail: ["admin", "speciality", "detail"],
+    auditLogsList: ["admin", "auth-logs", "list"],
+    financialReportList: ["admin", "financial-report", "list"],
     contactList: ["admin", "contact", "list"],
     contactDetail: ["admin", "contact", "detail"],
     statesList: ["states", "list"],

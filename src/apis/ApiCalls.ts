@@ -12,6 +12,10 @@ export const authLoginApi = (body: unknown) =>
 export const getAuthProfileApi = () =>
   AxiosInstance.get("/api/auth/profile");
 
+/** POST /api/auth/change-password — change password for authenticated user. */
+export const changePasswordApi = (body: { password: string }) =>
+  AxiosInstance.post("/api/auth/change-password", body);
+
 /** PUT /api/organization/profile — update organization and contact (org portal). */
 export const updateOrganizationProfileApi = (body: unknown) => AxiosInstance.put("/api/organization/profile", body);
 
@@ -292,6 +296,16 @@ export const getAdminSpecialityByIdApi = (id: string) =>
 /** DELETE /api/admin/specialities/:id — delete service/speciality (admin). */
 export const deleteAdminSpecialityApi = (id: string) =>
   AxiosInstance.delete(`/api/admin/specialities/${id}`);
+
+// ——— Admin reports — audit logs & financial ———
+
+/** GET /api/admin/auth-logs — list authentication / audit logs (admin). */
+export const getAdminAuthLogsApi = () =>
+  AxiosInstance.get("/api/admin/auth-logs");
+
+/** GET /api/admin/financial-report — list financial report entries (admin). */
+export const getAdminFinancialReportApi = () =>
+  AxiosInstance.get("/api/admin/financial-report");
 
 // ——— Staff portal (users) ———
 
