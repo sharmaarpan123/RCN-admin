@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useCallback } from "react";
-import { useFormContext } from "react-hook-form";
+import React, { useCallback, useMemo } from "react";
+import { useFormContext, useWatch } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import CustomAsyncSelect from "@/components/CustomAsyncSelect";
 import CustomReactSelect from "@/components/CustomReactSelect";
@@ -18,7 +18,6 @@ import { checkResponse } from "@/utils/commonFunc";
 import { Button } from "@/components";
 import defaultAdminQueryKeys from "@/utils/adminQueryKeys";
 
-/** Normalize API list to options. Supports { _id, name } or { id, name }. */
 function toOptions(list: unknown[]): OrgBranchDeptOption[] {
   if (!Array.isArray(list)) return [];
   return list
@@ -42,13 +41,21 @@ export function SelectReceiverSection({
   setStateFilter,
   onOpenAddReceiver,
 }: SelectReceiverSectionProps) {
-  const { watch, setValue } = useFormContext<ReferralFormValues>();
-  const receiverRows = (watch("receiver_rows") ?? []) as ReceiverRow[];
+  const { control, setValue, formState: { errors } } = useFormContext<ReferralFormValues>();
+  const watchedReceiverRows = useWatch({ name: "receiver_rows", control });
+  const receiverRows = useMemo(
+    () => (watchedReceiverRows ?? []) as ReceiverRow[],
+    [watchedReceiverRows]
+  );
 
-  const selectedOrgOptions: OrgBranchDeptOption[] = receiverRows.map((r) => ({
-    value: r.organizationId,
-    label: r.organizationName,
-  }));
+  const selectedOrgOptions: OrgBranchDeptOption[] = useMemo(
+    () =>
+      receiverRows.map((r) => ({
+        value: r.organizationId,
+        label: r.organizationName,
+      })),
+    [receiverRows]
+  );
 
   const { data: stateOptionsFromApi = [] } = useQuery({
     queryKey: [...defaultAdminQueryKeys.statesList],
@@ -95,20 +102,23 @@ export function SelectReceiverSection({
 
   const handleOrganizationChange = useCallback(
     (options: OrgBranchDeptOption[]) => {
+
+      const newReceiverRows = options.map((opt) => {
+        const existing = receiverRows.find((r) => r.organizationId === opt.value);
+        return {
+          organizationId: opt.value,
+          organizationName: opt.label,
+          branchId: existing?.branchId ?? null,
+          branchName: existing?.branchName ?? null,
+          departmentId: existing?.departmentId ?? null,
+          departmentName: existing?.departmentName ?? null,
+        };
+      })
+
       setValue(
         "receiver_rows",
-        options.map((opt) => {
-          const existing = receiverRows.find((r) => r.organizationId === opt.value);
-          return {
-            organizationId: opt.value,
-            organizationName: opt.label,
-            branchId: existing?.branchId ?? null,
-            branchName: existing?.branchName ?? null,
-            departmentId: existing?.departmentId ?? null,
-            departmentName: existing?.departmentName ?? null,
-          };
-        }),
-        { shouldValidate: true }
+        newReceiverRows,
+        { shouldValidate: true,  }
       );
     },
     [receiverRows, setValue]
@@ -222,6 +232,7 @@ export function SelectReceiverSection({
         updateRowBranch={updateRowBranch}
         updateRowDepartment={updateRowDepartment}
         removeRow={removeRow}
+        receiverRowsErrors={errors.receiver_rows}
       />
 
       <button
@@ -278,11 +289,15 @@ function ReceiverRow({
   updateRowBranch,
   updateRowDepartment,
   removeRow,
+  branchError,
+  departmentError,
 }: {
   row: ReceiverRow;
   updateRowBranch: (organizationId: string, branchId: string, branchName: string) => void;
   updateRowDepartment: (organizationId: string, departmentId: string, departmentName: string) => void;
   removeRow: (organizationId: string) => void;
+  branchError?: string;
+  departmentError?: string;
 }) {
   const branchOptions = useBranchOptions(row.organizationId);
   const departmentOptions = useDepartmentOptions(row.branchId);
@@ -311,9 +326,16 @@ function ReceiverRow({
           options={branchOptions}
           placeholder="Select branch..."
           aria-label="Branch"
+          aria-invalid={!!branchError}
           isClearable
           maxMenuHeight={220}
+          controlClassName={branchError ? "!border-red-500" : undefined}
         />
+        {branchError && (
+          <p className="text-xs text-rcn-danger mt-1 m-0" role="alert">
+            {branchError}
+          </p>
+        )}
       </div>
       <div className="min-w-[180px]">
         <CustomReactSelect
@@ -325,10 +347,17 @@ function ReceiverRow({
           options={departmentOptions}
           placeholder="Select department..."
           aria-label="Department"
+          aria-invalid={!!departmentError}
           isClearable
           maxMenuHeight={220}
           isDisabled={!row.branchId}
+          controlClassName={departmentError ? "!border-red-500" : undefined}
         />
+        {departmentError && (
+          <p className="text-xs text-rcn-danger mt-1 m-0" role="alert">
+            {departmentError}
+          </p>
+        )}
       </div>
       <div className="w-24 shrink-0">
         <Button
@@ -350,11 +379,13 @@ function ReceiverRowsTable({
   updateRowBranch,
   updateRowDepartment,
   removeRow,
+  receiverRowsErrors,
 }: {
   receiverRows: ReceiverRow[];
   updateRowBranch: (organizationId: string, branchId: string, branchName: string) => void;
   updateRowDepartment: (organizationId: string, departmentId: string, departmentName: string) => void;
   removeRow: (organizationId: string) => void;
+  receiverRowsErrors?: unknown;
 }) {
   if (receiverRows.length === 0) {
     return (
@@ -374,13 +405,15 @@ function ReceiverRowsTable({
           <div>Department</div>
           <div className="w-24 shrink-0">Action</div>
         </div>
-        {receiverRows.map((row) => (
+        {receiverRows.map((row, index) => (
           <ReceiverRow
             key={row.organizationId}
             row={row}
             updateRowBranch={updateRowBranch}
             updateRowDepartment={updateRowDepartment}
             removeRow={removeRow}
+            branchError={(receiverRowsErrors as Array<{ branchId?: { message?: string }; departmentId?: { message?: string } }>)?.[index]?.branchId?.message}
+            departmentError={(receiverRowsErrors as Array<{ branchId?: { message?: string }; departmentId?: { message?: string } }>)?.[index]?.departmentId?.message}
           />
         ))}
       </div>

@@ -26,9 +26,17 @@ export const referralFormSchema = yup.object({
       yup.object({
         organizationId: yup.string().required(),
         organizationName: yup.string().required(),
-        branchId: yup.string().nullable().default(null),
+        branchId: yup
+          .string()
+          .nullable()
+          .default(null)
+          .test("required", "Branch is required for each receiver.", (v) => v != null && v !== ""),
         branchName: yup.string().nullable().default(null),
-        departmentId: yup.string().nullable().default(null),
+        departmentId: yup
+          .string()
+          .nullable()
+          .default(null)
+          .test("required", "Department is required for each receiver.", (v) => v != null && v !== ""),
         departmentName: yup.string().nullable().default(null),
       })
     )
@@ -44,7 +52,7 @@ export const referralFormSchema = yup.object({
   patient_insurance_information: yup
     .array()
     .of(insuranceItemSchema)
-    .optional()
+    .optional() 
     .default([{ payer: "", policy: "", plan_group: "", document: "" }]),
   patient_phone_number: yup.string().trim().optional().default(""),
   patient_dial_code: yup.string().trim().optional().default("+1"),
