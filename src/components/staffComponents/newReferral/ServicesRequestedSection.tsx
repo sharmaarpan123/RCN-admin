@@ -1,43 +1,31 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
+import { useFormContext } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import Button from "@/components/Button";
 import { getStaffSpecialitiesApi } from "@/apis/ApiCalls";
 import { checkResponse } from "@/utils/commonFunc";
 import defaultQueryKeys from "@/utils/staffQueryKeys";
 import { SectionHeader } from "./SectionHeader";
+import type { ReferralFormValues } from "./referralFormSchema";
 
 const moveBtnBase =
   "min-w-[44px] min-h-[44px] w-12 h-12 md:w-10 md:h-10 !p-0 flex items-center justify-center text-lg md:text-base touch-manipulation active:scale-95";
 const moveBtnActive =
   "!bg-rcn-bg !border-rcn-border hover:!border-rcn-brand/50 hover:!bg-[#e5f2ea] hover:!ring-2 hover:!ring-rcn-brand/15";
 
-interface ServicesRequestedSectionProps {
-  requestedServices: string[];
-  setRequestedServices: React.Dispatch<React.SetStateAction<string[]>>;
-  selectedAvailableServices: string[];
-  setSelectedAvailableServices: React.Dispatch<React.SetStateAction<string[]>>;
-  selectedRequestedServices: string[];
-  setSelectedRequestedServices: React.Dispatch<React.SetStateAction<string[]>>;
-  otherServices: string;
-  setOtherServices: (v: string) => void;
-  additionalNotes: string;
-  setAdditionalNotes: (v: string) => void;
-}
+type SpecialityItem = { _id: string; name: string; user_id: string | null };
 
-export function ServicesRequestedSection({
-  requestedServices,
-  setRequestedServices,
-  selectedAvailableServices,
-  setSelectedAvailableServices,
-  selectedRequestedServices,
-  setSelectedRequestedServices,
-  otherServices,
-  setOtherServices,
-  additionalNotes,
-  setAdditionalNotes,
-}: ServicesRequestedSectionProps) {
+export function ServicesRequestedSection() {
+  const { watch, setValue } = useFormContext<ReferralFormValues>();
+  const speciality_ids = watch("speciality_ids") ?? [];
+  const additional_speciality = watch("additional_speciality") ?? "";
+  const additional_notes = watch("additional_notes") ?? "";
+
+  const [selectedAvailableIds, setSelectedAvailableIds] = useState<string[]>([]);
+  const [selectedRequestedIds, setSelectedRequestedIds] = useState<string[]>([]);
+
   const { data: specialitiesResponse } = useQuery({
     queryKey: defaultQueryKeys.specialitiesList,
     queryFn: async () => {
@@ -48,40 +36,60 @@ export function ServicesRequestedSection({
   });
 
   const specialitiesList = useMemo(() => {
-    const raw = specialitiesResponse as { data?: { _id: string; name: string; user_id: string | null }[] } | undefined;
+    const raw = specialitiesResponse as { data?: SpecialityItem[] } | undefined;
     return Array.isArray(raw?.data) ? raw.data : [];
   }, [specialitiesResponse]);
 
-  const availableServices = useMemo(
-    () => specialitiesList.filter((item) => !requestedServices.includes(item.name)).map((item) => item.name),
-    [specialitiesList, requestedServices]
+  const availableItems = useMemo(
+    () => specialitiesList.filter((item) => !speciality_ids.includes(item._id)),
+    [specialitiesList, speciality_ids]
   );
 
-  const toggleAvailableService = (service: string) => {
-    setSelectedAvailableServices((prev) =>
-      prev.includes(service) ? prev.filter((s) => s !== service) : [...prev, service]
+  const requestedItems = useMemo(
+    () => specialitiesList.filter((item) => speciality_ids.includes(item._id)),
+    [specialitiesList, speciality_ids]
+  );
+
+  const toggleAvailable = (id: string) => {
+    setSelectedAvailableIds((prev) =>
+      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
     );
   };
 
-  const toggleRequestedService = (service: string) => {
-    setSelectedRequestedServices((prev) =>
-      prev.includes(service) ? prev.filter((s) => s !== service) : [...prev, service]
+  const toggleRequested = (id: string) => {
+    setSelectedRequestedIds((prev) =>
+      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
     );
   };
 
   const moveService = (direction: "right" | "left" | "allRight" | "allLeft") => {
     if (direction === "right" || direction === "allRight") {
-      const toAdd = direction === "allRight" ? availableServices : selectedAvailableServices;
-      if (toAdd.length === 0) return;
-      setRequestedServices((prev) => [...new Set([...prev, ...toAdd])]);
-      setSelectedAvailableServices([]);
+      const toAddIds =
+        direction === "allRight"
+          ? availableItems.map((s) => s._id)
+          : selectedAvailableIds;
+      if (toAddIds.length === 0) return;
+      setValue("speciality_ids", [...new Set([...speciality_ids, ...toAddIds])], {
+        shouldValidate: true,
+      });
+      setSelectedAvailableIds([]);
     } else {
-      const toRemove = direction === "allLeft" ? requestedServices : selectedRequestedServices;
-      if (toRemove.length === 0) return;
-      setRequestedServices((prev) => prev.filter((s) => !toRemove.includes(s)));
-      setSelectedRequestedServices([]);
+      const toRemoveIds =
+        direction === "allLeft"
+          ? requestedItems.map((s) => s._id)
+          : selectedRequestedIds;
+      if (toRemoveIds.length === 0) return;
+      setValue(
+        "speciality_ids",
+        speciality_ids.filter((id) => !toRemoveIds.includes(id)),
+        { shouldValidate: true }
+      );
+      setSelectedRequestedIds([]);
     }
   };
+
+  const inputClass =
+    "w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal min-h-[95px] resize-y focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12";
 
   return (
     <section
@@ -109,24 +117,24 @@ export function ServicesRequestedSection({
             aria-multiselectable
             aria-label="Available services"
           >
-            {availableServices.length === 0 ? (
+            {availableItems.length === 0 ? (
               <p className="m-0 py-2 text-rcn-muted text-sm">No available services.</p>
             ) : (
-              availableServices.map((service) => {
-                const isSelected = selectedAvailableServices.includes(service);
+              availableItems.map((item) => {
+                const isSelected = selectedAvailableIds.includes(item._id);
                 return (
                   <div
-                    key={service}
+                    key={item._id}
                     role="option"
                     aria-selected={isSelected}
-                    onClick={() => toggleAvailableService(service)}
+                    onClick={() => toggleAvailable(item._id)}
                     className={`px-2.5 py-2 rounded-lg cursor-pointer border transition-colors ${
                       isSelected
                         ? "bg-rcn-brand/15 border-rcn-brand/40 text-rcn-text"
                         : "border-transparent hover:bg-slate-50 text-rcn-text"
                     }`}
                   >
-                    <p className="m-0 text-sm font-normal break-words">{service}</p>
+                    <p className="m-0 text-sm font-normal break-words">{item.name}</p>
                   </div>
                 );
               })
@@ -144,8 +152,8 @@ export function ServicesRequestedSection({
               variant="secondary"
               size="md"
               onClick={() => moveService("right")}
-              disabled={selectedAvailableServices.length === 0}
-              className={`${moveBtnBase} ${selectedAvailableServices.length !== 0 ? moveBtnActive : ""}`}
+              disabled={selectedAvailableIds.length === 0}
+              className={`${moveBtnBase} ${selectedAvailableIds.length !== 0 ? moveBtnActive : ""}`}
               aria-label="Move selected to requested"
               title="Add selected"
             >
@@ -156,8 +164,8 @@ export function ServicesRequestedSection({
               variant="secondary"
               size="md"
               onClick={() => moveService("allRight")}
-              disabled={availableServices.length === 0}
-              className={`${moveBtnBase} ${availableServices.length !== 0 ? moveBtnActive : ""}`}
+              disabled={availableItems.length === 0}
+              className={`${moveBtnBase} ${availableItems.length !== 0 ? moveBtnActive : ""}`}
               aria-label="Move all to requested"
               title="Add all"
             >
@@ -168,8 +176,8 @@ export function ServicesRequestedSection({
               variant="secondary"
               size="md"
               onClick={() => moveService("left")}
-              disabled={selectedRequestedServices.length === 0}
-              className={`${moveBtnBase} ${selectedRequestedServices.length !== 0 ? moveBtnActive : ""}`}
+              disabled={selectedRequestedIds.length === 0}
+              className={`${moveBtnBase} ${selectedRequestedIds.length !== 0 ? moveBtnActive : ""}`}
               aria-label="Move selected to available"
               title="Remove selected"
             >
@@ -180,8 +188,8 @@ export function ServicesRequestedSection({
               variant="secondary"
               size="md"
               onClick={() => moveService("allLeft")}
-              disabled={requestedServices.length === 0}
-              className={`${moveBtnBase} ${requestedServices.length !== 0 ? moveBtnActive : ""}`}
+              disabled={requestedItems.length === 0}
+              className={`${moveBtnBase} ${requestedItems.length !== 0 ? moveBtnActive : ""}`}
               aria-label="Move all to available"
               title="Remove all"
             >
@@ -200,26 +208,26 @@ export function ServicesRequestedSection({
             aria-multiselectable
             aria-label="Requested services"
           >
-            {requestedServices.length === 0 ? (
+            {requestedItems.length === 0 ? (
               <p className="m-0 py-2 text-rcn-muted text-sm">
                 None selected. Use the move buttons.
               </p>
             ) : (
-              requestedServices.map((service) => {
-                const isSelected = selectedRequestedServices.includes(service);
+              requestedItems.map((item) => {
+                const isSelected = selectedRequestedIds.includes(item._id);
                 return (
                   <div
-                    key={service}
+                    key={item._id}
                     role="option"
                     aria-selected={isSelected}
-                    onClick={() => toggleRequestedService(service)}
+                    onClick={() => toggleRequested(item._id)}
                     className={`px-2.5 py-2 rounded-lg cursor-pointer border transition-colors ${
                       isSelected
                         ? "bg-rcn-brand/15 border-rcn-brand/40 text-rcn-text"
                         : "border-transparent hover:bg-slate-50 text-rcn-text"
                     }`}
                   >
-                    <p className="m-0 text-sm font-normal break-words">{service}</p>
+                    <p className="m-0 text-sm font-normal break-words">{item.name}</p>
                   </div>
                 );
               })
@@ -236,22 +244,22 @@ export function ServicesRequestedSection({
           Other services: Please type
         </label>
         <textarea
-          value={otherServices}
-          onChange={(e) => setOtherServices(e.target.value)}
+          value={additional_speciality}
+          onChange={(e) => setValue("additional_speciality", e.target.value, { shouldValidate: true })}
           placeholder="Type any additional services needed..."
-          className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal min-h-[95px] resize-y focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+          className={inputClass}
         />
       </div>
 
       <div>
         <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
-          Other Information
+          Additional notes
         </label>
         <textarea
-          value={additionalNotes}
-          onChange={(e) => setAdditionalNotes(e.target.value)}
+          value={additional_notes}
+          onChange={(e) => setValue("additional_notes", e.target.value, { shouldValidate: true })}
           placeholder="Any additional referral notes..."
-          className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal min-h-[95px] resize-y focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+          className={inputClass}
         />
       </div>
     </section>

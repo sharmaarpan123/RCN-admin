@@ -13,10 +13,18 @@ import {
   SenderFormHeader,
   SenderInfoSection,
   ServicesRequestedSection,
-  type InsuranceBlock,
   type Receiver,
   type ReceiverRow,
 } from "@/components/staffComponents/newReferral";
+import {
+  getDepartmentIdsFromReceiverRows,
+  referralFormSchema,
+  type ReferralFormValues,
+} from "@/components/staffComponents/newReferral/referralFormSchema";
+import { postOrganizationReferralApi } from "@/apis/ApiCalls";
+import { checkResponse, catchAsync } from "@/utils/commonFunc";
+import { useForm, FormProvider } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
 import { useEffect, useState } from "react";
 
 const SECTION_IDS = [
@@ -32,42 +40,56 @@ const SECTION_IDS = [
   "form-actions",
 ];
 
+const defaultValues: ReferralFormValues = {
+  sender_name: "",
+  facility_name: "",
+  facility_address: "",
+  sender_email: "",
+  sender_phone_number: "",
+  sender_fax_number: "",
+  sender_dial_code: "+1",
+  receiver_rows: [],
+  speciality_ids: [],
+  additional_speciality: "",
+  additional_notes: "",
+  patient_first_name: "",
+  patient_last_name: "",
+  dob: "",
+  gender: "",
+  address_of_care: "",
+  patient_insurance_information: [{ payer: "", policy: "", plan_group: "", document: "" }],
+  patient_phone_number: "",
+  patient_dial_code: "+1",
+  primary_language: "",
+  social_security_number: "",
+  power_of_attorney: "",
+  other_information: "",
+  face_sheet: "",
+  medication_list: "",
+  discharge_summary: "",
+  wound_photos: [],
+  signed_order: "",
+  history_or_physical: "",
+  progress_notes: "",
+  other_documents: [],
+  primary_care_name: "",
+  primary_care_address: "",
+  primary_care_phone_number: "",
+  primary_care_dial_code: "+1",
+  primary_care_fax: "",
+  primary_care_email: "",
+  primary_care_npi: "",
+};
+
 export default function NewReferralPage() {
   const [stateFilter, setStateFilter] = useState("ALL");
-  const [receiverRows, setReceiverRows] = useState<ReceiverRow[]>([]);
-  const [requestedServices, setRequestedServices] = useState<string[]>([]);
-  const [insuranceBlocks, setInsuranceBlocks] = useState<InsuranceBlock[]>([
-    { id: 1, payer: "", policy: "", planGroup: "" },
-    { id: 2, payer: "", policy: "", planGroup: "" },
-  ]);
-  const [insuranceCount, setInsuranceCount] = useState(2);
   const [receiverModalOpen, setReceiverModalOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("sender-form");
 
-  const [lastName, setLastName] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [dob, setDob] = useState("");
-  const [gender, setGender] = useState("");
-  const [addressOfCare, setAddressOfCare] = useState("");
-  const [primaryPayer, setPrimaryPayer] = useState("");
-  const [primaryPolicy, setPrimaryPolicy] = useState("");
-  const [primaryPlanGroup, setPrimaryPlanGroup] = useState("");
-  const [phone, setPhone] = useState("");
-  const [language, setLanguage] = useState("");
-  const [ssn, setSsn] = useState("");
-  const [representative, setRepresentative] = useState("");
-  const [otherInfo, setOtherInfo] = useState("");
-  const [otherServices, setOtherServices] = useState("");
-  const [additionalNotes, setAdditionalNotes] = useState("");
-  const [pcpName, setPcpName] = useState("");
-  const [pcpAddress, setPcpAddress] = useState("");
-  const [pcpTel, setPcpTel] = useState("");
-  const [pcpFax, setPcpFax] = useState("");
-  const [pcpEmail, setPcpEmail] = useState("");
-  const [pcpNpi, setPcpNpi] = useState("");
-
-  const [selectedAvailableServices, setSelectedAvailableServices] = useState<string[]>([]);
-  const [selectedRequestedServices, setSelectedRequestedServices] = useState<string[]>([]);
+  const methods = useForm<ReferralFormValues>({
+    defaultValues,
+    resolver: yupResolver(referralFormSchema),
+  });
 
   useEffect(() => {
     const handleScroll = () => {
@@ -88,49 +110,75 @@ export default function NewReferralPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const addInsuranceBlock = () => {
-    setInsuranceCount((prev) => prev + 1);
-    setInsuranceBlocks((prev) => [
-      ...prev,
-      { id: insuranceCount + 1, payer: "", policy: "", planGroup: "" },
-    ]);
-  };
-
-  const removeInsuranceBlock = (id: number) => {
-    setInsuranceBlocks((prev) => prev.filter((block) => block.id !== id));
-  };
-
-  const updateInsuranceBlock = (
-    id: number,
-    field: keyof InsuranceBlock,
-    value: string
-  ) => {
-    setInsuranceBlocks((prev) =>
-      prev.map((block) => (block.id === id ? { ...block, [field]: value } : block))
+  const onSubmit = (values: ReferralFormValues) => {
+    const department_ids = getDepartmentIdsFromReceiverRows(
+      values.receiver_rows as ReceiverRow[]
     );
+    const payload = {
+      sender_name: values.sender_name,
+      facility_name: values.facility_name,
+      facility_address: values.facility_address,
+      sender_email: values.sender_email,
+      sender_phone_number: (values.sender_phone_number ?? "").replace(/\D/g, ""),
+      sender_fax_number: values.sender_fax_number,
+      sender_dial_code: values.sender_dial_code ?? "+1",
+      department_ids,
+      speciality_ids: values.speciality_ids,
+      additional_speciality: values.additional_speciality || undefined,
+      additional_notes: values.additional_notes || undefined,
+      patient_first_name: values.patient_first_name,
+      patient_last_name: values.patient_last_name,
+      dob: values.dob,
+      gender: values.gender,
+      address_of_care: values.address_of_care,
+      patient_insurance_information: values.patient_insurance_information.map((item) => ({
+        payer: item.payer,
+        policy: item.policy,
+        plan_group: item.plan_group,
+        ...(item.document ? { document: item.document } : {}),
+      })),
+      patient_phone_number: (values.patient_phone_number ?? "").replace(/\D/g, ""),
+      patient_dial_code: values.patient_dial_code ?? "+1",
+      primary_language: values.primary_language || undefined,
+      social_security_number: values.social_security_number || undefined,
+      power_of_attorney: values.power_of_attorney || undefined,
+      other_information: values.other_information || undefined,
+      face_sheet: values.face_sheet || undefined,
+      medication_list: values.medication_list || undefined,
+      discharge_summary: values.discharge_summary || undefined,
+      wound_photos: values.wound_photos?.length ? values.wound_photos : undefined,
+      signed_order: values.signed_order || undefined,
+      history_or_physical: values.history_or_physical || undefined,
+      progress_notes: values.progress_notes || undefined,
+      other_documents: values.other_documents?.length ? values.other_documents : undefined,
+      primary_care_name: values.primary_care_name || undefined,
+      primary_care_address: values.primary_care_address || undefined,
+      primary_care_phone_number: values.primary_care_phone_number || undefined,
+      primary_care_dial_code: values.primary_care_dial_code || undefined,
+      primary_care_fax: values.primary_care_fax || undefined,
+      primary_care_email: values.primary_care_email || undefined,
+      primary_care_npi: values.primary_care_npi || undefined,
+    };
+    catchAsync(async () => {
+      const res = await postOrganizationReferralApi(payload);
+      if (checkResponse({ res, showSuccess: true })) {
+        methods.reset(defaultValues);
+      }
+    })();
   };
 
   const handleAddReceiver = (receiver: Receiver) => {
-    // Optional: add custom receiver row when "Add Referral Receiver (if not listed)" is used
-    setReceiverRows((prev) => [
-      ...prev,
-      {
-        organizationId: `custom-${receiver.name}-${Date.now()}`,
-        organizationName: receiver.name,
-        branchId: null,
-        branchName: null,
-        departmentId: null,
-        departmentName: null,
-      },
-    ]);
-  };
-
-  const handleSubmit = () => {
-    alert("Demo: Referral submitted successfully!");
-  };
-
-  const handleSaveDraft = () => {
-    alert("Demo: Draft saved!");
+    const newRow: ReceiverRow = {
+      organizationId: `custom-${receiver.name}-${Date.now()}`,
+      organizationName: receiver.name,
+      branchId: null,
+      branchName: null,
+      departmentId: null,
+      departmentName: null,
+    };
+    methods.setValue("receiver_rows", [...methods.getValues("receiver_rows"), newRow], {
+      shouldValidate: true,
+    });
   };
 
   return (
@@ -140,92 +188,34 @@ export default function NewReferralPage() {
         onSectionChange={setActiveSection}
       />
 
-      <main>
-        <SenderFormHeader />
-        <SenderInfoSection />
+      <FormProvider {...methods}>
+        <form onSubmit={methods.handleSubmit(onSubmit)} noValidate>
+          <main>
+            <SenderFormHeader />
+            <SenderInfoSection />
 
-        <SelectReceiverSection
-          stateFilter={stateFilter}
-          setStateFilter={setStateFilter}
-          receiverRows={receiverRows}
-          setReceiverRows={setReceiverRows}
-          onOpenAddReceiver={() => setReceiverModalOpen(true)}
-        />
+            <SelectReceiverSection
+              stateFilter={stateFilter}
+              setStateFilter={setStateFilter}
+              onOpenAddReceiver={() => setReceiverModalOpen(true)}
+            />
 
-        <ServicesRequestedSection
-          requestedServices={requestedServices}
-          setRequestedServices={setRequestedServices}
-          selectedAvailableServices={selectedAvailableServices}
-          setSelectedAvailableServices={setSelectedAvailableServices}
-          selectedRequestedServices={selectedRequestedServices}
-          setSelectedRequestedServices={setSelectedRequestedServices}
-          otherServices={otherServices}
-          setOtherServices={setOtherServices}
-          additionalNotes={additionalNotes}
-          setAdditionalNotes={setAdditionalNotes}
-        />
+            <ServicesRequestedSection />
 
-        <PatientInfoSection
-          lastName={lastName}
-          setLastName={setLastName}
-          firstName={firstName}
-          setFirstName={setFirstName}
-          dob={dob}
-          setDob={setDob}
-          gender={gender}
-          setGender={setGender}
-          addressOfCare={addressOfCare}
-          setAddressOfCare={setAddressOfCare}
-        />
+            <PatientInfoSection />
 
-        <InsuranceInfoSection
-          primaryPayer={primaryPayer}
-          setPrimaryPayer={setPrimaryPayer}
-          primaryPolicy={primaryPolicy}
-          setPrimaryPolicy={setPrimaryPolicy}
-          primaryPlanGroup={primaryPlanGroup}
-          setPrimaryPlanGroup={setPrimaryPlanGroup}
-          insuranceBlocks={insuranceBlocks}
-          addInsuranceBlock={addInsuranceBlock}
-          removeInsuranceBlock={removeInsuranceBlock}
-          updateInsuranceBlock={updateInsuranceBlock}
-        />
+            <InsuranceInfoSection />
 
-        <AdditionalDetailsSection
-          phone={phone}
-          setPhone={setPhone}
-          language={language}
-          setLanguage={setLanguage}
-          ssn={ssn}
-          setSsn={setSsn}
-          representative={representative}
-          setRepresentative={setRepresentative}
-          otherInfo={otherInfo}
-          setOtherInfo={setOtherInfo}
-        />
+            <AdditionalDetailsSection />
 
-        <AttachmentsSection />
+            <AttachmentsSection />
 
-        <PcpInfoSection
-          pcpName={pcpName}
-          setPcpName={setPcpName}
-          pcpAddress={pcpAddress}
-          setPcpAddress={setPcpAddress}
-          pcpTel={pcpTel}
-          setPcpTel={setPcpTel}
-          pcpFax={pcpFax}
-          setPcpFax={setPcpFax}
-          pcpEmail={pcpEmail}
-          setPcpEmail={setPcpEmail}
-          pcpNpi={pcpNpi}
-          setPcpNpi={setPcpNpi}
-        />
+            <PcpInfoSection />
 
-        <FormActionsSection
-          onSaveDraft={handleSaveDraft}
-          onSubmit={handleSubmit}
-        />
-      </main>
+            <FormActionsSection />
+          </main>
+        </form>
+      </FormProvider>
 
       <AddReceiverModal
         isOpen={receiverModalOpen}

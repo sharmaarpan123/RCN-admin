@@ -310,3 +310,9 @@ export const postStaffDepartmentsByBranchesApi = (body: { branch_ids: string[] }
 /** GET /api/users/specialities — list specialities/services for staff (e.g. referral form). Params: page, limit. */
 export const getStaffSpecialitiesApi = (params?: { page?: number; limit?: number }) =>
   AxiosInstance.get("/api/users/specialities", { params });
+
+/** POST /api/organization/referral — create referral (staff portal). */
+export const postOrganizationReferralApi = (body: unknown) =>
+  AxiosInstance.post("/api/organization/referral", body);
+
+/** Request body for POST /api/organization/referral. Aligned with backend createOrUpdateReferralSchema (all optional). */

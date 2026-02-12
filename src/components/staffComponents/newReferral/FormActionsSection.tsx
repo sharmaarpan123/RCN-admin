@@ -1,32 +1,35 @@
 "use client";
 
 import React from "react";
+import { useFormContext } from "react-hook-form";
+import { Button } from "@/components";
+import type { ReferralFormValues } from "./referralFormSchema";
 
-interface FormActionsSectionProps {
-  onSaveDraft: () => void;
-  onSubmit: () => void;
-}
+export function FormActionsSection() {
+  const { formState: { isSubmitting } } = useFormContext<ReferralFormValues>();
 
-export function FormActionsSection({ onSaveDraft, onSubmit }: FormActionsSectionProps) {
   return (
     <section
       id="form-actions"
       className="flex gap-2.5 flex-wrap justify-end p-3 border border-rcn-border rounded-2xl bg-gradient-to-b from-white to-[#f6fbf7] shadow-rcn mb-3.5"
     >
-      <button
+      <Button
         type="button"
-        onClick={onSaveDraft}
+        variant="secondary"
+        size="md"
         className="border border-rcn-border bg-white px-3 py-2.5 rounded-xl font-extrabold text-xs shadow"
       >
         Save Draft
-      </button>
-      <button
-        type="button"
-        onClick={onSubmit}
+      </Button>
+      <Button
+        type="submit"
+        variant="primary"
+        size="md"
+        disabled={isSubmitting}
         className="border border-rcn-brand/30 bg-rcn-brand/10 text-rcn-accent-dark px-3 py-2.5 rounded-xl font-extrabold text-xs shadow"
       >
-        Submit Referral
-      </button>
+        {isSubmitting ? "Submitting…" : "Submit Referral"}
+      </Button>
     </section>
   );
 }

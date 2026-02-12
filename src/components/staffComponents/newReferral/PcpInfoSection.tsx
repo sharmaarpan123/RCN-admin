@@ -1,37 +1,28 @@
 "use client";
 
 import React from "react";
+import { useFormContext } from "react-hook-form";
 import { SectionHeader } from "./SectionHeader";
+import { PhoneInputField } from "@/components";
+import type { ReferralFormValues } from "./referralFormSchema";
 
-interface PcpInfoSectionProps {
-  pcpName: string;
-  setPcpName: (v: string) => void;
-  pcpAddress: string;
-  setPcpAddress: (v: string) => void;
-  pcpTel: string;
-  setPcpTel: (v: string) => void;
-  pcpFax: string;
-  setPcpFax: (v: string) => void;
-  pcpEmail: string;
-  setPcpEmail: (v: string) => void;
-  pcpNpi: string;
-  setPcpNpi: (v: string) => void;
-}
+const inputClass =
+  "w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12";
 
-export function PcpInfoSection({
-  pcpName,
-  setPcpName,
-  pcpAddress,
-  setPcpAddress,
-  pcpTel,
-  setPcpTel,
-  pcpFax,
-  setPcpFax,
-  pcpEmail,
-  setPcpEmail,
-  pcpNpi,
-  setPcpNpi,
-}: PcpInfoSectionProps) {
+export function PcpInfoSection() {
+  const { register, watch, setValue } = useFormContext<ReferralFormValues>();
+
+  const primaryCareDialCode = watch("primary_care_dial_code") ?? "";
+  const primaryCarePhone = watch("primary_care_phone_number") ?? "";
+  const primaryCarePhoneValue =
+    (primaryCareDialCode ?? "") + (primaryCarePhone ?? "").replace(/\D/g, "");
+
+  const handlePrimaryCarePhoneChange = (value: string, country: { dialCode: string }) => {
+    const code = String(country?.dialCode ?? "+1");
+    setValue("primary_care_dial_code", code, { shouldValidate: true });
+    setValue("primary_care_phone_number", value.slice(code.length) || "", { shouldValidate: true });
+  };
+
   return (
     <section
       id="pcp-info"
@@ -48,60 +39,53 @@ export function PcpInfoSection({
           <label className="block text-xs text-rcn-muted font-[850] mb-1.5">Name</label>
           <input
             type="text"
-            value={pcpName}
-            onChange={(e) => setPcpName(e.target.value)}
+            {...register("primary_care_name")}
             placeholder="PCP full name"
-            className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+            className={inputClass}
           />
         </div>
         <div className="md:col-span-2">
           <label className="block text-xs text-rcn-muted font-[850] mb-1.5">Address</label>
           <input
             type="text"
-            value={pcpAddress}
-            onChange={(e) => setPcpAddress(e.target.value)}
+            {...register("primary_care_address")}
             placeholder="Street, City, State, ZIP"
-            className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+            className={inputClass}
           />
         </div>
         <div>
           <label className="block text-xs text-rcn-muted font-[850] mb-1.5">Tel</label>
-          <input
-            type="tel"
-            value={pcpTel}
-            onChange={(e) => setPcpTel(e.target.value)}
+          <PhoneInputField
+            value={primaryCarePhoneValue}
+            onChange={handlePrimaryCarePhoneChange}
             placeholder="(xxx) xxx-xxxx"
-            className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
           />
         </div>
         <div>
           <label className="block text-xs text-rcn-muted font-[850] mb-1.5">Fax</label>
           <input
             type="tel"
-            value={pcpFax}
-            onChange={(e) => setPcpFax(e.target.value)}
+            {...register("primary_care_fax")}
             placeholder="(xxx) xxx-xxxx"
-            className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+            className={inputClass}
           />
         </div>
         <div>
           <label className="block text-xs text-rcn-muted font-[850] mb-1.5">Email</label>
           <input
             type="email"
-            value={pcpEmail}
-            onChange={(e) => setPcpEmail(e.target.value)}
+            {...register("primary_care_email")}
             placeholder="pcp@example.com"
-            className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+            className={inputClass}
           />
         </div>
         <div>
           <label className="block text-xs text-rcn-muted font-[850] mb-1.5">NPI</label>
           <input
             type="text"
-            value={pcpNpi}
-            onChange={(e) => setPcpNpi(e.target.value)}
+            {...register("primary_care_npi")}
             placeholder="NPI number"
-            className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+            className={inputClass}
           />
         </div>
       </div>

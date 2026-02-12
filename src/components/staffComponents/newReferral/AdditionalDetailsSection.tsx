@@ -1,33 +1,28 @@
 "use client";
 
 import React from "react";
+import { useFormContext } from "react-hook-form";
 import { SectionHeader } from "./SectionHeader";
+import { PhoneInputField } from "@/components";
+import type { ReferralFormValues } from "./referralFormSchema";
 
-interface AdditionalDetailsSectionProps {
-  phone: string;
-  setPhone: (v: string) => void;
-  language: string;
-  setLanguage: (v: string) => void;
-  ssn: string;
-  setSsn: (v: string) => void;
-  representative: string;
-  setRepresentative: (v: string) => void;
-  otherInfo: string;
-  setOtherInfo: (v: string) => void;
-}
+const inputClass =
+  "w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12";
 
-export function AdditionalDetailsSection({
-  phone,
-  setPhone,
-  language,
-  setLanguage,
-  ssn,
-  setSsn,
-  representative,
-  setRepresentative,
-  otherInfo,
-  setOtherInfo,
-}: AdditionalDetailsSectionProps) {
+export function AdditionalDetailsSection() {
+  const { register, watch, setValue, formState: { errors } } = useFormContext<ReferralFormValues>();
+
+  const patientDialCode = watch("patient_dial_code") ?? "";
+  const patientPhoneNumber = watch("patient_phone_number") ?? "";
+  const patientPhoneValue =
+    (patientDialCode ?? "") + (patientPhoneNumber ?? "").replace(/\D/g, "");
+
+  const handlePatientPhoneChange = (value: string, country: { dialCode: string }) => {
+    const code = String(country?.dialCode ?? "+1");
+    setValue("patient_dial_code", code, { shouldValidate: true });
+    setValue("patient_phone_number", value.slice(code.length) || "", { shouldValidate: true });
+  };
+
   return (
     <section
       id="additional-details"
@@ -62,13 +57,15 @@ export function AdditionalDetailsSection({
           <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
             Phone Number <span className="text-rcn-danger font-black">*</span>
           </label>
-          <input
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            required
-            className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+          <PhoneInputField
+            value={patientPhoneValue}
+            onChange={handlePatientPhoneChange}
+            hasError={!!errors.patient_phone_number}
+            placeholder="(xxx) xxx-xxxx"
           />
+          {errors.patient_phone_number && (
+            <p className="text-xs text-rcn-danger mt-1 m-0">{errors.patient_phone_number.message}</p>
+          )}
         </div>
         <div>
           <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
@@ -76,9 +73,8 @@ export function AdditionalDetailsSection({
           </label>
           <input
             type="text"
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-            className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+            {...register("primary_language")}
+            className={inputClass}
           />
         </div>
         <div>
@@ -87,21 +83,19 @@ export function AdditionalDetailsSection({
           </label>
           <input
             type="text"
-            value={ssn}
-            onChange={(e) => setSsn(e.target.value)}
+            {...register("social_security_number")}
             placeholder="XXX-XX-XXXX"
-            className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+            className={inputClass}
           />
         </div>
         <div>
           <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
-            Patient-selected representative or power of attorney
+            Power of attorney
           </label>
           <input
             type="text"
-            value={representative}
-            onChange={(e) => setRepresentative(e.target.value)}
-            className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+            {...register("power_of_attorney")}
+            className={inputClass}
           />
         </div>
         <div className="md:col-span-2">
@@ -109,10 +103,9 @@ export function AdditionalDetailsSection({
             Other Information
           </label>
           <textarea
-            value={otherInfo}
-            onChange={(e) => setOtherInfo(e.target.value)}
+            {...register("other_information")}
             placeholder="Additional details visible after receiver unlock..."
-            className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal min-h-[95px] resize-y focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+            className={`${inputClass} min-h-[95px] resize-y`}
           />
         </div>
       </div>

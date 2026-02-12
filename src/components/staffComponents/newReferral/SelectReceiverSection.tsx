@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useCallback } from "react";
+import { useFormContext } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import CustomAsyncSelect from "@/components/CustomAsyncSelect";
 import CustomReactSelect from "@/components/CustomReactSelect";
 import { SectionHeader } from "./SectionHeader";
 import type { OrgBranchDeptOption, ReceiverRow } from "./types";
+import type { ReferralFormValues } from "./referralFormSchema";
 import {
   getStaffOrganizationsApi,
   getStatesApi,
@@ -14,6 +16,7 @@ import {
 } from "@/apis/ApiCalls";
 import { checkResponse } from "@/utils/commonFunc";
 import { Button } from "@/components";
+import defaultAdminQueryKeys from "@/utils/adminQueryKeys";
 
 /** Normalize API list to options. Supports { _id, name } or { id, name }. */
 function toOptions(list: unknown[]): OrgBranchDeptOption[] {
@@ -31,25 +34,24 @@ function toOptions(list: unknown[]): OrgBranchDeptOption[] {
 interface SelectReceiverSectionProps {
   stateFilter: string;
   setStateFilter: (v: string) => void;
-  receiverRows: ReceiverRow[];
-  setReceiverRows: React.Dispatch<React.SetStateAction<ReceiverRow[]>>;
   onOpenAddReceiver: () => void;
 }
 
 export function SelectReceiverSection({
   stateFilter,
   setStateFilter,
-  receiverRows,
-  setReceiverRows,
   onOpenAddReceiver,
 }: SelectReceiverSectionProps) {
+  const { watch, setValue } = useFormContext<ReferralFormValues>();
+  const receiverRows = (watch("receiver_rows") ?? []) as ReceiverRow[];
+
   const selectedOrgOptions: OrgBranchDeptOption[] = receiverRows.map((r) => ({
     value: r.organizationId,
     label: r.organizationName,
   }));
 
   const { data: stateOptionsFromApi = [] } = useQuery({
-    queryKey: ["states"],
+    queryKey: [...defaultAdminQueryKeys.statesList],
     queryFn: async () => {
       const res = await getStatesApi();
       if (!checkResponse({ res })) return [];
@@ -93,9 +95,10 @@ export function SelectReceiverSection({
 
   const handleOrganizationChange = useCallback(
     (options: OrgBranchDeptOption[]) => {
-      setReceiverRows((prev) => {
-        const next: ReceiverRow[] = options.map((opt) => {
-          const existing = prev.find((r) => r.organizationId === opt.value);
+      setValue(
+        "receiver_rows",
+        options.map((opt) => {
+          const existing = receiverRows.find((r) => r.organizationId === opt.value);
           return {
             organizationId: opt.value,
             organizationName: opt.label,
@@ -104,50 +107,58 @@ export function SelectReceiverSection({
             departmentId: existing?.departmentId ?? null,
             departmentName: existing?.departmentName ?? null,
           };
-        });
-        return next;
-      });
+        }),
+        { shouldValidate: true }
+      );
     },
-    [setReceiverRows]
+    [receiverRows, setValue]
   );
 
   const removeRow = useCallback(
     (organizationId: string) => {
-      setReceiverRows((prev) => prev.filter((r) => r.organizationId !== organizationId));
+      setValue(
+        "receiver_rows",
+        receiverRows.filter((r) => r.organizationId !== organizationId),
+        { shouldValidate: true }
+      );
     },
-    [setReceiverRows]
+    [receiverRows, setValue]
   );
 
   const updateRowBranch = useCallback(
     (organizationId: string, branchId: string, branchName: string) => {
-      setReceiverRows((prev) =>
-        prev.map((r) =>
+      setValue(
+        "receiver_rows",
+        receiverRows.map((r) =>
           r.organizationId === organizationId
             ? {
-                ...r,
-                branchId,
-                branchName,
-                departmentId: null,
-                departmentName: null,
-              }
+              ...r,
+              branchId,
+              branchName,
+              departmentId: null,
+              departmentName: null,
+            }
             : r
-        )
+        ),
+        { shouldValidate: true }
       );
     },
-    [setReceiverRows]
+    [receiverRows, setValue]
   );
 
   const updateRowDepartment = useCallback(
     (organizationId: string, departmentId: string, departmentName: string) => {
-      setReceiverRows((prev) =>
-        prev.map((r) =>
+      setValue(
+        "receiver_rows",
+        receiverRows.map((r) =>
           r.organizationId === organizationId
             ? { ...r, departmentId, departmentName }
             : r
-        )
+        ),
+        { shouldValidate: true }
       );
     },
-    [setReceiverRows]
+    [receiverRows, setValue]
   );
 
   return (

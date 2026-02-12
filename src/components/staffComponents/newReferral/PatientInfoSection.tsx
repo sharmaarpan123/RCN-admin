@@ -1,33 +1,15 @@
 "use client";
 
-import React from "react";
+import { useFormContext } from "react-hook-form";
 import { SectionHeader } from "./SectionHeader";
+import type { ReferralFormValues } from "./referralFormSchema";
 
-interface PatientInfoSectionProps {
-  lastName: string;
-  setLastName: (v: string) => void;
-  firstName: string;
-  setFirstName: (v: string) => void;
-  dob: string;
-  setDob: (v: string) => void;
-  gender: string;
-  setGender: (v: string) => void;
-  addressOfCare: string;
-  setAddressOfCare: (v: string) => void;
-}
+export function PatientInfoSection() {
+  const { register, formState: { errors } } = useFormContext<ReferralFormValues>();
 
-export function PatientInfoSection({
-  lastName,
-  setLastName,
-  firstName,
-  setFirstName,
-  dob,
-  setDob,
-  gender,
-  setGender,
-  addressOfCare,
-  setAddressOfCare,
-}: PatientInfoSectionProps) {
+  const inputClass =
+    "w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12";
+
   return (
     <section
       id="patient-info"
@@ -46,11 +28,12 @@ export function PatientInfoSection({
           </label>
           <input
             type="text"
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-            required
-            className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+            {...register("patient_last_name")}
+            className={inputClass}
           />
+          {errors.patient_last_name && (
+            <p className="text-xs text-rcn-danger mt-1 m-0">{errors.patient_last_name.message}</p>
+          )}
         </div>
         <div>
           <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
@@ -58,11 +41,12 @@ export function PatientInfoSection({
           </label>
           <input
             type="text"
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-            required
-            className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+            {...register("patient_first_name")}
+            className={inputClass}
           />
+          {errors.patient_first_name && (
+            <p className="text-xs text-rcn-danger mt-1 m-0">{errors.patient_first_name.message}</p>
+          )}
         </div>
         <div>
           <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
@@ -70,28 +54,25 @@ export function PatientInfoSection({
           </label>
           <input
             type="date"
-            value={dob}
-            onChange={(e) => setDob(e.target.value)}
-            required
-            className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+            {...register("dob")}
+            className={inputClass}
           />
+          {errors.dob && (
+            <p className="text-xs text-rcn-danger mt-1 m-0">{errors.dob.message}</p>
+          )}
         </div>
         <div>
           <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
             Gender <span className="text-rcn-danger font-black">*</span>
           </label>
-          <select
-            value={gender}
-            onChange={(e) => setGender(e.target.value)}
-            required
-            className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
-          >
-            <option value="" disabled>
-              Select
-            </option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
+          <select {...register("gender")} className={inputClass}>
+            <option value="">Select</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
           </select>
+          {errors.gender && (
+            <p className="text-xs text-rcn-danger mt-1 m-0">{errors.gender.message}</p>
+          )}
         </div>
         <div className="md:col-span-2">
           <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
@@ -99,12 +80,13 @@ export function PatientInfoSection({
           </label>
           <input
             type="text"
-            value={addressOfCare}
-            onChange={(e) => setAddressOfCare(e.target.value)}
+            {...register("address_of_care")}
             placeholder="Street, City, State, ZIP"
-            required
-            className="w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12"
+            className={inputClass}
           />
+          {errors.address_of_care && (
+            <p className="text-xs text-rcn-danger mt-1 m-0">{errors.address_of_care.message}</p>
+          )}
         </div>
       </div>
     </section>
