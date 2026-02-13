@@ -8,67 +8,13 @@ import { getOrganizationReferralByIdApi, postOrganizationReferralPaymentSummaryA
 import { checkResponse, catchAsync } from "@/utils/commonFunc";
 import defaultQueryKeys from "@/utils/staffQueryKeys";
 import type { ReferralByIdApi, Company, ReceiverInstance, ChatMsg, Comm } from "@/app/staff-portal/inbox/types";
-import { fmtDate, pillClass, pillLabel, scrollToId } from "@/app/staff-portal/inbox/helpers";
+import { fmtDate, scrollToId } from "@/app/staff-portal/inbox/helpers";
 import { DEMO_COMPANIES } from "@/app/staff-portal/inbox/demo-data";
-import { ForwardModal } from "@/components/staffComponents/ForwardModal";
-import { ChatInput } from "@/components/staffComponents/inbox/sender/view/ChatInput";
-import { DocUploadInline } from "@/components/staffComponents/inbox/sender/view/DocUploadInline";
-import Modal from "@/components/Modal";
-
-const BOX_GRAD = "linear-gradient(90deg, rgba(15,107,58,.18), rgba(31,138,76,.12), rgba(31,138,76,.06))";
-
-/** Payment summary response from POST /api/organization/referral/:id/payment-summary. */
-interface PaymentSummaryData {
-  referral_id?: string;
-  total_departments?: number;
-  total_guest_organizations?: number;
-  total_recipients?: number;
-  source?: string;
-  amount?: number;
-  currency?: string | null;
-  breakdown?: { message?: string; [key: string]: unknown };
-}
-
-/** Flatten API documents object into list of { label, url } for display. Use as-is. */
-function documentsToList(documents: Record<string, unknown> | undefined): { label: string; url: string }[] {
-  if (!documents || typeof documents !== "object") return [];
-  const out: { label: string; url: string }[] = [];
-  const entries: [string, string][] = [
-    ["Face Sheet", "face_sheet"],
-    ["Medication List", "medication_list"],
-    ["Discharge Summary", "discharge_summary"],
-    ["Signed Order", "signed_order"],
-    ["History & Physical", "history_or_physical"],
-    ["Progress Notes", "progress_notes"],
-  ];
-  for (const [label, key] of entries) {
-    const v = documents[key];
-    if (typeof v === "string" && v) out.push({ label, url: v });
-    if (Array.isArray(v) && v.length) for (let i = 0; i < v.length; i++) out.push({ label: `${label} ${i + 1}`, url: typeof v[i] === "string" ? v[i] : "" });
-  }
-  const wound = documents.wound_photos;
-  if (Array.isArray(wound)) for (let i = 0; i < wound.length; i++) out.push({ label: `Wound Photo ${i + 1}`, url: typeof wound[i] === "string" ? wound[i] : "" });
-  else if (typeof wound === "string" && wound) out.push({ label: "Wound Photo", url: wound });
-  const other = documents.other_documents;
-  if (Array.isArray(other)) for (let i = 0; i < other.length; i++) out.push({ label: `Other Document ${i + 1}`, url: typeof other[i] === "string" ? other[i] : "" });
-  else if (typeof other === "string" && other) out.push({ label: "Other Document", url: other });
-  return out;
-}
-
-/** Build receivers list from API department_statuses + _localReceivers (as-is). */
-function receiversFromData(data: ReferralByIdApi): ReceiverInstance[] {
-  const dept = (data.department_statuses ?? []) as { department_id?: string; status?: string; organization_name?: string; name?: string; updated_at?: string }[];
-  const fromApi = dept.map((d, i) => ({
-    receiverId: d.department_id ?? `dept-${i}`,
-    name: d.organization_name ?? (d as { name?: string }).name ?? "Receiver",
-    email: "",
-    status: d.status ?? "PENDING",
-    paidUnlocked: false,
-    updatedAt: d.updated_at ? new Date(d.updated_at) : new Date(),
-    rejectReason: "",
-  }));
-  return [...fromApi, ...(data._localReceivers ?? [])];
-}
+import { documentsToList, receiversFromData, type PaymentSummaryData } from "@/components/staffComponents/inbox/sender/view/senderViewHelpers";
+import type { DocRow } from "@/components/staffComponents/inbox/sender/view/senderViewHelpers";
+import { SenderDetailModals } from "@/components/staffComponents/inbox/sender/view/SenderDetailModals";
+import { SenderDetailSections } from "@/components/staffComponents/inbox/sender/view/SenderDetailSections";
+import { SenderDraftPaymentSection } from "@/components/staffComponents/inbox/sender/view/SenderDraftPaymentSection";
 
 export default function SenderDetailPage() {
   const params = useParams<{ id: string }>();
@@ -147,7 +93,6 @@ function SenderDetailContent({ data }: { data: ReferralByIdApi }) {
 
   const apiDocsList = documentsToList(data.documents as Record<string, unknown> | undefined);
   const visibleApiDocs = apiDocsList.filter((d) => !overlay.deletedDocLabels.has(d.label));
-  type DocRow = { label: string; url: string; type: string; kind: "api" | "local"; localIndex?: number };
   const displayDocRows: DocRow[] = [
     ...visibleApiDocs.map((d) => ({ label: d.label, url: d.url, type: "Clinical", kind: "api" as const })),
     ...overlay.extraDocs.map((d, i) => ({ label: d.label, url: d.url, type: d.type, kind: "local" as const, localIndex: i })),
@@ -251,12 +196,8 @@ function SenderDetailContent({ data }: { data: ReferralByIdApi }) {
     ...(isDraft ? [{ id: "secPayment", label: "Payment & Send" }] : []),
   ];
 
-  const p = data.patient ?? {};
-  const ins = data.patient_insurance_information ?? [];
-  const primary = ins[0];
-  const addPatient = (data.additional_patient ?? {}) as Record<string, string>;
   const sentAt = data.sent_at ? new Date(data.sent_at) : new Date(data.createdAt ?? 0);
-
+  const p = data.patient ?? {};
   const chatInputSelected = { receivers: allReceivers };
 
   return (
@@ -300,391 +241,52 @@ function SenderDetailContent({ data }: { data: ReferralByIdApi }) {
           </div>
 
           <div className="flex flex-col gap-3.5">
-            {/* Basic Info — from data as-is */}
-            <div id="secBasic" className="border border-rcn-border/60 bg-white/95 rounded-[18px] p-3.5 shadow-[0_12px_26px_rgba(2,6,23,.07)] relative overflow-hidden border-l-4 border-l-rcn-brand scroll-mt-[120px]">
-              <div className="-m-3.5 -mt-3.5 mb-3 p-3 border-b border-rcn-border/60 rounded-t-[18px] flex items-center justify-between gap-2.5" style={{ background: BOX_GRAD }}>
-                <h4 className="m-0 text-[13px] font-semibold tracking-wide flex items-center gap-2.5">
-                  <span className="w-[30px] h-[30px] rounded-xl flex items-center justify-center border border-rcn-brand/25 bg-white/70 shadow">👤</span>
-                  Basic Information (Always Visible)
-                </h4>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border border-rcn-brand/25 bg-white/70 text-rcn-accent-dark">Always Visible</span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {[
-                  ["Last Name", p.patient_last_name],
-                  ["First Name", p.patient_first_name],
-                  ["Date of Birth (DOB)", p.dob],
-                  ["Gender", p.gender],
-                  ["Address of Care", p.address_of_care],
-                  ["Services Requested", (data.speciality_ids ?? []).join(", ")],
-                  ["Primary Insurance", primary ? `${primary.payer ?? ""} • Policy: ${primary.policy ?? ""}` : ""],
-                  ["Additional Insurances", ins.length > 1 ? ins.slice(1).map((x) => `${x.payer ?? ""} • ${x.policy ?? ""}`).join(" | ") : "None"],
-                ].map(([label, val]) => (
-                  <div key={String(label)}>
-                    <label className="block text-[11px] text-rcn-muted font-black mb-1">{label}</label>
-                    <div className="text-[13px] font-[850] text-rcn-text leading-tight p-2.5 border border-dashed border-slate-300/75 rounded-xl bg-slate-50/55">{val ?? "—"}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Receivers & Status */}
-            <div id="secReceivers" className="border border-rcn-border/60 bg-white/95 rounded-[18px] p-3.5 shadow relative overflow-hidden border-l-4 border-l-rcn-brand scroll-mt-[120px]">
-              <div className="-m-3.5 -mt-3.5 mb-3 p-3 border-b border-rcn-border/60 rounded-t-[18px] flex items-center justify-between" style={{ background: BOX_GRAD }}>
-                <h4 className="m-0 text-[13px] font-semibold flex items-center gap-2.5">
-                  <span className="w-[30px] h-[30px] rounded-xl flex items-center justify-center border border-rcn-brand/25 bg-white/70 shadow">📬</span>
-                  Receivers & Status
-                </h4>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border border-rcn-brand/25 bg-white/70 text-rcn-accent-dark">Message at any status</span>
-              </div>
-              <div className="overflow-hidden rounded-[14px] border border-slate-200 bg-white">
-                <table className="w-full border-collapse text-xs">
-                  <thead>
-                    <tr>
-                      <th className="text-left p-2.5 bg-rcn-brand/10 text-rcn-text font-black text-[11px] uppercase tracking-wide">Receiver</th>
-                      <th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">Status</th>
-                      <th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">Last Update</th>
-                      <th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">Payment</th>
-                      <th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {allReceivers.map((rx) => (
-                      <tr key={rx.receiverId} className="border-t border-slate-200">
-                        <td className="p-2.5 align-top">
-                          <strong>{rx.name}</strong>
-                          {rx.email && <div className="text-rcn-muted text-xs">{rx.email}</div>}
-                          {rx.status === "REJECTED" && rx.rejectReason && <div className="text-rcn-muted text-xs">Reason: {rx.rejectReason}</div>}
-                          {rx.servicesRequestedOverride?.length && <div className="text-rcn-muted text-xs">Services override: {rx.servicesRequestedOverride.join(", ")}</div>}
-                        </td>
-                        <td className="p-2.5"><span className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border ${pillClass(rx.status)}`}>{pillLabel(rx.status)}</span></td>
-                        <td className="p-2.5">{fmtDate(rx.updatedAt)}</td>
-                        <td className="p-2.5">{rx.paidUnlocked ? <span className={`inline-flex px-2.5 py-1.5 rounded-full text-[11px] font-black border ${pillClass("PAID")}`}>Paid</span> : <span className={`inline-flex px-2.5 py-1.5 rounded-full text-[11px] font-black border ${pillClass("PENDING")}`}>Not paid</span>}</td>
-                        <td className="p-2.5">
-                          <button type="button" onClick={() => { setChatReceiverSelection((s) => ({ ...s, [refId]: rx.receiverId })); setTimeout(() => scrollToId("secChat"), 0); }} className="border border-rcn-brand/25 bg-rcn-brand/10 text-rcn-accent-dark px-2 py-1.5 rounded-xl font-extrabold text-xs shadow mr-1">Chat</button>
-                          <button type="button" onClick={() => alert(`Demo: reminder sent to ${rx.name}`)} className="border border-slate-200 bg-white px-2 py-1.5 rounded-xl font-extrabold text-xs shadow">Reminder</button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Documents — from data.documents as-is + local extra */}
-            <div id="secDocs" className="border border-rcn-border/60 bg-white/95 rounded-[18px] p-3.5 shadow relative overflow-hidden border-l-4 border-l-rcn-brand scroll-mt-[120px]">
-              <div className="-m-3.5 -mt-3.5 mb-3 p-3 border-b border-rcn-border/60 rounded-t-[18px] flex items-center justify-between" style={{ background: BOX_GRAD }}>
-                <h4 className="m-0 text-[13px] font-semibold flex items-center gap-2.5">
-                  <span className="w-[30px] h-[30px] rounded-xl flex items-center justify-center border border-rcn-brand/25 bg-white/70 shadow">📎</span>
-                  Attached Documents (From Sender)
-                </h4>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border border-rcn-brand/25 bg-white/70 text-rcn-accent-dark">Downloadable</span>
-              </div>
-              <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-3 align-top">
-                <div className="overflow-hidden rounded-[14px] border border-slate-200 bg-white">
-                  {displayDocRows.length > 0 ? (
-                    <table className="w-full border-collapse text-xs">
-                      <thead>
-                        <tr>
-                          <th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">Document</th>
-                          <th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">Type</th>
-                          <th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">Download</th>
-                          <th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">Manage</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {displayDocRows.map((d, idx) => (
-                          <tr key={idx} className="border-t border-slate-200">
-                            <td className="p-2.5"><strong>{d.label}</strong>{d.url && <div className="text-rcn-muted text-xs">File: {d.url}</div>}</td>
-                            <td className="p-2.5">{d.type}</td>
-                            <td className="p-2.5"><button type="button" onClick={() => alert(`Demo: download ${d.label}`)} className="border border-slate-200 bg-white px-2 py-1.5 rounded-xl text-xs font-extrabold shadow">Download</button></td>
-                            <td className="p-2.5"><button type="button" onClick={() => openDeleteDocModal(d.kind, d.label, d.localIndex ?? 0)} className="border border-red-200 bg-red-50 text-red-700 px-2 py-1.5 rounded-xl text-xs font-extrabold shadow">Delete</button></td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  ) : (
-                    <div className="p-3 text-rcn-muted text-sm">No documents attached.</div>
-                  )}
-                </div>
-                <DocUploadInline refId={refId} onAdd={addDoc} />
-              </div>
-            </div>
-
-            {/* Additional Info — from data.additional_patient as-is */}
-            <div id="secAdditional" className="border border-rcn-border/60 bg-white/95 rounded-[18px] p-3.5 shadow relative overflow-hidden border-l-4 border-l-rcn-brand scroll-mt-[120px]">
-              <div className="-m-3.5 -mt-3.5 mb-3 p-3 border-b border-rcn-border/60 rounded-t-[18px] flex items-center justify-between" style={{ background: BOX_GRAD }}>
-                <h4 className="m-0 text-[13px] font-semibold flex items-center gap-2.5">
-                  <span className="w-[30px] h-[30px] rounded-xl flex items-center justify-center border border-rcn-brand/25 bg-white/70 shadow">🔒</span>
-                  Additional Patient Information
-                </h4>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border border-rcn-brand/25 bg-white/70 text-rcn-accent-dark">Visible Once Payment Is Completed</span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {[
-                  ["Phone Number (Must)", addPatient.phone_number],
-                  ["Primary Language", addPatient.primary_language],
-                  ["Representative / Power of Attorney", addPatient.power_of_attorney],
-                  ["Social Security Number", addPatient.social_security_number],
-                  ["Other Information", addPatient.other_information ?? "—"],
-                ].map(([label, val], i) => (
-                  <div key={i} className={i === 4 ? "sm:col-span-2" : ""}>
-                    <label className="block text-[11px] text-rcn-muted font-black mb-1">{label}</label>
-                    <div className="text-[13px] font-[850] text-rcn-text leading-tight p-2.5 border border-dashed border-slate-300/75 rounded-xl bg-slate-50/55">{val ?? "—"}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Chat */}
-            <div id="secChat" className="border border-rcn-border/60 bg-white/95 rounded-[18px] p-3.5 shadow relative overflow-hidden border-l-4 border-l-rcn-brand scroll-mt-[120px]">
-              <div className="-m-3.5 -mt-3.5 mb-3 p-3 border-b border-rcn-border/60 rounded-t-[18px] flex items-center justify-between" style={{ background: BOX_GRAD }}>
-                <h4 className="m-0 text-[13px] font-semibold flex items-center gap-2.5">
-                  <span className="w-[30px] h-[30px] rounded-xl flex items-center justify-center border border-rcn-brand/25 bg-white/70 shadow">💬</span>
-                  Chat with Receiver
-                </h4>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border border-rcn-brand/25 bg-white/70 text-rcn-accent-dark">Messaging Enabled</span>
-              </div>
-              <div className="border border-rcn-brand/20 rounded-[14px] bg-rcn-brand/5 overflow-hidden">
-                <div className="flex gap-2.5 items-center justify-between p-2.5 bg-rcn-brand/10 border-b border-rcn-brand/20">
-                  <span className="text-rcn-muted text-xs font-black">Thread</span>
-                  {allReceivers.length > 1 ? (
-                    <select value={chatReceiverId ?? ""} onChange={(e) => setChatReceiverSelection((s) => ({ ...s, [refId]: e.target.value }))} className="min-w-[220px] border border-slate-200 bg-white rounded-xl py-2 px-2.5 text-xs font-normal outline-none" aria-label="Select receiver chat thread">
-                      {allReceivers.map((rx) => (
-                        <option key={rx.receiverId} value={rx.receiverId}>{rx.name}</option>
-                      ))}
-                    </select>
-                  ) : (
-                    <span className="text-rcn-muted text-xs">{allReceivers[0]?.name ?? "—"}</span>
-                  )}
-                </div>
-                <div ref={chatBodyRef} className="max-h-[280px] overflow-auto p-2.5 flex flex-col gap-2.5">
-                  {thread.length ? (
-                    [...thread]
-                      .sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime())
-                      .map((m, i) => {
-                        const mine = m.fromRole === "SENDER";
-                        return (
-                          <div key={i} className={`flex gap-2.5 items-end ${mine ? "justify-end" : ""}`}>
-                            <div className={`max-w-[78%] border rounded-[14px] p-2.5 shadow-[0_8px_18px_rgba(2,6,23,.06)] ${mine ? "bg-rcn-brand/10 border-rcn-brand/20" : "border-slate-200 bg-white"}`}>
-                              <div className="text-[11px] text-rcn-muted font-black mb-1 flex gap-2 flex-wrap justify-between">{m.fromName} <span>{fmtDate(m.at)}</span></div>
-                              <div className="text-[13px] font-[850] text-rcn-text leading-snug whitespace-pre-wrap">{m.text}</div>
-                            </div>
-                          </div>
-                        );
-                      })
-                  ) : (
-                    <div className="p-2 text-rcn-muted font-black text-sm">No messages yet. Start the chat below.</div>
-                  )}
-                </div>
-                <ChatInput selected={chatInputSelected} chatReceiverId={chatReceiverId} onSend={sendChatMessage} role="SENDER" />
-              </div>
-            </div>
-
-            {/* Activity Log */}
-            <div id="secLog" className="border border-rcn-border/60 bg-white/95 rounded-[18px] p-3.5 shadow relative overflow-hidden border-l-4 border-l-rcn-brand scroll-mt-[120px]">
-              <div className="-m-3.5 -mt-3.5 mb-3 p-3 border-b border-rcn-border/60 rounded-t-[18px] flex items-center justify-between" style={{ background: BOX_GRAD }}>
-                <h4 className="m-0 text-[13px] font-semibold flex items-center gap-2.5">
-                  <span className="w-[30px] h-[30px] rounded-xl flex items-center justify-center border border-rcn-brand/25 bg-white/70 shadow">🕒</span>
-                  Communication & Activity Log
-                </h4>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border border-rcn-brand/25 bg-white/70 text-rcn-accent-dark">Audit Trail</span>
-              </div>
-              {overlay.comms.length > 0 ? (
-                <div className="overflow-hidden rounded-[14px] border border-slate-200 bg-white">
-                  <table className="w-full border-collapse text-xs">
-                    <thead><tr><th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">Time</th><th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">Who</th><th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">Message</th></tr></thead>
-                    <tbody>
-                      {[...overlay.comms].sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime()).map((c, i) => (
-                        <tr key={i} className="border-t border-slate-200">
-                          <td className="p-2.5">{fmtDate(c.at)}</td>
-                          <td className="p-2.5"><strong>{c.who}</strong></td>
-                          <td className="p-2.5">{c.msg}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="text-rcn-muted font-black text-sm">No activity yet.</div>
-              )}
-            </div>
-
-            {/* Payment & send (draft only) */}
+            <SenderDetailSections
+              data={data}
+              overlayComms={overlay.comms}
+              refId={refId}
+              allReceivers={allReceivers}
+              chatReceiverId={chatReceiverId}
+              thread={thread}
+              chatBodyRef={chatBodyRef}
+              displayDocRows={displayDocRows}
+              setChatReceiverSelection={setChatReceiverSelection}
+              openDeleteDocModal={openDeleteDocModal}
+              addDoc={addDoc}
+              sendChatMessage={sendChatMessage}
+              chatInputSelected={chatInputSelected}
+            />
             {isDraft && (
-              <div id="secPayment" className="border border-rcn-border/60 bg-white/95 rounded-[18px] p-3.5 shadow relative overflow-hidden border-l-4 border-l-rcn-brand scroll-mt-[120px]">
-                <div className="-m-3.5 -mt-3.5 mb-3 p-3 border-b border-rcn-border/60 rounded-t-[18px] flex items-center justify-between" style={{ background: BOX_GRAD }}>
-                  <h4 className="m-0 text-[13px] font-semibold flex items-center gap-2.5">
-                    <span className="w-[30px] h-[30px] rounded-xl flex items-center justify-center border border-rcn-brand/25 bg-white/70 shadow">💳</span>
-                    Payment & Send Referral
-                  </h4>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border border-rcn-brand/25 bg-white/70 text-rcn-accent-dark">Draft</span>
-                </div>
-                <p className="text-rcn-muted text-xs font-[850] mb-3">Choose who pays for this referral. Receiver can pay to unlock (referral sent for free) or you can pay as sender.</p>
-                <div className="space-y-3">
-                  <label className="flex items-center gap-2.5 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="paymentSource"
-                      checked={paymentSource === "free"}
-                      onChange={() => setPaymentSource("free")}
-                      className="rounded-full border-rcn-border"
-                    />
-                    <span className="text-sm font-[850]">Receiver pays</span>
-                    <span className="text-rcn-muted text-xs">(Referral sent for free; receiver pays to unlock patient info)</span>
-                  </label>
-                  <label className="flex items-center gap-2.5 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="paymentSource"
-                      checked={paymentSource === "payment"}
-                      onChange={() => setPaymentSource("payment")}
-                      className="rounded-full border-rcn-border"
-                    />
-                    <span className="text-sm font-[850]">Sender pays</span>
-                    <span className="text-rcn-muted text-xs">(You pay for the referral)</span>
-                  </label>
-                  {paymentSource === "payment" && (
-                    <div className="pl-6">
-                      <label className="block text-xs text-rcn-muted mb-1">Payment method ID</label>
-                      <input
-                        type="text"
-                        value={paymentMethodId}
-                        onChange={(e) => setPaymentMethodId(e.target.value)}
-                        placeholder="e.g. 69872818b7498eecd4b4e4af"
-                        className="w-full max-w-md px-2.5 py-2 text-sm rounded-xl border border-rcn-border bg-white focus:outline-none focus:ring-2 focus:ring-rcn-accent/30"
-                      />
-                    </div>
-                  )}
-                  <div className="pt-2">
-                    <button
-                      type="button"
-                      onClick={() => fetchPaymentSummary()}
-                      disabled={isPaymentSummaryPending || (paymentSource === "payment" && !paymentMethodId.trim())}
-                      className="border border-rcn-brand/30 bg-rcn-brand/10 text-rcn-accent-dark px-4 py-2.5 rounded-xl font-extrabold text-sm shadow hover:bg-rcn-brand/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isPaymentSummaryPending ? "Loading…" : "Get payment summary & send referral"}
-                    </button>
-                  </div>
-                </div>
-              </div>
+              <SenderDraftPaymentSection
+                paymentSource={paymentSource}
+                setPaymentSource={setPaymentSource}
+                paymentMethodId={paymentMethodId}
+                setPaymentMethodId={setPaymentMethodId}
+                onGetSummary={() => fetchPaymentSummary()}
+                isPending={isPaymentSummaryPending}
+              />
             )}
           </div>
         </div>
       </div>
 
-      <ForwardModal
-        isOpen={forwardOpen}
-        onClose={() => { setForwardOpen(false); setForwardRefId(null); setForwardSelectedCompany(null); }}
-        refId={forwardRefId}
+      <SenderDetailModals
+        forwardOpen={forwardOpen}
+        onCloseForward={() => { setForwardOpen(false); setForwardRefId(null); setForwardSelectedCompany(null); }}
+        forwardRefId={forwardRefId}
         servicesRequested={data.speciality_ids ?? []}
         companyDirectory={companyDirectory}
         selectedCompany={forwardSelectedCompany}
         onSelectCompany={setForwardSelectedCompany}
-        onForward={(company, customServices) => forwardRefId && forwardReferral(company, customServices)}
+        onForward={(company, customServices) => forwardRefId != null && forwardReferral(company, customServices)}
         onAddCompanyAndSelect={addCompanyAndSelect}
+        deleteDocModal={deleteDocModal}
+        onCloseDeleteDoc={() => setDeleteDocModal(null)}
+        onConfirmDeleteDoc={confirmDeleteDoc}
+        summaryModalOpen={summaryModalOpen}
+        paymentSummary={paymentSummary}
+        onCloseSummary={() => { setSummaryModalOpen(false); setPaymentSummary(null); }}
       />
-
-      <Modal
-        isOpen={deleteDocModal !== null}
-        onClose={() => setDeleteDocModal(null)}
-        maxWidth="500px"
-      >
-        <div className="p-4">
-          <h3 className="m-0 text-base font-semibold mb-3 flex items-center gap-2.5">
-            <span className="text-2xl">🗑️</span>
-            Delete Document
-          </h3>
-          <p className="m-0 mb-4 text-sm text-rcn-text">
-            Are you sure you want to delete the document <strong>&quot;{deleteDocModal?.label}&quot;</strong>? This action cannot be undone.
-          </p>
-          <div className="flex gap-2.5 justify-end">
-            <button
-              type="button"
-              onClick={() => setDeleteDocModal(null)}
-              className="border border-slate-200 bg-white text-rcn-text px-4 py-2 rounded-xl font-extrabold text-xs shadow hover:bg-slate-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={confirmDeleteDoc}
-              className="border border-red-200 bg-red-50 text-red-700 px-4 py-2 rounded-xl font-extrabold text-xs shadow hover:bg-red-100"
-            >
-              Delete
-            </button>
-          </div>
-        </div>
-      </Modal>
-
-      <Modal
-        isOpen={summaryModalOpen}
-        onClose={() => { setSummaryModalOpen(false); setPaymentSummary(null); }}
-        maxWidth="560px"
-      >
-        <div className="p-4">
-          <h3 className="m-0 text-base font-semibold mb-3 flex items-center gap-2.5">
-            <span className="text-2xl">💳</span>
-            Payment Summary
-          </h3>
-          {paymentSummary ? (
-            <div className="text-sm text-rcn-text space-y-3">
-              {paymentSummary.referral_id && (
-                <div>
-                  <span className="text-rcn-muted text-xs font-black">Referral ID</span>
-                  <p className="m-0 mt-0.5 font-[850]">{paymentSummary.referral_id}</p>
-                </div>
-              )}
-              <div className="grid grid-cols-2 gap-2">
-                {typeof paymentSummary.total_recipients === "number" && (
-                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                    <span className="text-rcn-muted text-xs font-black">Recipients</span>
-                    <p className="m-0 mt-0.5 font-[850]">{paymentSummary.total_recipients}</p>
-                  </div>
-                )}
-                {typeof paymentSummary.total_departments === "number" && (
-                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                    <span className="text-rcn-muted text-xs font-black">Departments</span>
-                    <p className="m-0 mt-0.5 font-[850]">{paymentSummary.total_departments}</p>
-                  </div>
-                )}
-                {paymentSummary.source != null && (
-                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                    <span className="text-rcn-muted text-xs font-black">Payment by</span>
-                    <p className="m-0 mt-0.5 font-[850]">{paymentSummary.source === "free" ? "Receiver pays" : "Sender pays"}</p>
-                  </div>
-                )}
-                {(paymentSummary.amount != null || paymentSummary.currency) && (
-                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                    <span className="text-rcn-muted text-xs font-black">Amount</span>
-                    <p className="m-0 mt-0.5 font-[850]">
-                      {paymentSummary.currency ? `${paymentSummary.currency} ` : ""}
-                      {typeof paymentSummary.amount === "number" ? paymentSummary.amount : "—"}
-                    </p>
-                  </div>
-                )}
-              </div>
-              {paymentSummary.breakdown?.message && (
-                <div className="p-3 rounded-xl bg-rcn-brand/5 border border-rcn-brand/20">
-                  <p className="m-0 text-[13px] font-[850] text-rcn-text">{paymentSummary.breakdown.message}</p>
-                </div>
-              )}
-              <p className="m-0 text-rcn-muted text-xs">Next: final payment flow will be integrated here.</p>
-            </div>
-          ) : (
-            <p className="m-0 text-rcn-muted text-sm">No summary data.</p>
-          )}
-          <div className="flex gap-2.5 justify-end mt-4">
-            <button
-              type="button"
-              onClick={() => { setSummaryModalOpen(false); setPaymentSummary(null); }}
-              className="border border-rcn-brand/25 bg-rcn-brand/10 text-rcn-accent-dark px-4 py-2 rounded-xl font-extrabold text-xs shadow hover:bg-rcn-brand/20"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      </Modal>
     </div>
   );
 }
