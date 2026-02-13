@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useFormContext } from "react-hook-form";
+import { useFormContext, useWatch } from "react-hook-form";
 import { SectionHeader } from "./SectionHeader";
 import { PhoneInputField } from "@/components";
 import type { ReferralFormValues } from "./referralFormSchema";
@@ -14,11 +14,13 @@ const disabledInputClass =
   "w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-slate-50 text-rcn-muted text-sm cursor-not-allowed";
 
 export function SenderInfoSection() {
-  const { register, watch, setValue } = useFormContext<ReferralFormValues>();
+  const { register,  setValue } = useFormContext<ReferralFormValues>();
   const { loginUser } = useStaffAuthLoginUser();
 
-  const senderDialCode = watch("sender_dial_code") ?? "";
-  const senderPhone = watch("sender_phone_number") ?? "";
+  console.log(loginUser, "loginUser")
+
+  const senderDialCode = useWatch({ name: "sender_dial_code" }) ?? "";
+  const senderPhone = useWatch({ name: "sender_phone_number" }) ?? "";
   const senderPhoneValue = (senderDialCode ?? "") + (senderPhone ?? "").replace(/\D/g, "");
 
   useEffect(() => {
@@ -36,12 +38,6 @@ export function SenderInfoSection() {
     setValue("sender_fax_number", "", { shouldValidate: true });
   }, [loginUser, setValue]);
 
-  const handleSenderPhoneChange = (value: string, country: { dialCode: string }) => {
-    if (loginUser) return;
-    const code = String(country?.dialCode ?? "+1");
-    setValue("sender_dial_code", code, { shouldValidate: true });
-    setValue("sender_phone_number", value.slice(code.length) || "", { shouldValidate: true });
-  };
 
   const isDisabled = !!loginUser;
 
@@ -103,7 +99,7 @@ export function SenderInfoSection() {
           <label className="block text-xs text-rcn-muted font-[850] mb-1.5">Phone Number</label>
           <PhoneInputField
             value={senderPhoneValue}
-            onChange={handleSenderPhoneChange}
+            onChange={() => {}}
             placeholder="(xxx) xxx-xxxx"
             inputProps={{ disabled: isDisabled, readOnly: isDisabled }}
             containerClass={isDisabled ? "opacity-90 pointer-events-none" : ""}

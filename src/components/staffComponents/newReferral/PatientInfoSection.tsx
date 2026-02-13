@@ -1,11 +1,12 @@
 "use client";
 
-import { useFormContext } from "react-hook-form";
+import { useFormContext, useFormState } from "react-hook-form";
 import { SectionHeader } from "./SectionHeader";
 import type { ReferralFormValues } from "./referralFormSchema";
 
 export function PatientInfoSection() {
-  const { register, formState: { errors } } = useFormContext<ReferralFormValues>();
+  const { errors } = useFormState<ReferralFormValues>();
+  const { register } = useFormContext<ReferralFormValues>();
 
   const inputClass =
     "w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12";

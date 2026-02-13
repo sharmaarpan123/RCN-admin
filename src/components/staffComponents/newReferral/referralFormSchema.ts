@@ -30,31 +30,78 @@ export const referralFormSchema = yup.object({
           .string()
           .nullable()
           .default(null)
-          .test("required", "Branch is required for each receiver.", (v) => v != null && v !== ""),
+          .test(
+            "branch-required",
+            "Branch is required for each receiver.",
+            function (v) {
+              const orgId = this.parent?.organizationId as string | undefined;
+              if (orgId?.startsWith("custom-")) return true;
+              return v != null && v !== "";
+            }
+          ),
         branchName: yup.string().nullable().default(null),
         departmentId: yup
           .string()
           .nullable()
           .default(null)
-          .test("required", "Department is required for each receiver.", (v) => v != null && v !== ""),
+          .test(
+            "department-required",
+            "Department is required for each receiver.",
+            function (v) {
+              const orgId = this.parent?.organizationId as string | undefined;
+              if (orgId?.startsWith("custom-")) return true;
+              return v != null && v !== "";
+            }
+          ),
         departmentName: yup.string().nullable().default(null),
       })
     )
-    .default([]),
-  speciality_ids: yup.array().of(yup.string().min(1)).optional().default([]),
+    .default([])
+    .test(
+      "receiver-departments",
+      "Select at least one receiver with branch and department, or add a receiver from the list above.",
+      (rows) => {
+        if (!rows?.length) return false;
+        const hasDepartment = rows.some(
+          (r) => r?.departmentId != null && String(r.departmentId).trim() !== ""
+        );
+        return hasDepartment;
+      }
+    ),
+  speciality_ids: yup
+    .array()
+    .of(yup.string().min(1))
+    .default([])
+    .test(
+      "at-least-one-service",
+      "Select at least one requested service, or describe other services below.",
+      (ids) => Array.isArray(ids) && ids.length > 0
+    ),
   additional_speciality: yup.string().trim().optional().default(""),
   additional_notes: yup.string().trim().optional().default(""),
-  patient_first_name: yup.string().trim().optional().default(""),
-  patient_last_name: yup.string().trim().optional().default(""),
-  dob: yup.string().trim().optional().default(""),
-  gender: yup.string().trim().optional().default(""),
-  address_of_care: yup.string().trim().optional().default(""),
+  patient_first_name: yup.string().trim().required("First name is required"),
+  patient_last_name: yup.string().trim().required("Last name is required"),
+  dob: yup.string().trim().required("DOB is required"),
+  gender: yup.string().trim().required("Gender is required"),
+  address_of_care: yup.string().trim().required("Address of care is required"),
   patient_insurance_information: yup
     .array()
     .of(insuranceItemSchema)
-    .optional() 
-    .default([{ payer: "", policy: "", plan_group: "", document: "" }]),
-  patient_phone_number: yup.string().trim().optional().default(""),
+    .default([{ payer: "", policy: "", plan_group: "", document: "" }])
+    .test(
+      "primary-insurance",
+      "Primary insurance: Payer, Policy #, and Plan/Group are required.",
+      (items) => {
+        const first = items?.[0];
+        if (!first) return true;
+        return (
+          Boolean(first.payer?.trim()) &&
+          Boolean(first.policy?.trim()) &&
+          Boolean(first.plan_group?.trim())
+        );
+      }
+    ),
+  patient_phone_number: yup.string().trim().required("Patient phone number is required"),
   patient_dial_code: yup.string().trim().optional().default("+1"),
   primary_language: yup.string().trim().optional().default(""),
   social_security_number: yup.string().trim().optional().default(""),

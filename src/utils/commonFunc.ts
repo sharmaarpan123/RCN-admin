@@ -36,7 +36,20 @@ export const catchAsync =
             fn(...args)
                 .catch((error: any) => {
                     toast.dismiss();
-                    toast.error(error?.response?.data?.message || "something went wrong");
+                    let errorsMessage: string =
+                        (typeof error?.response?.data?.message === "string" ? error?.response?.data?.message : null) ||
+                        "Something went wrong!";
+
+                    if (error?.response?.data?.message === "Validation failed") {
+                        const errors = error?.response?.data?.errors;
+                        if (Array.isArray(errors) && errors.length > 0) {
+                            const first = errors[0] as { field?: string; message?: string };
+                            const label = formatValidationField(first?.field ?? "");
+                            const msg = (first?.message ?? "").toLowerCase();
+                            errorsMessage = `Validation failed! : ${label} ${msg}`;
+                        }
+                    }
+                    toast.error(errorsMessage || "something went wrong");
                     setLoader?.(false);
                     callBack?.();
                     console.error(error, "error");
@@ -49,6 +62,17 @@ const removeUnderScoreAndCapitalFirstLetter = (str: string) => {
     if (!str) return "";
     const withSpaces = str.replace(/_/g, " ");
     return withSpaces.charAt(0).toUpperCase() + withSpaces.slice(1).toLowerCase();
+};
+
+/** Format API validation field path to readable label: strip body., indices like .0, then humanize. */
+const formatValidationField = (field: string): string => {
+    if (!field) return "";
+    const s = field
+        .replace(/^body\./i, "")
+        .replace(/\.\d+(?=\.|$)/g, "")
+        .replace(/\./g, " ")
+        .replace(/_/g, " ");
+    return removeUnderScoreAndCapitalFirstLetter(s.trim()) || field;
 };
 
 export const checkResponse = ({
@@ -67,7 +91,7 @@ export const checkResponse = ({
     showError?: boolean
 }) => {
 
-    console.log(res , "dataa324")
+    console.log(res, "dataa324")
     if (res?.data?.message === "Network Error") {
         toast.dismiss();
         toast.error("Network Error");
@@ -89,11 +113,24 @@ export const checkResponse = ({
     } else {
         if (showError) {
             toast.dismiss();
+            let errorsMessage: string =
+                (typeof res?.data?.message === "string" ? res?.data?.message : null) ||
+                "Something went wrong!";
+
+            if (res?.data?.message === "Validation failed") {
+                const errors = res?.data?.errors;
+                if (Array.isArray(errors) && errors.length > 0) {
+                    const first = errors[0] as { field?: string; message?: string };
+                    const label = formatValidationField(first?.field ?? "");
+                    const msg = (first?.message ?? "").toLowerCase();
+                    errorsMessage = `Validation failed! : ${label} ${msg}`;
+                }
+            }
+
             toast.error(
                 removeUnderScoreAndCapitalFirstLetter(
-                    (typeof res?.data?.data == "string" ? res?.data?.data : null) ||
-                    res?.data?.message
-                ) || "Something went wrong!"
+                    errorsMessage || "Something went wrong!"
+                )
             );
         }
         console.log(res?.data?.message, "Error in check response");

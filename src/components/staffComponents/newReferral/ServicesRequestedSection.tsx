@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { useFormContext } from "react-hook-form";
+import { useFormContext, useFormState, useWatch } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
-import Button from "@/components/Button";
+import { Button } from "@/components";
 import { getStaffSpecialitiesApi } from "@/apis/ApiCalls";
 import { checkResponse } from "@/utils/commonFunc";
 import defaultQueryKeys from "@/utils/staffQueryKeys";
@@ -18,10 +18,18 @@ const moveBtnActive =
 type SpecialityItem = { _id: string; name: string; user_id: string | null };
 
 export function ServicesRequestedSection() {
-  const { watch, setValue } = useFormContext<ReferralFormValues>();
-  const speciality_ids = watch("speciality_ids") ?? [];
-  const additional_speciality = watch("additional_speciality") ?? "";
-  const additional_notes = watch("additional_notes") ?? "";
+  const { setValue } = useFormContext<ReferralFormValues>();
+  const { errors } = useFormState<ReferralFormValues>();
+  const speciality_ids = useWatch({ name: "speciality_ids" }) ?? [];
+  const additional_speciality = useWatch({ name: "additional_speciality" }) ?? "";
+  const additional_notes = useWatch({ name: "additional_notes" }) ?? "";
+
+  const specialityIdsRootError =
+    errors.speciality_ids &&
+      typeof errors.speciality_ids === "object" &&
+      "message" in errors.speciality_ids
+      ? (errors.speciality_ids as { message?: string }).message
+      : undefined;
 
   const [selectedAvailableIds, setSelectedAvailableIds] = useState<string[]>([]);
   const [selectedRequestedIds, setSelectedRequestedIds] = useState<string[]>([]);
@@ -81,7 +89,7 @@ export function ServicesRequestedSection() {
       if (toRemoveIds.length === 0) return;
       setValue(
         "speciality_ids",
-        speciality_ids.filter((id) => !toRemoveIds.includes(id as string)),
+        speciality_ids.filter((id: string) => !toRemoveIds.includes(id)),
         { shouldValidate: true }
       );
       setSelectedRequestedIds([]);
@@ -106,6 +114,15 @@ export function ServicesRequestedSection() {
         Use the buttons to move services between Available and Requested.
       </p>
 
+      {specialityIdsRootError && (
+        <div
+          className="border border-red-300 bg-red-50 rounded-[14px] p-3 mb-3 text-sm text-red-800"
+          role="alert"
+        >
+          {specialityIdsRootError}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-3 items-stretch mb-3">
         <div className="min-w-0 flex flex-col">
           <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
@@ -129,8 +146,8 @@ export function ServicesRequestedSection() {
                     aria-selected={isSelected}
                     onClick={() => toggleAvailable(item._id)}
                     className={`px-2.5 py-2 rounded-lg cursor-pointer border transition-colors ${isSelected
-                        ? "bg-rcn-brand/15 border-rcn-brand/40 text-rcn-text"
-                        : "border-transparent hover:bg-slate-50 text-rcn-text"
+                      ? "bg-rcn-brand/15 border-rcn-brand/40 text-rcn-text"
+                      : "border-transparent hover:bg-slate-50 text-rcn-text"
                       }`}
                   >
                     <p className="m-0 text-sm font-normal break-words">{item.name}</p>
@@ -202,13 +219,18 @@ export function ServicesRequestedSection() {
             Requested services
           </label>
           <div
-            className="w-full min-h-[240px] max-h-[280px] min-w-0 px-3 py-2.5 rounded-xl border border-rcn-border bg-white text-sm overflow-y-auto overflow-x-hidden"
+            className={`w-full min-h-[240px] max-h-[280px] min-w-0 px-3 py-2.5 rounded-xl border bg-white text-sm overflow-y-auto overflow-x-hidden ${specialityIdsRootError ? "border-red-400" : "border-rcn-border"
+              }`}
             role="listbox"
             aria-multiselectable
             aria-label="Requested services"
+            aria-invalid={!!specialityIdsRootError}
           >
             {requestedItems.length === 0 ? (
-              <p className="m-0 py-2 text-rcn-muted text-sm">
+              <p
+                className={`m-0 py-2 text-sm ${specialityIdsRootError ? "text-red-700 font-medium" : "text-rcn-muted"
+                  }`}
+              >
                 None selected. Use the move buttons.
               </p>
             ) : (
@@ -221,8 +243,8 @@ export function ServicesRequestedSection() {
                     aria-selected={isSelected}
                     onClick={() => toggleRequested(item._id)}
                     className={`px-2.5 py-2 rounded-lg cursor-pointer border transition-colors ${isSelected
-                        ? "bg-rcn-brand/15 border-rcn-brand/40 text-rcn-text"
-                        : "border-transparent hover:bg-slate-50 text-rcn-text"
+                      ? "bg-rcn-brand/15 border-rcn-brand/40 text-rcn-text"
+                      : "border-transparent hover:bg-slate-50 text-rcn-text"
                       }`}
                   >
                     <p className="m-0 text-sm font-normal break-words">{item.name}</p>
@@ -234,6 +256,11 @@ export function ServicesRequestedSection() {
           <p className="text-xs text-rcn-muted mt-2">
             This list will be submitted as Services Requested.
           </p>
+          {specialityIdsRootError && (
+            <p className="text-xs text-red-600 mt-1 m-0" role="alert">
+              {specialityIdsRootError}
+            </p>
+          )}
         </div>
       </div>
 
@@ -245,8 +272,14 @@ export function ServicesRequestedSection() {
           value={additional_speciality}
           onChange={(e) => setValue("additional_speciality", e.target.value, { shouldValidate: true })}
           placeholder="Type any additional services needed..."
-          className={inputClass}
+          className={`${inputClass} ${errors.additional_speciality ? "border-red-400" : ""}`}
+          aria-invalid={!!errors.additional_speciality}
         />
+        {errors.additional_speciality?.message && (
+          <p className="text-xs text-red-600 mt-1 m-0" role="alert">
+            {errors.additional_speciality.message}
+          </p>
+        )}
       </div>
 
       <div>
@@ -257,8 +290,14 @@ export function ServicesRequestedSection() {
           value={additional_notes}
           onChange={(e) => setValue("additional_notes", e.target.value, { shouldValidate: true })}
           placeholder="Any additional referral notes..."
-          className={inputClass}
+          className={`${inputClass} ${errors.additional_notes ? "border-red-400" : ""}`}
+          aria-invalid={!!errors.additional_notes}
         />
+        {errors.additional_notes?.message && (
+          <p className="text-xs text-red-600 mt-1 m-0" role="alert">
+            {errors.additional_notes.message}
+          </p>
+        )}
       </div>
     </section>
   );

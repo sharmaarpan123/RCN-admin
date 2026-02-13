@@ -2,14 +2,24 @@
 
 import React, { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import type { Referral, Company } from "@/app/staff-portal/inbox/types";
-import { fmtDate, pillClass, pillLabel, overallStatus } from "@/app/staff-portal/inbox/helpers";
-import { ForwardModal } from "./ForwardModal";
-import { TableLayout, type TableColumn } from "@/components";
+import type { SentReferralApi, Company } from "@/app/staff-portal/inbox/types";
+import { fmtDate, pillClass, pillLabel } from "@/app/staff-portal/inbox/helpers";
+import { ForwardModal } from "../ForwardModal";
+import { Button, DebouncedInput, TableLayout, type TableColumn } from "@/components";
+
+function sentReferralStatus(ref: SentReferralApi): string {
+  if (ref.is_draft) return "DRAFT";
+  const statuses = ref.department_statuses as { status?: string }[] | undefined;
+  if (Array.isArray(statuses) && statuses.length > 0) {
+    const first = statuses[0]?.status;
+    if (first) return first;
+  }
+  return "SENT";
+}
 
 interface SenderInboxProps {
-  referrals: Referral[];
-  setReferrals: React.Dispatch<React.SetStateAction<Referral[]>>;
+  referrals: SentReferralApi[];
+  setReferrals: React.Dispatch<React.SetStateAction<SentReferralApi[]>>;
   companyDirectory: Company[];
   setCompanyDirectory: React.Dispatch<React.SetStateAction<Company[]>>;
   statusFilter: string;
@@ -18,6 +28,7 @@ interface SenderInboxProps {
   setDateFilterDays: (d: number) => void;
   query: string;
   setQuery: (q: string) => void;
+  isLoading?: boolean;
 }
 
 export function SenderInbox({
@@ -31,35 +42,46 @@ export function SenderInbox({
   setDateFilterDays,
   query,
   setQuery,
+  isLoading = false,
 }: SenderInboxProps) {
   const router = useRouter();
   const [forwardOpen, setForwardOpen] = useState(false);
   const [forwardRefId, setForwardRefId] = useState<string | null>(null);
   const [forwardSelectedCompany, setForwardSelectedCompany] = useState<Company | null>(null);
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
+  const baseList = useMemo(() => {
     const now = new Date();
     const cutoff = new Date(now.getTime() - dateFilterDays * 24 * 60 * 60 * 1000);
     return referrals
       .filter((ref) => {
-        if (q) {
-          const patient = `${ref.patient.last} ${ref.patient.first} ${ref.patient.dob}`.toLowerCase();
-          const rxNames = ref.receivers.map((x) => x.name.toLowerCase()).join(" ");
-          if (!`${ref.id} ${patient} ${rxNames}`.includes(q)) return false;
-        }
         if (statusFilter !== "ALL") {
-          const s = overallStatus(ref);
-          if (statusFilter === "ACCEPTED") return ref.receivers.some((x) => ["ACCEPTED", "PAID", "COMPLETED"].includes(x.status));
+          const s = sentReferralStatus(ref);
+          if (statusFilter === "DRAFT" && ref.is_draft) return true;
           if (s !== statusFilter) return false;
         }
-        if (new Date(ref.sentAt) < cutoff) return false;
+        const date = ref.sent_at ? new Date(ref.sent_at) : new Date(ref.createdAt ?? 0);
+        if (date < cutoff) return false;
         return true;
       })
-      .sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime());
-  }, [referrals, query, statusFilter, dateFilterDays]);
+      .sort((a, b) => {
+        const da = a.sent_at ? new Date(a.sent_at).getTime() : new Date(a.createdAt ?? 0).getTime();
+        const db = b.sent_at ? new Date(b.sent_at).getTime() : new Date(b.createdAt ?? 0).getTime();
+        return db - da;
+      });
+  }, [referrals, statusFilter, dateFilterDays]);
 
-  const fullRef = forwardRefId ? referrals.find((r) => r.id === forwardRefId) : null;
+  const senderBodyList = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return baseList;
+    return baseList.filter((ref) => {
+      const p = ref.patient;
+      const patient = `${p?.patient_last_name ?? ""} ${p?.patient_first_name ?? ""} ${p?.dob ?? ""}`.toLowerCase();
+      const localNames = (ref._localReceivers ?? []).map((x) => x.name.toLowerCase()).join(" ");
+      return `${ref._id} ${patient} ${localNames}`.includes(q);
+    });
+  }, [baseList, query]);
+
+  const fullRef = forwardRefId ? referrals.find((r) => r._id === forwardRefId) : null;
 
   const openForward = useCallback((id: string) => {
     setForwardRefId(id);
@@ -72,11 +94,9 @@ export function SenderInbox({
       const rxId = "RX-FWD-" + Math.random().toString(16).slice(2, 8).toUpperCase();
       setReferrals((prev) =>
         prev.map((r) => {
-          if (r.id !== refId) return r;
-          const receivers = [...r.receivers, { receiverId: rxId, name: company.name.trim(), email: (company.email || "").trim(), status: "PENDING", paidUnlocked: false, updatedAt: new Date(), rejectReason: "", servicesRequestedOverride: customServices || null }];
-          const chat = { ...r.chatByReceiver, [rxId]: [] };
-          const comms = [...r.comms, { at: new Date(), who: "Sender", msg: `Forwarded referral to ${company.name.trim()}${company.email ? " (" + company.email.trim() + ")" : ""}${customServices?.length ? " • Services: " + customServices.join(", ") : ""}.` }];
-          return { ...r, receivers, chatByReceiver: chat, comms };
+          if (r._id !== refId) return r;
+          const newReceiver = { receiverId: rxId, name: company.name.trim(), email: (company.email || "").trim(), status: "PENDING", paidUnlocked: false, updatedAt: new Date(), rejectReason: "", servicesRequestedOverride: customServices || null };
+          return { ...r, _localReceivers: [...(r._localReceivers ?? []), newReceiver] };
         })
       );
       setForwardOpen(false);
@@ -94,33 +114,43 @@ export function SenderInbox({
     [companyDirectory, setCompanyDirectory]
   );
 
-  const columns: TableColumn<Referral>[] = useMemo(
+  const columns: TableColumn<SentReferralApi>[] = useMemo(
     () => [
-      { head: "Referral ID", component: (ref) => <span className="font-black text-[13px]">{ref.id}</span> },
+      { head: "Referral ID", component: (ref) => <span className="font-black text-[13px]">{ref._id}</span> },
       {
         head: "Patient",
-        component: (ref) => (
-          <span className="font-[850] text-[13px]">{ref.patient.last}, {ref.patient.first} • DOB {ref.patient.dob}</span>
-        ),
+        component: (ref) => {
+          const p = ref.patient;
+          const last = p?.patient_last_name ?? "";
+          const first = p?.patient_first_name ?? "";
+          const dob = p?.dob ?? "";
+          return <span className="font-[850] text-[13px]">{last}, {first} • DOB {dob}</span>;
+        },
       },
       {
         head: "Services",
         component: (ref) => {
-          const svc = ref.servicesRequested.slice(0, 2).join(", ") + (ref.servicesRequested.length > 2 ? ` +${ref.servicesRequested.length - 2} more` : "");
-          return <span className="text-rcn-muted text-xs font-[850]">{svc || "—"}</span>;
+          const ids = ref.speciality_ids ?? [];
+          const extra = ref.additional_speciality ?? [];
+          const label = ids.length > 0 ? `${ids.length} service(s)` : extra.length > 0 ? (extra[0] as { name?: string })?.name ?? "—" : "—";
+          return <span className="text-rcn-muted text-xs font-[850]">{label}</span>;
         },
       },
       {
         head: "Receivers",
         component: (ref) => {
-          const receiversLabel = ref.receivers.length > 1 ? `${ref.receivers.length} receivers` : ref.receivers[0]?.name ?? "";
-          return <span className="text-rcn-muted text-xs font-[850]">{receiversLabel}</span>;
+          const local = ref._localReceivers ?? [];
+          const dept = ref.department_statuses ?? [];
+          const n = local.length || (Array.isArray(dept) ? dept.length : 0);
+          const name = local[0]?.name;
+          const label = n > 1 ? `${n} receivers` : name ?? (n ? "1 receiver" : "—");
+          return <span className="text-rcn-muted text-xs font-[850]">{label}</span>;
         },
       },
       {
         head: "Status",
         component: (ref) => {
-          const st = overallStatus(ref);
+          const st = sentReferralStatus(ref);
           return (
             <span className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border ${pillClass(st)}`}>
               {pillLabel(st)}
@@ -130,26 +160,32 @@ export function SenderInbox({
       },
       {
         head: "Sent Date",
-        component: (ref) => <span className="text-rcn-muted text-xs font-[850]">{fmtDate(ref.sentAt)}</span>,
+        component: (ref) => {
+          const d = ref.sent_at ? new Date(ref.sent_at) : ref.createdAt ? new Date(ref.createdAt) : null;
+          return <span className="text-rcn-muted text-xs font-[850]">{d ? fmtDate(d) : "—"}</span>;
+        },
       },
       {
         head: "Actions",
         component: (ref) => (
           <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-            <button
+            <Button
               type="button"
-              onClick={() => router.push(`/staff-portal/inbox/sender/${ref.id}`)}
+              variant="primary"
+              size="sm"
+              onClick={() => router.push(`/staff-portal/inbox/sender/${ref._id}`)}
               className="border border-rcn-brand/25 bg-rcn-brand/10 text-rcn-accent-dark px-2 py-1.5 rounded-xl font-extrabold text-xs shadow mr-1"
             >
               View
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              onClick={() => openForward(ref.id)}
-              className="border border-slate-200 bg-white px-2 py-1.5 rounded-xl font-extrabold text-xs shadow"
+              variant="secondary"
+              size="sm"
+              onClick={() => openForward(ref._id)}
             >
               Forward
-            </button>
+            </Button>
           </div>
         ),
       },
@@ -165,9 +201,16 @@ export function SenderInbox({
           <p className="m-0 mt-1 text-rcn-muted text-xs font-[850]">Search, filter, and click a referral to view details.</p>
         </div>
         <div className="flex flex-col gap-2.5 p-3 border-b border-slate-200 bg-white/90">
-          <input id="q" type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search patient, DOB, receiver, referral ID…" className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px]  text-rcn-text" aria-label="Search inbox" />
+          <DebouncedInput
+            id="sender-inbox-search"
+            value={query}
+            onChange={setQuery}
+            placeholder="Search patient, DOB, receiver, referral ID…"
+            className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-[13px] text-rcn-text"
+            aria-label="Search inbox"
+          />
           <div className="flex gap-2 flex-wrap" aria-label="Status filters">
-            {["ALL", "PENDING", "ACCEPTED", "REJECTED", "PAID", "COMPLETED"].map((f) => (
+            {["ALL", "DRAFT", "SENT", "PENDING", "ACCEPTED", "REJECTED", "PAID", "COMPLETED"].map((f) => (
               <button key={f} type="button" onClick={() => setStatusFilter(f)} className={`inline-flex items-center gap-1.5 px-2.5 py-2 rounded-full border cursor-pointer text-xs font-extrabold select-none ${statusFilter === f ? "bg-rcn-brand/10 border-rcn-brand/20 text-rcn-accent-dark" : "border-slate-200 bg-white text-rcn-muted"}`}>
                 {f === "ALL" ? "All" : f === "PAID" ? "Paid/Unlocked" : f.charAt(0) + f.slice(1).toLowerCase()}
               </button>
@@ -182,16 +225,18 @@ export function SenderInbox({
           </div>
         </div>
         <div className="overflow-auto max-w-full">
-          {filtered.length === 0 ? (
+          {isLoading ? (
+            <div className="py-5 px-3.5 text-center text-rcn-muted font-extrabold text-[13px]">Loading sent referrals…</div>
+          ) : senderBodyList.length === 0 ? (
             <div className="py-5 px-3.5 text-center text-rcn-muted font-extrabold text-[13px]">No referrals match your filters.</div>
           ) : (
-            <TableLayout<Referral>
+            <TableLayout<SentReferralApi>
               columns={columns}
-              data={filtered}
+              data={senderBodyList}
               size="sm"
               tableClassName="[&_thead_tr]:bg-rcn-brand/10 [&_th]:border-slate-200 [&_th]:border-b [&_td]:border-slate-200 [&_td]:border-b [&_tr]:border-slate-200 [&_tr:hover]:bg-slate-50/50"
-              getRowKey={(ref) => ref.id}
-              onRowClick={(ref) => router.push(`/staff-portal/inbox/sender/${ref.id}`)}
+              getRowKey={(ref) => ref._id}
+              onRowClick={(ref) => router.push(`/staff-portal/inbox/sender/${ref._id}`)}
             />
           )}
         </div>
@@ -201,11 +246,11 @@ export function SenderInbox({
         isOpen={forwardOpen}
         onClose={() => { setForwardOpen(false); setForwardRefId(null); setForwardSelectedCompany(null); }}
         refId={forwardRefId}
-        servicesRequested={fullRef?.servicesRequested ?? []}
+        servicesRequested={fullRef?.speciality_ids ?? []}
         companyDirectory={companyDirectory}
         selectedCompany={forwardSelectedCompany}
         onSelectCompany={setForwardSelectedCompany}
-        onForward={(company, customServices) => forwardRefId && forwardReferral(forwardRefId, company, customServices)}
+        onForward={(company: Company, customServices: string[] | null) => forwardRefId && forwardReferral(forwardRefId, company, customServices)}
         onAddCompanyAndSelect={addCompanyAndSelect}
       />
     </>

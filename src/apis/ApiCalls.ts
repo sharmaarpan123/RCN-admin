@@ -329,4 +329,8 @@ export const getStaffSpecialitiesApi = (params?: { page?: number; limit?: number
 export const postOrganizationReferralApi = (body: unknown) =>
   AxiosInstance.post("/api/organization/referral", body);
 
+/** GET /api/organization/referral/sent — list sent referrals (staff portal, sender inbox). */
+export const getOrganizationReferralSentApi = () =>
+  AxiosInstance.get("/api/organization/referral/sent");
+
 /** Request body for POST /api/organization/referral. Aligned with backend createOrUpdateReferralSchema (all optional). */

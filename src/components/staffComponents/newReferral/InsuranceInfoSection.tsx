@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useFormContext, useFieldArray } from "react-hook-form";
+import { useFormContext, useFieldArray, useFormState } from "react-hook-form";
 import { SectionHeader } from "./SectionHeader";
 import type { ReferralFormValues } from "./referralFormSchema";
 import { Button } from "@/components";
@@ -10,11 +10,19 @@ const inputClass =
   "w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12";
 
 export function InsuranceInfoSection() {
-  const { register, control, formState: { errors } } = useFormContext<ReferralFormValues>();
+  const { register, control } = useFormContext<ReferralFormValues>();
+  const { errors } = useFormState<ReferralFormValues>();
   const { fields, append, remove } = useFieldArray({
     control,
     name: "patient_insurance_information",
   });
+
+  const insuranceRootError =
+    errors.patient_insurance_information &&
+    typeof errors.patient_insurance_information === "object" &&
+    "message" in errors.patient_insurance_information
+      ? (errors.patient_insurance_information as { message?: string }).message
+      : undefined;
 
   return (
     <section
@@ -26,6 +34,15 @@ export function InsuranceInfoSection() {
         subtitle="Primary required; additional insurance optional"
         badge="Documents optional"
       />
+
+      {insuranceRootError && (
+        <div
+          className="border border-red-300 bg-red-50 rounded-[14px] p-3 mb-3 text-sm text-red-800"
+          role="alert"
+        >
+          {insuranceRootError}
+        </div>
+      )}
 
       {fields.map((field, index) => (
         <div
@@ -59,7 +76,8 @@ export function InsuranceInfoSection() {
                 type="text"
                 {...register(`patient_insurance_information.${index}.payer`)}
                 placeholder="e.g., BCBS, Aetna, Medicare"
-                className={inputClass}
+                className={`${inputClass} ${errors.patient_insurance_information?.[index]?.payer ? "border-red-400" : ""}`}
+                aria-invalid={!!errors.patient_insurance_information?.[index]?.payer}
               />
               {errors.patient_insurance_information?.[index]?.payer && (
                 <p className="text-xs text-rcn-danger mt-1 m-0">
@@ -75,7 +93,8 @@ export function InsuranceInfoSection() {
                 type="text"
                 {...register(`patient_insurance_information.${index}.policy`)}
                 placeholder="Policy / Member ID"
-                className={inputClass}
+                className={`${inputClass} ${errors.patient_insurance_information?.[index]?.policy ? "border-red-400" : ""}`}
+                aria-invalid={!!errors.patient_insurance_information?.[index]?.policy}
               />
               {errors.patient_insurance_information?.[index]?.policy && (
                 <p className="text-xs text-rcn-danger mt-1 m-0">
@@ -91,7 +110,8 @@ export function InsuranceInfoSection() {
                 type="text"
                 {...register(`patient_insurance_information.${index}.plan_group`)}
                 placeholder="Plan / Group"
-                className={inputClass}
+                className={`${inputClass} ${errors.patient_insurance_information?.[index]?.plan_group ? "border-red-400" : ""}`}
+                aria-invalid={!!errors.patient_insurance_information?.[index]?.plan_group}
               />
               {errors.patient_insurance_information?.[index]?.plan_group && (
                 <p className="text-xs text-rcn-danger mt-1 m-0">

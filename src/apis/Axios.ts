@@ -35,8 +35,6 @@ AxiosInstance.interceptors.request.use(
 AxiosInstance.interceptors.response.use(
     (response) => response,
     (error) => {
-        console.log("error", error);
-        console.log(error, "9878")
         if (error?.response?.data === "Internal Server Error") {
             toast.dismiss()
             return toast.error("Network error. Please check your connection and try again.")

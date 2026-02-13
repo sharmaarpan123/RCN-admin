@@ -1,18 +1,54 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import Link from "next/link";
-import type { Company } from "./types";
-import { DEMO_REFERRALS, DEMO_COMPANIES } from "./demo-data";
+import { useQuery } from "@tanstack/react-query";
+import { getOrganizationReferralSentApi } from "@/apis/ApiCalls";
+import { checkResponse } from "@/utils/commonFunc";
+import defaultQueryKeys from "@/utils/staffQueryKeys";
+import type { Company, Referral, SentReferralApi } from "./types";
+import { DEMO_COMPANIES } from "./demo-data";
 import { SenderInbox, ReceiverInbox } from "@/components/staffComponents";
 
 export default function StaffInboxPage() {
-  const [referrals, setReferrals] = useState(() => JSON.parse(JSON.stringify(DEMO_REFERRALS)));
+  const [referrals, setReferrals] = useState<Referral[]>([]);
+  const [forwardPatches, setForwardPatches] = useState<Map<string, SentReferralApi>>(new Map());
   const [companyDirectory, setCompanyDirectory] = useState<Company[]>(() => [...DEMO_COMPANIES]);
   const [role, setRole] = useState<"SENDER" | "RECEIVER">("SENDER");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [dateFilterDays, setDateFilterDays] = useState(30);
   const [query, setQuery] = useState("");
+
+  const { data: sentReferrals, isLoading: isLoadingSent } = useQuery({
+    queryKey: defaultQueryKeys.referralSentList,
+    queryFn: async () => {
+      const res = await getOrganizationReferralSentApi();
+      if (!checkResponse({ res })) return [];
+      const data = (res.data as { data?: SentReferralApi[] })?.data;
+      return Array.isArray(data) ? data : [];
+    },
+  });
+
+  const baseReferrals = useMemo(() => sentReferrals ?? [], [sentReferrals]);
+  const senderReferrals = useMemo(
+    () => baseReferrals.map((r) => forwardPatches.get(r._id) ?? r),
+    [baseReferrals, forwardPatches]
+  );
+
+  const setSenderReferrals = useCallback(
+    (arg: React.SetStateAction<SentReferralApi[]>) => {
+      if (typeof arg === "function") {
+        setForwardPatches((prev) => {
+          const currentList = baseReferrals.map((r) => prev.get(r._id) ?? r);
+          const updatedList = (arg as (prev: SentReferralApi[]) => SentReferralApi[])(currentList);
+          const next = new Map(prev);
+          updatedList.forEach((r) => next.set(r._id, r));
+          return next;
+        });
+      }
+    },
+    [baseReferrals]
+  );
 
   return (
     <div className="max-w-[1280px] mx-auto p-[18px]">
@@ -57,8 +93,8 @@ export default function StaffInboxPage() {
 
       {role === "SENDER" ? (
         <SenderInbox
-          referrals={referrals}
-          setReferrals={setReferrals}
+          referrals={senderReferrals}
+          setReferrals={setSenderReferrals}
           companyDirectory={companyDirectory}
           setCompanyDirectory={setCompanyDirectory}
           statusFilter={statusFilter}
@@ -67,6 +103,7 @@ export default function StaffInboxPage() {
           setDateFilterDays={setDateFilterDays}
           query={query}
           setQuery={setQuery}
+          isLoading={isLoadingSent}
         />
       ) : (
         <ReceiverInbox

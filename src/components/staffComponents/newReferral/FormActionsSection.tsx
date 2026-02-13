@@ -26,7 +26,7 @@ export function FormActionsSection() {
         variant="primary"
         size="md"
         disabled={isSubmitting}
-        className="border border-rcn-brand/30 bg-rcn-brand/10 text-rcn-accent-dark px-3 py-2.5 rounded-xl font-extrabold text-xs shadow"
+        className="border border-rcn-brand/30  text-rcn-accent-dark px-3 py-2.5 rounded-xl font-extrabold text-xs shadow"
       >
         {isSubmitting ? "Submitting…" : "Submit Referral"}
       </Button>

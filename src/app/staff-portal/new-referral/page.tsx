@@ -23,6 +23,9 @@ import {
 } from "@/components/staffComponents/newReferral/referralFormSchema";
 import { postOrganizationReferralApi } from "@/apis/ApiCalls";
 import { checkResponse, catchAsync } from "@/utils/commonFunc";
+import { toastError } from "@/utils/toast";
+import defaultQueryKeys from "@/utils/staffQueryKeys";
+import { useQueryClient } from "@tanstack/react-query";
 import { useForm, FormProvider } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useEffect, useState } from "react";
@@ -82,6 +85,7 @@ const defaultValues: ReferralFormValues = {
 };
 
 export default function NewReferralPage() {
+  const queryClient = useQueryClient();
   const [stateFilter, setStateFilter] = useState("ALL");
   const [receiverModalOpen, setReceiverModalOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("sender-form");
@@ -90,6 +94,7 @@ export default function NewReferralPage() {
     defaultValues,
     resolver: yupResolver(referralFormSchema),
   });
+
 
   useEffect(() => {
     const handleScroll = () => {
@@ -114,6 +119,12 @@ export default function NewReferralPage() {
     const department_ids = getDepartmentIdsFromReceiverRows(
       values.receiver_rows as ReceiverRow[]
     );
+    if (!department_ids.length) {
+      toastError(
+        "Select at least one receiver with branch and department before submitting."
+      );
+      return;
+    }
     const payload = {
       sender_name: values.sender_name,
       facility_name: values.facility_name,
@@ -163,6 +174,7 @@ export default function NewReferralPage() {
       const res = await postOrganizationReferralApi(payload);
       if (checkResponse({ res, showSuccess: true })) {
         methods.reset(defaultValues);
+        queryClient.invalidateQueries({ queryKey: defaultQueryKeys.referralSentList });
       }
     })();
   };

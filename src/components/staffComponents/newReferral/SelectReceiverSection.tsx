@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useMemo } from "react";
-import { useFormContext, useWatch } from "react-hook-form";
+import { useFormContext, useFormState, useWatch } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import CustomAsyncSelect from "@/components/CustomAsyncSelect";
 import CustomReactSelect from "@/components/CustomReactSelect";
@@ -41,12 +41,20 @@ export function SelectReceiverSection({
   setStateFilter,
   onOpenAddReceiver,
 }: SelectReceiverSectionProps) {
-  const { control, setValue, formState: { errors } } = useFormContext<ReferralFormValues>();
+  const { control, setValue } = useFormContext<ReferralFormValues>();
   const watchedReceiverRows = useWatch({ name: "receiver_rows", control });
+  const { errors } = useFormState<ReferralFormValues>();
   const receiverRows = useMemo(
     () => (watchedReceiverRows ?? []) as ReceiverRow[],
     [watchedReceiverRows]
   );
+
+  const receiverRowsRootError =
+    errors.receiver_rows &&
+    typeof errors.receiver_rows === "object" &&
+    "message" in errors.receiver_rows
+      ? (errors.receiver_rows as { message?: string }).message
+      : undefined;
 
   const selectedOrgOptions: OrgBranchDeptOption[] = useMemo(
     () =>
@@ -190,6 +198,15 @@ export function SelectReceiverSection({
         </p>
       </div>
 
+      {receiverRowsRootError && (
+        <div
+          className="border border-red-300 bg-red-50 rounded-[14px] p-3 mb-3 text-sm text-red-800"
+          role="alert"
+        >
+          {receiverRowsRootError}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
         <div>
           <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
@@ -233,18 +250,21 @@ export function SelectReceiverSection({
         updateRowDepartment={updateRowDepartment}
         removeRow={removeRow}
         receiverRowsErrors={errors.receiver_rows}
+        receiverRowsRootError={receiverRowsRootError}
       />
 
-      <button
+      <Button
         type="button"
+        variant="primary"
+        size="md"
         onClick={onOpenAddReceiver}
-        className="w-full mt-2.5 flex items-center justify-center gap-2.5 px-3 py-2.5 rounded-[14px] bg-gradient-to-b from-rcn-brand to-rcn-brand-light text-white border border-black/6 shadow-[0_10px_18px_rgba(47,125,79,.22)] font-black text-xs hover:brightness-[1.03] hover:-translate-y-px active:translate-y-0 transition-all"
+        className="w-full mt-2.5 flex items-center justify-center gap-2.5 rounded-[14px] bg-gradient-to-b from-rcn-brand to-rcn-brand-light border border-black/6 shadow-[0_10px_18px_rgba(47,125,79,.22)] font-black text-xs"
       >
         <span className="w-6.5 h-6.5 rounded-xl bg-white/18 flex items-center justify-center text-base">
           ＋
         </span>
         <span>Add Referral Receiver (if not listed)</span>
-      </button>
+      </Button>
     </section>
   );
 }
@@ -380,18 +400,34 @@ function ReceiverRowsTable({
   updateRowDepartment,
   removeRow,
   receiverRowsErrors,
+  receiverRowsRootError,
 }: {
   receiverRows: ReceiverRow[];
   updateRowBranch: (organizationId: string, branchId: string, branchName: string) => void;
   updateRowDepartment: (organizationId: string, departmentId: string, departmentName: string) => void;
   removeRow: (organizationId: string) => void;
   receiverRowsErrors?: unknown;
+  receiverRowsRootError?: string;
 }) {
   if (receiverRows.length === 0) {
     return (
-      <div className="py-4 text-center text-sm text-rcn-muted border border-rcn-border rounded-xl bg-slate-50/50">
-        No organizations selected. Use the search above to add organizations, then choose branch and
-        department for each row.
+      <div
+        className={`py-4 text-center text-sm border rounded-xl ${
+          receiverRowsRootError
+            ? "border-red-300 bg-red-50/80 text-red-800"
+            : "border-rcn-border bg-slate-50/50 text-rcn-muted"
+        }`}
+      >
+        {receiverRowsRootError ? (
+          <p className="m-0 font-medium" role="alert">
+            {receiverRowsRootError}
+          </p>
+        ) : (
+          <p className="m-0">
+            No organizations selected. Use the search above to add organizations, then choose branch
+            and department for each row.
+          </p>
+        )}
       </div>
     );
   }

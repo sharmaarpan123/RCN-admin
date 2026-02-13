@@ -5,12 +5,14 @@ import { useFormContext } from "react-hook-form";
 import { SectionHeader } from "./SectionHeader";
 import { PhoneInputField } from "@/components";
 import type { ReferralFormValues } from "./referralFormSchema";
+import { useFormState } from "react-hook-form";
 
 const inputClass =
   "w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12";
 
 export function AdditionalDetailsSection() {
-  const { register, watch, setValue, formState: { errors } } = useFormContext<ReferralFormValues>();
+  const { register, watch, setValue } = useFormContext<ReferralFormValues>();
+  const { errors } = useFormState<ReferralFormValues>();
 
   const patientDialCode = watch("patient_dial_code") ?? "";
   const patientPhoneNumber = watch("patient_phone_number") ?? "";

@@ -6,6 +6,8 @@ export function fmtDate(d: Date) {
 
 export function pillClass(status: string): string {
   const m: Record<string, string> = {
+    DRAFT: "border-slate-300 bg-slate-100 text-slate-600",
+    SENT: "border-rcn-brand/30 bg-rcn-brand/10 text-rcn-accent-dark",
     PENDING: "border-amber-300 bg-amber-100 text-amber-800",
     ACCEPTED: "border-rcn-brand/30 bg-rcn-brand/10 text-rcn-accent-dark",
     REJECTED: "border-red-300 bg-red-100 text-red-800",
@@ -17,6 +19,8 @@ export function pillClass(status: string): string {
 
 export function pillLabel(status: string): string {
   const m: Record<string, string> = {
+    DRAFT: "Draft",
+    SENT: "Sent",
     PENDING: "Pending",
     ACCEPTED: "Accepted",
     REJECTED: "Rejected",
