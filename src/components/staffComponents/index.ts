@@ -4,4 +4,4 @@ export { ForwardModal } from "./ForwardModal";
 export type { Company } from "./ForwardModal";
 export * from "./newReferral";
 export { ReceiverInbox } from "./inbox/ReceiverInbox";
-export { SenderInbox } from "./inbox/SenderInbox";
+export { SenderInbox } from "./inbox/sender/SenderInbox";

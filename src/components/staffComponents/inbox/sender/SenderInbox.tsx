@@ -4,7 +4,7 @@ import React, { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import type { SentReferralApi, Company } from "@/app/staff-portal/inbox/types";
 import { fmtDate, pillClass, pillLabel } from "@/app/staff-portal/inbox/helpers";
-import { ForwardModal } from "../ForwardModal";
+import { ForwardModal } from "../../ForwardModal";
 import { Button, DebouncedInput, TableLayout, type TableColumn } from "@/components";
 
 function sentReferralStatus(ref: SentReferralApi): string {
@@ -174,18 +174,18 @@ export function SenderInbox({
               variant="primary"
               size="sm"
               onClick={() => router.push(`/staff-portal/inbox/sender/${ref._id}`)}
-              className="border border-rcn-brand/25 bg-rcn-brand/10 text-rcn-accent-dark px-2 py-1.5 rounded-xl font-extrabold text-xs shadow mr-1"
+              className="border border-rcn-brand/25  text-rcn-accent-dark px-2 py-1.5 rounded-xl font-extrabold text-xs shadow mr-1"
             >
               View
             </Button>
-            <Button
+            {/* <Button
               type="button"
               variant="secondary"
               size="sm"
               onClick={() => openForward(ref._id)}
             >
               Forward
-            </Button>
+            </Button> */}
           </div>
         ),
       },

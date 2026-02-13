@@ -83,3 +83,6 @@ export interface SentReferralApi {
   /** UI-only: added when user forwards from inbox (not from API). */
   _localReceivers?: ReceiverInstance[];
 }
+
+/** GET /api/organization/referral/:id — response data as-is (do not reshape). */
+export type ReferralByIdApi = SentReferralApi;

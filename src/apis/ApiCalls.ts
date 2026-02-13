@@ -333,4 +333,8 @@ export const postOrganizationReferralApi = (body: unknown) =>
 export const getOrganizationReferralSentApi = () =>
   AxiosInstance.get("/api/organization/referral/sent");
 
+/** GET /api/organization/referral/:id — get referral by id (staff portal, sender detail). */
+export const getOrganizationReferralByIdApi = (id: string) =>
+  AxiosInstance.get(`/api/organization/referral/${id}`);
+
 /** Request body for POST /api/organization/referral. Aligned with backend createOrUpdateReferralSchema (all optional). */
