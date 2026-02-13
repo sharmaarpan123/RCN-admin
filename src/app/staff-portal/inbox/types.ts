@@ -105,3 +105,15 @@ export interface ReferralListResponse<T> {
   data: T[];
   meta: ReferralListMeta;
 }
+
+/** Response data from POST /api/organization/referral/:id/payment-summary. */
+export interface PaymentSummaryApi {
+  referral_id: string;
+  total_departments: number;
+  total_guest_organizations: number;
+  total_recipients: number;
+  source: string;
+  amount: number;
+  currency: string | null;
+  breakdown?: { message?: string };
+}

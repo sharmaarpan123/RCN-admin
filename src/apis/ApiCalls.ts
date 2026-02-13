@@ -341,4 +341,10 @@ export const getOrganizationReferralReceivedApi = (params?: { page?: number; lim
 export const getOrganizationReferralByIdApi = (id: string) =>
   AxiosInstance.get(`/api/organization/referral/${id}`);
 
+/** POST /api/organization/referral/:id/payment-summary — get payment summary for draft referral. source: "free" = sender pays, "payment" = receiver pays (requires payment_method_id). */
+export const postOrganizationReferralPaymentSummaryApi = (
+  referralId: string,
+  body: { source: "free" | "payment"; payment_method_id?: string }
+) => AxiosInstance.post(`/api/organization/referral/${referralId}/payment-summary`, body);
+
 /** Request body for POST /api/organization/referral. Aligned with backend createOrUpdateReferralSchema (all optional). */
