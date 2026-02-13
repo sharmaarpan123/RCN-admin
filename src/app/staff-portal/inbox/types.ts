@@ -86,3 +86,22 @@ export interface SentReferralApi {
 
 /** GET /api/organization/referral/:id — response data as-is (do not reshape). */
 export type ReferralByIdApi = SentReferralApi;
+
+/** Raw shape from GET /api/organization/referral/received — use API data directly in ReceiverInbox. Update when backend response is provided. */
+export type ReceivedReferralApi = SentReferralApi;
+
+/** Pagination meta from list APIs (e.g. /referral/sent, /referral/received). */
+export interface ReferralListMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
+/** Response shape from GET /api/organization/referral/sent and /referral/received — data + meta. */
+export interface ReferralListResponse<T> {
+  data: T[];
+  meta: ReferralListMeta;
+}

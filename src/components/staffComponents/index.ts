@@ -3,5 +3,5 @@ export { DocUploadInline } from "./DocUploadInline";
 export { ForwardModal } from "./ForwardModal";
 export type { Company } from "./ForwardModal";
 export * from "./newReferral";
-export { ReceiverInbox } from "./inbox/ReceiverInbox";
+export { ReceiverInbox } from "./inbox/receiver/ReceiverInbox";
 export { SenderInbox } from "./inbox/sender/SenderInbox";

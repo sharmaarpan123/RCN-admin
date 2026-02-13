@@ -2,10 +2,13 @@
 
 import React, { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import type { SentReferralApi, Company } from "@/app/staff-portal/inbox/types";
+import type { SentReferralApi, Company, ReferralListMeta } from "@/app/staff-portal/inbox/types";
 import { fmtDate, pillClass, pillLabel } from "@/app/staff-portal/inbox/helpers";
 import { ForwardModal } from "../../ForwardModal";
 import { Button, DebouncedInput, TableLayout, type TableColumn } from "@/components";
+import CustomPagination from "@/components/CustomPagination";
+import { SenderInboxBody } from "@/app/staff-portal/inbox/page";
+
 
 function sentReferralStatus(ref: SentReferralApi): string {
   if (ref.is_draft) return "DRAFT";
@@ -26,12 +29,15 @@ interface SenderInboxProps {
   setStatusFilter: (s: string) => void;
   dateFilterDays: number;
   setDateFilterDays: (d: number) => void;
-  query: string;
-  setQuery: (q: string) => void;
+  meta: ReferralListMeta;
   isLoading?: boolean;
+  body: SenderInboxBody;
+  setBody: React.Dispatch<React.SetStateAction<SenderInboxBody>>;
 }
 
 export function SenderInbox({
+  body,
+  setBody,
   referrals,
   setReferrals,
   companyDirectory,
@@ -40,8 +46,7 @@ export function SenderInbox({
   setStatusFilter,
   dateFilterDays,
   setDateFilterDays,
-  query,
-  setQuery,
+  meta,
   isLoading = false,
 }: SenderInboxProps) {
   const router = useRouter();
@@ -70,16 +75,7 @@ export function SenderInbox({
       });
   }, [referrals, statusFilter, dateFilterDays]);
 
-  const senderBodyList = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return baseList;
-    return baseList.filter((ref) => {
-      const p = ref.patient;
-      const patient = `${p?.patient_last_name ?? ""} ${p?.patient_first_name ?? ""} ${p?.dob ?? ""}`.toLowerCase();
-      const localNames = (ref._localReceivers ?? []).map((x) => x.name.toLowerCase()).join(" ");
-      return `${ref._id} ${patient} ${localNames}`.includes(q);
-    });
-  }, [baseList, query]);
+
 
   const fullRef = forwardRefId ? referrals.find((r) => r._id === forwardRefId) : null;
 
@@ -203,8 +199,8 @@ export function SenderInbox({
         <div className="flex flex-col gap-2.5 p-3 border-b border-slate-200 bg-white/90">
           <DebouncedInput
             id="sender-inbox-search"
-            value={query}
-            onChange={setQuery}
+            value={body.search}
+            onChange={(value) => setBody({ ...body, search: value })}
             placeholder="Search patient, DOB, receiver, referral ID…"
             className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-[13px] text-rcn-text"
             aria-label="Search inbox"
@@ -225,20 +221,23 @@ export function SenderInbox({
           </div>
         </div>
         <div className="overflow-auto max-w-full">
-          {isLoading ? (
-            <div className="py-5 px-3.5 text-center text-rcn-muted font-extrabold text-[13px]">Loading sent referrals…</div>
-          ) : senderBodyList.length === 0 ? (
-            <div className="py-5 px-3.5 text-center text-rcn-muted font-extrabold text-[13px]">No referrals match your filters.</div>
-          ) : (
-            <TableLayout<SentReferralApi>
-              columns={columns}
-              data={senderBodyList}
-              size="sm"
-              tableClassName="[&_thead_tr]:bg-rcn-brand/10 [&_th]:border-slate-200 [&_th]:border-b [&_td]:border-slate-200 [&_td]:border-b [&_tr]:border-slate-200 [&_tr:hover]:bg-slate-50/50"
-              getRowKey={(ref) => ref._id}
-              onRowClick={(ref) => router.push(`/staff-portal/inbox/sender/${ref._id}`)}
-            />
-          )}
+
+          <TableLayout<SentReferralApi>
+            columns={columns}
+            data={baseList}
+            size="sm"
+            loader={isLoading}
+            tableClassName="[&_thead_tr]:bg-rcn-brand/10 [&_th]:border-slate-200 [&_th]:border-b [&_td]:border-slate-200 [&_td]:border-b [&_tr]:border-slate-200 [&_tr:hover]:bg-slate-50/50"
+            getRowKey={(ref) => ref._id}
+            emptyMessage="No referrals match your filters."
+            onRowClick={(ref) => router.push(`/staff-portal/inbox/sender/${ref._id}`)}
+          />
+          <CustomPagination
+            total={meta.total}
+            pageSize={meta.limit}
+            current={meta.page}
+            onChange={(page) => setBody({ ...body, page })}
+          />
         </div>
       </section>
 

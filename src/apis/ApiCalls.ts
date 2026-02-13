@@ -330,8 +330,12 @@ export const postOrganizationReferralApi = (body: unknown) =>
   AxiosInstance.post("/api/organization/referral", body);
 
 /** GET /api/organization/referral/sent — list sent referrals (staff portal, sender inbox). */
-export const getOrganizationReferralSentApi = () =>
-  AxiosInstance.get("/api/organization/referral/sent");
+export const getOrganizationReferralSentApi = (params?: { page?: number; limit?: number; search?: string }) =>
+  AxiosInstance.get("/api/organization/referral/sent", { params: params ?? {} });
+
+/** GET /api/organization/referral/received — list received referrals (staff portal, receiver inbox). */
+export const getOrganizationReferralReceivedApi = (params?: { page?: number; limit?: number; search?: string }) =>
+  AxiosInstance.get("/api/organization/referral/received", { params: params ?? {} });
 
 /** GET /api/organization/referral/:id — get referral by id (staff portal, sender detail). */
 export const getOrganizationReferralByIdApi = (id: string) =>

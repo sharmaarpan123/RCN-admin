@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
@@ -90,12 +90,19 @@ export function UserForm({
       if (!userId) return null;
       const res = await getOrganizationUserApi(userId);
       if (!checkResponse({ res })) return null;
-      const d = res.data;
-      if (Array.isArray(d?.data)) return (d.data[0] as Record<string, unknown>) ?? null;
-      return (d?.data ?? d) as Record<string, unknown> | null;
+      const raw = res.data as { data?: unknown };
+      const data = raw?.data;
+      if (Array.isArray(data) && data.length > 0) return data[0] as Record<string, unknown>;
+      if (data && typeof data === "object") return data as Record<string, unknown>;
+      return null;
     },
-
+    enabled: !!userId,
   });
+
+
+
+
+
 
   const apiUser = userData && typeof userData === "object" ? (userData as Record<string, unknown>) : null;
 
@@ -126,7 +133,7 @@ export function UserForm({
       dialCode: (userData?.dial_code as string) ?? DEFAULT_DIAL_CODE,
       phone_number: userData?.phone_number ? ((userData?.phone_number as string) ?? "").replace(/\D/g, "").trim() : "",
       faxNumber: (userData?.fax_number as string) ?? "",
-      isActive: userData?.is_active !== false,
+      isActive: typeof userData?.is_active === "boolean" ? userData.is_active : (userData?.status !== undefined ? userData?.status === 1 : true),
       notes: (userData?.notes as string) ?? "",
       password: "",
       confirmPassword: "",
@@ -228,6 +235,18 @@ export function UserForm({
   };
 
   const isLoading = isEdit && isLoadingUser;
+
+  const initialBranchIds = useMemo(() => {
+    const b = apiUser?.branches;
+    if (!Array.isArray(b)) return [];
+    return b.map((x: { _id?: string }) => x._id).filter(Boolean) as string[];
+  }, [apiUser?.branches]);
+
+  const initialDeptIds = useMemo(() => {
+    const d = apiUser?.departments;
+    if (!Array.isArray(d)) return [];
+    return d.map((x: { _id?: string }) => x._id).filter(Boolean) as string[];
+  }, [apiUser?.departments]);
   const canSubmit = !isEdit || (isEdit);
 
   return (
@@ -408,8 +427,8 @@ export function UserForm({
             <UserBranchDepartmentAssign
               key={apiUser ? `${userId}-loaded` : `${userId}-loading`}
               userId={userId}
-              initialBranchIds={Array.isArray(apiUser?.branch_ids) ? (apiUser.branch_ids as string[]) : []}
-              initialDeptIds={Array.isArray(apiUser?.department_ids) ? (apiUser.department_ids as string[]) : []}
+              initialBranchIds={initialBranchIds}
+              initialDeptIds={initialDeptIds}
               onSave={onSave}
               disabled={isLoading}
             />

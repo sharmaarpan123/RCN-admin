@@ -200,11 +200,6 @@ const Login: React.FC = () => {
     mutateLogin(data);
   };
 
-  const handleResetDemo = () => {
-    if (window.confirm("Reset demo data? This clears local changes.")) {
-      toastSuccess("Demo data reset.");
-    }
-  };
 
   const inputBaseClass =
     "w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white text-sm outline-none focus:border-[#b9d7c5] focus:shadow-[0_0_0_3px_rgba(31,122,75,0.12)] transition-all";
@@ -293,10 +288,8 @@ const Login: React.FC = () => {
                 {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password.message}</p>}
               </div>
 
-              <div className="flex flex-wrap gap-3 mt-3 justify-between items-center">
-                <Button variant="secondary" onClick={handleResetDemo}>
-                  Reset demo data
-                </Button>
+              <div className="flex flex-wrap gap-3 mt-3 justify-end items-center">
+
                 <Button variant="primary" type="submit" disabled={isPending}>
                   {isPending ? "Signing in…" : "Login"}
                 </Button>
