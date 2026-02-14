@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Button from '../../Button';
 import ConfirmModal from '../../ConfirmModal';
 import Link from 'next/link';
+import { useAdminAuthLoginUser } from '@/store/slices/Auth/hooks';
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -15,6 +16,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
   const router = useRouter();
   const pathname = usePathname();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  // Get admin user details
+  const { loginUser } = useAdminAuthLoginUser();
+  console.log("login",loginUser)
 
   const handleLogoutClick = () => setShowLogoutModal(true);
 
@@ -158,7 +163,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
           </div>
           <div className="flex-1">
             <h1 className="text-sm font-semibold m-0 leading-tight">RCN Admin</h1>
-
+            {loginUser && (
+              <div className="text-xs text-rcn-dark-text/70 mt-0.5">
+                <span className="font-medium">{loginUser.first_name} {loginUser.last_name}</span>
+                <span className="mx-1">•</span>
+                <span className="truncate">{loginUser.email}</span>
+              </div>
+            )}
           </div>
           {/* Mobile Close Button */}
           <Button
