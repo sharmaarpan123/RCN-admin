@@ -78,6 +78,7 @@ export function StaffBranches() {
 
   return (
     <div className="max-w-[1100px] mx-auto p-4 lg:p-6">
+      
       <div className="mb-4">
         <h1 className="text-2xl font-semibold m-0">Branches</h1>
         <p className="text-sm text-rcn-muted mt-1 mb-0">
