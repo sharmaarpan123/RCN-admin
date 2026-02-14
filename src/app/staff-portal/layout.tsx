@@ -70,7 +70,9 @@ function StaffPortalSidebar({
             <Link
               key={href}
               href={href}
-              onClick={() => setSidebarOpen(false)}
+              onClick={() => {
+                setSidebarOpen(false);
+              }}
               className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl no-underline text-inherit mx-1.5 transition-all ${
                 pathname === href || pathname?.startsWith(href + "/") ? "bg-white/15" : "hover:bg-white/10"
               }`}
