@@ -371,6 +371,14 @@ export const getStaffOrganizationsApi = (params: {
   search?: string;
 }) => AxiosInstance.get("/api/users/organizations", { params });
 
+/** GET /api/users/branches — list branches available to staff users. */
+export const getStaffBranchesApi = (params?: { search?: string }) =>
+  AxiosInstance.get("/api/users/branches", { params: params ?? {} });
+
+/** GET /api/users/departments — list departments available to staff users. */
+export const getStaffDepartmentsApi = (params?: { search?: string }) =>
+  AxiosInstance.get("/api/users/departments", { params: params ?? {} });
+
 /** POST /api/users/branches/by-organizations — get branches for given organization ids. */
 export const postStaffBranchesByOrganizationsApi = (body: {
   organization_ids: string[];

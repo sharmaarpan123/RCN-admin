@@ -8,6 +8,8 @@ import { useEffect, useState } from "react";
 
 const NAV = [
   { href: "/staff-portal/profile", label: "Profile" },
+  { href: "/staff-portal/branches", label: "Branches" },
+  { href: "/staff-portal/departments", label: "Departments" },
   { href: "/staff-portal/inbox", label: "Inbox" },
   { href: "/staff-portal/chat", label: "Chat" },
   { href: "/staff-portal/new-referral", label: "New Referral" },
