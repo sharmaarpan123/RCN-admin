@@ -164,7 +164,7 @@ function SenderDetailContent({ data }: { data: ReferralByIdApi }) {
   );
 
   const isDraft = data.is_draft === true;
-  const [paymentSource, setPaymentSource] = useState<"free" | "payment">("free");
+  const [paymentSource, setPaymentSource] = useState<"free" | "payment" | "credit">("free");
   const [paymentMethodId, setPaymentMethodId] = useState("");
   const [summaryModalOpen, setSummaryModalOpen] = useState(false);
   const [paymentSummary, setPaymentSummary] = useState<PaymentSummaryData | null>(null);

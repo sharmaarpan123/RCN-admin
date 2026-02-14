@@ -4,8 +4,8 @@ import React from "react";
 import { BOX_GRAD } from "./senderViewHelpers";
 
 interface SenderDraftPaymentSectionProps {
-  paymentSource: "free" | "payment";
-  setPaymentSource: (v: "free" | "payment") => void;
+  paymentSource: "free" | "payment" | "credit";
+  setPaymentSource: (v: "free" | "payment" | "credit") => void;
   paymentMethodId: string;
   setPaymentMethodId: (v: string) => void;
   onGetSummary: () => void;
