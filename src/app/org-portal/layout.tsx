@@ -30,8 +30,12 @@ function OrgPortalSidebar({
   const handleLogoutConfirm = () => {
     setShowLogoutModal(false);
     setSidebarOpen(false);
-    // Simple logout - redirect to login
-    router.push('/login');
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("role");
+    document.cookie =
+      "authorization=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    document.cookie = "role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    router.push("/login");
   };
 
   return (
@@ -155,3 +159,4 @@ function OrgPortalLayoutInner({ children }: { children: React.ReactNode }) {
 export default function OrgPortalLayout({ children }: { children: React.ReactNode }) {
   return <OrgPortalLayoutInner>{children}</OrgPortalLayoutInner>;
 }
+
