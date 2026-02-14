@@ -9,15 +9,21 @@ export const getStatesApi = () => AxiosInstance.get("/api/states");
 export const authLoginApi = (body: unknown) =>
   AxiosInstance.post("/api/auth/login", body);
 
-export const getAuthProfileApi = () =>
-  AxiosInstance.get("/api/auth/profile");
+export const getAuthProfileApi = () => AxiosInstance.get("/api/auth/profile");
+
+export const authLogoutApi = (authorization?: string) =>
+  AxiosInstance.post(
+    "/api/auth/logout",
+  
+  );
 
 /** POST /api/auth/change-password — change password for authenticated user. */
 export const changePasswordApi = (body: { password: string }) =>
   AxiosInstance.post("/api/auth/change-password", body);
 
 /** PUT /api/organization/profile — update organization and contact (org portal). */
-export const updateOrganizationProfileApi = (body: unknown) => AxiosInstance.put("/api/organization/profile", body);
+export const updateOrganizationProfileApi = (body: unknown) =>
+  AxiosInstance.put("/api/organization/profile", body);
 
 export const organizationLoginApi = (body: unknown) =>
   AxiosInstance.post("/api/organization/login", body);
@@ -25,11 +31,14 @@ export const organizationLoginApi = (body: unknown) =>
 export const adminLoginApi = (body: { email: string; password: string }) =>
   AxiosInstance.post("/api/admin/login", body);
 
-export const authVerifyOtpApi = (body: unknown) => AxiosInstance.post("/api/auth/verify-otp", body);
+export const authVerifyOtpApi = (body: unknown) =>
+  AxiosInstance.post("/api/auth/verify-otp", body);
 
-export const organizationVerifyOtpApi = (body: unknown) => AxiosInstance.post("/api/organization/verify-otp", body);
+export const organizationVerifyOtpApi = (body: unknown) =>
+  AxiosInstance.post("/api/organization/verify-otp", body);
 
-export const adminVerifyOtpApi = (body: unknown) => AxiosInstance.post("/api/admin/verify-otp", body);
+export const adminVerifyOtpApi = (body: unknown) =>
+  AxiosInstance.post("/api/admin/verify-otp", body);
 
 /** GET /api/admin/organization — list organizations (admin). */
 export const getAdminOrganizationsApi = () =>
@@ -44,8 +53,10 @@ export const createAdminOrganizationApi = (body: unknown) =>
   AxiosInstance.post("/api/admin/organization", body);
 
 /** PUT /api/admin/organization/:id — update organization (admin). */
-export const updateAdminOrganizationApi = (organizationId: string, body: unknown) =>
-  AxiosInstance.put(`/api/admin/organization/${organizationId}`, body);
+export const updateAdminOrganizationApi = (
+  organizationId: string,
+  body: unknown,
+) => AxiosInstance.put(`/api/admin/organization/${organizationId}`, body);
 
 /** PUT /api/admin/organization/toggle/:organizationId — toggle organization status (admin). */
 export const putAdminOrganizationToggleApi = (organizationId: string) =>
@@ -58,20 +69,34 @@ export const deleteAdminOrganizationApi = (organizationId: string) =>
 /** POST /api/admin/organization/:organizationId/wallet/topup — top up organization wallet (admin). */
 export const postAdminOrganizationWalletTopupApi = (
   organizationId: string,
-  body: { amount: number }
-) => AxiosInstance.post(`/api/admin/organization/${organizationId}/wallet/topup`, body);
+  body: { amount: number },
+) =>
+  AxiosInstance.post(
+    `/api/admin/organization/${organizationId}/wallet/topup`,
+    body,
+  );
 
 /** GET /api/admin/organization/branch/:organizationId — list branches for an organization (admin). */
-export const getAdminOrganizationBranchesApi = (organizationId: string, body: unknown) =>
-  AxiosInstance.get(`/api/admin/organization/branch/${organizationId}`, { params: body });
+export const getAdminOrganizationBranchesApi = (
+  organizationId: string,
+  body: unknown,
+) =>
+  AxiosInstance.get(`/api/admin/organization/branch/${organizationId}`, {
+    params: body,
+  });
 
 /** POST /api/admin/organization/branch/:organizationId — create branch (admin). */
-export const createAdminOrganizationBranchApi = (organizationId: string, body: { name: string }) =>
+export const createAdminOrganizationBranchApi = (
+  organizationId: string,
+  body: { name: string },
+) =>
   AxiosInstance.post(`/api/admin/organization/branch/${organizationId}`, body);
 
 /** PUT /api/admin/organization/branch/:branchId — update branch (admin). */
-export const updateAdminOrganizationBranchApi = (branchId: string, body: { name: string }) =>
-  AxiosInstance.put(`/api/admin/branch/${branchId}`, body);
+export const updateAdminOrganizationBranchApi = (
+  branchId: string,
+  body: { name: string },
+) => AxiosInstance.put(`/api/admin/branch/${branchId}`, body);
 
 /** PUT /api/admin/branch/toggle/:branchId — toggle branch status (admin). */
 export const putAdminBranchToggleApi = (branchId: string) =>
@@ -84,21 +109,31 @@ export const getAdminOrganizationDepartmentsApi = (organizationId: string) =>
 /** POST /api/admin/organization/department/:organizationId — create department (admin). */
 export const createAdminOrganizationDepartmentApi = (
   organizationId: string,
-  body: { name: string; branch_id: string }
+  body: { name: string; branch_id: string },
 ) =>
-  AxiosInstance.post(`/api/admin/organization/department/${organizationId}`, body);
+  AxiosInstance.post(
+    `/api/admin/organization/department/${organizationId}`,
+    body,
+  );
 
 /** GET /api/admin/organization/user — list organization users (admin). Params: organization_id. */
-export const getAdminOrganizationUsersApi = (organizationId: string, body: unknown) =>
-  AxiosInstance.get("/api/admin/organization/user/" + organizationId, { params: body });
+export const getAdminOrganizationUsersApi = (
+  organizationId: string,
+  body: unknown,
+) =>
+  AxiosInstance.get("/api/admin/organization/user/" + organizationId, {
+    params: body,
+  });
 
 /** GET /api/admin/organization/user/:userId — get single organization user (admin). */
 export const getAdminOrganizationUserApi = (userId: string) =>
   AxiosInstance.get(`/api/admin/organization/user/${userId}`);
 
 /** POST /api/admin/organization/user/:organization_id — create organization user (admin). */
-export const createAdminOrganizationUserApi = (organizationId: string, body: unknown) =>
-  AxiosInstance.post(`/api/admin/organization/user/${organizationId}`, body);
+export const createAdminOrganizationUserApi = (
+  organizationId: string,
+  body: unknown,
+) => AxiosInstance.post(`/api/admin/organization/user/${organizationId}`, body);
 
 /** PUT /api/admin/department/toggle/:departmentId — toggle department status (admin). */
 export const putAdminDepartmentToggleApi = (departmentId: string) =>
@@ -121,7 +156,7 @@ export const updateOrganizationUserApi = (userId: string, body: unknown) =>
 /** PUT /api/organization/user/branch/:userId — update user's branch & department assignment. Body: [{ branch_id, department_ids }, ...]. */
 export const updateOrganizationUserBranchApi = (
   userId: string,
-  body: { branch_id: string; department_ids: string[] }[]
+  body: { branch_id: string; department_ids: string[] }[],
 ) => AxiosInstance.put(`/api/organization/user/branch/${userId}`, body);
 
 export const deleteOrganizationUserApi = (userId: string) =>
@@ -136,8 +171,10 @@ export const getOrganizationBranchApi = (branchId: string) =>
 export const createOrganizationBranchApi = (body: { name: string }) =>
   AxiosInstance.post(`/api/organization/branch`, body);
 
-export const updateOrganizationBranchApi = (branchId: string, body: { name: string }) =>
-  AxiosInstance.put(`/api/organization/branch/${branchId}`, body);
+export const updateOrganizationBranchApi = (
+  branchId: string,
+  body: { name: string },
+) => AxiosInstance.put(`/api/organization/branch/${branchId}`, body);
 
 export const deleteOrganizationBranchApi = (branchId: string) =>
   AxiosInstance.delete(`/api/organization/branch/${branchId}`);
@@ -148,18 +185,21 @@ export const getOrganizationDepartmentsApi = (params: { branch_id: string }) =>
 export const getOrganizationDepartmentApi = (departmentId: string) =>
   AxiosInstance.get(`/api/organization/department/${departmentId}`);
 
-export const createOrganizationDepartmentApi = (body: { name: string; branch_id: string }) =>
-  AxiosInstance.post("/api/organization/department", body);
+export const createOrganizationDepartmentApi = (body: {
+  name: string;
+  branch_id: string;
+}) => AxiosInstance.post("/api/organization/department", body);
 
-export const updateOrganizationDepartmentApi = (departmentId: string, body: { name: string; branch_id: string }) =>
-  AxiosInstance.put(`/api/organization/department/${departmentId}`, body);
+export const updateOrganizationDepartmentApi = (
+  departmentId: string,
+  body: { name: string; branch_id: string },
+) => AxiosInstance.put(`/api/organization/department/${departmentId}`, body);
 
 export const deleteOrganizationDepartmentApi = (departmentId: string) =>
   AxiosInstance.delete(`/api/organization/department/${departmentId}`);
 
 /** GET /api/admin/cms — list CMS pages (admin). */
-export const getAdminCmsListApi = () =>
-  AxiosInstance.get("/api/admin/cms");
+export const getAdminCmsListApi = () => AxiosInstance.get("/api/admin/cms");
 
 /** GET /api/admin/cms/:id — get single CMS page (admin). */
 export const getAdminCmsByIdApi = (id: string) =>
@@ -178,24 +218,26 @@ export const getAdminAssignablePermissionsApi = () =>
   AxiosInstance.get("/api/admin/permissions/assignable");
 
 /** GET /api/admin/roles — list roles (admin). */
-export const getAdminRolesApi = () =>
-  AxiosInstance.get("/api/admin/roles");
+export const getAdminRolesApi = () => AxiosInstance.get("/api/admin/roles");
 
 /** POST /api/admin/roles — create role (admin). Body: { name, permission_ids }. */
-export const createAdminRoleApi = (body: { name: string; permission_ids: string[] }) =>
-  AxiosInstance.post("/api/admin/roles", body);
+export const createAdminRoleApi = (body: {
+  name: string;
+  permission_ids: string[];
+}) => AxiosInstance.post("/api/admin/roles", body);
 
 /** PUT /api/admin/roles/:id — update role (admin). Body: { name, permission_ids }. */
-export const updateAdminRoleApi = (roleId: string | number, body: { name: string; permission_ids: string[] }) =>
-  AxiosInstance.put(`/api/admin/roles/${roleId}`, body);
+export const updateAdminRoleApi = (
+  roleId: string | number,
+  body: { name: string; permission_ids: string[] },
+) => AxiosInstance.put(`/api/admin/roles/${roleId}`, body);
 
 /** DELETE /api/admin/roles/:id — delete role (admin). */
 export const deleteAdminRoleApi = (roleId: string | number) =>
   AxiosInstance.delete(`/api/admin/roles/${roleId}`);
 
 /** GET /api/admin/user — list master admin users. */
-export const getAdminUsersApi = () =>
-  AxiosInstance.get("/api/admin/user");
+export const getAdminUsersApi = () => AxiosInstance.get("/api/admin/user");
 
 /** GET /api/admin/user/:id — get master admin user by id. */
 export const getAdminUserByIdApi = (userId: string) =>
@@ -224,7 +266,7 @@ export const updateAdminUserApi = (
     status: number;
     role_id: number;
     password?: string;
-  }
+  },
 ) => AxiosInstance.put(`/api/admin/user/${userId}`, body);
 
 /** DELETE /api/admin/user/:id — delete master admin user. */
@@ -236,7 +278,8 @@ export const getAdminPaymentSettingsApi = () =>
   AxiosInstance.get("/api/admin/payment-settings");
 
 /** PUT /api/admin/payment-settings — update payment settings (admin). */
-export const updateAdminPaymentSettingsApi = (body: unknown) => AxiosInstance.put("/api/admin/payment-settings", body);
+export const updateAdminPaymentSettingsApi = (body: unknown) =>
+  AxiosInstance.put("/api/admin/payment-settings", body);
 
 /** POST /api/users/profile/picture/upload — upload profile/banner image (common). FormData with key "file". */
 export const uploadProfilePictureApi = (file: File) => {
@@ -251,19 +294,30 @@ export const uploadProfilePictureApi = (file: File) => {
 export const getAdminBannersApi = () => AxiosInstance.get("/api/admin/banners");
 
 /** POST /api/admin/banners — create banner (admin). */
-export const createAdminBannerApi = (body: unknown) => AxiosInstance.post("/api/admin/banners", body);
+export const createAdminBannerApi = (body: unknown) =>
+  AxiosInstance.post("/api/admin/banners", body);
 
 /** PUT /api/admin/banners/:id — update banner (admin). */
-export const updateAdminBannerApi = (bannerId: string, body: Record<string, unknown>) =>
-  AxiosInstance.put(`/api/admin/banners/${bannerId}`, body);
+export const updateAdminBannerApi = (
+  bannerId: string,
+  body: Record<string, unknown>,
+) => AxiosInstance.put(`/api/admin/banners/${bannerId}`, body);
 
 /** DELETE /api/admin/banners/:id — delete banner (admin). Optional body e.g. { organization_id }. */
-export const deleteAdminBannerApi = (bannerId: string, body?: { organization_id?: string }) =>
-  AxiosInstance.delete(`/api/admin/banners/${bannerId}`, body ? { data: body } : undefined);
+export const deleteAdminBannerApi = (
+  bannerId: string,
+  body?: { organization_id?: string },
+) =>
+  AxiosInstance.delete(
+    `/api/admin/banners/${bannerId}`,
+    body ? { data: body } : undefined,
+  );
 
 /** GET /api/admin/contact — list contact queries with pagination (admin). */
-export const getAdminContactListApi = (params: { page: number; limit: number }) =>
-  AxiosInstance.get("/api/admin/contact", { params });
+export const getAdminContactListApi = (params: {
+  page: number;
+  limit: number;
+}) => AxiosInstance.get("/api/admin/contact", { params });
 
 /** GET /api/admin/contact/:id — get single contact query detail (admin). */
 export const getAdminContactDetailApi = (contactId: string) =>
@@ -280,13 +334,15 @@ export const getAdminSpecialitiesApi = () =>
   AxiosInstance.get("/api/admin/specialities");
 
 /** POST /api/admin/specialities — create service/speciality (admin). */
-export const createAdminSpecialityApi = (body: { name: string; user_id?: string }) =>
-  AxiosInstance.post("/api/admin/specialities", body);
+export const createAdminSpecialityApi = (body: {
+  name: string;
+  user_id?: string;
+}) => AxiosInstance.post("/api/admin/specialities", body);
 
 /** PUT /api/admin/specialities/:id — update service/speciality (admin). */
 export const updateAdminSpecialityApi = (
   id: string,
-  body: { name: string; user_id?: string }
+  body: { name: string; user_id?: string },
 ) => AxiosInstance.put(`/api/admin/specialities/${id}`, body);
 
 /** GET /api/admin/specialities/:id — get single service/speciality (admin). */
@@ -310,32 +366,50 @@ export const getAdminFinancialReportApi = () =>
 // ——— Staff portal (users) ———
 
 /** GET /api/users/organizations — list organizations for staff (e.g. referral receivers). Params: state, optional search. */
-export const getStaffOrganizationsApi = (params: { state?: string; search?: string }) =>
-  AxiosInstance.get("/api/users/organizations", { params });
+export const getStaffOrganizationsApi = (params: {
+  state?: string;
+  search?: string;
+}) => AxiosInstance.get("/api/users/organizations", { params });
 
 /** POST /api/users/branches/by-organizations — get branches for given organization ids. */
-export const postStaffBranchesByOrganizationsApi = (body: { organization_ids: string[] }) =>
-  AxiosInstance.post("/api/users/branches/by-organizations", body);
+export const postStaffBranchesByOrganizationsApi = (body: {
+  organization_ids: string[];
+}) => AxiosInstance.post("/api/users/branches/by-organizations", body);
 
 /** POST /api/users/departments/by-branches — get departments for given branch ids. */
-export const postStaffDepartmentsByBranchesApi = (body: { branch_ids: string[] }) =>
-  AxiosInstance.post("/api/users/departments/by-branches", body);
+export const postStaffDepartmentsByBranchesApi = (body: {
+  branch_ids: string[];
+}) => AxiosInstance.post("/api/users/departments/by-branches", body);
 
 /** GET /api/users/specialities — list specialities/services for staff (e.g. referral form). Params: page, limit. */
-export const getStaffSpecialitiesApi = (params?: { page?: number; limit?: number }) =>
-  AxiosInstance.get("/api/users/specialities", { params });
+export const getStaffSpecialitiesApi = (params?: {
+  page?: number;
+  limit?: number;
+}) => AxiosInstance.get("/api/users/specialities", { params });
 
 /** POST /api/organization/referral — create referral (staff portal). */
 export const postOrganizationReferralApi = (body: unknown) =>
   AxiosInstance.post("/api/organization/referral", body);
 
 /** GET /api/organization/referral/sent — list sent referrals (staff portal, sender inbox). */
-export const getOrganizationReferralSentApi = (params?: { page?: number; limit?: number; search?: string }) =>
-  AxiosInstance.get("/api/organization/referral/sent", { params: params ?? {} });
+export const getOrganizationReferralSentApi = (params?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+}) =>
+  AxiosInstance.get("/api/organization/referral/sent", {
+    params: params ?? {},
+  });
 
 /** GET /api/organization/referral/received — list received referrals (staff portal, receiver inbox). */
-export const getOrganizationReferralReceivedApi = (params?: { page?: number; limit?: number; search?: string }) =>
-  AxiosInstance.get("/api/organization/referral/received", { params: params ?? {} });
+export const getOrganizationReferralReceivedApi = (params?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+}) =>
+  AxiosInstance.get("/api/organization/referral/received", {
+    params: params ?? {},
+  });
 
 /** GET /api/organization/referral/:id — get referral by id (staff portal, sender detail). */
 export const getOrganizationReferralByIdApi = (id: string) =>
@@ -344,7 +418,11 @@ export const getOrganizationReferralByIdApi = (id: string) =>
 /** POST /api/organization/referral/:id/payment-summary — get payment summary for draft referral. source: "free" = sender pays, "payment" = receiver pays (requires payment_method_id). */
 export const postOrganizationReferralPaymentSummaryApi = (
   referralId: string,
-  body: { source: "free" | "payment"; payment_method_id?: string }
-) => AxiosInstance.post(`/api/organization/referral/${referralId}/payment-summary`, body);
+  body: { source: "free" | "payment"; payment_method_id?: string },
+) =>
+  AxiosInstance.post(
+    `/api/organization/referral/${referralId}/payment-summary`,
+    body,
+  );
 
 /** Request body for POST /api/organization/referral. Aligned with backend createOrUpdateReferralSchema (all optional). */

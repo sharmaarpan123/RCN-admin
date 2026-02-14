@@ -10,6 +10,7 @@ import Button from "../../Button";
 import ConfirmModal from "../../ConfirmModal";
 import { useAdminAuthLoginUser } from "@/store/slices/Auth/hooks";
 import { logoutSuccess } from "@/store/slices/Auth/authSlice";
+import { authLogoutApi } from "@/apis/ApiCalls";
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -32,6 +33,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
   const pathname = usePathname();
   const dispatch = useDispatch();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const { loginUser } = useAdminAuthLoginUser();
 
@@ -60,11 +62,20 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
 
   const handleLogoutClick = () => setShowLogoutModal(true);
 
-  const handleLogoutConfirm = () => {
-    setShowLogoutModal(false);
-    dispatch(logoutSuccess());
-    onClose?.();
-    router.push("/login");
+  const handleLogoutConfirm = async () => {
+    setIsLoggingOut(true);
+
+    try {
+      await authLogoutApi();
+    } catch (error) {
+      console.error("Logout API failed", error);
+    } finally {
+      setIsLoggingOut(false);
+      setShowLogoutModal(false);
+      dispatch(logoutSuccess());
+      onClose?.();
+      router.push("/login");
+    }
   };
 
   const isActive = (path: string) => pathname === path;
@@ -76,9 +87,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
         {
           path: "/master-admin/dashboard",
           label: "Referral Dashboard",
-          permissions: [
-      "admin.dashboard"
-          ],
+          permissions: ["admin.dashboard"],
         },
         {
           path: "/master-admin/organizations",
@@ -257,15 +266,30 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
                 ))}
 
                 {section.title === "System" && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleLogoutClick}
-                    className="w-full justify-start px-3 py-2.5 rounded-xl text-rcn-dark-text hover:bg-white/10"
-                  >
-                    Logout
-                  </Button>
+                  <div className="border-t border-white/10 pt-3 mt-2">
+                    <button
+                      type="button"
+                      onClick={handleLogoutClick}
+                      className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl w-full text-left mx-1.5 transition-all text-rcn-dark-text hover:bg-white/10"
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                        <polyline points="16 17 21 12 16 7" />
+                        <line x1="21" y1="12" x2="9" y2="12" />
+                      </svg>
+                      Logout
+                    </button>
+                  </div>
                 )}
               </nav>
             </div>
@@ -278,6 +302,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
         isOpen={showLogoutModal}
         onClose={() => setShowLogoutModal(false)}
         onConfirm={handleLogoutConfirm}
+        confirmDisabled={isLoggingOut}
       />
     </>
   );
