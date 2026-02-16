@@ -443,4 +443,8 @@ export const postOrganizationReferralSendApi = (
   body: { source: "free" | "payment"; payment_method_id?: string },
 ) => AxiosInstance.post(`/api/organization/referral/${referralId}/send`, body);
 
+/** POST /api/referral/chats/:referralId/start-chat — start or get conversation for a referral (receiver chat). */
+export const postReferralStartChatApi = (referralId: string) =>
+  AxiosInstance.post(`/api/referral/chats/${referralId}/start-chat`);
+
 /** Request body for POST /api/organization/referral. Aligned with backend createOrUpdateReferralSchema (all optional). */
