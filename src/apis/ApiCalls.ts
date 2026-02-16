@@ -437,4 +437,10 @@ export const postOrganizationReferralPaymentSummaryApi = (
 export const getPaymentMethodsActiveApi = () =>
   AxiosInstance.get("/api/payment-methods/active");
 
+/** POST /api/organization/referral/:id/send — confirm payment and send referral to receiver. */
+export const postOrganizationReferralSendApi = (
+  referralId: string,
+  body: { source: "free" | "payment"; payment_method_id?: string },
+) => AxiosInstance.post(`/api/organization/referral/${referralId}/send`, body);
+
 /** Request body for POST /api/organization/referral. Aligned with backend createOrUpdateReferralSchema (all optional). */

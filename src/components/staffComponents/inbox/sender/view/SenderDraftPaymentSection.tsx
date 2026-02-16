@@ -6,16 +6,23 @@ import Modal from "@/components/Modal";
 import {
   getPaymentMethodsActiveApi,
   postOrganizationReferralPaymentSummaryApi,
+  postOrganizationReferralSendApi,
 } from "@/apis/ApiCalls";
 import { checkResponse, catchAsync } from "@/utils/commonFunc";
 import defaultQueryKeys from "@/utils/staffQueryKeys";
 import { BOX_GRAD, type PaymentSummaryData } from "./senderViewHelpers";
+import { StripeCardModal } from "./StripeCardModal";
+import { Button } from "@/components";
 
-/** Minimal shape for active payment method (update when API response is known). */
+/** Active payment method from GET /api/payment-methods/active. */
 export interface PaymentMethodOption {
   id: string;
-  label: string;
+  name: string;
+  key: string;
 }
+
+const PAYMENT_METHODS_EXCLUDED_FROM_WEBSITE = ["apple_pay", "google_pay"];
+const CARD_KEYS_REQUIRING_STRIPE = ["credit_card", "debit_card"];
 
 interface SenderDraftPaymentSectionProps {
   refId: string;
@@ -26,6 +33,7 @@ export function SenderDraftPaymentSection({ refId }: SenderDraftPaymentSectionPr
   const [paymentMethodId, setPaymentMethodId] = useState("");
   const [summaryModalOpen, setSummaryModalOpen] = useState(false);
   const [paymentSummary, setPaymentSummary] = useState<PaymentSummaryData | null>(null);
+  const [stripeModalOpen, setStripeModalOpen] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -34,20 +42,24 @@ export function SenderDraftPaymentSection({ refId }: SenderDraftPaymentSectionPr
     queryFn: async () => {
       const res = await getPaymentMethodsActiveApi();
       if (!checkResponse({ res })) return [];
-      const raw = res.data as { data?: unknown[] } | unknown[];
-      const arr = Array.isArray(raw) ? raw : (raw && typeof raw === "object" && "data" in raw ? (raw as { data?: unknown[] }).data : null);
-      const list = Array.isArray(arr) ? arr : [];
-      return list.map((item: unknown) => {
-        const o = item && typeof item === "object" ? (item as Record<string, unknown>) : {};
-        return {
-          id: String(o._id ?? o.id ?? ""),
-          label: String(o.name ?? o.type ?? o.label ?? o._id ?? o.id ?? "—"),
-        };
-      }) as PaymentMethodOption[];
+      const raw = res.data as { success?: boolean; data?: { id: string; name: string; key: string }[] };
+      const list = Array.isArray(raw?.data) ? raw.data : [];
+      return list
+        .filter((item) => !PAYMENT_METHODS_EXCLUDED_FROM_WEBSITE.includes(item.key))
+        .map((item) => ({
+          id: item.id,
+          name: item.name,
+          key: item.key,
+        }));
     },
+    enabled: paymentSource === "payment",
   });
 
   const paymentMethodOptions = Array.isArray(paymentMethodsList) ? paymentMethodsList : [];
+  const selectedOption = paymentMethodOptions.find((pm) => pm.id === paymentMethodId);
+  const selectedMethodKey = selectedOption?.key ?? null;
+  const requiresStripeCard = selectedMethodKey != null && CARD_KEYS_REQUIRING_STRIPE.includes(selectedMethodKey);
+  
   const { isPending: isPaymentSummaryPending, mutate: fetchPaymentSummary } = useMutation({
     mutationFn: catchAsync(async () => {
       const body =
@@ -74,6 +86,46 @@ export function SenderDraftPaymentSection({ refId }: SenderDraftPaymentSectionPr
   const onCloseSummary = () => {
     setSummaryModalOpen(false);
     setPaymentSummary(null);
+    setStripeModalOpen(false);
+  };
+
+  const { isPending: isSendPending, mutate: sendReferral } = useMutation({
+    mutationFn: catchAsync(async (payload: { source: "free" | "payment"; payment_method_id?: string }) => {
+      const res = await postOrganizationReferralSendApi(refId, payload);
+      if (!checkResponse({ res, showSuccess: true })) return;
+      onCloseSummary();
+      queryClient.invalidateQueries({
+        queryKey: [...defaultQueryKeys.referralSentList, "detail", refId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: defaultQueryKeys.referralSentList,
+      });
+    }),
+  });
+
+  const onConfirmAndSend = () => {
+    if (paymentSource === "free") {
+      sendReferral({ source: "free" });
+      return;
+    }
+    if (paymentSource === "payment") {
+      if (requiresStripeCard) {
+        setStripeModalOpen(true);
+        return;
+      }
+      sendReferral({
+        source: "payment",
+        payment_method_id: paymentMethodId.trim() || undefined,
+      });
+    }
+  };
+
+  const onStripeCardSuccess = (stripePaymentMethodId: string) => {
+    setStripeModalOpen(false);
+    sendReferral({
+      source: "payment",
+      payment_method_id: stripePaymentMethodId,
+    });
   };
 
   return (
@@ -137,7 +189,7 @@ export function SenderDraftPaymentSection({ refId }: SenderDraftPaymentSectionPr
                 <option value="">Select payment method</option>
                 {paymentMethodOptions.map((pm) => (
                   <option key={pm.id} value={pm.id}>
-                    {pm.label}
+                    {pm.name}
                   </option>
                 ))}
               </select>
@@ -213,24 +265,39 @@ export function SenderDraftPaymentSection({ refId }: SenderDraftPaymentSectionPr
                   </p>
                 </div>
               )}
-              <p className="m-0 text-rcn-muted text-xs">
-                Next: final payment flow will be integrated here.
-              </p>
             </div>
           ) : (
             <p className="m-0 text-rcn-muted text-sm">No summary data.</p>
           )}
           <div className="flex gap-2.5 justify-end mt-4">
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={onCloseSummary}
-              className="border border-rcn-brand/25 bg-rcn-brand/10 text-rcn-accent-dark px-4 py-2 rounded-xl font-extrabold text-xs shadow hover:bg-rcn-brand/20"
+              className="border border-slate-200"
             >
               Close
-            </button>
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={onConfirmAndSend}
+              disabled={isSendPending || !paymentSummary}
+            >
+              {isSendPending ? "Sending…" : "Confirm & send referral"}
+            </Button>
           </div>
         </div>
       </Modal>
+
+      <StripeCardModal
+        isOpen={stripeModalOpen}
+        onClose={() => setStripeModalOpen(false)}
+        onSuccess={onStripeCardSuccess}
+        isSubmitting={isSendPending}
+      />
     </>
   );
 }
