@@ -5,3 +5,5 @@ export type { Company } from "./ForwardModal";
 export * from "./newReferral";
 export { ReceiverInbox } from "./inbox/receiver/ReceiverInbox";
 export { SenderInbox } from "./inbox/sender/SenderInbox";
+export { StaffBranches } from "./branches/StaffBranches";
+export { StaffDepartments } from "./departments/StaffDepartments";

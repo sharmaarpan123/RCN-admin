@@ -1,9 +1,17 @@
 "use client";
-import React, { useState } from 'react';
-import { toastSuccess, toastError } from '@/utils/toast';
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import * as yup from "yup";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { useMutation } from "@tanstack/react-query";
+
+import { changePasswordApi } from "@/apis/ApiCalls";
+import { Button } from "@/components";
+import { catchAsync, checkResponse } from "@/utils/commonFunc";
+import { toastError, toastSuccess } from "@/utils/toast";
 
 const Settings: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
+  const [activeTab, setActiveTab] = useState<"profile" | "password">("profile");
 
   // Mock current user
   const currentUser = {
@@ -16,42 +24,69 @@ const Settings: React.FC = () => {
   };
 
   const inputClass = "w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white text-sm outline-none focus:border-[#b9d7c5] focus:shadow-[0_0_0_3px_rgba(31,122,75,0.12)]";
-  const btnClass = "border border-rcn-border bg-white px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-rcn-text text-sm hover:border-[#c9ddd0] transition-colors";
-  const btnPrimaryClass = "bg-rcn-accent border-rcn-accent text-white px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-sm hover:bg-rcn-accent-dark transition-colors";
-  const tabBtnClass = "border border-rcn-border bg-[#f6fbf7] px-3 py-2 rounded-full text-xs font-extrabold cursor-pointer transition-all";
-  const tabBtnActiveClass = "bg-rcn-accent border-rcn-accent text-white px-3 py-2 rounded-full text-xs font-extrabold cursor-pointer transition-all";
+
+  const changePasswordSchema = yup.object({
+    password: yup
+      .string()
+      .required("New password is required.")
+      .min(8, "Password must be at least 8 characters."),
+    confirmPassword: yup
+      .string()
+      .required("Please confirm your password.")
+      .oneOf([yup.ref("password")], "Passwords do not match."),
+  });
+
+  type ChangePasswordFormValues = yup.InferType<typeof changePasswordSchema>;
+
+  const {
+    register: registerPassword,
+    handleSubmit: handleSubmitPassword,
+    reset: resetPasswordForm,
+    formState: { errors: passwordErrors },
+  } = useForm<ChangePasswordFormValues>({
+    defaultValues: {
+      password: "",
+      confirmPassword: "",
+    },
+    resolver: yupResolver(changePasswordSchema),
+  });
+
+  const { isPending: isSavingPassword, mutate: mutateChangePassword } = useMutation({
+    mutationFn: catchAsync(async (data: ChangePasswordFormValues) => {
+      const res = await changePasswordApi({ password: data.password });
+      if (checkResponse({ res, showSuccess: true })) {
+        resetPasswordForm();
+      }
+    }),
+  });
 
   const handleSaveProfile = () => {
-    const firstName = (document.getElementById('admin_first') as HTMLInputElement)?.value.trim();
-    const lastName = (document.getElementById('admin_last') as HTMLInputElement)?.value.trim();
-    const email = (document.getElementById('admin_email') as HTMLInputElement)?.value.trim().toLowerCase();
+    const firstName = (document.getElementById("admin_first") as HTMLInputElement)?.value.trim();
+    const lastName = (document.getElementById("admin_last") as HTMLInputElement)?.value.trim();
+    const email = (document.getElementById("admin_email") as HTMLInputElement)?.value.trim().toLowerCase();
 
-    if (!firstName) { toastError('First Name required.'); return; }
-    if (!lastName) { toastError('Last Name required.'); return; }
-    if (!email) { toastError('Email required.'); return; }
-    if (!email.includes('@')) { toastError('Invalid email.'); return; }
+    if (!firstName) {
+      toastError("First Name required.");
+      return;
+    }
+    if (!lastName) {
+      toastError("Last Name required.");
+      return;
+    }
+    if (!email) {
+      toastError("Email required.");
+      return;
+    }
+    if (!email.includes("@")) {
+      toastError("Invalid email.");
+      return;
+    }
 
-    toastSuccess('Profile updated (will be persisted via API).');
+    toastSuccess("Profile updated (will be persisted via API).");
   };
 
-  const handleSavePassword = () => {
-    const newPass = (document.getElementById('admin_newpass') as HTMLInputElement)?.value;
-    const confPass = (document.getElementById('admin_confpass') as HTMLInputElement)?.value;
-
-    if (newPass || confPass) {
-      if (newPass.length < 8) { toastError('Password must be at least 8 characters.'); return; }
-      if (newPass !== confPass) { toastError('Passwords do not match.'); return; }
-    }
-
-    toastSuccess('Password settings updated (will be persisted via API).');
-
-    // Clear password fields
-    if (document.getElementById('admin_newpass')) {
-      (document.getElementById('admin_newpass') as HTMLInputElement).value = '';
-    }
-    if (document.getElementById('admin_confpass')) {
-      (document.getElementById('admin_confpass') as HTMLInputElement).value = '';
-    }
+  const handleSavePassword = (values: ChangePasswordFormValues) => {
+    mutateChangePassword(values);
   };
 
   return (
@@ -64,24 +99,28 @@ const Settings: React.FC = () => {
 
           {/* Tabs */}
           <div className="flex flex-wrap gap-2 mb-4">
-            <button
-              className={activeTab === 'profile' ? tabBtnActiveClass : tabBtnClass}
-              onClick={() => setActiveTab('profile')}
+            <Button
+              variant="tab"
+              size="sm"
+              active={activeTab === "profile"}
+              onClick={() => setActiveTab("profile")}
             >
               Admin Profile
-            </button>
-            <button
-              className={activeTab === 'password' ? tabBtnActiveClass : tabBtnClass}
-              onClick={() => setActiveTab('password')}
+            </Button>
+            <Button
+              variant="tab"
+              size="sm"
+              active={activeTab === "password"}
+              onClick={() => setActiveTab("password")}
             >
               Manage Password
-            </button>
+            </Button>
           </div>
 
           <div className="h-px bg-rcn-border mb-4"></div>
 
           {/* Admin Profile Tab */}
-          {activeTab === 'profile' && (
+          {activeTab === "profile" && (
             <div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                 <div className="flex flex-col gap-1.5">
@@ -133,36 +172,46 @@ const Settings: React.FC = () => {
               <div className="border-t border-rcn-border my-4"></div>
 
               <div className="flex justify-end">
-                <button onClick={handleSaveProfile} className={btnPrimaryClass}>
+                <Button variant="primary" size="sm" onClick={handleSaveProfile}>
                   Save Profile
-                </button>
+                </Button>
               </div>
             </div>
           )}
 
           {/* Manage Password Tab */}
-          {activeTab === 'password' && (
-            <div>
+          {activeTab === "password" && (
+            <form onSubmit={handleSubmitPassword(handleSavePassword)} noValidate>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <div className="flex flex-col gap-1.5 mb-3">
                     <label className="text-xs text-rcn-muted font-semibold">New Password</label>
                     <input 
-                      id="admin_newpass" 
+                      {...registerPassword("password")}
                       type="password" 
-                      placeholder="Leave blank to keep current" 
+                      placeholder="Enter new password" 
                       className={inputClass} 
                     />
+                    {passwordErrors.password && (
+                      <p className="text-red-500 text-xs mt-0.5 mb-0">
+                        {passwordErrors.password.message}
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex flex-col gap-1.5 mb-3">
                     <label className="text-xs text-rcn-muted font-semibold">Confirm Password</label>
                     <input 
-                      id="admin_confpass" 
+                      {...registerPassword("confirmPassword")}
                       type="password" 
                       placeholder="Re-enter new password" 
                       className={inputClass} 
                     />
+                    {passwordErrors.confirmPassword && (
+                      <p className="text-red-500 text-xs mt-0.5 mb-0">
+                        {passwordErrors.confirmPassword.message}
+                      </p>
+                    )}
                   </div>
 
                  
@@ -175,11 +224,11 @@ const Settings: React.FC = () => {
               <div className="border-t border-rcn-border my-4"></div>
 
               <div className="flex justify-end">
-                <button onClick={handleSavePassword} className={btnPrimaryClass}>
-                  Save Password Settings
-                </button>
+                <Button type="submit" variant="primary" size="sm" disabled={isSavingPassword}>
+                  {isSavingPassword ? "Saving..." : "Save Password Settings"}
+                </Button>
               </div>
-            </div>
+            </form>
           )}
         </div>
       )}
