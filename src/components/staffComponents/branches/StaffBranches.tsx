@@ -77,7 +77,7 @@ export function StaffBranches() {
   }, [branches, search]);
 
   return (
-    <div className="max-w-[1100px] mx-auto p-4 lg:p-6">
+    <div className=" mx-auto p-4 lg:p-6">
       
       <div className="mb-4">
         <h1 className="text-2xl font-semibold m-0">Branches</h1>
