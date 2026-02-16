@@ -6,6 +6,7 @@ import Progressbar from "./Progressbar";
 import ReactQueryProvider from "./ReactQueryClient";
 import { ToastProvider } from "@/Providers/ToastProvider";
 import { GoogleMapsProvider } from "@/contexts/GoogleMapsContext";
+import { SocketProvider } from "@/contexts/SocketContext";
 // import FirebaseProvider from "./FirebaseProvider";
 
 const CommonProvider = ({ children }: { children: React.ReactNode }) => {
@@ -16,7 +17,9 @@ const CommonProvider = ({ children }: { children: React.ReactNode }) => {
         <ReactQueryProvider>
           <Provider store={store}>
             <GoogleMapsProvider>
-              {children}
+              <SocketProvider>
+                {children}
+              </SocketProvider>
             </GoogleMapsProvider>
           </Provider>
         </ReactQueryProvider>

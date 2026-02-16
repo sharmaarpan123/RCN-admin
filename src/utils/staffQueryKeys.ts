@@ -5,6 +5,8 @@ const defaultQueryKeys = {
   referralSentList: ["staff", "referral", "sent"],
   referralReceivedList: ["staff", "referral", "received"],
   referralChat: ["staff", "referral", "chat"],
+  referralChatList: ["staff", "referral", "chats", "list"],
+  referralChatMessages: ["staff", "referral", "chats", "messages"],
   paymentMethodsActive: ["staff", "payment-methods", "active"],
 };
 

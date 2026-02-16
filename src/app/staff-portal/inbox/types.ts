@@ -117,3 +117,26 @@ export interface PaymentSummaryApi {
   currency: string | null;
   breakdown?: { message?: string };
 }
+
+/** Raw list item from GET /api/referral/chats. Confirm shape with backend. */
+export interface ReferralChatListItemApi {
+  _id: string;
+  referral_id?: string;
+  receiver_id?: string;
+  receiver_name?: string;
+  patient_name?: string;
+  last_message?: { message?: string; text?: string; created_at?: string };
+  unread_count?: number;
+}
+
+/** Raw message from GET /api/referral/chats/:chatId/messages. */
+export interface ReferralChatMessageApi {
+  _id?: string;
+  message?: string;
+  text?: string;
+  sender_id?: string;
+  sender_name?: string;
+  created_at?: string;
+  read_by_sender?: boolean;
+  read_by_receiver?: boolean;
+}

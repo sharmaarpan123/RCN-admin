@@ -447,4 +447,21 @@ export const postOrganizationReferralSendApi = (
 export const postReferralStartChatApi = (referralId: string) =>
   AxiosInstance.post(`/api/referral/chats/${referralId}/start-chat`);
 
+/** GET /api/referral/chats — list chats (staff portal). Params: page, limit. */
+export const getReferralChatsApi = (params?: { page?: number; limit?: number }) =>
+  AxiosInstance.get("/api/referral/chats", { params: { page: params?.page ?? 1, limit: params?.limit ?? 20 } });
+
+/** GET /api/referral/chats/:chatId/messages — get messages for a chat. Params: page, limit. */
+export const getReferralChatMessagesApi = (
+  chatId: string,
+  params?: { page?: number; limit?: number },
+) =>
+  AxiosInstance.get(`/api/referral/chats/${chatId}/messages`, {
+    params: { page: params?.page ?? 1, limit: params?.limit ?? 50 },
+  });
+
+/** POST /api/referral/chats/:chatId/read — mark chat as read. */
+export const postReferralChatReadApi = (chatId: string) =>
+  AxiosInstance.post(`/api/referral/chats/${chatId}/read`);
+
 /** Request body for POST /api/organization/referral. Aligned with backend createOrUpdateReferralSchema (all optional). */
