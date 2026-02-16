@@ -173,7 +173,7 @@ export default function NewReferralPage() {
     catchAsync(async () => {
       const res = await postOrganizationReferralApi(payload);
       if (checkResponse({ res, showSuccess: true })) {
-        methods.reset(defaultValues);
+        // methods.reset(defaultValues);
         queryClient.invalidateQueries({ queryKey: defaultQueryKeys.referralSentList });
       }
     })();
@@ -192,6 +192,8 @@ export default function NewReferralPage() {
       shouldValidate: true,
     });
   };
+
+  console.log(methods.formState.errors, "errors");
 
   return (
     <div className="max-w-[1280px] mx-auto">

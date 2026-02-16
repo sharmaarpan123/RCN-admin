@@ -92,7 +92,6 @@ export default function StaffInboxPage() {
       {/* Topbar */}
       <div className="flex flex-wrap gap-3 items-center justify-between p-3.5 px-4 border border-slate-200 bg-white/80 backdrop-blur-md rounded-2xl shadow-[0_10px_30px_rgba(2,6,23,.07)] sticky top-2.5 z-10">
         <div className="flex items-center gap-2.5 min-w-[260px]">
-          <div className="w-[34px] h-[34px] rounded-xl bg-linear-to-br from-rcn-brand-light to-rcn-brand shadow-[0_10px_22px_rgba(15,107,58,.22)]" aria-hidden />
           <div>
             <h1 className="m-0 text-[15px] font-semibold leading-tight tracking-wide">Referral Coordination Network</h1>
             <p className="m-0 text-xs text-rcn-muted font-bold">Website Inbox • Sender + Receiver</p>

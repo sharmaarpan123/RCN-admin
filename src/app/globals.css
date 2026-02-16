@@ -84,12 +84,18 @@ select option {
 }
 
 
+.rc-pagination-item {
+  height: 100% !important;
+}
+
 .rc-pagination-item-active a {
+  
   color: white !important;
   background-color: var(--color-rcn-accent) !important;
 }
 
 .rc-pagination-item:hover a {
+
   background-color: #1f7a4b !important;
   color: white !important;
 }

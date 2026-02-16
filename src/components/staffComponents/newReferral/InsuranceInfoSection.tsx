@@ -19,10 +19,12 @@ export function InsuranceInfoSection() {
 
   const insuranceRootError =
     errors.patient_insurance_information &&
-    typeof errors.patient_insurance_information === "object" &&
-    "message" in errors.patient_insurance_information
-      ? (errors.patient_insurance_information as { message?: string }).message
+    typeof errors.patient_insurance_information?.root === "object" &&
+    "message" in errors.patient_insurance_information?.root
+      ? (errors.patient_insurance_information?.root as { message?: string }).message
       : undefined;
+
+      console.log(errors.patient_insurance_information?.root, "insuranceRootError");
 
   return (
     <section
