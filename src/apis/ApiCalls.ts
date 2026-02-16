@@ -433,4 +433,8 @@ export const postOrganizationReferralPaymentSummaryApi = (
     body,
   );
 
+/** GET /api/payment-methods/active — list active payment methods (e.g. for sender pays). */
+export const getPaymentMethodsActiveApi = () =>
+  AxiosInstance.get("/api/payment-methods/active");
+
 /** Request body for POST /api/organization/referral. Aligned with backend createOrUpdateReferralSchema (all optional). */

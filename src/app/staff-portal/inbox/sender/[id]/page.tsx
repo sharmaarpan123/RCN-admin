@@ -3,14 +3,14 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getOrganizationReferralByIdApi, postOrganizationReferralPaymentSummaryApi } from "@/apis/ApiCalls";
-import { checkResponse, catchAsync } from "@/utils/commonFunc";
+import { useQuery } from "@tanstack/react-query";
+import { getOrganizationReferralByIdApi } from "@/apis/ApiCalls";
+import { checkResponse } from "@/utils/commonFunc";
 import defaultQueryKeys from "@/utils/staffQueryKeys";
 import type { ReferralByIdApi, Company, ReceiverInstance, ChatMsg, Comm } from "@/app/staff-portal/inbox/types";
 import { fmtDate, scrollToId } from "@/app/staff-portal/inbox/helpers";
 import { DEMO_COMPANIES } from "@/app/staff-portal/inbox/demo-data";
-import { documentsToList, receiversFromData, type PaymentSummaryData } from "@/components/staffComponents/inbox/sender/view/senderViewHelpers";
+import { documentsToList, receiversFromData } from "@/components/staffComponents/inbox/sender/view/senderViewHelpers";
 import type { DocRow } from "@/components/staffComponents/inbox/sender/view/senderViewHelpers";
 import { SenderDetailModals } from "@/components/staffComponents/inbox/sender/view/SenderDetailModals";
 import { SenderDetailSections } from "@/components/staffComponents/inbox/sender/view/SenderDetailSections";
@@ -164,27 +164,6 @@ function SenderDetailContent({ data }: { data: ReferralByIdApi }) {
   );
 
   const isDraft = data.is_draft === true;
-  const [paymentSource, setPaymentSource] = useState<"free" | "payment" | "credit">("free");
-  const [paymentMethodId, setPaymentMethodId] = useState("");
-  const [summaryModalOpen, setSummaryModalOpen] = useState(false);
-  const [paymentSummary, setPaymentSummary] = useState<PaymentSummaryData | null>(null);
-
-  const queryClient = useQueryClient();
-  const { isPending: isPaymentSummaryPending, mutate: fetchPaymentSummary } = useMutation({
-    mutationFn: catchAsync(async () => {
-      const body = paymentSource === "free" ? { source: "free" as const } : { source: "payment" as const, payment_method_id: paymentMethodId.trim() || undefined };
-      if (paymentSource === "payment" && !paymentMethodId.trim()) {
-        throw new Error("Payment method is required when sender pays.");
-      }
-      const res = await postOrganizationReferralPaymentSummaryApi(refId, body);
-      if (!checkResponse({ res, showSuccess: true })) return;
-      const raw = res.data as { data?: PaymentSummaryData };
-      const payload = raw?.data ?? null;
-      setPaymentSummary(payload && typeof payload === "object" ? (payload as PaymentSummaryData) : null);
-      setSummaryModalOpen(true);
-      queryClient.invalidateQueries({ queryKey: [...defaultQueryKeys.referralSentList, "detail", refId] });
-    }),
-  });
 
   const navBtns = [
     { id: "secBasic", label: "Basic Info" },
@@ -256,16 +235,7 @@ function SenderDetailContent({ data }: { data: ReferralByIdApi }) {
               sendChatMessage={sendChatMessage}
               chatInputSelected={chatInputSelected}
             />
-            {isDraft && (
-              <SenderDraftPaymentSection
-                paymentSource={paymentSource}
-                setPaymentSource={setPaymentSource}
-                paymentMethodId={paymentMethodId}
-                setPaymentMethodId={setPaymentMethodId}
-                onGetSummary={() => fetchPaymentSummary()}
-                isPending={isPaymentSummaryPending}
-              />
-            )}
+            {isDraft && <SenderDraftPaymentSection refId={refId} />}
           </div>
         </div>
       </div>
@@ -283,9 +253,6 @@ function SenderDetailContent({ data }: { data: ReferralByIdApi }) {
         deleteDocModal={deleteDocModal}
         onCloseDeleteDoc={() => setDeleteDocModal(null)}
         onConfirmDeleteDoc={confirmDeleteDoc}
-        summaryModalOpen={summaryModalOpen}
-        paymentSummary={paymentSummary}
-        onCloseSummary={() => { setSummaryModalOpen(false); setPaymentSummary(null); }}
       />
     </div>
   );
