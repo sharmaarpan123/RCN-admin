@@ -41,15 +41,27 @@ export function documentsToList(documents: Record<string, unknown> | undefined):
   return out;
 }
 
-/** Build receivers list from API department_statuses + _localReceivers (as-is). */
+/** Department status item from API (GET /api/organization/referral/:id). */
+export interface DepartmentStatusApi {
+  department_id?: string;
+  status?: string;
+  payment_status?: string;
+  organization_name?: string;
+  name?: string;
+  updated_at?: string;
+  paid_by_user_id?: string | null;
+  department_user_id?: string | null;
+}
+
+/** Build receivers list from API department_statuses + _localReceivers (as-is). Normalizes status to uppercase; paidUnlocked from payment_status === "paid". */
 export function receiversFromData(data: ReferralByIdApi): ReceiverInstance[] {
-  const dept = (data.department_statuses ?? []) as { department_id?: string; status?: string; organization_name?: string; name?: string; updated_at?: string }[];
+  const dept = (data.department_statuses ?? []) as DepartmentStatusApi[];
   const fromApi = dept.map((d, i) => ({
     receiverId: d.department_id ?? `dept-${i}`,
     name: d.organization_name ?? (d as { name?: string }).name ?? "Receiver",
     email: "",
-    status: d.status ?? "PENDING",
-    paidUnlocked: false,
+    status: (d.status ?? "PENDING").toString().toUpperCase(),
+    paidUnlocked: d.payment_status === "paid",
     updatedAt: d.updated_at ? new Date(d.updated_at) : new Date(),
     rejectReason: "",
   }));

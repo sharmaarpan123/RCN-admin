@@ -50,7 +50,7 @@ export function SenderDetailSections({
         <div className="-m-3.5 -mt-3.5 mb-3 p-3 border-b border-rcn-border/60 rounded-t-[18px] flex items-center justify-between gap-2.5" style={{ background: BOX_GRAD }}>
           <h4 className="m-0 text-[13px] font-semibold tracking-wide flex items-center gap-2.5">
             <span className="w-[30px] h-[30px] rounded-xl flex items-center justify-center border border-rcn-brand/25 bg-white/70 shadow">👤</span>
-            Basic Information (Always Visible)
+            Basic Information
           </h4>
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border border-rcn-brand/25 bg-white/70 text-rcn-accent-dark">Always Visible</span>
         </div>
@@ -119,11 +119,10 @@ export function SenderDetailSections({
         <div className="-m-3.5 -mt-3.5 mb-3 p-3 border-b border-rcn-border/60 rounded-t-[18px] flex items-center justify-between" style={{ background: BOX_GRAD }}>
           <h4 className="m-0 text-[13px] font-semibold flex items-center gap-2.5">
             <span className="w-[30px] h-[30px] rounded-xl flex items-center justify-center border border-rcn-brand/25 bg-white/70 shadow">📎</span>
-            Attached Documents (From Sender)
+            Attached Documents
           </h4>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border border-rcn-brand/25 bg-white/70 text-rcn-accent-dark">Downloadable</span>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-3 align-top">
+        <div className="gap-3 align-top">
           <div className="overflow-hidden rounded-[14px] border border-slate-200 bg-white">
             {displayDocRows.length > 0 ? (
               <table className="w-full border-collapse text-xs">
@@ -150,7 +149,7 @@ export function SenderDetailSections({
               <div className="p-3 text-rcn-muted text-sm">No documents attached.</div>
             )}
           </div>
-          <DocUploadInline refId={refId} onAdd={addDoc} />
+         
         </div>
       </div>
 

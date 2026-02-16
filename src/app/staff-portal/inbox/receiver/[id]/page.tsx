@@ -1,121 +1,62 @@
 "use client";
 
-import React, { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { RECEIVER_CTX } from "@/app/staff-portal/inbox/demo-data";
+import { useQuery } from "@tanstack/react-query";
+import { getOrganizationReferralByIdApi } from "@/apis/ApiCalls";
+import { checkResponse } from "@/utils/commonFunc";
+import defaultQueryKeys from "@/utils/staffQueryKeys";
+import type { ReferralByIdApi, ReceiverInstance, ChatMsg, Comm } from "@/app/staff-portal/inbox/types";
 import { fmtDate, pillClass, scrollToId } from "@/app/staff-portal/inbox/helpers";
-import type { Referral } from "@/app/staff-portal/inbox/types";
-import { DEMO_REFERRALS } from "@/app/staff-portal/inbox/demo-data";
-import { ChatInput } from "@/components/staffComponents/ChatInput";
+import { documentsToList, receiversFromData } from "@/components/staffComponents/inbox/sender/view/senderViewHelpers";
+import { BOX_GRAD } from "@/components/staffComponents/inbox/sender/view/senderViewHelpers";
+import { ChatInput } from "@/components/staffComponents/inbox/sender/view/ChatInput";
 
-const BOX_GRAD = "linear-gradient(90deg, rgba(15,107,58,.18), rgba(31,138,76,.12), rgba(31,138,76,.06))";
+interface ReceiverOverlay {
+  chatByReceiver: Record<string, ChatMsg[]>;
+  comms: Comm[];
+  /** Local status override for demo until accept/reject/pay APIs exist */
+  receiverStatusOverride: Record<string, string>;
+  paidUnlockedOverride: Record<string, boolean>;
+  rejectReasonOverride: Record<string, string>;
+}
 
 export default function ReceiverDetailPage() {
   const params = useParams<{ id: string }>();
-  const [referrals, setReferrals] = useState<Referral[]>(() => JSON.parse(JSON.stringify(DEMO_REFERRALS)));
+  const id = params?.id as string | undefined;
+
+  const { data: apiData, isLoading } = useQuery({
+    queryKey: [...defaultQueryKeys.referralReceivedList, "detail", id],
+    queryFn: async () => {
+      if (!id) return null;
+      const res = await getOrganizationReferralByIdApi(id);
+      if (!checkResponse({ res })) return null;
+      const data = (res.data as { data?: ReferralByIdApi })?.data;
+      return data ?? null;
+    },
+    enabled: !!id,
+  });
+
   const chatBodyRef = useRef<HTMLDivElement>(null);
 
-  const getInboxRefs = useCallback((): Referral[] => {
-    return referrals
-      .filter((r) => r.receivers.some((rx) => rx.receiverId === RECEIVER_CTX.receiverId))
-      .map((r) => {
-        const inst = r.receivers.find((rx) => rx.receiverId === RECEIVER_CTX.receiverId);
-        return {
-          ...r,
-          receivers: inst ? [inst] : [],
-          chatByReceiver: { [RECEIVER_CTX.receiverId]: r.chatByReceiver?.[RECEIVER_CTX.receiverId] || [] },
-        };
-      });
-  }, [referrals]);
+  const [overlay, setOverlay] = useState<ReceiverOverlay>(() => ({
+    chatByReceiver: {},
+    comms: [],
+    receiverStatusOverride: {},
+    paidUnlockedOverride: {},
+    rejectReasonOverride: {},
+  }));
 
-  const selected = useMemo(() => {
-    const refs = getInboxRefs();
-    return refs.find((r) => r.id === params.id) ?? null;
-  }, [getInboxRefs, params.id]);
+  if (isLoading) {
+    return (
+      <div className="max-w-[1280px] mx-auto p-[18px]">
+        <div className="py-10 text-center text-rcn-muted">Loading referral…</div>
+      </div>
+    );
+  }
 
-  const fullRef = useMemo(() => referrals.find((r) => r.id === params.id) ?? null, [referrals, params.id]);
-  const thread = fullRef ? (fullRef.chatByReceiver?.[RECEIVER_CTX.receiverId] || []) : [];
-
-  useEffect(() => {
-    if (chatBodyRef.current) chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
-  }, [thread.length, selected?.id]);
-
-  const receiverSetStatus = useCallback(
-    (refId: string, status: string) => {
-      setReferrals((prev) =>
-        prev.map((r) => {
-          if (r.id !== refId) return r;
-          const inst = r.receivers.find((rx) => rx.receiverId === RECEIVER_CTX.receiverId);
-          if (!inst) return r;
-          const receivers = r.receivers.map((rx) => (rx.receiverId === RECEIVER_CTX.receiverId ? { ...rx, status, updatedAt: new Date() } : rx));
-          return { ...r, receivers, comms: [...r.comms, { at: new Date(), who: RECEIVER_CTX.receiverName, msg: `Status changed: ${status}` }] };
-        })
-      );
-    },
-    []
-  );
-
-  const receiverReject = useCallback(
-    (refId: string) => {
-      const reason = prompt("Rejection reason (optional):", "Not a fit / Out of service area") ?? "";
-      setReferrals((prev) =>
-        prev.map((r) => {
-          if (r.id !== refId) return r;
-          const inst = r.receivers.find((rx) => rx.receiverId === RECEIVER_CTX.receiverId);
-          if (!inst) return r;
-          const receivers = r.receivers.map((rx) =>
-            rx.receiverId === RECEIVER_CTX.receiverId ? { ...rx, status: "REJECTED", rejectReason: reason.trim(), updatedAt: new Date() } : rx
-          );
-          return { ...r, receivers, comms: [...r.comms, { at: new Date(), who: RECEIVER_CTX.receiverName, msg: `Rejected${reason.trim() ? ": " + reason.trim() : ""}.` }] };
-        })
-      );
-    },
-    []
-  );
-
-  const receiverPayUnlock = useCallback(
-    (refId: string) => {
-      if (!confirm("Demo: Pay service fee to unlock additional patient info?")) return;
-      setReferrals((prev) =>
-        prev.map((r) => {
-          if (r.id !== refId) return r;
-          const receivers = r.receivers.map((rx) =>
-            rx.receiverId === RECEIVER_CTX.receiverId ? { ...rx, status: "PAID", paidUnlocked: true, updatedAt: new Date() } : rx
-          );
-          return { ...r, receivers, comms: [...r.comms, { at: new Date(), who: "System", msg: "Receiver paid and unlocked additional info." }] };
-        })
-      );
-    },
-    []
-  );
-
-  const sendChatMessage = useCallback(
-    (refId: string, _receiverId: string, text: string) => {
-      const msg = (text || "").trim();
-      if (!msg) return;
-      setReferrals((prev) =>
-        prev.map((r) => {
-          if (r.id !== refId) return r;
-          const chat = { ...r.chatByReceiver };
-          const thread = chat[RECEIVER_CTX.receiverId] || [];
-          chat[RECEIVER_CTX.receiverId] = [...thread, { at: new Date(), fromRole: "RECEIVER", fromName: RECEIVER_CTX.receiverName, text: msg }];
-          return { ...r, chatByReceiver: chat, comms: [...r.comms, { at: new Date(), who: RECEIVER_CTX.receiverName, msg: "Chat message sent to sender." }] };
-        })
-      );
-    },
-    []
-  );
-
-  const navBtns = [
-    { id: "secBasic", label: "Basic Info" },
-    { id: "secDocs", label: "Documents" },
-    { id: "secAdditional", label: "Additional Info" },
-    { id: "secChat", label: "Chat" },
-    { id: "secLog", label: "Activity Log" },
-  ];
-
-  if (!selected) {
+  if (!apiData) {
     return (
       <div className="max-w-[1280px] mx-auto p-[18px]">
         <div className="py-10 text-center">
@@ -126,25 +67,133 @@ export default function ReceiverDetailPage() {
     );
   }
 
-  const inst = selected.receivers[0];
-  const receiverStatus = inst?.status || "PENDING";
-  const isUnlocked = receiverStatus === "PAID" || receiverStatus === "COMPLETED";
-  const servicesForDisplay = inst?.servicesRequestedOverride?.length ? (inst.servicesRequestedOverride || []) : selected.servicesRequested;
+  return (
+    <ReceiverDetailContent key={id} data={apiData} overlay={overlay} setOverlay={setOverlay} chatBodyRef={chatBodyRef} />
+  );
+}
+
+function ReceiverDetailContent({
+  data,
+  overlay,
+  setOverlay,
+  chatBodyRef,
+}: {
+  data: ReferralByIdApi;
+  overlay: ReceiverOverlay;
+  setOverlay: React.Dispatch<React.SetStateAction<ReceiverOverlay>>;
+  chatBodyRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  const refId = data._id;
+  const apiReceivers = receiversFromData(data);
+  const currentReceiver: ReceiverInstance | null = apiReceivers[0] ?? null;
+  const receiverId = currentReceiver?.receiverId ?? null;
+
+  const statusOverride = receiverId ? overlay.receiverStatusOverride[receiverId] : undefined;
+  const paidOverride = receiverId ? overlay.paidUnlockedOverride[receiverId] : undefined;
+  const rejectReasonDisplay = receiverId ? (overlay.rejectReasonOverride[receiverId] ?? currentReceiver?.rejectReason) : "";
+
+  const receiverStatus = statusOverride ?? currentReceiver?.status ?? "PENDING";
+  const paidUnlocked = paidOverride ?? currentReceiver?.paidUnlocked ?? false;
+  const isUnlocked = paidUnlocked || receiverStatus === "PAID" || receiverStatus === "COMPLETED";
+
+  const thread = receiverId ? (overlay.chatByReceiver[receiverId] ?? []) : [];
+  const comms = overlay.comms;
+
+  useEffect(() => {
+    if (chatBodyRef.current) chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
+  }, [thread.length, refId, chatBodyRef]);
+
+  const receiverSetStatus = useCallback(
+    (status: string) => {
+      if (!receiverId) return;
+      setOverlay((prev) => ({
+        ...prev,
+        receiverStatusOverride: { ...prev.receiverStatusOverride, [receiverId]: status },
+        comms: [...prev.comms, { at: new Date(), who: currentReceiver?.name ?? "Receiver", msg: `Status changed: ${status}` }],
+      }));
+    },
+    [receiverId, currentReceiver?.name, setOverlay]
+  );
+
+  const receiverReject = useCallback(() => {
+    const reason = prompt("Rejection reason (optional):", "Not a fit / Out of service area") ?? "";
+    if (!receiverId) return;
+    setOverlay((prev) => ({
+      ...prev,
+      receiverStatusOverride: { ...prev.receiverStatusOverride, [receiverId]: "REJECTED" },
+      rejectReasonOverride: { ...prev.rejectReasonOverride, [receiverId]: reason.trim() },
+      comms: [...prev.comms, { at: new Date(), who: currentReceiver?.name ?? "Receiver", msg: `Rejected${reason.trim() ? ": " + reason.trim() : ""}.` }],
+    }));
+  }, [receiverId, currentReceiver?.name, setOverlay]);
+
+  const receiverPayUnlock = useCallback(() => {
+    if (!confirm("Pay service fee to unlock additional patient info?")) return;
+    if (!receiverId) return;
+    setOverlay((prev) => ({
+      ...prev,
+      receiverStatusOverride: { ...prev.receiverStatusOverride, [receiverId]: "PAID" },
+      paidUnlockedOverride: { ...prev.paidUnlockedOverride, [receiverId]: true },
+      comms: [...prev.comms, { at: new Date(), who: "System", msg: "Receiver paid and unlocked additional info." }],
+    }));
+  }, [receiverId, setOverlay]);
+
+  const sendChatMessage = useCallback(
+    (_receiverId: string, text: string) => {
+      const msg = (text || "").trim();
+      if (!msg || !receiverId) return;
+      setOverlay((prev) => {
+        const chat = { ...prev.chatByReceiver };
+        const t = chat[receiverId] ?? [];
+        chat[receiverId] = [...t, { at: new Date(), fromRole: "RECEIVER", fromName: currentReceiver?.name ?? "Receiver", text: msg }];
+        return {
+          ...prev,
+          chatByReceiver: chat,
+          comms: [...prev.comms, { at: new Date(), who: currentReceiver?.name ?? "Receiver", msg: "Chat message sent to sender." }],
+        };
+      });
+    },
+    [receiverId, currentReceiver?.name, setOverlay]
+  );
+
+  const p = data.patient ?? {};
+  const ins = data.patient_insurance_information ?? [];
+  const primary = ins[0];
+  const addPatient = (data.additional_patient ?? {}) as Record<string, string>;
+  const sentAt = data.sent_at ? new Date(data.sent_at) : new Date(data.createdAt ?? 0);
+  const servicesForDisplay =
+    currentReceiver?.servicesRequestedOverride?.length ? (currentReceiver.servicesRequestedOverride ?? []) : (data.speciality_ids ?? []);
+
+  const docList = documentsToList(data.documents as Record<string, unknown> | undefined);
+
+  const navBtns = [
+    { id: "secBasic", label: "Basic Info" },
+    { id: "secDocs", label: "Documents" },
+    { id: "secAdditional", label: "Additional Info" },
+    { id: "secChat", label: "Chat" },
+    { id: "secLog", label: "Activity Log" },
+  ];
 
   const rxControls =
     receiverStatus === "PENDING"
-      ? [<button key="a" type="button" onClick={() => receiverSetStatus(selected.id, "ACCEPTED")} className="border border-rcn-brand/30 bg-rcn-brand/10 text-rcn-accent-dark px-2.5 py-2 rounded-xl font-extrabold text-xs shadow">Accept</button>, <button key="r" type="button" onClick={() => receiverReject(selected.id)} className="border border-red-200 bg-red-50 text-red-700 px-2.5 py-2 rounded-xl font-extrabold text-xs shadow">Reject</button>]
+      ? [
+          <button key="a" type="button" onClick={() => receiverSetStatus("ACCEPTED")} className="border border-rcn-brand/30 bg-rcn-brand/10 text-rcn-accent-dark px-2.5 py-2 rounded-xl font-extrabold text-xs shadow">Accept</button>,
+          <button key="r" type="button" onClick={() => receiverReject()} className="border border-red-200 bg-red-50 text-red-700 px-2.5 py-2 rounded-xl font-extrabold text-xs shadow">Reject</button>,
+        ]
       : receiverStatus === "ACCEPTED"
-        ? [<button key="p" type="button" onClick={() => receiverPayUnlock(selected.id)} className="border border-rcn-brand/25 bg-rcn-brand/10 text-rcn-accent-dark px-2.5 py-2 rounded-xl font-extrabold text-xs shadow">Pay & Unlock</button>, <button key="r2" type="button" onClick={() => receiverReject(selected.id)} className="border border-red-200 bg-red-50 text-red-700 px-2.5 py-2 rounded-xl font-extrabold text-xs shadow">Reject</button>]
+        ? [
+            <button key="p" type="button" onClick={() => receiverPayUnlock()} className="border border-rcn-brand/25 bg-rcn-brand/10 text-rcn-accent-dark px-2.5 py-2 rounded-xl font-extrabold text-xs shadow">Pay & Unlock</button>,
+            <button key="r2" type="button" onClick={() => receiverReject()} className="border border-red-200 bg-red-50 text-red-700 px-2.5 py-2 rounded-xl font-extrabold text-xs shadow">Reject</button>,
+          ]
         : receiverStatus === "PAID"
           ? [<span key="paid" className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border ${pillClass("PAID")}`}>Paid/Unlocked</span>]
           : receiverStatus === "REJECTED"
-            ? [<span key="rej" className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border ${pillClass("REJECTED")}`}>Rejected</span>]
-            : [<button key="r3" type="button" onClick={() => receiverReject(selected.id)} className="border border-red-200 bg-red-50 text-red-700 px-2.5 py-2 rounded-xl font-extrabold text-xs shadow">Reject</button>];
+            ? [<span key="rej" className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border ${pillClass("REJECTED")}`}>Rejected</span>, rejectReasonDisplay ? <span key="reason" className="text-rcn-muted text-xs">Reason: {rejectReasonDisplay}</span> : null]
+            : [<button key="r3" type="button" onClick={() => receiverReject()} className="border border-red-200 bg-red-50 text-red-700 px-2.5 py-2 rounded-xl font-extrabold text-xs shadow">Reject</button>];
+
+  const chatInputSelected = { receivers: currentReceiver ? [currentReceiver] : [] };
 
   return (
     <div className="max-w-[1280px] mx-auto p-[18px]">
-      {/* Topbar */}
       <div className="flex flex-wrap gap-3 items-center justify-between p-3.5 px-4 border border-slate-200 bg-white/80 backdrop-blur-md rounded-2xl shadow-[0_10px_30px_rgba(2,6,23,.07)] sticky top-2.5 z-10 mb-3.5">
         <div className="flex items-center gap-2.5">
           <Link href="/staff-portal/inbox" className="text-rcn-brand hover:underline text-sm font-semibold">← Back to Inbox</Link>
@@ -155,17 +204,21 @@ export default function ReceiverDetailPage() {
       <div className="border border-slate-200 bg-white/65 rounded-2xl shadow-[0_10px_30px_rgba(2,6,23,.07)] overflow-hidden">
         <div className="p-3.5 pt-3 pb-2.5 border-b border-slate-200 bg-white/90">
           <h2 className="m-0 text-sm font-semibold tracking-wide">Referral Detail</h2>
-          <p className="m-0 mt-1 text-rcn-muted text-xs font-[850]">Receiver view: your copy + chat with sender.</p>
+          <p className="m-0 mt-1 text-rcn-muted text-xs font-[850]">Receiver view: chat is free. Patient information requires payment — payment flow will be added soon.</p>
         </div>
         <div className="p-3 overflow-auto">
           <div className="flex flex-wrap gap-3 items-start justify-between p-3.5 rounded-2xl border border-rcn-brand/20 bg-white/95 shadow-[0_12px_26px_rgba(2,6,23,.07)] mb-3">
             <div>
-              <h3 className="m-0 text-[15px] font-semibold tracking-wide">{selected.id} — {selected.patient.last}, {selected.patient.first} • DOB {selected.patient.dob} • {selected.patient.gender}</h3>
-              <p className="m-0 mt-1.5 text-rcn-muted text-xs font-[850]">Sent: {fmtDate(selected.sentAt)} • Address of Care: {selected.addressOfCare}</p>
+              <h3 className="m-0 text-[15px] font-semibold tracking-wide">
+                {isUnlocked && p && (p.patient_last_name != null || p.patient_first_name != null)
+                  ? ` ${p.patient_last_name ?? ""}, ${p.patient_first_name ?? ""} • DOB ${p.dob ?? ""} • ${p.gender ?? ""}`
+                  : "  Referral (pay to view patient details)"}
+              </h3>
+              <p className="m-0 mt-1.5 text-rcn-muted text-xs font-[850]">Sent: {fmtDate(sentAt)}{isUnlocked && p?.address_of_care != null ? ` • Address of Care: ${p.address_of_care}` : ""}</p>
             </div>
           </div>
 
-          <div className="border border-rcn-brand/20 rounded-2xl bg-white/95 shadow-[0_12px_26px_rgba(2,6,23,.07)] p-2.5 sticky top-[86px] z-[4] mb-3" aria-label="Quick Jump Navigation">
+          <div className="border border-rcn-brand/20 rounded-2xl bg-white/95 shadow-[0_12px_26px_rgba(2,6,23,.07)] p-2.5 sticky top-[86px] z-4 mb-3" aria-label="Quick Jump Navigation">
             <div className="flex items-center justify-between gap-2.5 mb-2">
               <strong className="text-xs tracking-wide">Quick Jump</strong>
               <span className="text-[11px] text-rcn-muted font-extrabold">Jump to any section</span>
@@ -181,69 +234,102 @@ export default function ReceiverDetailPage() {
           </div>
 
           <div className="flex flex-col gap-3.5">
-            {/* Basic Info */}
-            <div id="secBasic" className="border border-rcn-border/60 bg-white/95 rounded-[18px] p-3.5 shadow-[0_12px_26px_rgba(2,6,23,.07)] relative overflow-hidden border-l-4 border-l-rcn-brand scroll-mt-[120px]">
+            {/* Basic Info — locked until payment (chat is free; patient info requires payment) */}
+            <div id="secBasic" className="border  min-h-[300px] border-rcn-border/60 bg-white/95 rounded-[18px] p-3.5 shadow-[0_12px_26px_rgba(2,6,23,.07)] relative overflow-hidden border-l-4 border-l-rcn-brand">
               <div className="-m-3.5 -mt-3.5 mb-3 p-3 border-b border-rcn-border/60 rounded-t-[18px] flex items-center justify-between gap-2.5" style={{ background: BOX_GRAD }}>
                 <h4 className="m-0 text-[13px] font-semibold tracking-wide flex items-center gap-2.5">
                   <span className="w-[30px] h-[30px] rounded-xl flex items-center justify-center border border-rcn-brand/25 bg-white/70 shadow">👤</span>
-                  Basic Information (Always Visible)
+                  Basic Patient Information
                 </h4>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border border-rcn-brand/25 bg-white/70 text-rcn-accent-dark">Always Visible</span>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border border-rcn-brand/25 bg-white/70 text-rcn-accent-dark">{isUnlocked ? "Visible" : "Pay to view"}</span>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {[["Last Name", selected.patient.last], ["First Name", selected.patient.first], ["Date of Birth (DOB)", selected.patient.dob], ["Gender", selected.patient.gender], ["Address of Care", selected.addressOfCare], ["Services Requested", servicesForDisplay.join(", ")], ["Primary Insurance", `${selected.insurance.primary.name} • Policy: ${selected.insurance.primary.policy}`], ["Additional Insurances", selected.insurance.additional?.length ? selected.insurance.additional.map((x) => `${x.name} • ${x.policy}`).join(" | ") : "None"]].map(([label, val]) => (
-                  <div key={String(label)}>
-                    <label className="block text-[11px] text-rcn-muted font-black mb-1">{label}</label>
-                    <div className="text-[13px] font-[850] text-rcn-text leading-tight p-2.5 border border-dashed border-slate-300/75 rounded-xl bg-slate-50/55">{val || "—"}</div>
+              {isUnlocked ? (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {[
+                      ["Last Name", p.patient_last_name],
+                      ["First Name", p.patient_first_name],
+                      ["Date of Birth (DOB)", p.dob],
+                      ["Gender", p.gender],
+                      ["Address of Care", p.address_of_care],
+                      ["Services Requested", servicesForDisplay.join(", ")],
+                      ["Primary Insurance", primary ? `${primary.payer ?? ""} • Policy: ${primary.policy ?? ""}` : ""],
+                      ["Additional Insurances", ins.length > 1 ? ins.slice(1).map((x) => `${x.payer ?? ""} • ${x.policy ?? ""}`).join(" | ") : "None"],
+                    ].map(([label, val]) => (
+                      <div key={String(label)}>
+                        <label className="block text-[11px] text-rcn-muted font-black mb-1">{label}</label>
+                        <div className="text-[13px] font-[850] text-rcn-text leading-tight p-2.5 border border-dashed border-slate-300/75 rounded-xl bg-slate-50/55">{val ?? "—"}</div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-              {receiverStatus === "PENDING" && (
-                <div className="mt-3 flex gap-2.5 flex-wrap justify-end">
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border ${pillClass("PENDING")}`}>Decision point: Accept or Reject</span>
+                  {receiverStatus === "PENDING" && (
+                    <div className="mt-3 flex gap-2.5 flex-wrap justify-end">
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border ${pillClass("PENDING")}`}>Decision point: Accept or Reject</span>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="absolute inset-0 rounded-[18px] bg-slate-900/45 flex items-center justify-center p-4">
+                  <div className="w-full max-w-[520px] rounded-2xl bg-white/95 border border-slate-200 shadow-[0_20px_50px_rgba(2,6,23,.25)] p-3.5">
+                    <h5 className="m-0 text-[13px] font-semibold">Locked: Patient Information</h5>
+                    <p className="m-0 mt-1.5 mb-3 text-rcn-muted text-xs font-[850]">Chat is free. To view patient details (name, DOB, insurance, etc.), payment is required. Payment flow will be added soon.</p>
+                    <div className="flex gap-2.5 flex-wrap justify-end">
+                      <button type="button" onClick={() => receiverPayUnlock()} className="border border-rcn-brand/25 bg-rcn-brand/10 text-rcn-accent-dark px-2.5 py-2 rounded-xl font-extrabold text-xs shadow">Pay & Unlock</button>
+                      <button type="button" onClick={() => receiverReject()} className="border border-red-200 bg-red-50 text-red-700 px-2.5 py-2 rounded-xl font-extrabold text-xs shadow">Reject</button>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* Documents (read-only) */}
+            {/* Documents (read-only; locked until payment) */}
             <div id="secDocs" className="border border-rcn-border/60 bg-white/95 rounded-[18px] p-3.5 shadow relative overflow-hidden border-l-4 border-l-rcn-brand scroll-mt-[120px]">
               <div className="-m-3.5 -mt-3.5 mb-3 p-3 border-b border-rcn-border/60 rounded-t-[18px] flex items-center justify-between" style={{ background: BOX_GRAD }}>
                 <h4 className="m-0 text-[13px] font-semibold flex items-center gap-2.5">
                   <span className="w-[30px] h-[30px] rounded-xl flex items-center justify-center border border-rcn-brand/25 bg-white/70 shadow">📎</span>
                   Attached Documents (From Sender)
                 </h4>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border border-rcn-brand/25 bg-white/70 text-rcn-accent-dark">Downloadable</span>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border border-rcn-brand/25 bg-white/70 text-rcn-accent-dark">{isUnlocked ? "Downloadable" : "Pay to view"}</span>
               </div>
-              {selected.docs?.length ? (
-                <div className="overflow-hidden rounded-[14px] border border-slate-200 bg-white">
-                  <table className="w-full border-collapse text-xs">
-                    <thead>
-                      <tr>
-                        <th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">Document</th>
-                        <th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">Type</th>
-                        <th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">Download</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {selected.docs.map((d, idx) => (
-                        <tr key={idx} className="border-t border-slate-200">
-                          <td className="p-2.5"><strong>{d.name}</strong>{d.fileName && <div className="text-rcn-muted text-xs">File: {d.fileName}</div>}</td>
-                          <td className="p-2.5">{d.type}</td>
-                          <td className="p-2.5"><button type="button" onClick={() => alert(`Demo: download ${d.name}`)} className="border border-slate-200 bg-white px-2 py-1.5 rounded-xl text-xs font-extrabold shadow">Download</button></td>
+              {isUnlocked ? (
+                docList.length > 0 ? (
+                  <div className="overflow-hidden rounded-[14px] border border-slate-200 bg-white">
+                    <table className="w-full border-collapse text-xs">
+                      <thead>
+                        <tr>
+                          <th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">Document</th>
+                          <th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">Type</th>
+                          <th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">Download</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {docList.map((d, idx) => (
+                          <tr key={idx} className="border-t border-slate-200">
+                            <td className="p-2.5"><strong>{d.label}</strong>{d.url && <div className="text-rcn-muted text-xs">File: {d.url}</div>}</td>
+                            <td className="p-2.5">Clinical</td>
+                            <td className="p-2.5"><button type="button" onClick={() => alert(`Demo: download ${d.label}`)} className="border border-slate-200 bg-white px-2 py-1.5 rounded-xl text-xs font-extrabold shadow">Download</button></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="p-3 text-rcn-muted text-sm">No documents attached.</div>
+                )
               ) : (
-                <div className="p-3 text-rcn-muted text-sm">No documents attached.</div>
+                <div className="rounded-[14px] border border-dashed border-rcn-brand/35 bg-rcn-brand/5 p-4 text-center">
+                  <p className="m-0 text-rcn-muted text-sm font-[850]">Pay to view and download attached documents. Chat is free.</p>
+                  <div className="flex gap-2.5 flex-wrap justify-center mt-3">
+                    {receiverStatus === "ACCEPTED" && <button type="button" onClick={() => receiverPayUnlock()} className="border border-rcn-brand/25 bg-rcn-brand/10 text-rcn-accent-dark px-2.5 py-2 rounded-xl font-extrabold text-xs shadow">Pay & Unlock</button>}
+                  </div>
+                </div>
               )}
               <div className="mt-3 border border-dashed border-rcn-brand/35 rounded-[14px] bg-rcn-brand/5 p-3">
                 <div className="flex justify-between gap-2.5 mb-2.5">
                   <strong className="text-xs">Upload Documents</strong>
-                  <span className="text-[11px] text-rcn-muted font-black">Sender Only</span>
+                 
                 </div>
-                <div className="text-rcn-muted text-xs">Sender uploads documents. All documents on the left are downloadable.</div>
+                <div className="text-rcn-muted text-xs"> All documents are downloadable after payment.</div>
               </div>
             </div>
 
@@ -259,10 +345,16 @@ export default function ReceiverDetailPage() {
                 </span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {[["Phone Number (Must)", selected.additionalPatientInfo.phone], ["Primary Language", selected.additionalPatientInfo.language], ["Representative / Power of Attorney", selected.additionalPatientInfo.rep], ["Social Security Number", selected.additionalPatientInfo.ssn], ["Other Information", selected.additionalPatientInfo.otherInfo || "—"]].map(([label, val], i) => (
+                {[
+                  ["Phone Number (Must)", addPatient.phone_number],
+                  ["Primary Language", addPatient.primary_language],
+                  ["Representative / Power of Attorney", addPatient.power_of_attorney],
+                  ["Social Security Number", addPatient.social_security_number],
+                  ["Other Information", addPatient.other_information ?? "—"],
+                ].map(([label, val], i) => (
                   <div key={i} className={i === 4 ? "sm:col-span-2" : ""}>
                     <label className="block text-[11px] text-rcn-muted font-black mb-1">{label}</label>
-                    <div className="text-[13px] font-[850] text-rcn-text leading-tight p-2.5 border border-dashed border-slate-300/75 rounded-xl bg-slate-50/55">{val}</div>
+                    <div className="text-[13px] font-[850] text-rcn-text leading-tight p-2.5 border border-dashed border-slate-300/75 rounded-xl bg-slate-50/55">{val ?? "—"}</div>
                   </div>
                 ))}
               </div>
@@ -270,10 +362,10 @@ export default function ReceiverDetailPage() {
                 <div className="absolute inset-0 rounded-[18px] bg-slate-900/45 flex items-center justify-center p-4">
                   <div className="w-full max-w-[520px] rounded-2xl bg-white/95 border border-slate-200 shadow-[0_20px_50px_rgba(2,6,23,.25)] p-3.5">
                     <h5 className="m-0 text-[13px] font-semibold">Locked: Additional Patient Information</h5>
-                    <p className="m-0 mt-1.5 mb-3 text-rcn-muted text-xs font-[850]">To view these fields, payment is required. You can reject anytime.</p>
+                    <p className="m-0 mt-1.5 mb-3 text-rcn-muted text-xs font-[850]">Chat is free. To view phone, SSN, and other sensitive fields, payment is required. Payment flow will be added soon.</p>
                     <div className="flex gap-2.5 flex-wrap justify-end">
-                      {receiverStatus === "ACCEPTED" && <button type="button" onClick={() => receiverPayUnlock(selected.id)} className="border border-rcn-brand/25 bg-rcn-brand/10 text-rcn-accent-dark px-2.5 py-2 rounded-xl font-extrabold text-xs shadow">Pay & Unlock</button>}
-                      <button type="button" onClick={() => receiverReject(selected.id)} className="border border-red-200 bg-red-50 text-red-700 px-2.5 py-2 rounded-xl font-extrabold text-xs shadow">Reject</button>
+                      {receiverStatus === "ACCEPTED" && <button type="button" onClick={() => receiverPayUnlock()} className="border border-rcn-brand/25 bg-rcn-brand/10 text-rcn-accent-dark px-2.5 py-2 rounded-xl font-extrabold text-xs shadow">Pay & Unlock</button>}
+                      <button type="button" onClick={() => receiverReject()} className="border border-red-200 bg-red-50 text-red-700 px-2.5 py-2 rounded-xl font-extrabold text-xs shadow">Reject</button>
                     </div>
                   </div>
                 </div>
@@ -313,7 +405,7 @@ export default function ReceiverDetailPage() {
                     <div className="p-2 text-rcn-muted font-black text-sm">No messages yet. Start the chat below.</div>
                   )}
                 </div>
-                <ChatInput selected={selected} chatReceiverId={RECEIVER_CTX.receiverId} onSend={(rid, t) => sendChatMessage(selected.id, rid, t)} role="RECEIVER" />
+                <ChatInput selected={chatInputSelected} chatReceiverId={receiverId} onSend={sendChatMessage} role="RECEIVER" />
               </div>
             </div>
 
@@ -326,12 +418,12 @@ export default function ReceiverDetailPage() {
                 </h4>
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border border-rcn-brand/25 bg-white/70 text-rcn-accent-dark">Audit Trail</span>
               </div>
-              {selected.comms?.length ? (
+              {comms.length > 0 ? (
                 <div className="overflow-hidden rounded-[14px] border border-slate-200 bg-white">
                   <table className="w-full border-collapse text-xs">
                     <thead><tr><th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">Time</th><th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">Who</th><th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">Message</th></tr></thead>
                     <tbody>
-                      {[...selected.comms].sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime()).map((c, i) => (
+                      {[...comms].sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime()).map((c, i) => (
                         <tr key={i} className="border-t border-slate-200">
                           <td className="p-2.5">{fmtDate(c.at)}</td>
                           <td className="p-2.5"><strong>{c.who}</strong></td>
