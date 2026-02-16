@@ -11,6 +11,9 @@ export const authLoginApi = (body: unknown) =>
 
 export const getAuthProfileApi = () => AxiosInstance.get("/api/auth/profile");
 
+/** GET /api/auth/credits — get current referral credits for authenticated user/org. */
+export const getAuthCreditsApi = () => AxiosInstance.get("/api/auth/credits");
+
 export const authLogoutApi = (authorization?: string) =>
   AxiosInstance.post(
     "/api/auth/logout",
@@ -436,6 +439,18 @@ export const postOrganizationReferralPaymentSummaryApi = (
 /** GET /api/payment-methods/active — list active payment methods (e.g. for sender pays). */
 export const getPaymentMethodsActiveApi = () =>
   AxiosInstance.get("/api/payment-methods/active");
+
+/** POST /api/wallet/purchase-credits/summary — get purchase summary before buying credits. */
+export const postWalletPurchaseCreditsSummaryApi = (body: {
+  creditAmount: number;
+  payment_method_id?: string;
+}) => AxiosInstance.post("/api/wallet/purchase-credits/summary", body);
+
+/** POST /api/wallet/purchase-credits — purchase credits. */
+export const postWalletPurchaseCreditsApi = (body: {
+  creditAmount: number;
+  payment_method_id?: string;
+}) => AxiosInstance.post("/api/wallet/purchase-credits", body);
 
 /** POST /api/organization/referral/:id/send — confirm payment and send referral to receiver. */
 export const postOrganizationReferralSendApi = (

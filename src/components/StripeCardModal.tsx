@@ -85,11 +85,13 @@ function StripeCardForm({ onSuccess, onCancel, isSubmitting }: StripeCardFormPro
   );
 }
 
-interface StripeCardModalProps {
+export interface StripeCardModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: (paymentMethodId: string) => void;
   isSubmitting?: boolean;
+  /** Optional description (e.g. for wallet vs referral). */
+  description?: string;
 }
 
 export function StripeCardModal({
@@ -97,6 +99,7 @@ export function StripeCardModal({
   onClose,
   onSuccess,
   isSubmitting = false,
+  description = "Enter your credit or debit card details to pay for this referral.",
 }: StripeCardModalProps) {
   if (!stripePromise) {
     return (
@@ -104,7 +107,7 @@ export function StripeCardModal({
         <div className="p-4">
           <h3 className="m-0 text-base font-semibold mb-2">Card payment</h3>
           <p className="m-0 text-sm text-rcn-muted">
-            Stripe is not configured. Set in your environment.
+            Stripe is not configured. Set NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY in your environment.
           </p>
           <div className="flex justify-end mt-4">
             <Button type="button" variant="primary" size="sm" onClick={onClose}>
@@ -123,9 +126,7 @@ export function StripeCardModal({
           <span className="text-xl">💳</span>
           Enter card details
         </h3>
-        <p className="m-0 text-sm text-rcn-muted mb-4">
-          Enter your credit or debit card details to pay for this referral.
-        </p>
+        <p className="m-0 text-sm text-rcn-muted mb-4">{description}</p>
         <Elements stripe={stripePromise}>
           <StripeCardForm
             onSuccess={onSuccess}

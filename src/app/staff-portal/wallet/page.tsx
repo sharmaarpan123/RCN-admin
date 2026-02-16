@@ -1,153 +1,173 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { toastSuccess, toastError } from "@/utils/toast";
-import { MOCK_SESSION, MOCK_ORG, type StaffOrg } from "../mockData";
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toastError } from "@/utils/toast";
+import {
+  getAuthCreditsApi,
+  getPaymentMethodsActiveApi,
+  postWalletPurchaseCreditsSummaryApi,
+  postWalletPurchaseCreditsApi,
+} from "@/apis/ApiCalls";
+import { checkResponse, catchAsync } from "@/utils/commonFunc";
+import defaultQueryKeys from "@/utils/staffQueryKeys";
+import Modal from "@/components/Modal";
+import { Button, StripeCardModal } from "@/components";
 
-// Pricing: 5 credits = $10, so 1 credit = $2
-const CREDIT_PRICE = 2.00;
+const PAYMENT_METHODS_EXCLUDED_FROM_WEBSITE = ["apple_pay", "google_pay"];
+const CARD_KEYS_REQUIRING_STRIPE = ["credit_card", "debit_card"];
 
-interface CardDetails {
-  cardNumber: string;
-  expiryMonth: string;
-  expiryYear: string;
-  cvv: string;
-  nameOnCard: string;
-  zipCode: string;
+/** Payment method option from GET /api/payment-methods/active */
+interface PaymentMethodOption {
+  id: string;
+  name: string;
+  key: string;
+}
+
+/** Purchase summary from POST /api/wallet/purchase-credits/summary */
+interface PurchaseSummaryData {
+  creditAmount?: number;
+  creditPrice?: number;
+  processingFee?: number;
+  processingFeePercent?: number;
+  baseAmount?: number;
+  subtotal?: number;
+  totalAmount?: number;
+  currency?: string;
+  payment_method_id?: string;
+  payment_method_name?: string;
+  threshold_applied?: boolean;
+  breakdown?: {
+    calculation?: string;
+    message?: string;
+  };
 }
 
 export default function WalletPage() {
-  const session = MOCK_SESSION;
+  const queryClient = useQueryClient();
   const [creditAmount, setCreditAmount] = useState<string>("");
-  const [paymentMethod, setPaymentMethod] = useState<string>("creditCard");
-  const [loading, setLoading] = useState(true);
-  const [org, setOrg] = useState<StaffOrg | null>(null);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [cardDetails, setCardDetails] = useState<CardDetails>({
-    cardNumber: "",
-    expiryMonth: "",
-    expiryYear: "",
-    cvv: "",
-    nameOnCard: "",
-    zipCode: "",
+  const [paymentMethodId, setPaymentMethodId] = useState("");
+  const [summaryModalOpen, setSummaryModalOpen] = useState(false);
+  const [purchaseSummary, setPurchaseSummary] = useState<PurchaseSummaryData | null>(null);
+  const [stripeModalOpen, setStripeModalOpen] = useState(false);
+  /** When paying with card, we get this from Stripe and use it for summary + purchase */
+  const [stripePaymentMethodId, setStripePaymentMethodId] = useState<string | null>(null);
+
+  const { data: creditsData, isLoading: creditsLoading } = useQuery({
+    queryKey: defaultQueryKeys.credits,
+    queryFn: async () => {
+      const res = await getAuthCreditsApi();
+      if (!checkResponse({ res })) return { user_credits: 0, branch_credits: 0 };
+      const raw = res.data as { data?: { user_credits?: number; branch_credits?: number } };
+      const data = raw?.data;
+      const user_credits = typeof data?.user_credits === "number" ? data.user_credits : 0;
+      const branch_credits = typeof data?.branch_credits === "number" ? data.branch_credits : 0;
+      return { user_credits, branch_credits };
+    },
   });
-  const [processing, setProcessing] = useState(false);
 
-  useEffect(() => {
-    if (session?.orgId && session.orgId === MOCK_ORG.id) {
-      setOrg({ ...MOCK_ORG });
-    }
-    setLoading(false);
-  }, []);
+  const { data: paymentMethodsList } = useQuery({
+    queryKey: defaultQueryKeys.paymentMethodsActive,
+    queryFn: async () => {
+      const res = await getPaymentMethodsActiveApi();
+      if (!checkResponse({ res })) return [];
+      const raw = res.data as { success?: boolean; data?: { id: string; name: string; key: string }[] };
+      const list = Array.isArray(raw?.data) ? raw.data : [];
+      return list
+        .filter((item) => !PAYMENT_METHODS_EXCLUDED_FROM_WEBSITE.includes(item.key))
+        .map((item) => ({ id: item.id, name: item.name, key: item.key }));
+    },
+  });
 
-  const formatCardNumber = (value: string) => {
-    const v = value.replace(/\s+/g, "").replace(/[^0-9]/gi, "");
-    const matches = v.match(/\d{4,16}/g);
-    const match = (matches && matches[0]) || "";
-    const parts = [];
-    for (let i = 0, len = match.length; i < len; i += 4) {
-      parts.push(match.substring(i, i + 4));
-    }
-    if (parts.length) {
-      return parts.join(" ");
-    } else {
-      return v;
-    }
+  const paymentMethodOptions: PaymentMethodOption[] = Array.isArray(paymentMethodsList) ? paymentMethodsList : [];
+  const selectedOption = paymentMethodOptions.find((pm) => pm.id === paymentMethodId);
+  const selectedMethodKey = selectedOption?.key ?? null;
+  const requiresStripeCard = selectedMethodKey != null && CARD_KEYS_REQUIRING_STRIPE.includes(selectedMethodKey);
+
+  const { isPending: isSummaryPending, mutate: fetchPurchaseSummary } = useMutation({
+    mutationFn: catchAsync(async (overridePaymentMethodId?: string) => {
+      const credits = parseInt(creditAmount, 10);
+      if (!creditAmount || isNaN(credits) || credits <= 0) {
+        toastError("Please enter a valid number of credits.");
+        return;
+      }
+      const payment_method_id = overridePaymentMethodId ?? stripePaymentMethodId ?? (paymentMethodId.trim() || undefined);
+      if (!payment_method_id) {
+        toastError("Please select a payment method.");
+        return;
+      }
+      const res = await postWalletPurchaseCreditsSummaryApi({ creditAmount: credits, payment_method_id });
+      if (!checkResponse({ res })) return;
+      const raw = res.data as { data?: PurchaseSummaryData };
+      const payload = raw?.data ?? null;
+      setPurchaseSummary(payload && typeof payload === "object" ? payload : null);
+      setSummaryModalOpen(true);
+    }),
+  });
+
+  const onCloseSummary = () => {
+    setSummaryModalOpen(false);
+    setPurchaseSummary(null);
+    setStripeModalOpen(false);
+    setStripePaymentMethodId(null);
   };
 
-  const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatCardNumber(e.target.value);
-    setCardDetails((prev) => ({ ...prev, cardNumber: formatted }));
-  };
+  const { isPending: isPurchasePending, mutate: purchaseCredits } = useMutation({
+    mutationFn: catchAsync(async () => {
+      const credits = parseInt(creditAmount, 10);
+      if (!creditAmount || isNaN(credits) || credits <= 0) {
+        toastError("Please enter a valid number of credits.");
+        return;
+      }
+      const payment_method_id = stripePaymentMethodId ?? (paymentMethodId.trim() || undefined);
+      if (!payment_method_id) {
+        toastError("Please select a payment method.");
+        return;
+      }
+      const res = await postWalletPurchaseCreditsApi({ creditAmount: credits, payment_method_id });
+      if (!checkResponse({ res, showSuccess: true })) return;
+      onCloseSummary();
+      setCreditAmount("");
+      queryClient.invalidateQueries({ queryKey: defaultQueryKeys.credits });
+    }),
+  });
 
-  const calculatePrice = (credits: number): number => {
-    return credits * CREDIT_PRICE;
-  };
-
-  const handleOpenPaymentModal = () => {
+  const handleGetSummaryOrStripe = () => {
     const credits = parseInt(creditAmount, 10);
     if (!creditAmount || isNaN(credits) || credits <= 0) {
       toastError("Please enter a valid number of credits.");
       return;
     }
-    if (paymentMethod === "creditCard" || paymentMethod === "debitCard") {
-      setShowPaymentModal(true);
-    } else {
-      // For other payment methods, proceed directly
-      handlePurchase();
-    }
-  };
-
-  const handlePurchase = () => {
-    const credits = parseInt(creditAmount, 10);
-    if (!creditAmount || isNaN(credits) || credits <= 0 || !session?.orgId) {
-      toastError("Please enter a valid number of credits.");
+    if (requiresStripeCard) {
+      setStripeModalOpen(true);
       return;
     }
-
-    // Validate card details if using card payment
-    if ((paymentMethod === "creditCard" || paymentMethod === "debitCard") && showPaymentModal) {
-      if (!cardDetails.cardNumber.replace(/\s/g, "") || cardDetails.cardNumber.replace(/\s/g, "").length < 13) {
-        toastError("Please enter a valid card number.");
-        return;
-      }
-      if (!cardDetails.expiryMonth || !cardDetails.expiryYear) {
-        toastError("Please enter card expiry date.");
-        return;
-      }
-      if (!cardDetails.cvv || cardDetails.cvv.length < 3) {
-        toastError("Please enter a valid CVV.");
-        return;
-      }
-      if (!cardDetails.nameOnCard.trim()) {
-        toastError("Please enter name on card.");
-        return;
-      }
-      if (!cardDetails.zipCode.trim()) {
-        toastError("Please enter zip code.");
-        return;
-      }
+    if (!paymentMethodId.trim()) {
+      toastError("Please select a payment method.");
+      return;
     }
-
-    setProcessing(true);
-
-    const totalCredits = credits;
-    const price = calculatePrice(credits);
-
-    setOrg((prev) =>
-      prev
-        ? { ...prev, referralCredits: (prev.referralCredits || 0) + totalCredits }
-        : null
-    );
-
-    toastSuccess(`Successfully purchased ${totalCredits} credits!`);
-    setCreditAmount("");
-    setShowPaymentModal(false);
-    setCardDetails({
-      cardNumber: "",
-      expiryMonth: "",
-      expiryYear: "",
-      cvv: "",
-      nameOnCard: "",
-      zipCode: "",
-    });
-    setProcessing(false);
+    fetchPurchaseSummary(undefined);
   };
 
-  const getPaymentMethodLabel = (method: string) => {
-    const labels: Record<string, string> = {
-      creditCard: "Credit Card",
-      debitCard: "Debit Card",
-      applePay: "Apple Pay",
-      paypal: "PayPal",
-      googlePay: "Google Pay",
-      bankTransfer: "Bank Transfer",
-      ach: "ACH",
-    };
-    return labels[method] || method;
+  const onStripeCardSuccess = (paymentMethodIdFromStripe: string) => {
+    setStripePaymentMethodId(paymentMethodIdFromStripe);
+    setStripeModalOpen(false);
+    fetchPurchaseSummary(paymentMethodIdFromStripe);
   };
 
-  if (loading) {
+  const handleConfirmPurchase = () => {
+    const credits = parseInt(creditAmount, 10);
+    if (!creditAmount || isNaN(credits) || credits <= 0) return;
+    const payment_method_id = stripePaymentMethodId ?? (paymentMethodId.trim() || undefined);
+    if (!payment_method_id) return;
+    purchaseCredits();
+  };
+
+  const userCredits = typeof creditsData?.user_credits === "number" ? creditsData.user_credits : 0;
+  const branchCredits = typeof creditsData?.branch_credits === "number" ? creditsData.branch_credits : 0;
+  const totalCredits = userCredits + branchCredits;
+
+  if (creditsLoading) {
     return (
       <div className="max-w-6xl mx-auto p-6">
         <div className="text-center py-10">Loading wallet...</div>
@@ -155,56 +175,37 @@ export default function WalletPage() {
     );
   }
 
-  if (!session?.orgId) {
-    return (
-      <div className="max-w-6xl mx-auto p-6">
-        <div className="text-center py-10">
-          <h2 className="text-lg font-semibold mb-2">No Organization Found</h2>
-          <p className="text-rcn-muted">You must be associated with an organization to access the wallet.</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!org) {
-    return (
-      <div className="max-w-6xl mx-auto p-6">
-        <div className="text-center py-10">
-          <h2 className="text-lg font-semibold mb-2">Organization Not Found</h2>
-          <p className="text-rcn-muted">Unable to load organization data.</p>
-        </div>
-      </div>
-    );
-  }
-
-  const credits = org.referralCredits || 0;
-
   return (
     <div className="max-w-6xl mx-auto p-6">
-      {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-semibold m-0 mb-2">Wallet & Credits</h1>
         <p className="text-rcn-muted text-sm m-0">Purchase credits to send referrals and manage your account balance.</p>
       </div>
 
-      {/* Balance Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-       
         <div className="bg-white rounded-2xl border border-slate-200 shadow-[0_10px_30px_rgba(2,6,23,.07)] p-6">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-black text-rcn-muted uppercase tracking-wide">Referral Credits</span>
-            <span className="text-2xl font-black text-rcn-accent-dark">{credits}</span>
+            <span className="text-xs font-black text-rcn-muted uppercase tracking-wide">User Credits</span>
+            <span className="text-2xl font-black text-rcn-accent-dark">{userCredits}</span>
           </div>
-          <p className="text-xs text-rcn-muted m-0">Credits available for sending referrals</p>
+          <p className="text-xs text-rcn-muted m-0">Credits assigned to your account</p>
+        </div>
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-[0_10px_30px_rgba(2,6,23,.07)] p-6">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-black text-rcn-muted uppercase tracking-wide">Branch Credits</span>
+            <span className="text-2xl font-black text-rcn-accent-dark">{branchCredits}</span>
+          </div>
+          <p className="text-xs text-rcn-muted m-0">Credits available at your branch</p>
         </div>
       </div>
+      <div className="mb-6 p-3 rounded-xl bg-slate-50 border border-slate-200">
+        <span className="text-xs font-black text-rcn-muted uppercase tracking-wide">Total available</span>
+        <p className="m-0 mt-1 text-lg font-black text-rcn-accent-dark">{totalCredits} credits</p>
+      </div>
 
-      {/* Purchase Credits Section */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-[0_10px_30px_rgba(2,6,23,.07)] p-6 mb-6">
         <h2 className="text-lg font-semibold m-0 mb-4">Purchase Credits</h2>
-        
         <div className="space-y-4">
-          {/* Credit Amount Input */}
           <div>
             <label className="block text-xs font-black text-rcn-muted mb-1.5">
               Number of Credits <span className="text-red-500">*</span>
@@ -222,255 +223,136 @@ export default function WalletPage() {
               min="1"
               className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-normal text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
             />
-            <p className="text-xs text-rcn-muted mt-1.5">Price: $2.00 per credit (5 credits = $10.00)</p>
           </div>
 
-          {/* Payment Method and Total */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-black text-rcn-muted mb-1.5">Payment Method</label>
-              <select
-                value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-normal text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
-              >
-                <option value="creditCard">Credit Card</option>
-                <option value="debitCard">Debit Card</option>
-                <option value="applePay">Apple Pay</option>
-                <option value="paypal">PayPal</option>
-                <option value="googlePay">Google Pay</option>
-                <option value="bankTransfer">Bank Transfer</option>
-                <option value="ach">ACH</option>
-              </select>
-            </div>
-            <div className="flex items-end">
-              <div className="w-full">
-                <div className="text-xs font-black text-rcn-muted mb-1.5">Total</div>
-                <div className="text-2xl font-black text-rcn-accent-dark">
-                  ${creditAmount && !isNaN(Number(creditAmount)) && Number(creditAmount) > 0
-                    ? calculatePrice(Number(creditAmount)).toFixed(2)
-                    : "0.00"}
-                </div>
-                <div className="text-xs text-rcn-muted mt-1">
-                  {creditAmount && !isNaN(Number(creditAmount)) && Number(creditAmount) > 0
-                    ? `${creditAmount} credits`
-                    : "0 credits"}
-                </div>
-              </div>
-            </div>
+          <div>
+            <label className="block text-xs font-black text-rcn-muted mb-1.5">Payment Method</label>
+            <select
+              value={paymentMethodId}
+              onChange={(e) => {
+                setPaymentMethodId(e.target.value);
+                setStripePaymentMethodId(null);
+              }}
+              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-normal text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
+              aria-label="Select payment method"
+            >
+              <option value="">Select payment method</option>
+              {paymentMethodOptions.map((pm) => (
+                <option key={pm.id} value={pm.id}>
+                  {pm.name}
+                </option>
+              ))}
+            </select>
           </div>
 
-          {/* Purchase Button */}
-          <button
+          <Button
             type="button"
-            onClick={handleOpenPaymentModal}
-            disabled={processing || !creditAmount || isNaN(Number(creditAmount)) || Number(creditAmount) <= 0}
-            className="w-full md:w-auto px-6 py-3 rounded-xl border border-rcn-brand/30 bg-rcn-brand/10 text-rcn-accent-dark font-extrabold text-sm shadow hover:bg-rcn-brand/15 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            variant="primary"
+            size="md"
+            onClick={handleGetSummaryOrStripe}
+            disabled={
+              isSummaryPending ||
+              !creditAmount ||
+              isNaN(Number(creditAmount)) ||
+              Number(creditAmount) <= 0 ||
+              paymentMethodOptions.length === 0 ||
+              (!requiresStripeCard && !paymentMethodId.trim())
+            }
           >
-            {processing ? "Processing..." : "Purchase Credits"}
-          </button>
+            {isSummaryPending ? "Loading…" : "Get payment summary"}
+          </Button>
         </div>
       </div>
 
-      {/* Payment Modal */}
-      {showPaymentModal && creditAmount && !isNaN(Number(creditAmount)) && Number(creditAmount) > 0 && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-[0_20px_50px_rgba(2,6,23,.25)] max-w-md w-full max-h-[90vh] overflow-auto">
-            <div className="p-6">
-              {/* Modal Header */}
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold m-0">Payment Details</h3>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowPaymentModal(false);
-                    setProcessing(false);
-                  }}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg text-rcn-muted hover:bg-slate-100 transition-colors"
-                  aria-label="Close"
-                >
-                  ✕
-                </button>
+      <Modal isOpen={summaryModalOpen} onClose={onCloseSummary} maxWidth="560px">
+        <div className="p-4">
+          <h3 className="m-0 text-base font-semibold mb-3 flex items-center gap-2.5">
+            <span className="text-2xl">💳</span>
+            Purchase Summary
+          </h3>
+          {purchaseSummary ? (
+            <div className="text-sm text-rcn-text space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                {typeof purchaseSummary.creditAmount === "number" && (
+                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                    <span className="text-rcn-muted text-xs font-black">Credits</span>
+                    <p className="m-0 mt-0.5 font-[850]">{purchaseSummary.creditAmount}</p>
+                  </div>
+                )}
+                {purchaseSummary.payment_method_name && (
+                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                    <span className="text-rcn-muted text-xs font-black">Payment method</span>
+                    <p className="m-0 mt-0.5 font-[850]">{purchaseSummary.payment_method_name}</p>
+                  </div>
+                )}
+                {typeof purchaseSummary.creditPrice === "number" && (
+                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                    <span className="text-rcn-muted text-xs font-black">Price per credit</span>
+                    <p className="m-0 mt-0.5 font-[850]">
+                      {purchaseSummary.currency ?? "USD"} {purchaseSummary.creditPrice}
+                    </p>
+                  </div>
+                )}
+                {(purchaseSummary.processingFee != null && purchaseSummary.processingFee > 0) && (
+                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                    <span className="text-rcn-muted text-xs font-black">Processing fee</span>
+                    <p className="m-0 mt-0.5 font-[850]">
+                      {purchaseSummary.currency ?? "USD"} {purchaseSummary.processingFee}
+                      {typeof purchaseSummary.processingFeePercent === "number" && purchaseSummary.processingFeePercent > 0
+                        ? ` (${purchaseSummary.processingFeePercent}%)`
+                        : ""}
+                    </p>
+                  </div>
+                )}
               </div>
-
-              {/* Order Summary */}
-              <div className="bg-slate-50 rounded-xl p-4 mb-6 border border-slate-200">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-[850] text-rcn-text">Credits</span>
-                  <span className="text-sm font-black text-rcn-accent-dark">
-                    {creditAmount} credits
+              {purchaseSummary.breakdown?.calculation && (
+                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                  <span className="text-rcn-muted text-xs font-black">Calculation</span>
+                  <p className="m-0 mt-0.5 font-[850]">{purchaseSummary.breakdown.calculation}</p>
+                </div>
+              )}
+              <div className="p-3 rounded-xl bg-rcn-brand/5 border border-rcn-brand/20">
+                <div className="flex justify-between items-center">
+                  <span className="text-rcn-muted text-xs font-black">Total</span>
+                  <span className="text-base font-black text-rcn-accent-dark">
+                    {purchaseSummary.currency ?? "USD"} {typeof purchaseSummary.totalAmount === "number" ? purchaseSummary.totalAmount : purchaseSummary.subtotal ?? "—"}
                   </span>
                 </div>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-[850] text-rcn-text">Price per Credit</span>
-                  <span className="text-sm font-black text-rcn-text">${CREDIT_PRICE.toFixed(2)}</span>
-                </div>
-                <div className="border-t border-slate-200 pt-2 mt-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-base font-black text-rcn-text">Total</span>
-                    <span className="text-xl font-black text-rcn-accent-dark">
-                      ${calculatePrice(Number(creditAmount)).toFixed(2)}
-                    </span>
-                  </div>
-                </div>
+                {purchaseSummary.breakdown?.message && (
+                  <p className="m-0 mt-1 text-[13px] font-[850] text-rcn-text">{purchaseSummary.breakdown.message}</p>
+                )}
               </div>
-
-              {/* Card Details Form */}
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handlePurchase();
-                }}
-                className="space-y-4"
-              >
-                {/* Card Number */}
-                <div>
-                  <label className="block text-xs font-black text-rcn-muted mb-1.5">
-                    Card Number <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={cardDetails.cardNumber}
-                    onChange={handleCardNumberChange}
-                    placeholder="1234 5678 9012 3456"
-                    maxLength={19}
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-normal text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
-                    required
-                  />
-                </div>
-
-                {/* Name on Card */}
-                <div>
-                  <label className="block text-xs font-black text-rcn-muted mb-1.5">
-                    Name on Card <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={cardDetails.nameOnCard}
-                    onChange={(e) => setCardDetails((prev) => ({ ...prev, nameOnCard: e.target.value }))}
-                    placeholder="John Doe"
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-normal text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
-                    required
-                  />
-                </div>
-
-                {/* Expiry and CVV */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-black text-rcn-muted mb-1.5">
-                      Expiry Date <span className="text-red-500">*</span>
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <select
-                        value={cardDetails.expiryMonth}
-                        onChange={(e) => setCardDetails((prev) => ({ ...prev, expiryMonth: e.target.value }))}
-                        className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-normal text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
-                        required
-                      >
-                        <option value="">Month</option>
-                        {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
-                          <option key={month} value={String(month).padStart(2, "0")}>
-                            {String(month).padStart(2, "0")}
-                          </option>
-                        ))}
-                      </select>
-                      <select
-                        value={cardDetails.expiryYear}
-                        onChange={(e) => setCardDetails((prev) => ({ ...prev, expiryYear: e.target.value }))}
-                        className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-normal text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
-                        required
-                      >
-                        <option value="">Year</option>
-                        {Array.from({ length: 15 }, (_, i) => new Date().getFullYear() + i).map((year) => (
-                          <option key={year} value={String(year)}>
-                            {year}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-black text-rcn-muted mb-1.5">
-                      CVV <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={cardDetails.cvv}
-                      onChange={(e) => {
-                        const v = e.target.value.replace(/\D/g, "").slice(0, 4);
-                        setCardDetails((prev) => ({ ...prev, cvv: v }));
-                      }}
-                      placeholder="123"
-                      maxLength={4}
-                      className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-normal text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Zip Code */}
-                <div>
-                  <label className="block text-xs font-black text-rcn-muted mb-1.5">
-                    Zip Code <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={cardDetails.zipCode}
-                    onChange={(e) => {
-                      const v = e.target.value.replace(/\D/g, "").slice(0, 10);
-                      setCardDetails((prev) => ({ ...prev, zipCode: v }));
-                    }}
-                    placeholder="12345"
-                    maxLength={10}
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-normal text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
-                    required
-                  />
-                </div>
-
-                {/* Payment Method Display */}
-                <div className="bg-rcn-brand/5 rounded-xl p-3 border border-rcn-brand/20">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-black text-rcn-muted">Payment Method</span>
-                    <span className="text-xs font-black text-rcn-accent-dark">
-                      {getPaymentMethodLabel(paymentMethod)}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex gap-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowPaymentModal(false);
-                      setProcessing(false);
-                    }}
-                    className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-rcn-text font-extrabold text-sm shadow hover:bg-slate-50 transition-colors"
-                    disabled={processing}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={processing}
-                    className="flex-1 px-4 py-2.5 rounded-xl border border-rcn-brand/30 bg-rcn-brand/10 text-rcn-accent-dark font-extrabold text-sm shadow hover:bg-rcn-brand/15 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {processing ? "Processing..." : `Pay $${calculatePrice(Number(creditAmount)).toFixed(2)}`}
-                  </button>
-                </div>
-
-                {/* Security Notice */}
-                <div className="pt-2 text-center">
-                  <p className="text-[10px] text-rcn-muted m-0 flex items-center justify-center gap-1">
-                    <span>🔒</span>
-                    <span>Your payment information is secure and encrypted</span>
-                  </p>
-                </div>
-              </form>
             </div>
+          ) : (
+            <p className="m-0 text-rcn-muted text-sm">No summary data.</p>
+          )}
+          <div className="flex gap-2.5 justify-end mt-4">
+            <Button type="button" variant="ghost" size="sm" onClick={onCloseSummary} className="border border-slate-200">
+              Close
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={handleConfirmPurchase}
+              disabled={isPurchasePending || !purchaseSummary}
+            >
+              {isPurchasePending ? "Processing…" : "Confirm & purchase credits"}
+            </Button>
           </div>
         </div>
-      )}
+      </Modal>
+
+      <StripeCardModal
+        isOpen={stripeModalOpen}
+        onClose={() => {
+          setStripeModalOpen(false);
+          setStripePaymentMethodId(null);
+        }}
+        onSuccess={onStripeCardSuccess}
+        isSubmitting={isSummaryPending}
+        description="Enter your card details to purchase credits."
+      />
     </div>
   );
 }

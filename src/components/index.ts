@@ -15,3 +15,5 @@ export { TableLayout, TableActions } from './Table';
 export type { TableColumn, TableSortState } from './Table';
 export type { ConfirmModalType } from './ConfirmModal';
 export type { RcnSelectOption, RcnSelectProps } from './CustomReactSelect';
+export { StripeCardModal } from './StripeCardModal';
+export type { StripeCardModalProps } from './StripeCardModal';

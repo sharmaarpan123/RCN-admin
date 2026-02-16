@@ -8,6 +8,7 @@ const defaultQueryKeys = {
   referralChatList: ["staff", "referral", "chats", "list"],
   referralChatMessages: ["staff", "referral", "chats", "messages"],
   paymentMethodsActive: ["staff", "payment-methods", "active"],
+  credits: ["staff", "credits"],
 };
 
 export default defaultQueryKeys;

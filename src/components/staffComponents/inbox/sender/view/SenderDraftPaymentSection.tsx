@@ -11,8 +11,7 @@ import {
 import { checkResponse, catchAsync } from "@/utils/commonFunc";
 import defaultQueryKeys from "@/utils/staffQueryKeys";
 import { BOX_GRAD, type PaymentSummaryData } from "./senderViewHelpers";
-import { StripeCardModal } from "./StripeCardModal";
-import { Button } from "@/components";
+import { Button, StripeCardModal } from "@/components";
 
 /** Active payment method from GET /api/payment-methods/active. */
 export interface PaymentMethodOption {
