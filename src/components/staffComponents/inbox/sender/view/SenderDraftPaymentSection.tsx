@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { loadStripe } from "@stripe/stripe-js";
 import Modal from "@/components/Modal";
 import {
   getPaymentMethodsActiveApi,
@@ -10,8 +11,13 @@ import {
 } from "@/apis/ApiCalls";
 import { checkResponse, catchAsync } from "@/utils/commonFunc";
 import defaultQueryKeys from "@/utils/staffQueryKeys";
+import { toastError } from "@/utils/toast";
 import { BOX_GRAD, type PaymentSummaryData } from "./senderViewHelpers";
 import { Button, StripeCardModal } from "@/components";
+
+const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+  ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
+  : null;
 
 /** Active payment method from GET /api/payment-methods/active. */
 export interface PaymentMethodOption {
@@ -21,7 +27,7 @@ export interface PaymentMethodOption {
 }
 
 const PAYMENT_METHODS_EXCLUDED_FROM_WEBSITE = ["apple_pay", "google_pay"];
-const CARD_KEYS_REQUIRING_STRIPE = ["credit_card", "debit_card"];
+const CARD_KEYS_REQUIRING_STRIPE = ["card"];
 
 interface SenderDraftPaymentSectionProps {
   refId: string;
@@ -58,7 +64,7 @@ export function SenderDraftPaymentSection({ refId }: SenderDraftPaymentSectionPr
   const selectedOption = paymentMethodOptions.find((pm) => pm.id === paymentMethodId);
   const selectedMethodKey = selectedOption?.key ?? null;
   const requiresStripeCard = selectedMethodKey != null && CARD_KEYS_REQUIRING_STRIPE.includes(selectedMethodKey);
-  
+
   const { isPending: isPaymentSummaryPending, mutate: fetchPaymentSummary } = useMutation({
     mutationFn: catchAsync(async () => {
       const body =
@@ -92,6 +98,22 @@ export function SenderDraftPaymentSection({ refId }: SenderDraftPaymentSectionPr
     mutationFn: catchAsync(async (payload: { source: "free" | "payment"; payment_method_id?: string }) => {
       const res = await postOrganizationReferralSendApi(refId, payload);
       if (!checkResponse({ res, showSuccess: true })) return;
+      const data = (res.data as { data?: { client_secret?: string } })?.data;
+      const payment_method_id = payload.payment_method_id;
+      if (requiresStripeCard && data?.client_secret && payment_method_id) {
+        const stripe = await stripePromise;
+        if (!stripe) {
+          toastError("Stripe is not configured.");
+          return;
+        }
+        const { error } = await stripe.confirmCardPayment(data.client_secret, {
+          payment_method: payment_method_id,
+        });
+        if (error) {
+          toastError(error.message ?? "Payment confirmation failed.");
+          return;
+        }
+      }
       onCloseSummary();
       queryClient.invalidateQueries({
         queryKey: [...defaultQueryKeys.referralSentList, "detail", refId],

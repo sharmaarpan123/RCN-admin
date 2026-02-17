@@ -19,7 +19,9 @@ const defaultMeta: ReferralListMeta = {
 import { DEMO_COMPANIES } from "./demo-data";
 import { SenderInbox, ReceiverInbox } from "@/components/staffComponents";
 
-export type SenderInboxBody = { page: number; limit: number; search: string };
+export type SenderInboxType = "all" | "draft" | "sent";
+
+export type SenderInboxBody = { page: number; limit: number; search: string, type: SenderInboxType, day: number };
 export type ReceiverInboxBody = { page: number; limit: number; search: string };
 
 export default function StaffInboxPage() {
@@ -28,16 +30,18 @@ export default function StaffInboxPage() {
   const [role, setRole] = useState<"SENDER" | "RECEIVER">("SENDER");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [dateFilterDays, setDateFilterDays] = useState(30);
-  const [senderBody, setSenderBody] = useState<SenderInboxBody>({ page: 1, limit: 10, search: "" });
+  const [senderBody, setSenderBody] = useState<SenderInboxBody>({ page: 1, limit: 10, search: "", type: "all", day: 1 });
   const [receiverBody, setReceiverBody] = useState<ReceiverInboxBody>({ page: 1, limit: 10, search: "" });
 
   const { data: sentResponse, isLoading: isLoadingSent } = useQuery({
-    queryKey: [...defaultQueryKeys.referralSentList, senderBody.page, senderBody.limit, senderBody.search],
+    queryKey: [...defaultQueryKeys.referralSentList, senderBody.page, senderBody.search, senderBody.type, senderBody.day],
     queryFn: async (): Promise<ReferralListResponse<SentReferralApi>> => {
       const res = await getOrganizationReferralSentApi({
         page: senderBody.page,
         limit: senderBody.limit,
         search: senderBody.search || undefined,
+        type: senderBody.type as SenderInboxType,
+        day: senderBody.day,
       });
       if (!checkResponse({ res })) return { data: [], meta: defaultMeta };
       const raw = res.data as { data?: SentReferralApi[]; meta?: ReferralListMeta };

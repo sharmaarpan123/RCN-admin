@@ -7,7 +7,7 @@ import { fmtDate, pillClass, pillLabel } from "@/app/staff-portal/inbox/helpers"
 import { ForwardModal } from "../../ForwardModal";
 import { Button, DebouncedInput, TableLayout, type TableColumn } from "@/components";
 import CustomPagination from "@/components/CustomPagination";
-import { SenderInboxBody } from "@/app/staff-portal/inbox/page";
+import { SenderInboxBody, SenderInboxType } from "@/app/staff-portal/inbox/page";
 
 
 function sentReferralStatus(ref: SentReferralApi): string {
@@ -148,7 +148,7 @@ export function SenderInbox({
         component: (ref) => {
           const st = sentReferralStatus(ref);
           return (
-            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border ${pillClass(st)}`}>
+            <span className={`inline-flex capitalize items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border ${pillClass(st)}`}>
               {pillLabel(st)}
             </span>
           );
@@ -206,14 +206,14 @@ export function SenderInbox({
             aria-label="Search inbox"
           />
           <div className="flex gap-2 flex-wrap" aria-label="Status filters">
-            {["ALL", "DRAFT", "SENT", "PENDING", "ACCEPTED", "REJECTED", "PAID", "COMPLETED"].map((f) => (
-              <button key={f} type="button" onClick={() => setStatusFilter(f)} className={`inline-flex items-center gap-1.5 px-2.5 py-2 rounded-full border cursor-pointer text-xs font-extrabold select-none ${statusFilter === f ? "bg-rcn-brand/10 border-rcn-brand/20 text-rcn-accent-dark" : "border-slate-200 bg-white text-rcn-muted"}`}>
-                {f === "ALL" ? "All" : f === "PAID" ? "Paid/Unlocked" : f.charAt(0) + f.slice(1).toLowerCase()}
+            {[{ label: "ALL", value: "all" as SenderInboxType }, { label: "DRAFT", value: "draft" as SenderInboxType }, { label: "SENT", value: "sent" as SenderInboxType }].map((f) => (
+              <button key={f.value} type="button" onClick={() => setBody({ ...body, type: f.value as SenderInboxType })} className={`inline-flex items-center gap-1.5 px-2.5 py-2 rounded-full border cursor-pointer text-xs font-extrabold select-none ${body.type === f.value ? "bg-rcn-brand/10 border-rcn-brand/20 text-rcn-accent-dark" : "border-slate-200 bg-white text-rcn-muted"}`}>
+                {f.label}
               </button>
             ))}
           </div>
           <div className="flex gap-2 flex-wrap" aria-label="Date filters">
-            {[[30, "Last 30 days"], [7, "Last 7 days"], [90, "Last 90 days"], [3650, "All time"]].map(([days, label]) => (
+            {[[30, "Last 30 days"], [7, "Last 7 days"], [90, "Last 90 days"], [0, "All time"]].map(([days, label]) => (
               <button key={String(days)} type="button" onClick={() => setDateFilterDays(Number(days))} className={`inline-flex items-center gap-1.5 px-2.5 py-2 rounded-full border cursor-pointer text-xs font-extrabold select-none ${dateFilterDays === days ? "bg-rcn-brand/10 border-rcn-brand/20 text-rcn-accent-dark" : "border-slate-200 bg-white text-rcn-muted"}`}>
                 {label}
               </button>

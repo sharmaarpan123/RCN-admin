@@ -4,7 +4,7 @@ import React from "react";
 import { motion } from "framer-motion";
 
 const ICON_WRAPPER_CLASS =
-  "flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-rcn-brand-light/15 text-rcn-brand-light";
+  "flex h-12 w-12 shrink-0 items-center justify-center  text-rcn-brand-light";
 
 const PLATFORM_FEATURES = [
   {
