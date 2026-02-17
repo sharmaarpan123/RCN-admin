@@ -78,10 +78,10 @@ export function AboutUsHero() {
             className="absolute inset-0 bg-cover bg-center scale-105"
             style={{
               backgroundImage: `url(${HERO_BG_IMAGE})`,
-              filter: "blur(2px) saturate(0.65)",
+
             }}
           />
-          <div className="absolute inset-0 bg-[#c8e6d4]/90 z-10" />
+          <div className="absolute inset-0 bg-[#c8e6d4]/70 z-10" />
           <div className="absolute inset-0 bg-linear-to-b from-white/20 to-transparent z-10" />
         </div>
 
@@ -142,7 +142,7 @@ export function AboutUsHero() {
                 custom={i}
                 variants={statItemVariants}
                 initial="hidden"
-                animate="visible"  
+                animate="visible"
               >
                 <div className="text-2xl md:text-3xl font-bold text-rcn-brand-light ">{value}</div>
                 <div className="text-sm text-rcn-text-faded font-medium">{label}</div>

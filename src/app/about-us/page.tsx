@@ -1,6 +1,10 @@
 import React from "react";
 import { ContentPageHeader } from "@/components/contentpage";
-import { AboutUsHero, AboutUsDescription } from "@/components/contentpage/aboutus";
+import {
+  AboutUsHero,
+  AboutUsDescription,
+  AboutUsPlatformFeatures,
+} from "@/components/contentpage/aboutus";
 
 const AboutUsPage = () => {
   return (
@@ -8,6 +12,7 @@ const AboutUsPage = () => {
       <ContentPageHeader />
       <AboutUsHero />
       <AboutUsDescription />
+      <AboutUsPlatformFeatures />
     </>
   );
 };
