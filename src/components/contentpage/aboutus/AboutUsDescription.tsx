@@ -8,8 +8,15 @@ const FEATURES = [
     title: "Real-Time Tracking",
     description: "Monitor every referral from creation to completion with live status updates.",
     icon: (
-      <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+      <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44" fill="none">
+        <rect width="44" height="44" rx="12" fill="url(#paint0_linear_306_2042)" />
+        <path d="M31.1663 21.9997H28.893C28.4924 21.9988 28.1025 22.1292 27.783 22.3709C27.4635 22.6126 27.232 22.9523 27.1238 23.338L24.9697 31.0013C24.9558 31.0489 24.9268 31.0908 24.8872 31.1205C24.8475 31.1503 24.7993 31.1663 24.7497 31.1663C24.7001 31.1663 24.6518 31.1503 24.6122 31.1205C24.5725 31.0908 24.5436 31.0489 24.5297 31.0013L19.4697 12.998C19.4558 12.9504 19.4268 12.9086 19.3872 12.8788C19.3475 12.8491 19.2993 12.833 19.2497 12.833C19.2001 12.833 19.1518 12.8491 19.1122 12.8788C19.0725 12.9086 19.0436 12.9504 19.0297 12.998L16.8755 20.6613C16.7678 21.0456 16.5376 21.3841 16.22 21.6257C15.9023 21.8672 15.5146 21.9985 15.1155 21.9997H12.833" stroke="#31A561" stroke-width="1.83333" stroke-linecap="round" stroke-linejoin="round" />
+        <defs>
+          <linearGradient id="paint0_linear_306_2042" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#31A561" stop-opacity="0.2" />
+            <stop offset="1" stop-color="#138652" stop-opacity="0.1" />
+          </linearGradient>
+        </defs>
       </svg>
     ),
   },
@@ -17,8 +24,15 @@ const FEATURES = [
     title: "Connected Teams",
     description: "Bring providers, care teams, and admin staff onto a single platform.",
     icon: (
-      <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+      <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44" fill="none">
+        <rect width="44" height="44" rx="12" fill="url(#paint0_linear_306_2042)" />
+        <path d="M31.1663 21.9997H28.893C28.4924 21.9988 28.1025 22.1292 27.783 22.3709C27.4635 22.6126 27.232 22.9523 27.1238 23.338L24.9697 31.0013C24.9558 31.0489 24.9268 31.0908 24.8872 31.1205C24.8475 31.1503 24.7993 31.1663 24.7497 31.1663C24.7001 31.1663 24.6518 31.1503 24.6122 31.1205C24.5725 31.0908 24.5436 31.0489 24.5297 31.0013L19.4697 12.998C19.4558 12.9504 19.4268 12.9086 19.3872 12.8788C19.3475 12.8491 19.2993 12.833 19.2497 12.833C19.2001 12.833 19.1518 12.8491 19.1122 12.8788C19.0725 12.9086 19.0436 12.9504 19.0297 12.998L16.8755 20.6613C16.7678 21.0456 16.5376 21.3841 16.22 21.6257C15.9023 21.8672 15.5146 21.9985 15.1155 21.9997H12.833" stroke="#31A561" stroke-width="1.83333" stroke-linecap="round" stroke-linejoin="round" />
+        <defs>
+          <linearGradient id="paint0_linear_306_2042" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#31A561" stop-opacity="0.2" />
+            <stop offset="1" stop-color="#138652" stop-opacity="0.1" />
+          </linearGradient>
+        </defs>
       </svg>
     ),
   },
@@ -26,8 +40,17 @@ const FEATURES = [
     title: "Complete Visibility",
     description: "Full audit trails and reporting for every referral action.",
     icon: (
-      <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44" fill="none">
+        <rect width="44" height="44" rx="12" fill="url(#paint0_linear_306_2063)" />
+        <path d="M24.7503 12.833H16.5003C16.0141 12.833 15.5478 13.0262 15.204 13.37C14.8601 13.7138 14.667 14.1801 14.667 14.6663V29.333C14.667 29.8192 14.8601 30.2856 15.204 30.6294C15.5478 30.9732 16.0141 31.1663 16.5003 31.1663H27.5003C27.9866 31.1663 28.4529 30.9732 28.7967 30.6294C29.1405 30.2856 29.3337 29.8192 29.3337 29.333V17.4163L24.7503 12.833Z" stroke="#31A561" stroke-width="1.83333" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M23.833 12.833V16.4997C23.833 16.9859 24.0262 17.4522 24.37 17.796C24.7138 18.1399 25.1801 18.333 25.6663 18.333H29.333" stroke="#31A561" stroke-width="1.83333" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M19.25 24.7503L21.0833 26.5837L24.75 22.917" stroke="#31A561" stroke-width="1.83333" stroke-linecap="round" stroke-linejoin="round" />
+        <defs>
+          <linearGradient id="paint0_linear_306_2063" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#31A561" stop-opacity="0.2" />
+            <stop offset="1" stop-color="#138652" stop-opacity="0.1" />
+          </linearGradient>
+        </defs>
       </svg>
     ),
   },
@@ -35,7 +58,7 @@ const FEATURES = [
 
 export function AboutUsDescription() {
   return (
-    <section className="bg-white container mx-auto">
+    <section className=" container mx-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 lg:py-20">
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-start">
           {/* Left column: copy + decorative background */}
@@ -93,13 +116,13 @@ export function AboutUsDescription() {
             {FEATURES.map(({ title, description, icon }, i) => (
               <motion.div
                 key={title}
-                className="flex gap-4 p-5 rounded-xl border border-rcn-border-light bg-rcn-card shadow-sm"
+                className="flex gap-4 p-5 rounded-xl border border-rcn-border-light bg-rcn-card shadow-sm items-center"
                 initial={{ opacity: 0, x: 16 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true, margin: "-40px" }}
                 transition={{ duration: 0.4, delay: 0.08 * i }}
               >
-                <div className="w-12 h-12 shrink-0 rounded-lg bg-rcn-accent/10 flex items-center justify-center text-rcn-accent p-2.5">
+                <div className="w-12 h-12 ">
                   {icon}
                 </div>
                 <div>
