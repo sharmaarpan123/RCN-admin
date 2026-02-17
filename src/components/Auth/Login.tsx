@@ -501,34 +501,7 @@ const Login: React.FC = () => {
               </CustomNextLink>
             </div>
 
-            <div className="h-px bg-rcn-border my-4"></div>
-
-            <div
-              className="bg-white shadow-none rounded-2xl border border-dashed border-rcn-border p-4"
-              style={{ background: "#fbfefc" }}
-            >
-              <h3 className="text-sm font-semibold m-0 mb-2">Demo users</h3>
-              <div className="grid gap-2 text-xs">
-                <div>
-                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]">
-                    System Admin
-                  </span>{" "}
-                  <span className="font-mono">sysadmin@rcn.local</span>
-                </div>
-                <div>
-                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border border-rcn-border bg-[#f8fcf9]">
-                    Org Admin
-                  </span>{" "}
-                  <span className="font-mono">orgadmin@northlake.org</span>
-                </div>
-                <div>
-                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border border-rcn-border bg-[#f8fcf9]">
-                    Staff
-                  </span>{" "}
-                  <span className="font-mono">staff@northlake.org</span>
-                </div>
-              </div>
-            </div>
+          
           </div>
         </div>
         <p className="text-xs text-rcn-muted mt-3 text-center">

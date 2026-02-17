@@ -16,6 +16,7 @@
   --color-rcn-danger: #b91c1c;
   --color-rcn-dark-bg: #0b3b24;
   --color-rcn-dark-text: #e7f5ec;
+  --color-rcn-text-faded: #60766D;
 
   /* Custom shadows */
   --shadow-rcn: 0 10px 30px rgba(2, 6, 23, 0.08);
@@ -89,7 +90,7 @@ select option {
 }
 
 .rc-pagination-item-active a {
-  
+
   color: white !important;
   background-color: var(--color-rcn-accent) !important;
 }
@@ -98,4 +99,8 @@ select option {
 
   background-color: #1f7a4b !important;
   color: white !important;
+}
+
+.header-gradient {
+  background: linear-gradient(180deg, #DBFCE8 0%, rgba(219, 252, 232, 0) 100%);
 }
