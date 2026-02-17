@@ -173,7 +173,7 @@ export default function NewReferralPage() {
     catchAsync(async () => {
       const res = await postOrganizationReferralApi(payload);
       if (checkResponse({ res, showSuccess: true })) {
-        // methods.reset(defaultValues);
+        methods.reset(defaultValues);
         queryClient.invalidateQueries({ queryKey: defaultQueryKeys.referralSentList });
       }
     })();

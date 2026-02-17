@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { toastError } from "@/utils/toast";
+import { loadStripe } from "@stripe/stripe-js";
+import { toastError, toastSuccess } from "@/utils/toast";
 import {
   getAuthCreditsApi,
   getPaymentMethodsActiveApi,
@@ -14,8 +15,12 @@ import defaultQueryKeys from "@/utils/staffQueryKeys";
 import Modal from "@/components/Modal";
 import { Button, StripeCardModal } from "@/components";
 
+const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+  ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
+  : null;
+
 const PAYMENT_METHODS_EXCLUDED_FROM_WEBSITE = ["apple_pay", "google_pay"];
-const CARD_KEYS_REQUIRING_STRIPE = ["credit_card", "debit_card"];
+const CARD_KEYS_REQUIRING_STRIPE = ["card"];
 
 /** Payment method option from GET /api/payment-methods/active */
 interface PaymentMethodOption {
@@ -125,7 +130,29 @@ export default function WalletPage() {
         return;
       }
       const res = await postWalletPurchaseCreditsApi({ creditAmount: credits, payment_method_id });
-      if (!checkResponse({ res, showSuccess: true })) return;
+      const data = (res.data as { data?: { clientSecret?: string }; message?: string })?.data;
+      const hasClientSecret = Boolean(data?.clientSecret);
+
+      if (!checkResponse({ res, showSuccess: !hasClientSecret })) return;
+
+      if (requiresStripeCard && data?.clientSecret && payment_method_id) {
+        const stripe = await stripePromise;
+        if (!stripe) {
+          toastError("Stripe is not configured.");
+          return;
+        }
+        const { error } = await stripe.confirmCardPayment(data.clientSecret, {
+          payment_method: payment_method_id,
+        });
+        if (error) {
+          toastError(error.message ?? "Payment confirmation failed.");
+          return;
+        }
+      }
+
+      if (hasClientSecret) {
+        toastSuccess((res.data as { message?: string })?.message ?? "Payment confirmed. Credits added. it may take a few minutes to appear in your account.");
+      }
       onCloseSummary();
       setCreditAmount("");
       queryClient.invalidateQueries({ queryKey: defaultQueryKeys.credits });
@@ -150,6 +177,7 @@ export default function WalletPage() {
   };
 
   const onStripeCardSuccess = (paymentMethodIdFromStripe: string) => {
+
     setStripePaymentMethodId(paymentMethodIdFromStripe);
     setStripeModalOpen(false);
     fetchPurchaseSummary(paymentMethodIdFromStripe);
@@ -161,6 +189,7 @@ export default function WalletPage() {
     const payment_method_id = stripePaymentMethodId ?? (paymentMethodId.trim() || undefined);
     if (!payment_method_id) return;
     purchaseCredits();
+
   };
 
   const userCredits = typeof creditsData?.user_credits === "number" ? creditsData.user_credits : 0;
