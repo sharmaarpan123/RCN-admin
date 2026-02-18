@@ -44,6 +44,7 @@ export function documentsToList(documents: Record<string, unknown> | undefined):
 /** Department status item from API (GET /api/organization/referral/:id). */
 export interface DepartmentStatusApi {
   department_id?: string;
+  department?: { _id?: string; name?: string };
   status?: string;
   payment_status?: string;
   organization_name?: string;
@@ -51,14 +52,16 @@ export interface DepartmentStatusApi {
   updated_at?: string;
   paid_by_user_id?: string | null;
   department_user_id?: string | null;
+  /** 1 = sender already paid for this department; receiver can only Accept or Reject. */
+  is_paid_by_sender?: number;
 }
 
 /** Build receivers list from API department_statuses + _localReceivers (as-is). Normalizes status to uppercase; paidUnlocked from payment_status === "paid". */
 export function receiversFromData(data: ReferralByIdApi): ReceiverInstance[] {
   const dept = (data.department_statuses ?? []) as DepartmentStatusApi[];
   const fromApi = dept.map((d, i) => ({
-    receiverId: d.department_id ?? `dept-${i}`,
-    name: d.organization_name ?? (d as { name?: string }).name ?? "Receiver",
+    receiverId: d.department_id ?? d.department?._id ?? `dept-${i}`,
+    name: d.department?.name ?? d.organization_name ?? (d as { name?: string }).name ?? "Receiver",
     email: "",
     status: (d.status ?? "PENDING").toString().toUpperCase(),
     paidUnlocked: d.payment_status === "paid",
@@ -66,6 +69,15 @@ export function receiversFromData(data: ReferralByIdApi): ReceiverInstance[] {
     rejectReason: "",
   }));
   return [...fromApi, ...(data._localReceivers ?? [])];
+}
+
+/** Get department status for a given department id from referral data. */
+export function getDepartmentStatusByDepartmentId(
+  data: ReferralByIdApi,
+  departmentId: string | null
+): DepartmentStatusApi | undefined {
+  const list = (data.department_statuses ?? []) as DepartmentStatusApi[];
+  return departmentId ? list.find((d) => (d.department_id ?? d.department?._id) === departmentId) : undefined;
 }
 
 export type DocRow = { label: string; url: string; type: string; kind: "api" | "local"; localIndex?: number };

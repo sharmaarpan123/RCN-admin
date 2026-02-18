@@ -1,31 +1,37 @@
 "use client";
 
-import React, { useState, useCallback, useRef } from "react";
+import React, { useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
-import { getOrganizationReferralByIdApi } from "@/apis/ApiCalls";
-import { checkResponse } from "@/utils/commonFunc";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { loadStripe } from "@stripe/stripe-js";
+import {
+  getOrganizationReferralByIdApi,
+  getPaymentMethodsActiveApi,
+  postOrganizationReferralDepartmentPaymentSummaryApi,
+  postOrganizationReferralDepartmentPayApi,
+} from "@/apis/ApiCalls";
+import { checkResponse, catchAsync } from "@/utils/commonFunc";
 import defaultQueryKeys from "@/utils/staffQueryKeys";
-import type { ReferralByIdApi, ReceiverInstance, ChatMsg, Comm } from "@/app/staff-portal/inbox/types";
+import { toastError } from "@/utils/toast";
+import type { ReferralByIdApi, ReceiverInstance } from "@/app/staff-portal/inbox/types";
 import { fmtDate, pillClass, scrollToId } from "@/app/staff-portal/inbox/helpers";
-import { documentsToList, receiversFromData } from "@/components/staffComponents/inbox/sender/view/senderViewHelpers";
+import { documentsToList } from "@/components/staffComponents/inbox/sender/view/senderViewHelpers";
 import {
   ReceiverBasicSection,
   ReceiverDocsSection,
   ReceiverAdditionalSection,
   ReceiverChatSection,
-  ReceiverActivityLogSection,
 } from "@/components/staffComponents/inbox/receiver/view";
+import { PayToUnlockModal, PaymentSummaryModal } from "@/components/staffComponents/inbox/receiver/view/Modals";
+import type { PaymentSummaryData } from "@/components/staffComponents/inbox/receiver/view/Modals";
+import { StripeCardModal } from "@/components";
 
-interface ReceiverOverlay {
-  chatByReceiver: Record<string, ChatMsg[]>;
-  comms: Comm[];
-  /** Local status override for demo until accept/reject/pay APIs exist */
-  receiverStatusOverride: Record<string, string>;
-  paidUnlockedOverride: Record<string, boolean>;
-  rejectReasonOverride: Record<string, string>;
-}
+const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+  ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
+  : null;
+const EXCLUDED_PAYMENT_KEYS = ["apple", "google"];
+const CARD_KEY = "card";
 
 export default function ReceiverDetailPage() {
   const params = useParams<{ id: string }>();
@@ -44,14 +50,6 @@ export default function ReceiverDetailPage() {
   });
 
   const chatBodyRef = useRef<HTMLDivElement>(null);
-
-  const [overlay, setOverlay] = useState<ReceiverOverlay>(() => ({
-    chatByReceiver: {},
-    comms: [],
-    receiverStatusOverride: {},
-    paidUnlockedOverride: {},
-    rejectReasonOverride: {},
-  }));
 
   if (isLoading) {
     return (
@@ -73,97 +71,179 @@ export default function ReceiverDetailPage() {
   }
 
   return (
-    <ReceiverDetailContent key={id} data={apiData} overlay={overlay} setOverlay={setOverlay} chatBodyRef={chatBodyRef} />
+    <ReceiverDetailContent key={id} data={apiData} chatBodyRef={chatBodyRef} />
   );
 }
 
 function ReceiverDetailContent({
   data,
-  overlay,
-  setOverlay,
   chatBodyRef,
 }: {
   data: ReferralByIdApi;
-  overlay: ReceiverOverlay;
-  setOverlay: React.Dispatch<React.SetStateAction<ReceiverOverlay>>;
   chatBodyRef: React.RefObject<HTMLDivElement | null>;
 }) {
+  const queryClient = useQueryClient();
+  const [payModalOpen, setPayModalOpen] = useState(false);
+  const [paySource, setPaySource] = useState<"credit" | "payment">("payment");
+  const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState("");
+  const [summaryOpen, setSummaryOpen] = useState(false);
+  const [summary, setSummary] = useState<PaymentSummaryData | null>(null);
+  const [stripeOpen, setStripeOpen] = useState(false);
+  const [stripePmId, setStripePmId] = useState("");
+
   const refId = data._id;
-  const apiReceivers = receiversFromData(data);
-  const currentReceiver: ReceiverInstance | null = apiReceivers[0] ?? null;
-  const receiverId = currentReceiver?.receiverId ?? null;
+  const department_status = (data.department_statuses ?? [])[0] as {
+    department_id?: string;
+    department?: { _id?: string; name?: string };
+    status?: "pending" | "active" | "rejected";
+    payment_status?: "paid" | "not_paid";
+    is_paid_by_sender?: number;
+  } | undefined;
 
-  const statusOverride = receiverId ? overlay.receiverStatusOverride[receiverId] : undefined;
-  const paidOverride = receiverId ? overlay.paidUnlockedOverride[receiverId] : undefined;
-  const rejectReasonDisplay = receiverId ? (overlay.rejectReasonOverride[receiverId] ?? currentReceiver?.rejectReason) : "";
+  const receiverId = department_status?.department_id ?? department_status?.department?._id ?? null;
+  const senderPaid = department_status?.is_paid_by_sender === 1;
+  const wePaid = !senderPaid && department_status?.payment_status === "paid";
+  const isUnlocked = department_status?.payment_status === "paid";
+  const receiverStatus = isUnlocked ? "PAID" : (department_status?.status ?? "pending").toUpperCase();
 
-  const receiverStatus = statusOverride ?? currentReceiver?.status ?? "PENDING";
-  const paidUnlocked = paidOverride ?? currentReceiver?.paidUnlocked ?? false;
-  const isUnlocked = paidUnlocked || receiverStatus === "PAID" || receiverStatus === "COMPLETED";
+  const currentReceiver: ReceiverInstance | null = department_status
+    ? {
+      receiverId: receiverId ?? "unknown",
+      name: department_status.department?.name ?? "Receiver",
+      email: "",
+      status: receiverStatus,
+      paidUnlocked: department_status.payment_status === "paid",
+      updatedAt: new Date(),
+      rejectReason: "",
+    }
+    : null;
 
-  const localChatMessages = receiverId ? (overlay.chatByReceiver[receiverId] ?? []) : [];
-  const comms = overlay.comms;
+  const { data: methodsList } = useQuery({
+    queryKey: defaultQueryKeys.paymentMethodsActive,
+    queryFn: async () => {
+      const res = await getPaymentMethodsActiveApi();
+      if (!checkResponse({ res })) return [];
+      const raw = res.data as { data?: { id: string; name: string; key: string }[] };
+      const list = Array.isArray(raw?.data) ? raw.data : [];
+      return list
+        .filter((m) => !EXCLUDED_PAYMENT_KEYS.includes(m.key))
+        .map((m) => ({ id: m.id, name: m.name, key: m.key }));
+    },
+    enabled: payModalOpen && paySource === "payment",
+  });
 
-  const receiverSetStatus = useCallback(
-    (status: string) => {
+  const methods = Array.isArray(methodsList) ? methodsList : [];
+  const selectedMethod = methods.find((m) => m.id === selectedPaymentMethodId);
+  const isCard = selectedMethod?.key === CARD_KEY;
+
+  const closePayModals = () => {
+    setPayModalOpen(false);
+    setSummaryOpen(false);
+    setStripeOpen(false);
+    setSelectedPaymentMethodId("");
+    setPaySource("payment");
+    setSummary(null);
+  };
+
+  const { isPending: summaryLoading, mutate: getSummary } = useMutation({
+    mutationFn: catchAsync(async (pmId: string) => {
       if (!receiverId) return;
-      setOverlay((prev) => ({
-        ...prev,
-        receiverStatusOverride: { ...prev.receiverStatusOverride, [receiverId]: status },
-        comms: [...prev.comms, { at: new Date(), who: currentReceiver?.name ?? "Receiver", msg: `Status changed: ${status}` }],
-      }));
-    },
-    [receiverId, currentReceiver?.name, setOverlay]
-  );
-
-  const receiverReject = useCallback(() => {
-    const reason = prompt("Rejection reason (optional):", "Not a fit / Out of service area") ?? "";
-    if (!receiverId) return;
-    setOverlay((prev) => ({
-      ...prev,
-      receiverStatusOverride: { ...prev.receiverStatusOverride, [receiverId]: "REJECTED" },
-      rejectReasonOverride: { ...prev.rejectReasonOverride, [receiverId]: reason.trim() },
-      comms: [...prev.comms, { at: new Date(), who: currentReceiver?.name ?? "Receiver", msg: `Rejected${reason.trim() ? ": " + reason.trim() : ""}.` }],
-    }));
-  }, [receiverId, currentReceiver?.name, setOverlay]);
-
-  const receiverPayUnlock = useCallback(() => {
-    if (!receiverId) return;
-    setOverlay((prev) => ({
-      ...prev,
-      receiverStatusOverride: { ...prev.receiverStatusOverride, [receiverId]: "PAID" },
-      paidUnlockedOverride: { ...prev.paidUnlockedOverride, [receiverId]: true },
-      comms: [...prev.comms, { at: new Date(), who: "System", msg: "Receiver paid and unlocked additional info." }],
-    }));
-  }, [receiverId, setOverlay]);
-
-  const receiverAccept = useCallback(() => {
-    if (!receiverId) return;
-    setOverlay((prev) => ({
-      ...prev,
-      receiverStatusOverride: { ...prev.receiverStatusOverride, [receiverId]: "PAID" },
-      paidUnlockedOverride: { ...prev.paidUnlockedOverride, [receiverId]: true },
-      comms: [...prev.comms, { at: new Date(), who: "System", msg: "Accepted (sender already paid)." }],
-    }));
-  }, [receiverId, setOverlay]);
-
-  const sendChatMessage = useCallback(
-    (_receiverId: string, text: string) => {
-      const msg = (text || "").trim();
-      if (!msg || !receiverId) return;
-      setOverlay((prev) => {
-        const chat = { ...prev.chatByReceiver };
-        const t = chat[receiverId] ?? [];
-        chat[receiverId] = [...t, { at: new Date(), fromRole: "RECEIVER", fromName: currentReceiver?.name ?? "Receiver", text: msg }];
-        return {
-          ...prev,
-          chatByReceiver: chat,
-          comms: [...prev.comms, { at: new Date(), who: currentReceiver?.name ?? "Receiver", msg: "Chat message sent to sender." }],
-        };
+      const res = await postOrganizationReferralDepartmentPaymentSummaryApi(refId, receiverId, {
+        source: "payment",
+        payment_method_id: pmId,
       });
-    },
-    [receiverId, currentReceiver?.name, setOverlay]
-  );
+      if (!checkResponse({ res, showSuccess: true })) return;
+      const raw = res.data as { data?: PaymentSummaryData };
+      setSummary(raw?.data ?? null);
+      setStripePmId(pmId);
+
+      setSummaryOpen(true);
+    }),
+  });
+
+  const { isPending: payLoading, mutate: pay } = useMutation({
+    mutationFn: catchAsync(async (payload: { source: "credit" | "payment"; payment_method_id?: string }) => {
+      if (!receiverId) return;
+      const res = await postOrganizationReferralDepartmentPayApi(refId, receiverId, payload);
+      const needsStripe = payload.source === "payment" && payload.payment_method_id;
+      if (!checkResponse({ res, showSuccess: !needsStripe })) return;
+      const resData = (res.data as { data?: { client_secret?: string } })?.data;
+      console.log(needsStripe, resData?.client_secret, payload.payment_method_id, "checking")
+      if (needsStripe && resData?.client_secret && payload.payment_method_id) {
+        const stripe = await stripePromise;
+        if (!stripe) {
+          toastError("Stripe is not configured.");
+          return;
+        }
+        const { error } = await stripe.confirmCardPayment(resData.client_secret, {
+          payment_method: payload.payment_method_id,
+        });
+        if (error) {
+          toastError(error.message ?? "Payment confirmation failed.");
+          return;
+        }
+      }
+      closePayModals();
+      queryClient.invalidateQueries({ queryKey: [...defaultQueryKeys.referralReceivedList, "detail", refId] });
+      queryClient.invalidateQueries({ queryKey: defaultQueryKeys.referralReceivedList });
+    }),
+  });
+
+  const openPayModal = () => setPayModalOpen(true);
+
+  const onPayModalAction = () => {
+    if (paySource === "credit") {
+      pay({ source: "credit" });
+      return;
+    }
+    if (!selectedPaymentMethodId.trim()) {
+      toastError("Please select a payment method.");
+      return;
+    }
+    if (isCard) {
+      setStripeOpen(true);
+      return;
+    }
+  };
+
+  const onSummaryConfirm = () => {
+    pay({ source: "payment", payment_method_id: stripePmId });
+  };
+
+  const onStripeDone = (pmId: string) => {
+    setStripeOpen(false);
+    getSummary(pmId);
+  };
+  const closeSummary = () => {
+    setSummaryOpen(false);
+    setSummary(null);
+    setStripeOpen(false);
+  };
+  const payBusy = summaryLoading || payLoading;
+
+  const revalidateReferral = () => {
+    queryClient.invalidateQueries({ queryKey: [...defaultQueryKeys.referralReceivedList, "detail", refId] });
+    queryClient.invalidateQueries({ queryKey: defaultQueryKeys.referralReceivedList });
+  };
+
+  const receiverSetStatus = () => {
+    if (!receiverId) return;
+    revalidateReferral();
+  };
+
+  const receiverReject = () => {
+    if (!receiverId) return;
+    revalidateReferral();
+  };
+
+  const receiverAccept = () => {
+    if (!receiverId) return;
+    revalidateReferral();
+  };
+
+  const sendChatMessage = (...args: [string, string]) => {
+    void args;
+  };
 
   const p = data.patient ?? {};
   const ins = data.patient_insurance_information ?? [];
@@ -180,29 +260,30 @@ function ReceiverDetailContent({
     { id: "secDocs", label: "Documents" },
     { id: "secAdditional", label: "Additional Info" },
     { id: "secChat", label: "Chat" },
-    { id: "secLog", label: "Activity Log" },
   ];
 
+  const btn = (onClick: () => void, label: string, primary = true) => (
+    <button key={label} type="button" onClick={onClick} className={primary ? "border border-rcn-brand/30 bg-rcn-brand/10 text-rcn-accent-dark px-2.5 py-2 rounded-xl font-extrabold text-xs shadow" : "border border-red-200 bg-red-50 text-red-700 px-2.5 py-2 rounded-xl font-extrabold text-xs shadow"}>
+      {label}
+    </button>
+  );
+  const showPay = (receiverStatus === "ACCEPTED" || receiverStatus === "ACTIVE") && !senderPaid && !wePaid;
   const rxControls =
-    receiverStatus === "PENDING"
-      ? [
-          <button key="a" type="button" onClick={() => receiverSetStatus("ACCEPTED")} className="border border-rcn-brand/30 bg-rcn-brand/10 text-rcn-accent-dark px-2.5 py-2 rounded-xl font-extrabold text-xs shadow">Accept</button>,
-          <button key="r" type="button" onClick={() => receiverReject()} className="border border-red-200 bg-red-50 text-red-700 px-2.5 py-2 rounded-xl font-extrabold text-xs shadow">Reject</button>,
-        ]
-      : receiverStatus === "ACCEPTED"
-        ? [
-            <button key="p" type="button" onClick={() => receiverPayUnlock()} className="border border-rcn-brand/25 bg-rcn-brand/10 text-rcn-accent-dark px-2.5 py-2 rounded-xl font-extrabold text-xs shadow">Pay & Unlock</button>,
-            <button key="r2" type="button" onClick={() => receiverReject()} className="border border-red-200 bg-red-50 text-red-700 px-2.5 py-2 rounded-xl font-extrabold text-xs shadow">Reject</button>,
-          ]
-        : receiverStatus === "PAID"
-          ? [<span key="paid" className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border ${pillClass("PAID")}`}>Paid/Unlocked</span>]
-          : receiverStatus === "REJECTED"
-            ? [<span key="rej" className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border ${pillClass("REJECTED")}`}>Rejected</span>, rejectReasonDisplay ? <span key="reason" className="text-rcn-muted text-xs">Reason: {rejectReasonDisplay}</span> : null]
-            : [<button key="r3" type="button" onClick={() => receiverReject()} className="border border-red-200 bg-red-50 text-red-700 px-2.5 py-2 rounded-xl font-extrabold text-xs shadow">Reject</button>];
+    receiverStatus === "PAID"
+      ? [<span key="paid" className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border ${pillClass("PAID")}`}>Paid/Unlocked</span>]
+      : receiverStatus === "REJECTED"
+        ? [<span key="rej" className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border ${pillClass("REJECTED")}`}>Rejected</span>]
+        : receiverStatus === "PENDING"
+          ? [btn(receiverSetStatus, "Accept"), btn(receiverReject, "Reject", false)]
+          : receiverStatus === "ACTIVE"
+            ? senderPaid
+              ? [btn(receiverAccept, "Accept"), btn(receiverReject, "Reject", false)]
+              : [...(showPay ? [btn(openPayModal, "Pay & Unlock")] : []), btn(receiverReject, "Reject", false)]
+            : receiverStatus === "ACCEPTED"
+              ? [...(showPay ? [btn(openPayModal, "Pay & Unlock")] : []), btn(receiverReject, "Reject", false)]
+              : [btn(receiverReject, "Reject", false)];
 
   const chatInputSelected = { receivers: currentReceiver ? [currentReceiver] : [] };
-
-  // const isAlreadyPaidByMe = data.department_statuses?.find((status) => status.status === "PAID" && status.departmentId === receiverId);
 
   return (
     <div className="max-w-[1280px] mx-auto p-[18px]">
@@ -253,36 +334,58 @@ function ReceiverDetailContent({
               primaryInsurance={primary}
               additionalInsurances={ins}
               servicesForDisplay={servicesForDisplay}
-              onPayUnlock={receiverPayUnlock}
+              onPayUnlock={openPayModal}
               onReject={receiverReject}
             />
             <ReceiverDocsSection
               isUnlocked={isUnlocked}
               receiverStatus={receiverStatus}
               docList={docList}
-              onPayUnlock={receiverPayUnlock}
+              onPayUnlock={openPayModal}
             />
             <ReceiverAdditionalSection
-              referralId={refId}
-              departmentId={receiverId ?? ""}
               isUnlocked={isUnlocked}
-              receiverStatus={receiverStatus}
               addPatient={addPatient}
-              senderPaid={data.payment_type === "payment"}
+              senderPaid={senderPaid}
               onAccept={receiverAccept}
-              onPayUnlock={receiverPayUnlock}
               onReject={receiverReject}
             />
             <ReceiverChatSection
               referralId={refId}
-              localMessages={localChatMessages}
+              localMessages={[]}
               chatBodyRef={chatBodyRef}
-              receiverId={receiverId}
+              receiverId={receiverId ?? null}
               chatInputSelected={chatInputSelected}
               onSend={sendChatMessage}
             />
-            <ReceiverActivityLogSection comms={comms} />
           </div>
+
+          <PayToUnlockModal
+            isOpen={payModalOpen}
+            onClose={closePayModals}
+            paySource={paySource}
+            onPaySourceChange={setPaySource}
+            paymentMethodId={selectedPaymentMethodId}
+            onPaymentMethodChange={setSelectedPaymentMethodId}
+            methods={methods}
+            busy={payBusy}
+            payLoading={payLoading}
+            summaryLoading={summaryLoading}
+            onAction={onPayModalAction}
+          />
+          <PaymentSummaryModal
+            isOpen={summaryOpen}
+            onClose={closeSummary}
+            summary={summary}
+            payLoading={payLoading}
+            onConfirm={onSummaryConfirm}
+          />
+          <StripeCardModal
+            isOpen={stripeOpen}
+            onClose={() => setStripeOpen(false)}
+            onSuccess={onStripeDone}
+            isSubmitting={payLoading}
+          />
         </div>
       </div>
     </div>

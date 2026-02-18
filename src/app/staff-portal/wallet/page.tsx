@@ -19,7 +19,7 @@ const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
   ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
   : null;
 
-const PAYMENT_METHODS_EXCLUDED_FROM_WEBSITE = ["apple_pay", "google_pay"];
+const PAYMENT_METHODS_EXCLUDED_FROM_WEBSITE = ["apple", "google"];
 const CARD_KEYS_REQUIRING_STRIPE = ["card"];
 
 /** Payment method option from GET /api/payment-methods/active */
