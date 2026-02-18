@@ -326,9 +326,7 @@ function ReceiverDetailContent({
     setDepartmentStatus("active");
   };
 
-  const sendChatMessage = (...args: [string, string]) => {
-    void args;
-  };
+
 
   const p = data.patient ?? {};
   const ins = data.patient_insurance_information ?? [];
@@ -475,7 +473,6 @@ function ReceiverDetailContent({
               chatInputSelected={{
                 receivers: currentReceiver ? [currentReceiver] : [],
               }}
-              onSend={sendChatMessage}
             />
           </div>
 

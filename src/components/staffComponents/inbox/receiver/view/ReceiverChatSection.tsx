@@ -24,7 +24,7 @@ interface ReceiverChatSectionProps {
   chatBodyRef: RefObject<HTMLDivElement | null>;
   receiverId: string | null;
   chatInputSelected: { receivers: ReceiverInstance[] };
-  onSend: (receiverId: string, text: string) => void;
+
 }
 
 export function ReceiverChatSection({
@@ -33,7 +33,7 @@ export function ReceiverChatSection({
   chatBodyRef,
   receiverId,
   chatInputSelected,
-  onSend,
+
 }: ReceiverChatSectionProps) {
   const { data: apiMessages = [], isLoading } = useQuery({
     queryKey: [...defaultQueryKeys.referralChat, referralId],
@@ -56,6 +56,10 @@ export function ReceiverChatSection({
   useEffect(() => {
     if (chatBodyRef.current) chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
   }, [thread.length, chatBodyRef]);
+
+  const onSend = () => {
+    postReferralStartChatApi(referralId);
+  };
 
   return (
     <div id="secChat" className={SECTION_CLASS}>
