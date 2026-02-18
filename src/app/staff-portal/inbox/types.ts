@@ -63,7 +63,7 @@ export interface SentReferralApi {
   sender_phone_number?: string;
   sender_fax_number?: string;
   sender_dial_code?: string;
-  speciality_ids?: string[];
+  speciality_ids?: { name: string; id: string }[];
   additional_speciality?: { name?: string; user_id?: string; _id?: string }[];
   department_ids?: string[];
   guest_organizations?: unknown[];

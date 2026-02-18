@@ -13,7 +13,7 @@ interface ReceiverBasicSectionProps {
   patient: Record<string, unknown>;
   primaryInsurance: { payer?: string; policy?: string } | undefined;
   additionalInsurances: { payer?: string; policy?: string }[];
-  servicesForDisplay: string[];
+  servicesForDisplay: { name: string; id: string }[];
   onPayUnlock: () => void;
   onReject: () => void;
 }
@@ -48,7 +48,7 @@ export function ReceiverBasicSection({
               ["Date of Birth (DOB)", p.dob],
               ["Gender", p.gender],
               ["Address of Care", p.address_of_care],
-              ["Services Requested", servicesForDisplay.join(", ")],
+              ["Services Requested", servicesForDisplay?.map((x) => x.name).join(", ")],
               ["Primary Insurance", primaryInsurance ? `${primaryInsurance.payer ?? ""} • Policy: ${primaryInsurance.policy ?? ""}` : ""],
               ["Additional Insurances", additionalInsurances.length > 1 ? additionalInsurances.slice(1).map((x) => `${x.payer ?? ""} • ${x.policy ?? ""}`).join(" | ") : "None"],
             ].map(([label, val]) => (
@@ -58,7 +58,7 @@ export function ReceiverBasicSection({
               </div>
             ))}
           </div>
-          {receiverStatus === "PENDING" && (
+          {receiverStatus === "pending" && (
             <div className="mt-3 flex gap-2.5 flex-wrap justify-end">
               <span className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border ${pillClass("PENDING")}`}>Decision point: Accept or Reject</span>
             </div>

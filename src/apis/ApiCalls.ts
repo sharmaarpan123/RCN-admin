@@ -488,6 +488,17 @@ export const postOrganizationReferralDepartmentPayApi = (
     body,
   );
 
+/** PATCH /api/organization/referral/:referralId/departments/:departmentId/status — accept or reject (receiver). status: "active" | "rejected". */
+export const patchOrganizationReferralDepartmentStatusApi = (
+  referralId: string,
+  departmentId: string,
+  body: { status: "active" | "rejected" },
+) =>
+  AxiosInstance.patch(
+    `/api/organization/referral/${referralId}/departments/${departmentId}/status`,
+    body,
+  );
+
 /** POST /api/referral/chats/:referralId/start-chat — start or get conversation for a referral (receiver chat). */
 export const postReferralStartChatApi = (referralId: string) =>
   AxiosInstance.post(`/api/referral/chats/${referralId}/start-chat`);
