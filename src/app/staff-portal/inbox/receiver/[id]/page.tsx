@@ -202,6 +202,8 @@ function ReceiverDetailContent({
 
   const chatInputSelected = { receivers: currentReceiver ? [currentReceiver] : [] };
 
+  // const isAlreadyPaidByMe = data.department_statuses?.find((status) => status.status === "PAID" && status.departmentId === receiverId);
+
   return (
     <div className="max-w-[1280px] mx-auto p-[18px]">
       <div className="flex flex-wrap gap-3 items-center justify-between p-3.5 px-4 border border-slate-200 bg-white/80 backdrop-blur-md rounded-2xl shadow-[0_10px_30px_rgba(2,6,23,.07)] sticky top-2.5 z-10 mb-3.5">
