@@ -11,7 +11,7 @@ import {
 } from "@/apis/ApiCalls";
 import { checkResponse, catchAsync } from "@/utils/commonFunc";
 import defaultQueryKeys from "@/utils/staffQueryKeys";
-import { toastError } from "@/utils/toast";
+import { toastError, toastSuccess } from "@/utils/toast";
 import { BOX_GRAD, type PaymentSummaryData } from "./senderViewHelpers";
 import { Button, StripeCardModal } from "@/components";
 
@@ -97,22 +97,29 @@ export function SenderDraftPaymentSection({ refId }: SenderDraftPaymentSectionPr
   const { isPending: isSendPending, mutate: sendReferral } = useMutation({
     mutationFn: catchAsync(async (payload: { source: "free" | "payment"; payment_method_id?: string }) => {
       const res = await postOrganizationReferralSendApi(refId, payload);
-      if (!checkResponse({ res, showSuccess: true })) return;
-      const data = (res.data as { data?: { client_secret?: string } })?.data;
+      const resBody = res.data as {
+        data?: { client_secret?: string; message?: string };
+        message?: string;
+      };
+      const data = resBody?.data;
+      const needsStripeConfirm = requiresStripeCard && data?.client_secret && payload.payment_method_id;
+      if (!checkResponse({ res, showSuccess: !needsStripeConfirm })) return;
       const payment_method_id = payload.payment_method_id;
-      if (requiresStripeCard && data?.client_secret && payment_method_id) {
+      if (needsStripeConfirm && payment_method_id) {
         const stripe = await stripePromise;
         if (!stripe) {
           toastError("Stripe is not configured.");
           return;
         }
-        const { error } = await stripe.confirmCardPayment(data.client_secret, {
+        const { error } = await stripe.confirmCardPayment(data!.client_secret!, {
           payment_method: payment_method_id,
         });
         if (error) {
           toastError(error.message ?? "Payment confirmation failed.");
           return;
         }
+        const successMessage = data?.message ?? resBody?.message;
+        if (successMessage) toastSuccess(successMessage);
       }
       onCloseSummary();
       queryClient.invalidateQueries({

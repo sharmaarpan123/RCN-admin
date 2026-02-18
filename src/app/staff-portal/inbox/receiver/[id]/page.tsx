@@ -1,16 +1,15 @@
 "use client";
 
-import React, { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { getOrganizationReferralByIdApi, postReferralStartChatApi } from "@/apis/ApiCalls";
+import { getOrganizationReferralByIdApi } from "@/apis/ApiCalls";
 import { checkResponse } from "@/utils/commonFunc";
 import defaultQueryKeys from "@/utils/staffQueryKeys";
 import type { ReferralByIdApi, ReceiverInstance, ChatMsg, Comm } from "@/app/staff-portal/inbox/types";
 import { fmtDate, pillClass, scrollToId } from "@/app/staff-portal/inbox/helpers";
 import { documentsToList, receiversFromData } from "@/components/staffComponents/inbox/sender/view/senderViewHelpers";
-import { mapStartChatResponseToMessages } from "@/components/staffComponents/inbox/receiver/view/receiverChatHelpers";
 import {
   ReceiverBasicSection,
   ReceiverDocsSection,
@@ -102,27 +101,8 @@ function ReceiverDetailContent({
   const paidUnlocked = paidOverride ?? currentReceiver?.paidUnlocked ?? false;
   const isUnlocked = paidUnlocked || receiverStatus === "PAID" || receiverStatus === "COMPLETED";
 
-  const { data: chatFromApi, isLoading: isChatLoading } = useQuery({
-    queryKey: [...defaultQueryKeys.referralChat, refId],
-    queryFn: async () => {
-      const res = await postReferralStartChatApi(refId);
-      if (!checkResponse({ res })) return [];
-      return mapStartChatResponseToMessages(res.data ?? res);
-    },
-    enabled: !!refId,
-  });
-
-  const thread = useMemo(() => {
-    const apiMessages = chatFromApi ?? [];
-    const localMessages = receiverId ? (overlay.chatByReceiver[receiverId] ?? []) : [];
-    return [...apiMessages, ...localMessages].sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime());
-  }, [chatFromApi, overlay.chatByReceiver, receiverId]);
-
+  const localChatMessages = receiverId ? (overlay.chatByReceiver[receiverId] ?? []) : [];
   const comms = overlay.comms;
-
-  useEffect(() => {
-    if (chatBodyRef.current) chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
-  }, [thread.length, refId, chatBodyRef]);
 
   const receiverSetStatus = useCallback(
     (status: string) => {
@@ -148,13 +128,22 @@ function ReceiverDetailContent({
   }, [receiverId, currentReceiver?.name, setOverlay]);
 
   const receiverPayUnlock = useCallback(() => {
-    if (!confirm("Pay service fee to unlock additional patient info?")) return;
     if (!receiverId) return;
     setOverlay((prev) => ({
       ...prev,
       receiverStatusOverride: { ...prev.receiverStatusOverride, [receiverId]: "PAID" },
       paidUnlockedOverride: { ...prev.paidUnlockedOverride, [receiverId]: true },
       comms: [...prev.comms, { at: new Date(), who: "System", msg: "Receiver paid and unlocked additional info." }],
+    }));
+  }, [receiverId, setOverlay]);
+
+  const receiverAccept = useCallback(() => {
+    if (!receiverId) return;
+    setOverlay((prev) => ({
+      ...prev,
+      receiverStatusOverride: { ...prev.receiverStatusOverride, [receiverId]: "PAID" },
+      paidUnlockedOverride: { ...prev.paidUnlockedOverride, [receiverId]: true },
+      comms: [...prev.comms, { at: new Date(), who: "System", msg: "Accepted (sender already paid)." }],
     }));
   }, [receiverId, setOverlay]);
 
@@ -272,19 +261,23 @@ function ReceiverDetailContent({
               onPayUnlock={receiverPayUnlock}
             />
             <ReceiverAdditionalSection
+              referralId={refId}
+              departmentId={receiverId ?? ""}
               isUnlocked={isUnlocked}
               receiverStatus={receiverStatus}
               addPatient={addPatient}
+              senderPaid={data.payment_type === "payment"}
+              onAccept={receiverAccept}
               onPayUnlock={receiverPayUnlock}
               onReject={receiverReject}
             />
             <ReceiverChatSection
-              thread={thread}
+              referralId={refId}
+              localMessages={localChatMessages}
               chatBodyRef={chatBodyRef}
               receiverId={receiverId}
               chatInputSelected={chatInputSelected}
               onSend={sendChatMessage}
-              isLoading={isChatLoading}
             />
             <ReceiverActivityLogSection comms={comms} />
           </div>

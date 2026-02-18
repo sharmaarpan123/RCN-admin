@@ -1,33 +1,62 @@
 "use client";
 
-import React, { RefObject } from "react";
+import React, { RefObject, useMemo, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { postReferralStartChatApi } from "@/apis/ApiCalls";
+import { checkResponse } from "@/utils/commonFunc";
+import defaultQueryKeys from "@/utils/staffQueryKeys";
 import { fmtDate } from "@/app/staff-portal/inbox/helpers";
 import type { ChatMsg } from "@/app/staff-portal/inbox/types";
 import type { ReceiverInstance } from "@/app/staff-portal/inbox/types";
 import { BOX_GRAD } from "@/components/staffComponents/inbox/sender/view/senderViewHelpers";
+import { mapStartChatResponseToMessages } from "@/components/staffComponents/inbox/receiver/view/receiverChatHelpers";
 import { ChatInput } from "@/components/staffComponents/inbox/sender/view/ChatInput";
 
 const SECTION_CLASS =
   "border border-rcn-border/60 bg-white/95 rounded-[18px] p-3.5 shadow-[0_12px_26px_rgba(2,6,23,.07)] relative overflow-hidden border-l-4 border-l-rcn-brand scroll-mt-[120px]";
 
+/** POST /api/referral/chats/:referralId/start-chat — start or load conversation for this referral. */
 interface ReceiverChatSectionProps {
-  thread: ChatMsg[];
+  /** Referral id — used to call start-chat API. */
+  referralId: string;
+  /** Messages added locally (e.g. when receiver sends); merged with API messages. */
+  localMessages?: ChatMsg[];
   chatBodyRef: RefObject<HTMLDivElement | null>;
   receiverId: string | null;
   chatInputSelected: { receivers: ReceiverInstance[] };
   onSend: (receiverId: string, text: string) => void;
-  /** True while start-chat API is loading */
-  isLoading?: boolean;
 }
 
 export function ReceiverChatSection({
-  thread,
+  referralId,
+  localMessages = [],
   chatBodyRef,
   receiverId,
   chatInputSelected,
   onSend,
-  isLoading,
 }: ReceiverChatSectionProps) {
+  const { data: apiMessages = [], isLoading } = useQuery({
+    queryKey: [...defaultQueryKeys.referralChat, referralId],
+    queryFn: async () => {
+      const res = await postReferralStartChatApi(referralId);
+      if (!checkResponse({ res })) return [];
+      return mapStartChatResponseToMessages(res.data ?? res);
+    },
+    enabled: !!referralId,
+  });
+
+  const thread = useMemo(
+    () =>
+      [...apiMessages, ...localMessages].sort(
+        (a, b) => new Date(a.at).getTime() - new Date(b.at).getTime()
+      ),
+    [apiMessages, localMessages]
+  );
+
+  useEffect(() => {
+    if (chatBodyRef.current) chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
+  }, [thread.length, chatBodyRef]);
+
   return (
     <div id="secChat" className={SECTION_CLASS}>
       <div className="-m-3.5 -mt-3.5 mb-3 p-3 border-b border-rcn-border/60 rounded-t-[18px] flex items-center justify-between" style={{ background: BOX_GRAD }}>

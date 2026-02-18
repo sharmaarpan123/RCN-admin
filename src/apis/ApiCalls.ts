@@ -466,6 +466,28 @@ export const postOrganizationReferralSendApi = (
   body: { source: "free" | "payment"; payment_method_id?: string },
 ) => AxiosInstance.post(`/api/organization/referral/${referralId}/send`, body);
 
+/** POST /api/organization/referral/:referralId/departments/:departmentId/payment-summary — get payment summary for receiver department (pay to unlock). */
+export const postOrganizationReferralDepartmentPaymentSummaryApi = (
+  referralId: string,
+  departmentId: string,
+  body: { source: "payment"; payment_method_id: string },
+) =>
+  AxiosInstance.post(
+    `/api/organization/referral/${referralId}/departments/${departmentId}/payment-summary`,
+    body,
+  );
+
+/** POST /api/organization/referral/:referralId/departments/:departmentId/pay — pay to unlock (receiver). source: "credit" | "payment". */
+export const postOrganizationReferralDepartmentPayApi = (
+  referralId: string,
+  departmentId: string,
+  body: { source: "credit" | "payment"; payment_method_id?: string },
+) =>
+  AxiosInstance.post(
+    `/api/organization/referral/${referralId}/departments/${departmentId}/pay`,
+    body,
+  );
+
 /** POST /api/referral/chats/:referralId/start-chat — start or get conversation for a referral (receiver chat). */
 export const postReferralStartChatApi = (referralId: string) =>
   AxiosInstance.post(`/api/referral/chats/${referralId}/start-chat`);
