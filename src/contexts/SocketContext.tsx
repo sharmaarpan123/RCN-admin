@@ -60,10 +60,10 @@ export function SocketProvider({ children }: SocketProviderProps) {
       if (data?.userId) setOnlineUserIds((prev) => prev.filter((id) => id !== data.userId));
     });
 
-    s.on("new_message", () => {
-      queryClient.invalidateQueries({ queryKey: defaultQueryKeys.referralChatList });
-      queryClient.invalidateQueries({ queryKey: defaultQueryKeys.referralChatMessages });
-    });
+    // s.on("new_message", () => {
+    //   queryClient.invalidateQueries({ queryKey: defaultQueryKeys.referralChatList });
+    //   queryClient.invalidateQueries({ queryKey: defaultQueryKeys.referralChatMessages });
+    // });
 
     return () => {
       s.removeAllListeners();

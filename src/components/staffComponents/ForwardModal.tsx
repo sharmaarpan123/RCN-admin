@@ -9,7 +9,7 @@ interface ForwardModalProps {
   isOpen: boolean;
   onClose: () => void;
   refId: string | null;
-  servicesRequested: string[];
+  servicesRequested: { name: string; id: string }[];
   companyDirectory: Company[];
   selectedCompany: Company | null;
   onSelectCompany: (c: Company | null) => void;
@@ -160,7 +160,7 @@ export function ForwardModal({
                 {(servicesRequested || []).map((s, i) => (
                   <div key={i} className="flex items-center gap-2.5 p-2.5 border border-slate-200 rounded-xl bg-white/90">
                     <input type="checkbox" id={`svc_${i}`} data-svc={s} className="rounded" />
-                    <label htmlFor={`svc_${i}`} className="text-xs font-black text-rcn-text">{s}</label>
+                    <label htmlFor={`svc_${i}`} className="text-xs font-black text-rcn-text">{s.name}</label>
                   </div>
                 ))}
               </div>
@@ -180,9 +180,8 @@ export function ForwardModal({
                   <div
                     key={idx}
                     onClick={() => onSelectCompany(c)}
-                    className={`px-3 py-2.5 border-b border-slate-200 flex items-center justify-between gap-3 cursor-pointer last:border-b-0 ${
-                      selectedCompany?.name === c.name ? "bg-rcn-brand/10 outline-2 outline-rcn-brand/15 -outline-offset-2" : "hover:bg-rcn-brand/5"
-                    }`}
+                    className={`px-3 py-2.5 border-b border-slate-200 flex items-center justify-between gap-3 cursor-pointer last:border-b-0 ${selectedCompany?.name === c.name ? "bg-rcn-brand/10 outline-2 outline-rcn-brand/15 -outline-offset-2" : "hover:bg-rcn-brand/5"
+                      }`}
                   >
                     <div className="flex flex-col gap-0.5">
                       <strong className="text-[13px] font-black">{c.name}</strong>
@@ -199,9 +198,8 @@ export function ForwardModal({
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <strong className="text-xs font-black">Selected Company</strong>
               <span
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border ${
-                  selectedCompany ? "border-rcn-brand/30 bg-rcn-brand/10 text-rcn-accent-dark" : "border-slate-300 bg-slate-100 text-slate-600"
-                }`}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border ${selectedCompany ? "border-rcn-brand/30 bg-rcn-brand/10 text-rcn-accent-dark" : "border-slate-300 bg-slate-100 text-slate-600"
+                  }`}
               >
                 {selectedCompany ? "Selected" : "None selected"}
               </span>

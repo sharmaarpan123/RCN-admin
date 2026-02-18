@@ -14,7 +14,7 @@ interface SenderDetailModalsProps {
   forwardOpen: boolean;
   onCloseForward: () => void;
   forwardRefId: string | null;
-  servicesRequested: string[];
+  servicesRequested: { name: string; id: string }[];
   companyDirectory: Company[];
   selectedCompany: Company | null;
   onSelectCompany: (c: Company | null) => void;

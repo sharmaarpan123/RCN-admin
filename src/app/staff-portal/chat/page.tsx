@@ -20,11 +20,7 @@ import defaultQueryKeys from "@/utils/staffQueryKeys";
 import { useSocket } from "@/contexts/SocketContext";
 import type { RootState } from "@/store";
 import { ChatInput } from "@/components/staffComponents/ChatInput";
-import {
-  mapChatListItemApiToUi,
-  mapChatMessageApiToUi,
-  type ChatListItemUi,
-} from "./chatApiMappers";
+import { mapChatMessageApiToUi } from "./chatApiMappers";
 
 const CHAT_LIST_PAGE = 1;
 const CHAT_LIST_LIMIT = 20;
@@ -33,7 +29,7 @@ const MESSAGES_LIMIT = 50;
 
 export default function ChatPage() {
   const queryClient = useQueryClient();
-  const [selectedChat, setSelectedChat] = React.useState<{ chatId: string; referralId: string; receiverId: string } | null>(null);
+  const [selectedChat, setSelectedChat] = React.useState<ReferralChatListItemApi | null>(null);
   const [mobileSidebarOpen, setMobileSidebarOpen] = React.useState(false);
   const chatBodyRef = useRef<HTMLDivElement>(null);
   const { sendMessage, connected } = useSocket();
@@ -54,7 +50,12 @@ export default function ChatPage() {
     queryKey: [...defaultQueryKeys.referralChatList, CHAT_LIST_PAGE, CHAT_LIST_LIMIT],
     queryFn: async (): Promise<ReferralListResponse<ReferralChatListItemApi>> => {
       const res = await getReferralChatsApi({ page: CHAT_LIST_PAGE, limit: CHAT_LIST_LIMIT });
-      if (!checkResponse({ res })) return { data: [], meta: { page: 1, limit: CHAT_LIST_LIMIT, total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false } };
+      if (!checkResponse({ res })) {
+        return {
+          data: [],
+          meta: { page: CHAT_LIST_PAGE, limit: CHAT_LIST_LIMIT, total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false },
+        };
+      }
       const data = (res.data as { data?: ReferralChatListItemApi[] })?.data ?? (Array.isArray(res.data) ? res.data : []);
       const meta = (res.data as { meta?: ReferralListResponse<ReferralChatListItemApi>["meta"] })?.meta;
       return {
@@ -64,16 +65,12 @@ export default function ChatPage() {
     },
   });
 
-  const chatList: ChatListItemUi[] = useMemo(() => {
-    const list = chatsResponse?.data ?? [];
-    const mapped = list.map(mapChatListItemApiToUi);
-    return mapped.sort((a, b) => {
-      if (!a.lastMessage && !b.lastMessage) return 0;
-      if (!a.lastMessage) return 1;
-      if (!b.lastMessage) return -1;
-      return new Date(b.lastMessage.at).getTime() - new Date(a.lastMessage.at).getTime();
-    });
-  }, [chatsResponse?.data]);
+  const chatList: ReferralChatListItemApi[] = useMemo(
+    () => chatsResponse?.data ?? [],
+    [chatsResponse?.data]
+  );
+
+  console.log(chatsResponse?.data, "chatList")
 
   // Effective selected chat: use first in list when none selected
   const displayChat = useMemo(
@@ -81,20 +78,22 @@ export default function ChatPage() {
       selectedChat ??
       (chatList.length > 0
         ? {
-            chatId: chatList[0].chatId,
-            referralId: chatList[0].referralId,
-            receiverId: chatList[0].receiverId,
-          }
+          chatId: chatList[0]._id,
+          referralId: chatList[0].referral_id ?? chatList[0]._id,
+          receiverId: chatList[0].receiver_id ?? "",
+        }
         : null),
     [selectedChat, chatList]
   );
 
   // Messages for selected chat
+
+  console.log(selectedChat, "selectedChat")
   const { data: messagesResponse } = useQuery({
-    queryKey: [...defaultQueryKeys.referralChatMessages, displayChat?.chatId ?? ""],
+    queryKey: [...defaultQueryKeys.referralChatMessages, selectedChat?.referral_id ?? ""],
     queryFn: async () => {
-      if (!displayChat?.chatId) return { data: [] };
-      const res = await getReferralChatMessagesApi(displayChat.chatId, {
+      if (!selectedChat?.referral_id) return { data: [] };
+      const res = await getReferralChatMessagesApi(selectedChat?.referral_id ?? "", {
         page: MESSAGES_PAGE,
         limit: MESSAGES_LIMIT,
       });
@@ -103,7 +102,7 @@ export default function ChatPage() {
       const list = Array.isArray(raw) ? raw : [];
       return { data: list };
     },
-    enabled: !!displayChat?.chatId,
+    enabled: !!selectedChat?.referral_id,
   });
 
   const thread: ChatMsg[] = useMemo(() => {
@@ -113,12 +112,12 @@ export default function ChatPage() {
 
   // Mark chat as read when selecting
   useEffect(() => {
-    if (!displayChat?.chatId) return;
-    postReferralChatReadApi(displayChat.chatId).then((res) => {
+    if (!selectedChat?.referral_id) return;
+    postReferralChatReadApi(selectedChat.referral_id).then((res) => {
       checkResponse({ res });
       queryClient.invalidateQueries({ queryKey: defaultQueryKeys.referralChatList });
     });
-  }, [displayChat?.chatId, queryClient]);
+  }, [selectedChat?.referral_id, queryClient]);
 
   // Auto-scroll to bottom when thread updates
   useEffect(() => {
@@ -140,8 +139,10 @@ export default function ChatPage() {
 
   const selectedListItem = displayChat
     ? chatList.find(
-        (c) => c.chatId === displayChat.chatId || (c.referralId === displayChat.referralId && c.receiverId === displayChat.receiverId)
-      )
+      (c) =>
+        c._id === selectedChat?._id ||
+        (c.referral_id === selectedChat?.referral_id && (c.receiver_id ?? "") === selectedChat?.receiver_id)
+    ) ?? null
     : null;
 
   // ChatInput expects selected with receivers array
@@ -150,8 +151,8 @@ export default function ChatPage() {
     return {
       receivers: [
         {
-          receiverId: selectedListItem.receiverId,
-          name: selectedListItem.receiverName,
+          receiverId: selectedListItem.receiver_id ?? "",
+          name: selectedListItem.receiver_name ?? "—",
           email: "",
           status: "",
           paidUnlocked: false,
@@ -207,51 +208,47 @@ export default function ChatPage() {
               <div className="p-2">
                 {chatList.map((chat) => {
                   const isSelected =
-                    displayChat?.chatId === chat.chatId ||
-                    (displayChat?.referralId === chat.referralId && displayChat?.receiverId === chat.receiverId);
+                    selectedChat?._id === chat._id ||
+                    (selectedChat?.referral_id === chat.referral_id &&
+                      (chat.receiver_id ?? "") === (selectedChat?.receiver_id ?? ""));
                   return (
                     <button
-                      key={chat.chatId}
+                      key={chat._id}
                       type="button"
                       onClick={() => {
-                        setSelectedChat({
-                          chatId: chat.chatId,
-                          referralId: chat.referralId,
-                          receiverId: chat.receiverId,
-                        });
+                        setSelectedChat(chat);
                         setMobileSidebarOpen(false);
                       }}
-                      className={`w-full text-left p-3 rounded-xl mb-2 transition-all ${
-                        isSelected
-                          ? "bg-rcn-brand/10 border-2 border-rcn-brand/30"
-                          : "bg-white/80 border border-slate-200 hover:bg-slate-50"
-                      }`}
+                      className={`w-full text-left p-3 rounded-xl mb-2 transition-all ${isSelected
+                        ? "bg-rcn-brand/10 border-2 border-rcn-brand/30"
+                        : "bg-white/80 border border-slate-200 hover:bg-slate-50"
+                        }`}
                     >
                       <div className="flex items-start justify-between gap-2 mb-1">
                         <div className="flex-1 min-w-0">
                           <div className="text-xs font-semibold text-rcn-text truncate">
-                            {chat.receiverName}
+                            {chat.receiver_name ?? "—"}
                           </div>
                           <div className="text-[11px] text-rcn-muted font-[850] truncate">
-                            {chat.patientName}
+                            {chat.patient_name ?? "—"}
                           </div>
                         </div>
-                        {chat.lastMessage && (
+                        {chat.last_message?.created_at && (
                           <span className="text-[10px] text-rcn-muted font-black shrink-0">
-                            {new Date(chat.lastMessage.at).toLocaleDateString(undefined, {
+                            {new Date(chat.last_message.created_at).toLocaleDateString(undefined, {
                               month: "short",
                               day: "numeric",
                             })}
                           </span>
                         )}
                       </div>
-                      {chat.lastMessage && (
+                      {chat.last_message && (
                         <div className="text-[11px] text-rcn-muted truncate mt-1">
-                          {chat.lastMessage.text}
+                          {(chat.last_message.message ?? chat.last_message.text ?? "").toString()}
                         </div>
                       )}
                       <div className="text-[10px] text-rcn-muted font-black mt-1.5">
-                        Ref: {chat.referralId}
+                        Ref: {chat.referral_id ?? chat._id}
                       </div>
                     </button>
                   );
@@ -287,7 +284,7 @@ export default function ChatPage() {
                 </svg>
               </button>
               <span className="text-sm font-semibold text-rcn-text">
-                {selectedListItem ? selectedListItem.receiverName : "Chat"}
+                {selectedListItem ? (selectedListItem.receiver_name ?? "—") : "Chat"}
               </span>
               {connected && (
                 <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" title="Connected" aria-hidden />
@@ -299,9 +296,9 @@ export default function ChatPage() {
                 <div className="p-3.5 border-b border-slate-200 bg-white/90 hidden md:block">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="m-0 text-sm font-semibold">{selectedListItem.receiverName}</h3>
+                      <h3 className="m-0 text-sm font-semibold">{selectedListItem.receiver_name ?? "—"}</h3>
                       <p className="m-0 mt-0.5 text-xs text-rcn-muted font-[850]">
-                        {displayChat.referralId} • {selectedListItem.patientName}
+                        {selectedChat?.referral_id ?? selectedChat?._id} • {selectedListItem.patient_name ?? "—"}
                       </p>
                     </div>
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border border-rcn-brand/25 bg-white/70 text-rcn-accent-dark">
@@ -314,7 +311,7 @@ export default function ChatPage() {
                   <div className="border border-rcn-brand/20 rounded-[14px] bg-rcn-brand/5 m-3 flex-1 flex flex-col overflow-hidden">
                     <div className="flex gap-2.5 items-center justify-between p-2.5 bg-rcn-brand/10 border-b border-rcn-brand/20">
                       <span className="text-rcn-muted text-xs font-black">Thread</span>
-                      <span className="text-rcn-muted text-xs">{selectedListItem.receiverName}</span>
+                      <span className="text-rcn-muted text-xs">{selectedListItem.receiver_name ?? "—"}</span>
                     </div>
                     <div
                       ref={chatBodyRef}
@@ -331,11 +328,10 @@ export default function ChatPage() {
                                 className={`flex gap-2.5 items-end ${mine ? "justify-end" : ""}`}
                               >
                                 <div
-                                  className={`max-w-[78%] border rounded-[14px] p-2.5 shadow-[0_8px_18px_rgba(2,6,23,.06)] ${
-                                    mine
-                                      ? "bg-rcn-brand/10 border-rcn-brand/20"
-                                      : "border-slate-200 bg-white"
-                                  }`}
+                                  className={`max-w-[78%] border rounded-[14px] p-2.5 shadow-[0_8px_18px_rgba(2,6,23,.06)] ${mine
+                                    ? "bg-rcn-brand/10 border-rcn-brand/20"
+                                    : "border-slate-200 bg-white"
+                                    }`}
                                 >
                                   <div className="text-[11px] text-rcn-muted font-black mb-1 flex gap-2 flex-wrap justify-between">
                                     {m.fromName}
@@ -358,9 +354,9 @@ export default function ChatPage() {
                     </div>
                     <ChatInput
                       selected={selectedForInput}
-                      chatReceiverId={displayChat.receiverId}
+                      chatReceiverId={selectedChat?.receiver_id ?? ""}
                       onSend={(rid, t) =>
-                        sendChatMessage(displayChat.referralId, rid, t)
+                        sendChatMessage(selectedChat?.referral_id ?? selectedChat?._id ?? "", rid, t)
                       }
                       role="SENDER"
                     />
