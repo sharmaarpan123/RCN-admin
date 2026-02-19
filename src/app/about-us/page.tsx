@@ -2,7 +2,10 @@ import React from "react";
 import { ContentPageHeader } from "@/components/contentpage";
 import {
   AboutUsHero,
+  AboutUsStatsCard,
   AboutUsDescription,
+  AboutUsProcess,
+  AboutUsMission,
   AboutUsPlatformFeatures,
 } from "@/components/contentpage/aboutus";
 
@@ -12,7 +15,11 @@ const AboutUsPage = () => {
       <ContentPageHeader />
       <AboutUsHero />
       <AboutUsDescription />
+
       <AboutUsPlatformFeatures />
+      <AboutUsStatsCard />
+      <AboutUsProcess />
+      <AboutUsMission />
     </>
   );
 };

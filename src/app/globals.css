@@ -3,6 +3,7 @@
 @theme {
   /* Custom RCN Colors */
   --color-rcn-bg: #F4FBF6;
+  --color-rcn-dark-brand: #00FF6A;
   --color-rcn-card: #ffffff;
   --color-rcn-text: #0f172a;
   --color-rcn-muted: #475569;
@@ -29,7 +30,6 @@
 @layer base {
   body {
     margin: 0;
-    background-color: var(--color-rcn-bg);
     color: var(--color-rcn-text);
     font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
   }
@@ -103,4 +103,12 @@ select option {
 
 .header-gradient {
   background: linear-gradient(180deg, #DBFCE8 0%, rgba(219, 252, 232, 0) 100%);
+}
+
+
+.about-us-stats-card {
+  background-image: url('/about-us/statusBgSec.png');
+  background-size: cover;
+  background-position: center;
+  background-color: rgba(13, 66, 35, 1);
 }

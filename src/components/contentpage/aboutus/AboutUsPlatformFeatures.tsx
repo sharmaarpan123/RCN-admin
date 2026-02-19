@@ -133,7 +133,7 @@ const PLATFORM_FEATURES = [
 
 export function AboutUsPlatformFeatures() {
   return (
-    <section className="bg-rcn-border-light/50">
+    <section className="bg-rcn-border-light/50 pb-20">
       <div className="container mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
         <div className="mx-auto max-w-3xl text-center">
           <motion.p
