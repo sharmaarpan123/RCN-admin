@@ -1,7 +1,5 @@
 "use client";
 
-import React from "react";
-import NextLink from "next/link";
 import { motion } from "framer-motion";
 
 
@@ -11,7 +9,7 @@ const HERO_BG_IMAGE = "/about-us/Hero-sec-img.png";
 export function ContactUsHero() {
   return (
     <motion.section
-      className="relative my-2 overflow-hidden rounded-2xl mx-4 sm:mx-6 lg:mx-8 mb-8 md:mb-10 min-h-[200px] flex flex-col justify-center"
+      className="relative py-2 overflow-hidden rounded-2xl mx-4 sm:mx-6 lg:mx-8 mb-8 md:mb-10 min-h-[200px] flex flex-col justify-center"
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}

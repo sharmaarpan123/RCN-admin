@@ -105,6 +105,12 @@ select option {
   background: linear-gradient(180deg, #DBFCE8 0%, rgba(219, 252, 232, 0) 100%);
 }
 
+.contact-us-gradient {
+  background:
+    linear-gradient(0deg, #ffffff 0%, #ffffff 10%, transparent 10%),
+    linear-gradient(0deg, #DBFCE8 0%, rgba(219, 252, 232, 0) 100%),
+    linear-gradient(180deg, #DBFCE8 0%, rgba(219, 252, 232, 0) 10%);
+}
 
 .about-us-stats-card {
   background-image: url('/about-us/statusBgSec.png');
