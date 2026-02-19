@@ -78,7 +78,7 @@ export function AboutUsHero() {
             className="absolute inset-0 bg-cover bg-center scale-105"
             style={{
               backgroundImage: `url(${HERO_BG_IMAGE})`,
-
+              backgroundPosition:"5% 0"
             }}
           />
           <div className="absolute inset-0 bg-[#c8e6d4]/70 z-10" />

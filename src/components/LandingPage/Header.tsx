@@ -4,9 +4,11 @@ import CustomNextLink from '@/components/CustomNextLink';
 import NextLink from 'next/link';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     // Handle smooth scroll for anchor links
@@ -14,13 +16,13 @@ export default function Header() {
       const target = e.target as HTMLElement;
       const link = target.closest('a[href^="#"]') as HTMLAnchorElement;
       if (!link) return;
-      
+
       const href = link.getAttribute('href');
       if (!href || href === '#') return;
-      
+
       const element = document.querySelector(href);
       if (!element) return;
-      
+
       e.preventDefault();
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
       setIsMenuOpen(false);
@@ -56,19 +58,29 @@ export default function Header() {
               </div>
             </NextLink>
 
-           
 
             <div className="flex gap-2.5 items-center">
-            {/* <div className="hidden md:inline-flex gap-2.5 items-center"> */}
+              <CustomNextLink href="/about-us" variant="text" className={`${pathname === "/about-us" ? "text-rcn-accent-dark" : "text-rcn-muted"}`} size="md">
+                About Us
+              </CustomNextLink>
+              <CustomNextLink href="/contact-us" variant="text" className={`${pathname === "/contact-us" ? "text-rcn-accent-dark" : "text-rcn-muted"}`} size="md">
+                Contact Us
+              </CustomNextLink>
+            </div>
+
+
+
+            <div className="flex gap-2.5 items-center">
+              {/* <div className="hidden md:inline-flex gap-2.5 items-center"> */}
 
               <CustomNextLink href="/login" variant="secondary" className="hidden md:inline-flex">
                 User Login
               </CustomNextLink>
-              
+
               <CustomNextLink href="/org-signup" variant="primary" className="hidden md:inline-flex">
                 Register Company
               </CustomNextLink>
-            {/* </div> */}
+              {/* </div> */}
 
               <button
                 className="md:hidden w-11 h-11 rounded-xl border border-rcn-border-light bg-[rgba(255,255,255,0.88)] cursor-pointer flex items-center justify-center"
@@ -105,7 +117,7 @@ export default function Header() {
                 <CustomNextLink href="/login" variant="ghost">
                   User Login
                 </CustomNextLink>
-               
+
                 <CustomNextLink href="/org-signup" variant="primary">
                   Register Company
                 </CustomNextLink>

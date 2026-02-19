@@ -1,20 +1,20 @@
-import React from "react";
-import { ContentPageHeader, ContentPageFooter } from "@/components/contentpage";
 import {
-  AboutUsHero,
-  AboutUsStatsCard,
   AboutUsDescription,
-  AboutUsProcess,
+  AboutUsHero,
   AboutUsMission,
-  AboutUsValues,
-  AboutUsSecurityTrust,
   AboutUsPlatformFeatures,
+  AboutUsProcess,
+  AboutUsSecurityTrust,
+  AboutUsStatsCard,
+  AboutUsValues,
 } from "@/components/contentpage/aboutus";
+import Footer from "@/components/LandingPage/Footer";
+import Header from "@/components/LandingPage/Header";
 
 const AboutUsPage = () => {
   return (
     <>
-      <ContentPageHeader />
+      <Header />
       <AboutUsHero />
       <AboutUsDescription />
       <AboutUsPlatformFeatures />
@@ -23,7 +23,7 @@ const AboutUsPage = () => {
       <AboutUsMission />
       <AboutUsValues />
       <AboutUsSecurityTrust />
-      <ContentPageFooter />
+      <Footer />
     </>
   );
 };
