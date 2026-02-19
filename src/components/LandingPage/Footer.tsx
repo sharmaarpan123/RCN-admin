@@ -1,5 +1,6 @@
-import NextLink from "next/link";
 import Link from "@/components/CustomNextLink";
+import Image from "next/image";
+import NextLink from "next/link";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -14,7 +15,7 @@ export default function Footer() {
           <div>
             <NextLink href="#top" className="flex items-center gap-2.5 no-underline">
               <div className="w-9 h-9 rounded-[14px] bg-linear-to-br from-rcn-brand to-rcn-brand-light shadow-[0_10px_22px_rgba(15,107,58,0.18)] relative shrink-0">
-                <div className="absolute inset-[10px] rounded-xl border-2 border-[rgba(255,255,255,0.75)] opacity-90" />
+                <Image src="/logo.jpeg" alt="RCN Logo" width={36} height={36} className="object-cover" />
               </div>
               <div>
                 <strong className="block text-sm">Referral Coordination Network</strong>
