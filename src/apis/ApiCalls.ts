@@ -520,4 +520,11 @@ export const getReferralChatMessagesApi = (
 export const postReferralChatReadApi = (chatId: string) =>
   AxiosInstance.post(`/api/referral/chats/${chatId}/read`);
 
+/** POST /api/contact — public contact form (email, phone_number, query). */
+export const postContactApi = (body: {
+  email: string;
+  phone_number: string;
+  query: string;
+}) => AxiosInstance.post("/api/contact", body);
+
 /** Request body for POST /api/organization/referral. Aligned with backend createOrUpdateReferralSchema (all optional). */

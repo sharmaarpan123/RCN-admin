@@ -1,11 +1,13 @@
 import React from "react";
-import { ContentPageHeader } from "@/components/contentpage";
+import { ContentPageHeader, ContentPageFooter } from "@/components/contentpage";
 import {
   AboutUsHero,
   AboutUsStatsCard,
   AboutUsDescription,
   AboutUsProcess,
   AboutUsMission,
+  AboutUsValues,
+  AboutUsSecurityTrust,
   AboutUsPlatformFeatures,
 } from "@/components/contentpage/aboutus";
 
@@ -15,11 +17,13 @@ const AboutUsPage = () => {
       <ContentPageHeader />
       <AboutUsHero />
       <AboutUsDescription />
-
       <AboutUsPlatformFeatures />
       <AboutUsStatsCard />
       <AboutUsProcess />
       <AboutUsMission />
+      <AboutUsValues />
+      <AboutUsSecurityTrust />
+      <ContentPageFooter />
     </>
   );
 };
