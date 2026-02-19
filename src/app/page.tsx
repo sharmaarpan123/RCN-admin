@@ -421,7 +421,7 @@ export default function Home() {
 
             <div>
               <h4 className="m-0 mb-2 text-sm">Resources</h4>
-              <Link href="/about" variant="text" className="block py-1.5">
+              <Link href="/about-us" variant="text" className="block py-1.5">
                 About
               </Link>
               <Link href="/faq" variant="text" className="block py-1.5">
@@ -430,7 +430,7 @@ export default function Home() {
               <Link href="/support" variant="text" className="block py-1.5">
                 Support
               </Link>
-              <Link href="/contact" variant="text" className="block py-1.5">
+              <Link href="/contact-us" variant="text" className="block py-1.5">
                 Contact
               </Link>
             </div>
