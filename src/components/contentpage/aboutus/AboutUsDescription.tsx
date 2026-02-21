@@ -25,10 +25,13 @@ const FEATURES = [
     description: "Bring providers, care teams, and admin staff onto a single platform.",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44" fill="none">
-        <rect width="44" height="44" rx="12" fill="url(#paint0_linear_306_2042)" />
-        <path d="M31.1663 21.9997H28.893C28.4924 21.9988 28.1025 22.1292 27.783 22.3709C27.4635 22.6126 27.232 22.9523 27.1238 23.338L24.9697 31.0013C24.9558 31.0489 24.9268 31.0908 24.8872 31.1205C24.8475 31.1503 24.7993 31.1663 24.7497 31.1663C24.7001 31.1663 24.6518 31.1503 24.6122 31.1205C24.5725 31.0908 24.5436 31.0489 24.5297 31.0013L19.4697 12.998C19.4558 12.9504 19.4268 12.9086 19.3872 12.8788C19.3475 12.8491 19.2993 12.833 19.2497 12.833C19.2001 12.833 19.1518 12.8491 19.1122 12.8788C19.0725 12.9086 19.0436 12.9504 19.0297 12.998L16.8755 20.6613C16.7678 21.0456 16.5376 21.3841 16.22 21.6257C15.9023 21.8672 15.5146 21.9985 15.1155 21.9997H12.833" stroke="#31A561" stroke-width="1.83333" stroke-linecap="round" stroke-linejoin="round" />
+        <rect width="44" height="44" rx="12" fill="url(#paint0_linear_306_2051)" />
+        <path d="M25.6663 30.25V28.4167C25.6663 27.4442 25.28 26.5116 24.5924 25.8239C23.9048 25.1363 22.9721 24.75 21.9997 24.75H16.4997C15.5272 24.75 14.5946 25.1363 13.9069 25.8239C13.2193 26.5116 12.833 27.4442 12.833 28.4167V30.25" stroke="#31A561" stroke-width="1.83333" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M19.2497 21.0833C21.2747 21.0833 22.9163 19.4417 22.9163 17.4167C22.9163 15.3916 21.2747 13.75 19.2497 13.75C17.2246 13.75 15.583 15.3916 15.583 17.4167C15.583 19.4417 17.2246 21.0833 19.2497 21.0833Z" stroke="#31A561" stroke-width="1.83333" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M31.167 30.25V28.4166C31.1664 27.6042 30.896 26.815 30.3982 26.1729C29.9005 25.5308 29.2036 25.0722 28.417 24.8691" stroke="#31A561" stroke-width="1.83333" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M25.667 13.8691C26.4557 14.0711 27.1548 14.5298 27.654 15.1729C28.1532 15.8161 28.4242 16.6071 28.4242 17.4212C28.4242 18.2354 28.1532 19.0264 27.654 19.6695C27.1548 20.3127 26.4557 20.7714 25.667 20.9733" stroke="#31A561" stroke-width="1.83333" stroke-linecap="round" stroke-linejoin="round" />
         <defs>
-          <linearGradient id="paint0_linear_306_2042" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+          <linearGradient id="paint0_linear_306_2051" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
             <stop stop-color="#31A561" stop-opacity="0.2" />
             <stop offset="1" stop-color="#138652" stop-opacity="0.1" />
           </linearGradient>

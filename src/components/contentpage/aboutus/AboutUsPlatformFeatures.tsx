@@ -51,17 +51,15 @@ const PLATFORM_FEATURES = [
       "Know where every referral is—new, opened, in progress, completed—without chasing updates.",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44" fill="none">
-        <rect width="44" height="44" rx="12" fill="url(#paint0_linear_292_3711)" />
-        <path d="M16.5 13.75V24.75" stroke="#31A561" stroke-width="1.83333" stroke-linecap="round" stroke-linejoin="round" />
-        <path d="M27.5 19.25C29.0188 19.25 30.25 18.0188 30.25 16.5C30.25 14.9812 29.0188 13.75 27.5 13.75C25.9812 13.75 24.75 14.9812 24.75 16.5C24.75 18.0188 25.9812 19.25 27.5 19.25Z" stroke="#31A561" stroke-width="1.83333" stroke-linecap="round" stroke-linejoin="round" />
-        <path d="M16.5 30.25C18.0188 30.25 19.25 29.0188 19.25 27.5C19.25 25.9812 18.0188 24.75 16.5 24.75C14.9812 24.75 13.75 25.9812 13.75 27.5C13.75 29.0188 14.9812 30.25 16.5 30.25Z" stroke="#31A561" stroke-width="1.83333" stroke-linecap="round" stroke-linejoin="round" />
-        <path d="M27.5 19.25C27.5 21.438 26.6308 23.5365 25.0836 25.0836C23.5365 26.6308 21.438 27.5 19.25 27.5" stroke="#31A561" stroke-width="1.83333" stroke-linecap="round" stroke-linejoin="round" />
-        <defs>
-          <linearGradient id="paint0_linear_292_3711" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#31A561" stop-opacity="0.2" />
-            <stop offset="1" stop-color="#138652" stop-opacity="0.1" />
-          </linearGradient>
-        </defs>
+      <rect width="44" height="44" rx="12" fill="url(#paint0_linear_292_3722)"/>
+      <path d="M12.8903 22.3191C12.8139 22.1133 12.8139 21.8869 12.8903 21.6811C13.6344 19.877 14.8974 18.3344 16.5192 17.2489C18.141 16.1634 20.0486 15.584 22.0001 15.584C23.9517 15.584 25.8593 16.1634 27.4811 17.2489C29.1029 18.3344 30.3659 19.877 31.11 21.6811C31.1864 21.8869 31.1864 22.1133 31.11 22.3191C30.3659 24.1232 29.1029 25.6658 27.4811 26.7513C25.8593 27.8367 23.9517 28.4162 22.0001 28.4162C20.0486 28.4162 18.141 27.8367 16.5192 26.7513C14.8974 25.6658 13.6344 24.1232 12.8903 22.3191Z" stroke="#31A561" stroke-width="1.83333" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M22 24.75C23.5188 24.75 24.75 23.5188 24.75 22C24.75 20.4812 23.5188 19.25 22 19.25C20.4812 19.25 19.25 20.4812 19.25 22C19.25 23.5188 20.4812 24.75 22 24.75Z" stroke="#31A561" stroke-width="1.83333" stroke-linecap="round" stroke-linejoin="round"/>
+      <defs>
+      <linearGradient id="paint0_linear_292_3722" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#31A561" stop-opacity="0.2"/>
+      <stop offset="1" stop-color="#138652" stop-opacity="0.1"/>
+      </linearGradient>
+      </defs>
       </svg>
     ),
   },
@@ -70,19 +68,17 @@ const PLATFORM_FEATURES = [
     description:
       "Control who can view, send, open, and manage referral across your organization.",
     icon: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44" fill="none">
+<rect width="44" height="44" rx="12" fill="url(#paint0_linear_292_3731)"/>
+<path d="M29.3337 22.9168C29.3337 27.5001 26.1253 29.7918 22.312 31.1209C22.1123 31.1886 21.8954 31.1853 21.6978 31.1118C17.8753 29.7918 14.667 27.5001 14.667 22.9168V16.5001C14.667 16.257 14.7636 16.0238 14.9355 15.8519C15.1074 15.68 15.3405 15.5834 15.5837 15.5834C17.417 15.5834 19.7087 14.4834 21.3037 13.0901C21.4979 12.9242 21.7449 12.833 22.0003 12.833C22.2558 12.833 22.5028 12.9242 22.697 13.0901C24.3012 14.4926 26.5837 15.5834 28.417 15.5834C28.6601 15.5834 28.8933 15.68 29.0652 15.8519C29.2371 16.0238 29.3337 16.257 29.3337 16.5001V22.9168Z" stroke="#31A561" stroke-width="1.83333" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M19.25 22.0003L21.0833 23.8337L24.75 20.167" stroke="#31A561" stroke-width="1.83333" stroke-linecap="round" stroke-linejoin="round"/>
+<defs>
+<linearGradient id="paint0_linear_292_3731" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+<stop stop-color="#31A561" stop-opacity="0.2"/>
+<stop offset="1" stop-color="#138652" stop-opacity="0.1"/>
+</linearGradient>
+</defs>
+</svg>
     ),
   },
   {
@@ -90,20 +86,18 @@ const PLATFORM_FEATURES = [
     description:
       "Time-frame reporting, transparency in referral activity, and structured reporting for leadership.",
     icon: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <line x1="12" y1="20" x2="12" y2="10" />
-        <line x1="18" y1="20" x2="18" y2="4" />
-        <line x1="6" y1="20" x2="6" y2="16" />
+      <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44" fill="none">
+      <rect width="44" height="44" rx="12" fill="url(#paint0_linear_292_3740)"/>
+      <path d="M13.75 13.75V28.4167C13.75 28.9029 13.9432 29.3692 14.287 29.713C14.6308 30.0568 15.0971 30.25 15.5833 30.25H30.25" stroke="#31A561" stroke-width="1.83333" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M27.5 26.5833V19.25" stroke="#31A561" stroke-width="1.83333" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M22.917 26.583V15.583" stroke="#31A561" stroke-width="1.83333" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M18.333 26.583V23.833" stroke="#31A561" stroke-width="1.83333" stroke-linecap="round" stroke-linejoin="round"/>
+      <defs>
+      <linearGradient id="paint0_linear_292_3740" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#31A561" stop-opacity="0.2"/>
+      <stop offset="1" stop-color="#138652" stop-opacity="0.1"/>
+      </linearGradient>
+      </defs>
       </svg>
     ),
   },
@@ -112,20 +106,17 @@ const PLATFORM_FEATURES = [
     description:
       "Clear logs and referral history to support internal reviews and compliance needs.",
     icon: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-        <path d="M14 2v6h6" />
-        <path d="M9 15l2 2 4-4" />
+      <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44" fill="none">
+      <rect width="44" height="44" rx="12" fill="url(#paint0_linear_292_3751)"/>
+      <path d="M24.7497 12.833H19.2497C18.7434 12.833 18.333 13.2434 18.333 13.7497V15.583C18.333 16.0893 18.7434 16.4997 19.2497 16.4997H24.7497C25.2559 16.4997 25.6663 16.0893 25.6663 15.583V13.7497C25.6663 13.2434 25.2559 12.833 24.7497 12.833Z" stroke="#31A561" stroke-width="1.83333" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M25.667 14.667H27.5003C27.9866 14.667 28.4529 14.8601 28.7967 15.204C29.1405 15.5478 29.3337 16.0141 29.3337 16.5003V29.3337C29.3337 29.8199 29.1405 30.2862 28.7967 30.63C28.4529 30.9738 27.9866 31.167 27.5003 31.167H16.5003C16.0141 31.167 15.5478 30.9738 15.204 30.63C14.8601 30.2862 14.667 29.8199 14.667 29.3337V16.5003C14.667 16.0141 14.8601 15.5478 15.204 15.204C15.5478 14.8601 16.0141 14.667 16.5003 14.667H18.3337" stroke="#31A561" stroke-width="1.83333" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M19.25 23.8333L21.0833 25.6667L24.75 22" stroke="#31A561" stroke-width="1.83333" stroke-linecap="round" stroke-linejoin="round"/>
+      <defs>
+      <linearGradient id="paint0_linear_292_3751" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#31A561" stop-opacity="0.2"/>
+      <stop offset="1" stop-color="#138652" stop-opacity="0.1"/>
+      </linearGradient>
+      </defs>
       </svg>
     ),
   },
