@@ -9,24 +9,18 @@ const HERO_BG_IMAGE = "/about-us/Hero-sec-img.png";
 export function ContactUsHero() {
   return (
     <motion.section
-      className="relative py-2 overflow-hidden rounded-2xl mx-4 sm:mx-6 lg:mx-8 mb-8 md:mb-10 min-h-[200px] flex flex-col justify-center"
+      className="relative py-2 h-[100px] md:h-[500px] overflow-hidden rounded-2xl mx-4 sm:mx-6 lg:mx-8 mb-8 md:mb-10 min-h-[200px] flex flex-col justify-center"
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      style={{
-        minHeight: "500px",
-      }
-      }
+     
     >
       <div className="absolute inset-0 z-0" >
         <div
-          className="absolute inset-0 bg-cover bg-center scale-105"
+          className="absolute inset-0 bg-cover bg-left-center  scale-105 bg-no-repeat"
           style={{
             backgroundImage: `url(${HERO_BG_IMAGE})`,
-            backgroundSize: "cover",
-            backgroundPosition: "0 0",
-            backgroundRepeat: "no-repeat",
-
+            backgroundPosition: "top center",
           }}
         />
         <div className="absolute inset-0  bg-[#c8e6d4]/70   z-10" />
