@@ -45,6 +45,11 @@ export function SelectReceiverSection({
   const [receiverModalOpen, setReceiverModalOpen] = useState(false);
   const { control, setValue, getValues } = useFormContext<ReferralFormValues>();
   const watchedReceiverRows = useWatch({ name: "receiver_rows", control });
+  const watchedGuestOrganizations = useWatch({ name: "guest_organizations", control });
+  const guestOrganizations = useMemo(
+    () => (watchedGuestOrganizations ?? []) as GuestOrganization[],
+    [watchedGuestOrganizations]
+  );
   const { errors } = useFormState<ReferralFormValues>();
   const receiverRows = useMemo(
     () => (watchedReceiverRows ?? []) as ReceiverRow[],
@@ -196,7 +201,7 @@ export function SelectReceiverSection({
         isOpen={receiverModalOpen}
         onClose={() => setReceiverModalOpen(false)}
         onAdd={handleAddReceiver}
-
+        defaultState={stateFilter}
       />
       <section
         id="select-receiver"
@@ -272,9 +277,14 @@ export function SelectReceiverSection({
         />
 
         <GuestOrganizationsTable
-          guestOrganizations={getValues("guest_organizations") ?? []}
-          removeGuestOrganization={(organizationId: string) => {
-            setValue("guest_organizations", getValues("guest_organizations")?.filter((g: GuestOrganization) => g.company_name !== organizationId), { shouldValidate: true });
+          guestOrganizations={guestOrganizations}
+          removeGuestOrganization={(index: number) => {
+            const current = getValues("guest_organizations") ?? [];
+            setValue(
+              "guest_organizations",
+              current.filter((_, i) => i !== index),
+              { shouldValidate: true }
+            );
           }}
         />
 
@@ -476,6 +486,63 @@ function ReceiverRowsTable({
             branchError={(receiverRowsErrors as Array<{ branchId?: { message?: string }; departmentId?: { message?: string } }>)?.[index]?.branchId?.message}
             departmentError={(receiverRowsErrors as Array<{ branchId?: { message?: string }; departmentId?: { message?: string } }>)?.[index]?.departmentId?.message}
           />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function GuestOrganizationsTable({
+  guestOrganizations,
+  removeGuestOrganization,
+}: {
+  guestOrganizations: GuestOrganization[];
+  removeGuestOrganization: (index: number) => void;
+}) {
+  if (guestOrganizations.length === 0) return null;
+
+  return (
+    <div className="rounded-xl border border-rcn-border mb-3 my-2">
+      <div className="text-sm font-medium text-rcn-text mb-2 p-2 ">Guest Organizations</div>
+      <div className="min-w-[600px] rounded-xl">
+        <div className="grid grid-cols-[1fr_1fr_120px_auto] gap-2 bg-slate-50 border-b border-rcn-border px-2 py-2.5 text-xs font-semibold text-rcn-muted uppercase tracking-wider items-center">
+          <div>Company</div>
+          <div>Email / Phone</div>
+          <div>State</div>
+          <div className="w-20 shrink-0">Action</div>
+        </div>
+        {guestOrganizations.map((guest, index) => (
+          <div
+            key={`${guest.company_name}-${index}`}
+            className="grid grid-cols-[1fr_1fr_120px_auto] gap-2 border-b border-rcn-border last:border-b-0 py-2.5 px-2 items-center"
+          >
+            <div className="min-w-0">
+              <p className="m-0 text-sm font-medium text-rcn-text truncate" title={guest.company_name}>
+                {guest.company_name}
+              </p>
+              <p className="m-0 text-xs text-rcn-muted truncate" title={guest.address}>
+                {guest.address}
+              </p>
+            </div>
+            <div className="min-w-0">
+              <p className="m-0 text-sm text-rcn-text truncate">{guest.email}</p>
+              <p className="m-0 text-xs text-rcn-muted truncate">
+                {guest.dial_code} {guest.phone_number}
+              </p>
+            </div>
+            <div className="text-sm text-rcn-text">{guest.state}</div>
+            <div className="w-20 shrink-0">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => removeGuestOrganization(index)}
+                aria-label="Remove guest organization"
+              >
+                Remove
+              </Button>
+            </div>
+          </div>
         ))}
       </div>
     </div>

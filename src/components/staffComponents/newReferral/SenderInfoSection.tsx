@@ -14,10 +14,10 @@ const disabledInputClass =
   "w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-slate-50 text-rcn-muted text-sm cursor-not-allowed";
 
 export function SenderInfoSection() {
-  const { register,  setValue } = useFormContext<ReferralFormValues>();
+  const { register, setValue } = useFormContext<ReferralFormValues>();
   const { loginUser } = useStaffAuthLoginUser();
 
-  console.log(loginUser, "loginUser")
+
 
   const senderDialCode = useWatch({ name: "sender_dial_code" }) ?? "";
   const senderPhone = useWatch({ name: "sender_phone_number" }) ?? "";
@@ -39,7 +39,7 @@ export function SenderInfoSection() {
   }, [loginUser, setValue]);
 
 
-  const isDisabled = !!loginUser;
+  const isDisabled = true;
 
   return (
     <section
@@ -99,7 +99,7 @@ export function SenderInfoSection() {
           <label className="block text-xs text-rcn-muted font-[850] mb-1.5">Phone Number</label>
           <PhoneInputField
             value={senderPhoneValue}
-            onChange={() => {}}
+            onChange={() => { }}
             placeholder="(xxx) xxx-xxxx"
             inputProps={{ disabled: isDisabled, readOnly: isDisabled }}
             containerClass={isDisabled ? "opacity-90 pointer-events-none" : ""}
