@@ -8,10 +8,10 @@ interface ModalProps {
   maxWidth?: string;
 }
 
-const Modal: React.FC<ModalProps> = ({ 
-  isOpen, 
-  onClose, 
-  children, 
+const Modal: React.FC<ModalProps> = ({
+  isOpen,
+  onClose,
+  children,
   locked = false,
   maxWidth = '900px'
 }) => {
@@ -53,7 +53,7 @@ const Modal: React.FC<ModalProps> = ({
         className="w-full"
         style={{ maxWidth: `min(${maxWidth}, calc(100vw - 1.5rem))` }}
       >
-        <div className="bg-white border border-rcn-border rounded-rcn-lg shadow-rcn p-4 max-h-[85vh] sm:max-h-[80vh] overflow-auto">
+        <div className="bg-white border border-rcn-border rounded-rcn-lg shadow-rcn p-4 max-h-[85vh] sm:max-h-[90vh] overflow-auto">
           {children}
         </div>
       </div>

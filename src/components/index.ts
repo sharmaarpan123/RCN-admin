@@ -17,3 +17,5 @@ export type { ConfirmModalType } from './ConfirmModal';
 export type { RcnSelectOption, RcnSelectProps } from './CustomReactSelect';
 export { StripeCardModal } from './StripeCardModal';
 export type { StripeCardModalProps } from './StripeCardModal';
+export { PreviewFile } from './PreviewFile';
+export type { PreviewFileProps } from './PreviewFile';
