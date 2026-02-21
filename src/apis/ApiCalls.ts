@@ -296,8 +296,8 @@ export const getAdminPaymentSettingsApi = () =>
 export const updateAdminPaymentSettingsApi = (body: unknown) =>
   AxiosInstance.put("/api/admin/payment-settings", body);
 
-/** POST /api/users/profile/picture/upload — upload profile/banner image (common). FormData with key "file". */
-export const uploadProfilePictureApi = (file: File) => {
+
+export const uploadFileApi = (file: File) => {
   const formData = new FormData();
   formData.append("file", file);
   return AxiosInstance.post("/api/users/profile/picture/upload", formData, {

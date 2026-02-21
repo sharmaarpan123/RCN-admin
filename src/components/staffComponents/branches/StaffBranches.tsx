@@ -118,7 +118,7 @@ export function StaffBranches() {
                       <div className="font-medium text-rcn-text">{row.name}</div>
                       <div className="text-xs text-rcn-muted mt-0.5">{row.id}</div>
                     </td>
-                    <td className="px-4 py-3 text-rcn-text">{row.organization}</td>
+                   
                     <td className="px-4 py-3">
                       <span
                         className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${

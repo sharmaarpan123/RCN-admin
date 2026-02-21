@@ -9,7 +9,7 @@ import { Button, Modal } from "@/components";
 import {
   createAdminBannerApi,
   updateAdminBannerApi,
-  uploadProfilePictureApi,
+  uploadFileApi,
 } from "@/apis/ApiCalls";
 import { catchAsync, checkResponse } from "@/utils/commonFunc";
 import { toastError } from "@/utils/toast";
@@ -128,7 +128,7 @@ export function BannerModal({
     if (!file) return;
     setUploadingImage(true);
     try {
-      const res = await uploadProfilePictureApi(file);
+      const res = await uploadFileApi(file);
       const url =
         (res?.data as { data?: { url?: string }; url?: string })?.data?.url ??
         (res?.data as { url?: string })?.url ??
