@@ -25,10 +25,8 @@ interface SenderInboxProps {
   setReferrals: React.Dispatch<React.SetStateAction<SentReferralApi[]>>;
   companyDirectory: Company[];
   setCompanyDirectory: React.Dispatch<React.SetStateAction<Company[]>>;
-  statusFilter: string;
-  setStatusFilter: (s: string) => void;
-  dateFilterDays: number;
-  setDateFilterDays: (d: number) => void;
+
+
   meta: ReferralListMeta;
   isLoading?: boolean;
   body: SenderInboxBody;
@@ -42,10 +40,6 @@ export function SenderInbox({
   setReferrals,
   companyDirectory,
   setCompanyDirectory,
-  statusFilter,
-  setStatusFilter,
-  dateFilterDays,
-  setDateFilterDays,
   meta,
   isLoading = false,
 }: SenderInboxProps) {
@@ -54,27 +48,7 @@ export function SenderInbox({
   const [forwardRefId, setForwardRefId] = useState<string | null>(null);
   const [forwardSelectedCompany, setForwardSelectedCompany] = useState<Company | null>(null);
 
-  const baseList = useMemo(() => {
-    const now = new Date();
-    const cutoff = new Date(now.getTime() - dateFilterDays * 24 * 60 * 60 * 1000);
-    return referrals
-      .filter((ref) => {
-        if (statusFilter !== "ALL") {
-          const s = sentReferralStatus(ref);
-          if (statusFilter === "DRAFT" && ref.is_draft) return true;
-          if (s !== statusFilter) return false;
-        }
-        const date = ref.sent_at ? new Date(ref.sent_at) : new Date(ref.createdAt ?? 0);
-        if (date < cutoff) return false;
-        return true;
-      })
-      .sort((a, b) => {
-        const da = a.sent_at ? new Date(a.sent_at).getTime() : new Date(a.createdAt ?? 0).getTime();
-        const db = b.sent_at ? new Date(b.sent_at).getTime() : new Date(b.createdAt ?? 0).getTime();
-        return db - da;
-      });
-  }, [referrals, statusFilter, dateFilterDays]);
-
+  const baseList = referrals
 
 
   const fullRef = forwardRefId ? referrals.find((r) => r._id === forwardRefId) : null;
@@ -120,7 +94,7 @@ export function SenderInbox({
           const last = p?.patient_last_name ?? "";
           const first = p?.patient_first_name ?? "";
           const dob = p?.dob ?? "";
-          return <span className="font-[850] text-[13px]">{last}, {first} • DOB {dob}</span>;
+          return <span className="font-[850] text-[13px]">{last}, {first} { `• DOB ${dob || "N/A"}`}</span>;
         },
       },
       {
@@ -214,7 +188,7 @@ export function SenderInbox({
           </div>
           <div className="flex gap-2 flex-wrap" aria-label="Date filters">
             {[[30, "Last 30 days"], [7, "Last 7 days"], [90, "Last 90 days"], [0, "All time"]].map(([days, label]) => (
-              <button key={String(days)} type="button" onClick={() => setDateFilterDays(Number(days))} className={`inline-flex items-center gap-1.5 px-2.5 py-2 rounded-full border cursor-pointer text-xs font-extrabold select-none ${dateFilterDays === days ? "bg-rcn-brand/10 border-rcn-brand/20 text-rcn-accent-dark" : "border-slate-200 bg-white text-rcn-muted"}`}>
+              <button key={String(days)} type="button" onClick={() => setBody(p => ({ ...p, day: Number(days) }))} className={`inline-flex items-center gap-1.5 px-2.5 py-2 rounded-full border cursor-pointer text-xs font-extrabold select-none ${body.day === Number(days) ? "bg-rcn-brand/10 border-rcn-brand/20 text-rcn-accent-dark" : "border-slate-200 bg-white text-rcn-muted"}`}>
                 {label}
               </button>
             ))}

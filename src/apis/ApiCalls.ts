@@ -421,11 +421,7 @@ export const getOrganizationReferralSentApi = (params?: unknown) =>
   });
 
 /** GET /api/organization/referral/received — list received referrals (staff portal, receiver inbox). */
-export const getOrganizationReferralReceivedApi = (params?: {
-  page?: number;
-  limit?: number;
-  search?: string;
-}) =>
+export const getOrganizationReferralReceivedApi = (params?: unknown) =>
   AxiosInstance.get("/api/organization/referral/received", {
     params: params ?? {},
   });

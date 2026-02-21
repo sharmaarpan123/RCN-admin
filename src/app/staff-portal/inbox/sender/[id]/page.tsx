@@ -167,14 +167,9 @@ function SenderDetailContent({ data }: { data: ReferralByIdApi }) {
           <p className="m-0 mt-1 text-rcn-muted text-xs font-[850]">Sender view: all receivers + per-receiver chat. Messaging at any status.</p>
         </div>
         <div className="p-3 overflow-auto">
-          <div className="flex flex-wrap gap-3 items-start justify-between p-3.5 rounded-2xl border border-rcn-brand/20 bg-white/95 shadow-[0_12px_26px_rgba(2,6,23,.07)] mb-3">
-            <div>
-              <h3 className="m-0 text-[15px] font-semibold tracking-wide"> {p.patient_last_name ?? ""}, {p.patient_first_name ?? ""} • DOB {p.dob ?? ""} • {p.gender ?? ""}</h3>
-              <p className="m-0 mt-1.5 text-rcn-muted text-xs font-[850]">Sent: {fmtDate(sentAt)} • Address of Care: {p.address_of_care ?? ""}</p>
-            </div>
-          </div>
+          
 
-          <div className="border border-rcn-brand/20 rounded-2xl bg-white/95 shadow-[0_12px_26px_rgba(2,6,23,.07)] p-2.5 sticky top-[86px] z-4 mb-3" aria-label="Quick Jump Navigation">
+          <div className="border border-rcn-brand/20 rounded-2xl bg-white/95 shadow-[0_12px_26px_rgba(2,6,23,.07)] p-2.5  z-4 mb-3" aria-label="Quick Jump Navigation">
             <div className="flex items-center justify-between gap-2.5 mb-2">
               <strong className="text-xs tracking-wide">Quick Jump</strong>
               <span className="text-[11px] text-rcn-muted font-extrabold">Jump to any section</span>

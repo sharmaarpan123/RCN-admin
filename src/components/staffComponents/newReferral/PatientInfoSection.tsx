@@ -29,20 +29,7 @@ export function PatientInfoSection() {
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div>
-          <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
-            Last Name <span className="text-rcn-danger font-black">*</span>
-          </label>
-          <input
-            type="text"
-            {...register("patient_last_name")}
-            className={inputClass}
-            value={patient_last_name}
-          />
-          {errors.patient_last_name && (
-            <p className="text-xs text-rcn-danger mt-1 m-0">{errors.patient_last_name.message}</p>
-          )}
-        </div>
+      
         <div>
           <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
             First Name <span className="text-rcn-danger font-black">*</span>
@@ -55,6 +42,20 @@ export function PatientInfoSection() {
           />
           {errors.patient_first_name && (
             <p className="text-xs text-rcn-danger mt-1 m-0">{errors.patient_first_name.message}</p>
+          )}
+        </div>
+        <div>
+          <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
+            Last Name <span className="text-rcn-danger font-black">*</span>
+          </label>
+          <input
+            type="text"
+            {...register("patient_last_name")}
+            className={inputClass}
+            value={patient_last_name}
+          />
+          {errors.patient_last_name && (
+            <p className="text-xs text-rcn-danger mt-1 m-0">{errors.patient_last_name.message}</p>
           )}
         </div>
         <div>

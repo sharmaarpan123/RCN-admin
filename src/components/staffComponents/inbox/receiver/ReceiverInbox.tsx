@@ -4,7 +4,7 @@ import React, { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import type { ReceivedReferralApi, ReferralListMeta } from "@/app/staff-portal/inbox/types";
 import { fmtDate, pillClass, pillLabel } from "@/app/staff-portal/inbox/helpers";
-import { ReceiverInboxBody } from "@/app/staff-portal/inbox/page";
+import { ReceiverInboxBody, ReceiverInboxType } from "@/app/staff-portal/inbox/page";
 import { Button, DebouncedInput, TableLayout, type TableColumn } from "@/components";
 import CustomPagination from "@/components/CustomPagination";
 
@@ -21,10 +21,6 @@ interface ReceiverInboxProps {
   referrals: ReceivedReferralApi[];
   body: ReceiverInboxBody;
   setBody: React.Dispatch<React.SetStateAction<ReceiverInboxBody>>;
-  statusFilter: string;
-  setStatusFilter: (s: string) => void;
-  dateFilterDays: number;
-  setDateFilterDays: (d: number) => void;
   meta: ReferralListMeta;
   isLoading?: boolean;
 }
@@ -33,35 +29,12 @@ export function ReceiverInbox({
   referrals,
   body,
   setBody,
-  statusFilter,
-  setStatusFilter,
-  dateFilterDays,
-  setDateFilterDays,
   meta,
   isLoading = false,
 }: ReceiverInboxProps) {
   const router = useRouter();
 
-  const baseList = useMemo(() => {
-    const now = new Date();
-    const cutoff = new Date(now.getTime() - dateFilterDays * 24 * 60 * 60 * 1000);
-    return referrals
-      .filter((ref) => {
-        if (statusFilter !== "ALL") {
-          const s = receivedReferralStatus(ref);
-          if (statusFilter === "ACCEPTED") return ["ACCEPTED", "PAID", "COMPLETED"].includes(s);
-          if (s !== statusFilter) return false;
-        }
-        const date = ref.sent_at ? new Date(ref.sent_at) : new Date(ref.createdAt ?? 0);
-        if (date < cutoff) return false;
-        return true;
-      })
-      .sort((a, b) => {
-        const da = a.sent_at ? new Date(a.sent_at).getTime() : new Date(a.createdAt ?? 0).getTime();
-        const db = b.sent_at ? new Date(b.sent_at).getTime() : new Date(b.createdAt ?? 0).getTime();
-        return db - da;
-      });
-  }, [referrals, statusFilter, dateFilterDays]);
+  const baseList = referrals
 
   const receiverBodyList = useMemo(() => {
     const q = (body.search ?? "").trim().toLowerCase();
@@ -86,8 +59,9 @@ export function ReceiverInbox({
           const p = ref.patient;
           const last = p?.patient_last_name ?? "";
           const first = p?.patient_first_name ?? "";
+          const name = `${last} ${first}`.trim() || "N/A";
           const dob = p?.dob ?? "";
-          return <span className="font-[850] text-[13px]">{last}, {first} • DOB {dob}</span>;
+          return <span className="font-[850] text-[13px]">{`${name} ${dob ? `• DOB ${dob || "N/A"}` : ""}`}</span>;
         },
       },
       {
@@ -153,14 +127,14 @@ export function ReceiverInbox({
           aria-label="Search inbox"
         />
         <div className="flex gap-2 flex-wrap" aria-label="Status filters">
-          {["ALL", "PENDING", "ACCEPTED", "REJECTED", "PAID", "COMPLETED"].map((f) => (
+          {["all", "pending", "accepted", "rejected", "paid"].map((f) => (
             <button
-              key={f}
+              key={f as ReceiverInboxType}
               type="button"
-              onClick={() => setStatusFilter(f)}
-              className={`inline-flex  items-center gap-1.5 px-2.5 py-2 rounded-full border cursor-pointer text-xs font-extrabold select-none ${statusFilter === f ? "bg-rcn-brand/10 border-rcn-brand/20 text-rcn-accent-dark" : "border-slate-200 bg-white text-rcn-muted"}`}
+              onClick={() => setBody({ ...body, type: f as ReceiverInboxType })}
+              className={`inline-flex  items-center gap-1.5 px-2.5 py-2 rounded-full border cursor-pointer text-xs font-extrabold select-none ${body.type === f ? "bg-rcn-brand/10 border-rcn-brand/20 text-rcn-accent-dark" : "border-slate-200 bg-white text-rcn-muted"}`}
             >
-              {f === "ALL" ? "All" : f === "PAID" ? "Paid/Unlocked" : f.charAt(0) + f.slice(1).toLowerCase()}
+              {f === "all" ? "All" : f === "paid" ? "Paid/Unlocked" : f.charAt(0) + f.slice(1).toLowerCase()}
             </button>
           ))}
         </div>
@@ -169,8 +143,8 @@ export function ReceiverInbox({
             <button
               key={String(days)}
               type="button"
-              onClick={() => setDateFilterDays(Number(days))}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-2 rounded-full border cursor-pointer text-xs font-extrabold select-none ${dateFilterDays === days ? "bg-rcn-brand/10 border-rcn-brand/20 text-rcn-accent-dark" : "border-slate-200 bg-white text-rcn-muted"}`}
+              onClick={() => setBody({ ...body, day: Number(days) })}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-2 rounded-full border cursor-pointer text-xs font-extrabold select-none ${body.day === Number(days) ? "bg-rcn-brand/10 border-rcn-brand/20 text-rcn-accent-dark" : "border-slate-200 bg-white text-rcn-muted"}`}
             >
               {label}
             </button>

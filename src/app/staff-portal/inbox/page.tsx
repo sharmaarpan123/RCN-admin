@@ -20,9 +20,10 @@ import { DEMO_COMPANIES } from "./demo-data";
 import { SenderInbox, ReceiverInbox } from "@/components/staffComponents";
 
 export type SenderInboxType = "all" | "draft" | "sent";
+export type ReceiverInboxType = "all" | "pending" | "accepted" | "rejected" | "paid";
 
 export type SenderInboxBody = { page: number; limit: number; search: string, type: SenderInboxType, day: number };
-export type ReceiverInboxBody = { page: number; limit: number; search: string };
+export type ReceiverInboxBody = { page: number; limit: number; search: string, type: ReceiverInboxType, day: number };
 
 export default function StaffInboxPage() {
   const [forwardPatches, setForwardPatches] = useState<Map<string, SentReferralApi>>(new Map());
@@ -31,7 +32,7 @@ export default function StaffInboxPage() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [dateFilterDays, setDateFilterDays] = useState(30);
   const [senderBody, setSenderBody] = useState<SenderInboxBody>({ page: 1, limit: 10, search: "", type: "all", day: 1 });
-  const [receiverBody, setReceiverBody] = useState<ReceiverInboxBody>({ page: 1, limit: 10, search: "" });
+  const [receiverBody, setReceiverBody] = useState<ReceiverInboxBody>({ page: 1, limit: 10, search: "", type: "all", day: 1 });
 
   const { data: sentResponse, isLoading: isLoadingSent } = useQuery({
     queryKey: [...defaultQueryKeys.referralSentList, senderBody.page, senderBody.search, senderBody.type, senderBody.day],
@@ -52,12 +53,14 @@ export default function StaffInboxPage() {
   });
 
   const { data: receivedResponse, isLoading: isLoadingReceived } = useQuery({
-    queryKey: [...defaultQueryKeys.referralReceivedList, receiverBody.page, receiverBody.limit, receiverBody.search],
+    queryKey: [...defaultQueryKeys.referralReceivedList, receiverBody.page, receiverBody.limit, receiverBody.search, receiverBody.type, receiverBody.day],
     queryFn: async (): Promise<ReferralListResponse<ReceivedReferralApi>> => {
       const res = await getOrganizationReferralReceivedApi({
         page: receiverBody.page,
         limit: receiverBody.limit,
         search: receiverBody.search || undefined,
+        type: receiverBody.type as ReceiverInboxType,
+        day: receiverBody.day,
       });
       if (!checkResponse({ res })) return { data: [], meta: defaultMeta };
       const raw = res.data as { data?: ReceivedReferralApi[]; meta?: ReferralListMeta };
@@ -139,10 +142,6 @@ export default function StaffInboxPage() {
           setReferrals={setSenderReferrals}
           companyDirectory={companyDirectory}
           setCompanyDirectory={setCompanyDirectory}
-          statusFilter={statusFilter}
-          setStatusFilter={setStatusFilter}
-          dateFilterDays={dateFilterDays}
-          setDateFilterDays={setDateFilterDays}
           meta={sentMeta}
           isLoading={isLoadingSent}
         />
@@ -151,10 +150,6 @@ export default function StaffInboxPage() {
           referrals={baseReceivedReferrals}
           body={receiverBody}
           setBody={setReceiverBody}
-          statusFilter={statusFilter}
-          setStatusFilter={setStatusFilter}
-          dateFilterDays={dateFilterDays}
-          setDateFilterDays={setDateFilterDays}
           meta={receivedMeta}
           isLoading={isLoadingReceived}
         />
