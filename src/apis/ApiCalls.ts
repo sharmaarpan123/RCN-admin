@@ -11,6 +11,17 @@ export const authLoginApi = (body: unknown) =>
 
 export const getAuthProfileApi = () => AxiosInstance.get("/api/auth/profile");
 
+/** PUT /api/admin/profile — update own admin profile (send id + fields). */
+export const updateAdminProfileApi = (body: {
+  _id: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  dial_code?: string;
+  phone_number?: string;
+  notes?: string;
+}) => AxiosInstance.put("/api/admin/user/" + body._id, body);
+
 /** PUT /api/users/profile — update authenticated user profile. */
 export const putUserProfileApi = (body: {
   first_name?: string;
@@ -56,8 +67,8 @@ export const adminVerifyOtpApi = (body: unknown) =>
   AxiosInstance.post("/api/admin/verify-otp", body);
 
 /** GET /api/admin/organization — list organizations (admin). */
-export const getAdminOrganizationsApi = () =>
-  AxiosInstance.get("/api/admin/organization");
+export const getAdminOrganizationsApi = (body?: unknown) =>
+  AxiosInstance.get("/api/admin/organization", { params: body });
 
 /** GET /api/admin/organization/:id — get single organization (admin). */
 export const getAdminOrganizationApi = (organizationId: string) =>

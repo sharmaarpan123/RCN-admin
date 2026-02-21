@@ -2,6 +2,7 @@
 
 
 const defaultQueryKeys = {
+    profile: ["admin", "profile"],
     organizationsList: ["admin", "organizations", "list"],
     organizationDetail: ["admin", "organization", "detail"],
     organizationBranchesList: ["admin", "organization", "branches" , "list"],

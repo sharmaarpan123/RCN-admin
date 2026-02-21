@@ -56,7 +56,7 @@ export function OrganizationsPage() {
   const { data: orgsResponse, isLoading: orgsLoading, error: orgsError } = useQuery({
     queryKey: [...defaultQueryKeys.organizationsList, orgListBody.page, orgListBody.search],
     queryFn: async () => {
-      const res = await getAdminOrganizationsApi();
+      const res = await getAdminOrganizationsApi({ page: orgListBody.page, limit: orgListBody.limit, search: orgListBody.search });
       if (!checkResponse({ res })) return { data: [] } as AdminOrganizationsApiResponse;
       return res.data as AdminOrganizationsApiResponse;
     },

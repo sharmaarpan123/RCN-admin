@@ -51,7 +51,7 @@ export function BannerModal({
     setValue,
     formState: { errors },
   } = useForm<BannerFormValues>({
-    resolver: yupResolver(bannerFormSchema),
+    resolver: yupResolver(bannerFormSchema(Boolean(editingBanner))),
     defaultValues: defaultFormValues,
   });
 

@@ -366,15 +366,15 @@ function SystemAccessUserForm({
     context: { isEdit, allowPasswordEdit },
     values: apiUser
       ? {
-          ...defaultFormValues,
-          first_name: apiUser.first_name ?? "",
-          last_name: apiUser.last_name ?? "",
-          email: apiUser.email ?? "",
-          dial_code: apiUser.dial_code ?? "",
-          phone_number: apiUser.phone_number ?? "",
-          role_id: apiUser.role_id ?? roles[0]?.id ?? 0,
-          status: apiUser.status ?? 1,
-        }
+        ...defaultFormValues,
+        first_name: apiUser.first_name ?? "",
+        last_name: apiUser.last_name ?? "",
+        email: apiUser.email ?? "",
+        dial_code: apiUser.dial_code ?? "",
+        phone_number: apiUser.phone_number ?? "",
+        role_id: apiUser.role_id ?? roles[0]?.id ?? 0,
+        status: apiUser.status ?? 1,
+      }
       : { ...defaultFormValues, role_id: roles[0]?.id ?? 0 },
   });
 
@@ -575,16 +575,14 @@ function SystemAccessUserForm({
                 aria-label="Toggle password editing"
               >
                 <span
-                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-rcn-brand focus-visible:ring-offset-2 ${
-                    allowPasswordEdit
+                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-rcn-brand focus-visible:ring-offset-2 ${allowPasswordEdit
                       ? "border-rcn-brand bg-rcn-brand"
                       : "border-rcn-border bg-rcn-border"
-                  }`}
+                    }`}
                 >
                   <span
-                    className={`absolute   left-0.5 h-4 w-4 rounded-full  shadow-sm transition-transform duration-200 ease-in-out ${
-                      allowPasswordEdit ? "translate-x-4 bg-white" : "translate-x-0 bg-rcn-brand"
-                    }`}
+                    className={`absolute   left-0.5 h-4 w-4 rounded-full  shadow-sm transition-transform duration-200 ease-in-out ${allowPasswordEdit ? "translate-x-4 bg-white" : "translate-x-0 bg-rcn-brand"
+                      }`}
                   />
                 </span>
               </button>

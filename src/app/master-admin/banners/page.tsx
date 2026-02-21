@@ -3,7 +3,7 @@
 import type { AxiosResponse } from "axios";
 import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Button, ConfirmModal, TableLayout, type TableColumn } from "@/components";
+import { Button, ConfirmModal, PreviewFile, TableLayout, type TableColumn } from "@/components";
 import Image from "next/image";
 import {
   getAdminBannersApi,
@@ -44,6 +44,7 @@ const Banners: React.FC = () => {
   const [isBannerModalOpen, setIsBannerModalOpen] = useState(false);
   const [editingBannerId, setEditingBannerId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ApiBanner | null>(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
 
   const { data: bannersResponse, isLoading } = useQuery({
     queryKey: defaultQueryKeys.bannersList,
@@ -150,9 +151,32 @@ const Banners: React.FC = () => {
       component: (b) => (
         <>
           <div><strong>{b.name}</strong></div>
-          <div className="text-rcn-muted text-xs break-all">{b.link_url || "—"}</div>
+          <div className="text-rcn-muted text-xs break-all">{b.link_url || "N/A "}</div>
         </>
       ),
+    },
+    {
+      head: "Image",
+      component: (b) => {
+        const url = b.image_url?.trim();
+        if (!url) return <span className="text-rcn-muted text-xs">—</span>;
+        return (
+          <button
+            type="button"
+            onClick={() => setImagePreviewUrl(url)}
+            className="inline-block rounded border border-rcn-border overflow-hidden bg-rcn-bg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-rcn-accent/50"
+            title="Preview image"
+          >
+            <Image
+              src={url}
+              alt={b.alt_text || "Banner"}
+              width={48}
+              height={48}
+              className="object-cover w-12 h-12"
+            />
+          </button>
+        );
+      },
     },
     { head: "Placement", component: (b) => placementLabel(b.placement) },
     {
@@ -188,14 +212,7 @@ const Banners: React.FC = () => {
                 Inactive
               </span>
             )}
-            {!inRange && (
-              <span
-                className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border-[#f3d9a1] bg-[#fff8e6] text-[#7a4a00] ml-1"
-                title="Outside date range"
-              >
-                Out of range
-              </span>
-            )}
+
           </>
         );
       },
@@ -214,7 +231,7 @@ const Banners: React.FC = () => {
       thClassName: "text-right",
       tdClassName: "text-right",
       component: (b) => (
-        <div className="flex gap-1 justify-end flex-wrap">
+        <div className="flex gap-1 justify-end ">
           <Button
             variant="secondary"
             size="sm"
@@ -373,6 +390,13 @@ const Banners: React.FC = () => {
         message="Delete this banner? This cannot be undone."
         confirmLabel="Delete"
         confirmDisabled={deleteMutation.isPending}
+      />
+
+      <PreviewFile
+        url={imagePreviewUrl ?? ""}
+        isOpen={!!imagePreviewUrl}
+        onClose={() => setImagePreviewUrl(null)}
+        fileType="image"
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5 mt-3.5">

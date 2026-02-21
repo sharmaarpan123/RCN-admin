@@ -208,7 +208,7 @@ function buildUpdatePayload(data: OrgFormValues): unknown {
     user_dial_code: contactPhone.dial_code,
     user_phone_number: (data.contact?.tel ?? "").replace(/\D/g, "").slice(0, 15) || contactPhone.number,
     user_fax_number: s(data.contact?.fax),
-    enabled: data.enabled === true || (data.enabled as unknown) === "true",
+    status: data.enabled === true || (data.enabled as unknown) === "true" ? 1 : 2,
   };
   if (data.address?.latitude != null && data.address?.longitude != null) {
     payload.latitude = data.address.latitude;
@@ -356,6 +356,7 @@ export function OrgModalContent({
     control,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<OrgFormValues>({
     defaultValues: formValues,
@@ -534,38 +535,28 @@ export function OrgModalContent({
             <div className="col-span-1">
               <div className="bg-white border border-rcn-border rounded-2xl p-4 mb-4">
                 <h3 className="text-sm font-semibold m-0 mb-3">Organization Address</h3>
-                {!isEdit && (
-                  <div className="mb-3">
-                    <label className="text-xs text-rcn-muted block mb-1.5">Search address</label>
-                    <Autocomplete
-                      onPlaceSelect={handleAddressSelect}
-                      placeholder="Start typing an address..."
-                      countryRestriction="us"
-                      className="mb-1"
-                    />
-                    <p className="text-xs text-rcn-muted mt-0.5 m-0">
-                      Select a suggestion to fill the fields below.
-                    </p>
-                    {(errors.address?.latitude ?? errors.address?.longitude) && (
-                      <p className="text-xs text-red-500 mt-1 m-0">
-                        {errors.address?.latitude?.message ?? errors.address?.longitude?.message}
-                      </p>
-                    )}
-                  </div>
-                )}
+
                 <div className="mb-3">
                   <label className="text-xs text-rcn-muted block mb-1.5">Street</label>
-                  <Controller
-                    name="address.street"
-                    control={control}
-                    render={({ field }) => (
-                      <input {...field} value={field.value ?? ""} className={inputCn(!!errors.address?.street)} />
-                    )}
+                  <Autocomplete
+                    onPlaceSelect={handleAddressSelect}
+                    placeholder="Start typing an address..."
+                    countryRestriction="us"
+                    className="mb-1"
+                    value={watch("address.street")}
+                    onChange={(value) => setValue("address.street", value)}
                   />
-                  {errors.address?.street && (
-                    <p className="text-xs text-red-500 mt-1 m-0">{errors.address.street.message}</p>
+                  <p className="text-xs text-rcn-muted mt-0.5 m-0">
+                    Select a suggestion to fill the fields below.
+                  </p>
+                  {(errors.address?.latitude ?? errors.address?.longitude) && (
+                    <p className="text-xs text-red-500 mt-1 m-0">
+                      {errors.address?.latitude?.message ?? errors.address?.longitude?.message}
+                    </p>
                   )}
                 </div>
+
+
                 <div className="mb-3">
                   <label className="text-xs text-rcn-muted block mb-1.5">Apt/Suite</label>
                   <Controller
@@ -665,7 +656,7 @@ export function OrgModalContent({
                 </div>
                 <div className="grid grid-cols-2 gap-2 mb-0">
                   <div>
-                    <label className="text-xs text-rcn-muted block mb-1.5">Tel</label>
+                    <label className="text-xs text-rcn-muted block mb-1.5">Telephone</label>
                     <Controller
                       name="contact.tel"
                       control={control}

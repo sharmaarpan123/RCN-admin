@@ -122,7 +122,7 @@ const Login: React.FC = () => {
     mutationFn: catchAsync(
       async ({ pending, otp }: { pending: PendingOtpData; otp: string }) => {
         const { loginType, user_id, redirectTo } = pending;
-        console.log(redirectTo, "redirectTo");
+    
         const body =
           loginType === "admin"
             ? { user_id, otp }

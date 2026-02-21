@@ -24,10 +24,14 @@ import defaultQueryKeys from "@/utils/adminQueryKeys";
 import { catchAsync, checkResponse } from "@/utils/commonFunc";
 
 type AdminSpeciality = {
+  user_id?: {
+    first_name: string;
+    last_name: string;
+  } | null;
   _id?: string;
   id?: string;
   name?: string;
-  user_id?: string;
+
   status?: number;
   created_at?: string;
   updated_at?: string;
@@ -42,7 +46,7 @@ const INPUT_CLASS =
 const safeLower = (s: unknown) => (s ?? "").toString().toLowerCase();
 
 const specialityFormSchema = yup.object({
-  name: yup.string().trim().required("Service name is required."),
+  name: yup.string().trim().required("Service name is required.").max(40, "Service name must be less than 40 characters."),
 });
 
 type SpecialityFormValues = yup.InferType<typeof specialityFormSchema>;
@@ -124,15 +128,11 @@ export default function ServicesPage() {
       component: (s) => <span className="font-medium text-sm">{s.name ?? "—"}</span>,
     },
     {
-      head: "Created",
-      component: (s) =>
-        s.created_at ? (
-          <span className="text-xs text-rcn-muted">
-            {new Date(s.created_at).toLocaleString()}
-          </span>
-        ) : (
-          <span className="text-xs text-rcn-muted">—</span>
-        ),
+      head: "Created By",
+      component: (s) => (<span className="text-xs text-rcn-muted">
+        {s?.user_id?.first_name ? (s?.user_id?.first_name ?? "") + " " + (s?.user_id?.last_name ?? "") : "By Admin"}
+      </span>
+      )
     },
     {
       head: "Actions",
@@ -271,9 +271,9 @@ function ServiceForm({
     resolver: yupResolver(specialityFormSchema),
     values: detailResponse
       ? {
-          ...defaultFormValues,
-          name: detailResponse.name ?? "",
-        }
+        ...defaultFormValues,
+        name: detailResponse.name ?? "",
+      }
       : defaultFormValues,
   });
 
@@ -357,10 +357,10 @@ function ServiceForm({
             {isSaving
               ? "Saving…"
               : isEdit && isLoading
-              ? "Loading…"
-              : isEdit
-              ? "Update"
-              : "Create"}
+                ? "Loading…"
+                : isEdit
+                  ? "Update"
+                  : "Create"}
           </Button>
         </div>
       </form>

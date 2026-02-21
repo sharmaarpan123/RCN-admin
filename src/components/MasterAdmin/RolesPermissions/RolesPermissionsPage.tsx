@@ -118,13 +118,8 @@ export function RolesPermissionsPage() {
         }
       />
 
-      <div className="flex justify-between items-start flex-wrap gap-3">
-        <div>
-          <h3 className="m-0 text-sm font-semibold">Roles & Permissions</h3>
-          <p className="text-xs text-rcn-muted mt-1 mb-0">
-            Create and manage roles and assign permissions to them.
-          </p>
-        </div>
+      <div className="flex justify-end items-start flex-wrap gap-3">
+        
         <Button variant="primary" size="md" onClick={openNew}>
           + New Role
         </Button>
