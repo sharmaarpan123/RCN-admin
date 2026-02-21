@@ -46,7 +46,7 @@ export const catchAsync =
                             const first = errors[0] as { field?: string; message?: string };
                             const label = formatValidationField(first?.field ?? "");
                             const msg = (first?.message ?? "").toLowerCase();
-                            errorsMessage = `Validation failed! : ${label} ${msg}`;
+                            errorsMessage = `${label} ${msg}`;
                         }
                     }
                     toast.error(errorsMessage || "something went wrong");
@@ -123,7 +123,7 @@ export const checkResponse = ({
                     const first = errors[0] as { field?: string; message?: string };
                     const label = formatValidationField(first?.field ?? "");
                     const msg = (first?.message ?? "").toLowerCase();
-                    errorsMessage = `Validation failed! : ${label} ${msg}`;
+                    errorsMessage = `${label} ${msg}`;
                 }
             }
 

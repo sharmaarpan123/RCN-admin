@@ -88,11 +88,12 @@ const defaultValues: ReferralFormValues = {
 export default function NewReferralPage() {
   const queryClient = useQueryClient();
   const [stateFilter, setStateFilter] = useState("ALL");
-  
+
   const [activeSection, setActiveSection] = useState("sender-form");
 
   const methods = useForm<ReferralFormValues>({
     defaultValues,
+    mode: "onChange",
     resolver: yupResolver(referralFormSchema),
   });
 
@@ -185,15 +186,15 @@ export default function NewReferralPage() {
     catchAsync(async () => {
       const res = await postOrganizationReferralApi(payload);
       if (checkResponse({ res, showSuccess: true })) {
-        methods.reset(defaultValues);
+        methods.reset(defaultValues, { keepDefaultValues: false, });
         queryClient.invalidateQueries({ queryKey: defaultQueryKeys.referralSentList });
       }
     })();
   };
 
-  
 
-  
+
+
 
   return (
     <div className="max-w-[1280px] mx-auto">
@@ -203,7 +204,7 @@ export default function NewReferralPage() {
       />
 
       <FormProvider {...methods}>
-        <form onSubmit={methods.handleSubmit(onSubmit)} noValidate>
+        <form onSubmit={methods.handleSubmit(onSubmit)}>
           <main>
             <SenderFormHeader />
             <SenderInfoSection />
@@ -211,7 +212,7 @@ export default function NewReferralPage() {
             <SelectReceiverSection
               stateFilter={stateFilter}
               setStateFilter={setStateFilter}
-              
+
             />
 
             <ServicesRequestedSection />
@@ -231,7 +232,7 @@ export default function NewReferralPage() {
         </form>
       </FormProvider>
 
-     
+
     </div>
   );
 }

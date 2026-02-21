@@ -1,21 +1,57 @@
 "use client";
 
-import React from "react";
+import React, { useState, useRef } from "react";
 import { useFormContext, useFieldArray, useFormState } from "react-hook-form";
 import { SectionHeader } from "./SectionHeader";
 import type { ReferralFormValues } from "./referralFormSchema";
-import { Button } from "@/components";
+import { Button, PreviewFile } from "@/components";
+import { uploadFileApi } from "@/apis/ApiCalls";
+import { catchAsync, checkResponse } from "@/utils/commonFunc";
+import { toastError } from "@/utils/toast";
 
 const inputClass =
   "w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12";
 
+const zoneClass =
+  "w-full min-h-[44px] px-3 py-2.5 relative rounded-xl border border-rcn-border border-dashed bg-rcn-brand/5 outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12 flex items-center justify-center gap-2 flex-wrap";
+
+function getUploadResponseUrl(res: unknown): string {
+  const data = res as { data?: { url?: string }; url?: string };
+  return data?.data?.url ?? data?.url ?? "";
+}
+
 export function InsuranceInfoSection() {
-  const { register, control } = useFormContext<ReferralFormValues>();
+  const { register, control, setValue, watch } = useFormContext<ReferralFormValues>();
   const { errors } = useFormState<ReferralFormValues>();
   const { fields, append, remove } = useFieldArray({
     control,
     name: "patient_insurance_information",
   });
+
+  const [uploadingFields, setUploadingFields] = useState<Record<string, boolean>>({});
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const docInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
+
+  const setUploading = (key: string, value: boolean) => {
+    setUploadingFields((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleDocUpload = (index: number, file: File) => {
+    const key = `insurance-doc-${index}`;
+    setUploading(key, true);
+    catchAsync(async () => {
+      const res = await uploadFileApi(file);
+      const url = getUploadResponseUrl(res?.data);
+      if (url) {
+        setValue(`patient_insurance_information.${index}.document`, url, {
+          shouldValidate: true,
+        });
+        checkResponse({ res });
+      } else {
+        toastError("Upload succeeded but no URL was returned.");
+      }
+    })().finally(() => setUploading(key, false));
+  };
 
   const insuranceRootError =
     errors.patient_insurance_information &&
@@ -23,8 +59,6 @@ export function InsuranceInfoSection() {
     "message" in errors.patient_insurance_information?.root
       ? (errors.patient_insurance_information?.root as { message?: string }).message
       : undefined;
-
-      console.log(errors.patient_insurance_information?.root, "insuranceRootError");
 
   return (
     <section
@@ -122,18 +156,66 @@ export function InsuranceInfoSection() {
               )}
             </div>
           </div>
-          <p className="text-xs text-rcn-muted mt-2.5">Document URL (optional).</p>
+          <p className="text-xs text-rcn-muted mt-2.5">Document (optional). Upload or view.</p>
           <label className="block text-xs text-rcn-muted font-[850] mb-1.5 mt-2.5">
-            Document URL
+            Document
           </label>
-          <input
-            type="text"
-            {...register(`patient_insurance_information.${index}.document`)}
-            placeholder="https://..."
-            className={inputClass}
-          />
+          <div className="relative">
+            <input
+              ref={(el) => {
+                docInputRefs.current[index] = el;
+              }}
+              type="file"
+              id={`insurance-doc-${index}`}
+              className="absolute inset-0 w-full min-h-[44px] opacity-0 cursor-pointer z-10 disabled:cursor-not-allowed rounded-xl"
+              disabled={uploadingFields[`insurance-doc-${index}`] === true}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleDocUpload(index, file);
+                e.target.value = "";
+              }}
+              aria-label={`Upload insurance document ${index + 1}`}
+            />
+            <label
+              htmlFor={`insurance-doc-${index}`}
+              className={zoneClass}
+              aria-label={`Upload insurance document ${index + 1}`}
+            >
+              {uploadingFields[`insurance-doc-${index}`] ? (
+                <span className="text-rcn-muted flex items-center gap-2">
+                  <span className="inline-block w-4 h-4 border-2 border-rcn-brand border-t-transparent rounded-full animate-spin" />
+                  Uploading…
+                </span>
+              ) : (watch(`patient_insurance_information.${index}.document`) ?? "").trim() ? (
+                <span className="text-rcn-brand truncate max-w-full">Uploaded ✓</span>
+              ) : (
+                <span className="text-rcn-muted">Choose file to upload</span>
+              )}
+            </label>
+            {(watch(`patient_insurance_information.${index}.document`) ?? "").trim() &&
+              !uploadingFields[`insurance-doc-${index}`] && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPreviewUrl(
+                    (watch(`patient_insurance_information.${index}.document`) ?? "").trim()
+                  );
+                }}
+                className="text-xs text-rcn-brand mt-1 block truncate text-left hover:underline focus:outline-none focus:ring-0"
+              >
+                View file
+              </button>
+            )}
+          </div>
         </div>
       ))}
+
+      <PreviewFile
+        url={previewUrl ?? ""}
+        isOpen={!!previewUrl}
+        onClose={() => setPreviewUrl(null)}
+      />
 
       <Button
         type="button"
