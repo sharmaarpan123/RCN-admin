@@ -380,7 +380,7 @@ function ReceiverDetailContent({
             >
               Rejected
             </span>
-          ) : null};
+          ) : null}
         </div>
       </div>
 

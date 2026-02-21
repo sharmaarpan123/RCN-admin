@@ -140,10 +140,7 @@ export default function ChatPage() {
   );
 
   // Effective selected chat: use first in list when none selected
-  const displayChat = useMemo(
-    () => selectedChat ?? (chatList.length > 0 ? chatList[0] : null),
-    [selectedChat, chatList],
-  );
+  const displayChat = selectedChat
 
   // Messages for selected chat
   const { data: messagesResponse, isLoading: isLoadingMessages } = useQuery({

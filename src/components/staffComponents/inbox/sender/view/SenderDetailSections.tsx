@@ -2,7 +2,8 @@
 
 import { fmtDate, pillClass, pillLabel } from "@/app/staff-portal/inbox/helpers";
 import type { ReceiverInstance, ReferralByIdApi } from "@/app/staff-portal/inbox/types";
-import { PreviewFile } from "@/components";
+import { Button, PreviewFile } from "@/components";
+import { toastError } from "@/utils/toast";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { DocRow } from "./senderViewHelpers";
@@ -32,11 +33,29 @@ export function SenderDetailSections({
   const addPatient = (data.additional_patient ?? {}) as Record<string, string>;
   const router = useRouter();
   const [previewDocUrl, setPreviewDocUrl] = useState<string | null>(null);
+  const [downloadingDoc, setDownloadingDoc] = useState<Record<string, boolean>>({});
 
   const startChatWithReceiver = (referralId: string) => {
     router.push(`/staff-portal/chat?RedirectedReferralId=${referralId}`);
   };
 
+  const downloadDoc = async (url: string, key: string) => {
+    setDownloadingDoc(p => ({ ...p, [key]: true }));
+    const res = await fetch("/api/download?url=" + url);
+    if (res.ok) {
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = url.split("/").pop() ?? "downloaded-file";
+      a.click();
+      setDownloadingDoc(p => ({ ...p, [key]: false }));
+    } else {
+      setDownloadingDoc(p => ({ ...p, [key]: false }));
+
+      toastError("Failed to download document");
+    }
+  };
 
 
   return (
@@ -133,13 +152,23 @@ export function SenderDetailSections({
                       <td className="p-2.5"><strong>{d.label}</strong>{d.url && <div className="text-rcn-muted text-xs">File: {d.url}</div>}</td>
                       <td className="p-2.5">
                         {d.url ? (
-                          <button
-                            type="button"
-                            onClick={() => setPreviewDocUrl(d.url)}
-                            className="border border-rcn-brand/25 bg-rcn-brand/10 text-rcn-accent-dark px-2 py-1.5 rounded-xl text-xs font-extrabold shadow"
-                          >
-                            View document
-                          </button>
+                          <div className="flex gap-2">
+
+                            <Button
+                              type="button"
+                              onClick={() => setPreviewDocUrl(d.url)}
+                              className="border border-rcn-brand/25 bg-rcn-brand/10 text-rcn-accent-dark px-2 py-1.5 rounded-xl text-xs font-extrabold shadow"
+                            >
+                              View document
+                            </Button>
+                            <Button
+                              type="button"
+                              onClick={() => downloadDoc(d.url, d.label)}
+                              className="border border-rcn-brand/25 bg-rcn-brand/10 text-rcn-accent-dark px-2 py-1.5 rounded-xl text-xs font-extrabold shadow"
+                            >
+                              {downloadingDoc[d.label] ? <span className="animate-spin">🔄</span> : "Download"}
+                            </Button>
+                          </div>
                         ) : (
                           <span className="text-rcn-muted text-xs">—</span>
                         )}

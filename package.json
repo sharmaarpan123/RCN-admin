@@ -21,6 +21,7 @@
     "clsx": "^2.1.1",
     "firebase": "^12.9.0",
     "framer-motion": "^12.34.1",
+    "moment": "^2.30.1",
     "next": "16.1.4",
     "next-nprogress-bar": "^2.4.7",
     "rc-pagination": "^5.1.0",

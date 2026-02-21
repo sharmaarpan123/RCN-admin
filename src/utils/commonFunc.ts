@@ -138,7 +138,15 @@ export const checkResponse = ({
 };
 
 
-
+export const downloadUrl = (url: string, filename = "image") => {
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.target = "_blank";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
 
 export const detectUserTimezone = () => {
     try {

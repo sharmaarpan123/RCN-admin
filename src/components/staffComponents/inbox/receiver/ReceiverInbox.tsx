@@ -115,7 +115,6 @@ export function ReceiverInbox({
     <section className="mt-3.5 border border-slate-200 bg-white/65 rounded-2xl shadow-[0_10px_30px_rgba(2,6,23,.07)] overflow-hidden" aria-label="Receiver inbox list">
       <div className="p-3.5 pt-3 pb-2.5 border-b border-slate-200 bg-white/90">
         <h2 className="m-0 text-sm font-semibold tracking-wide">Receiver Inbox</h2>
-        <p className="m-0 mt-1 text-rcn-muted text-xs font-[850]">Referrals sent to your organization. Search, filter, and click to view details.</p>
       </div>
       <div className="flex flex-col gap-2.5 p-3 border-b border-slate-200 bg-white/90">
         <DebouncedInput
@@ -160,7 +159,6 @@ export function ReceiverInbox({
           tableClassName="[&_thead_tr]:bg-rcn-brand/10 [&_th]:border-slate-200 [&_th]:border-b [&_td]:border-slate-200 [&_td]:border-b [&_tr]:border-slate-200 [&_tr:hover]:bg-slate-50/50"
           getRowKey={(ref) => ref._id}
           emptyMessage="No referrals match your filters."
-          onRowClick={(ref) => router.push(`/staff-portal/inbox/receiver/${ref._id}`)}
         />
         <CustomPagination
           total={meta.total}
