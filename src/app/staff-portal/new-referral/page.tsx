@@ -13,7 +13,7 @@ import {
   SenderFormHeader,
   SenderInfoSection,
   ServicesRequestedSection,
-  type Receiver,
+  type GuestOrganization,
   type ReceiverRow,
 } from "@/components/staffComponents/newReferral";
 import {
@@ -82,12 +82,13 @@ const defaultValues: ReferralFormValues = {
   primary_care_fax: "",
   primary_care_email: "",
   primary_care_npi: "",
+  guest_organizations: [],
 };
 
 export default function NewReferralPage() {
   const queryClient = useQueryClient();
   const [stateFilter, setStateFilter] = useState("ALL");
-  const [receiverModalOpen, setReceiverModalOpen] = useState(false);
+  
   const [activeSection, setActiveSection] = useState("sender-form");
 
   const methods = useForm<ReferralFormValues>({
@@ -169,6 +170,17 @@ export default function NewReferralPage() {
       primary_care_fax: values.primary_care_fax || undefined,
       primary_care_email: values.primary_care_email || undefined,
       primary_care_npi: values.primary_care_npi || undefined,
+      guest_organizations:
+        values.guest_organizations?.length ?
+          values.guest_organizations.map((g) => ({
+            company_name: g.company_name,
+            email: g.email,
+            phone_number: `${g.dial_code ?? ""}${(g.phone_number ?? "").replace(/\D/g, "")}`.trim() || undefined,
+            fax_number: g.fax_number || undefined,
+            address: g.address,
+            state: g.state,
+          }))
+          : undefined,
     };
     catchAsync(async () => {
       const res = await postOrganizationReferralApi(payload);
@@ -179,21 +191,9 @@ export default function NewReferralPage() {
     })();
   };
 
-  const handleAddReceiver = (receiver: Receiver) => {
-    const newRow: ReceiverRow = {
-      organizationId: `custom-${receiver.name}-${Date.now()}`,
-      organizationName: receiver.name,
-      branchId: null,
-      branchName: null,
-      departmentId: null,
-      departmentName: null,
-    };
-    methods.setValue("receiver_rows", [...methods.getValues("receiver_rows"), newRow], {
-      shouldValidate: true,
-    });
-  };
+  
 
-  console.log(methods.formState.errors, "errors");
+  
 
   return (
     <div className="max-w-[1280px] mx-auto">
@@ -211,7 +211,7 @@ export default function NewReferralPage() {
             <SelectReceiverSection
               stateFilter={stateFilter}
               setStateFilter={setStateFilter}
-              onOpenAddReceiver={() => setReceiverModalOpen(true)}
+              
             />
 
             <ServicesRequestedSection />
@@ -231,12 +231,7 @@ export default function NewReferralPage() {
         </form>
       </FormProvider>
 
-      <AddReceiverModal
-        isOpen={receiverModalOpen}
-        onClose={() => setReceiverModalOpen(false)}
-        onAdd={handleAddReceiver}
-        defaultState={stateFilter}
-      />
+     
     </div>
   );
 }

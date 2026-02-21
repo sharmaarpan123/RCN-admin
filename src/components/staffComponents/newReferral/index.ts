@@ -11,7 +11,13 @@ export { SelectReceiverSection } from "./SelectReceiverSection";
 export { SenderFormHeader } from "./SenderFormHeader";
 export { SenderInfoSection } from "./SenderInfoSection";
 export { ServicesRequestedSection } from "./ServicesRequestedSection";
-export type { InsuranceBlock, OrgBranchDeptOption, Receiver, ReceiverRow } from "./types";
+export type {
+  InsuranceBlock,
+  GuestOrganization,
+  OrgBranchDeptOption,
+  Receiver,
+  ReceiverRow,
+} from "./types";
 export {
   AVAILABLE_SERVICES,
   DEMO_RECEIVERS,

@@ -224,7 +224,7 @@ export function AttachmentsSection() {
                       }}
                       className="text-xs text-rcn-brand mt-1 block truncate text-left hover:underline focus:outline-none focus:ring-0"
                     >
-                     View Photo {i + 1}
+                      View Photo {i + 1}
                     </button>
                     <button
                       type="button"
@@ -291,7 +291,7 @@ export function AttachmentsSection() {
                       }}
                       className="text-xs text-rcn-brand mt-1 block truncate text-left hover:underline focus:outline-none focus:ring-0"
                     >
-                      View Document 
+                      View Document
                     </button>
                     <button
                       type="button"

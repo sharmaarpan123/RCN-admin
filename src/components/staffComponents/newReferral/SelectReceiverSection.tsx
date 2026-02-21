@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { useFormContext, useFormState, useWatch } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import CustomAsyncSelect from "@/components/CustomAsyncSelect";
 import CustomReactSelect from "@/components/CustomReactSelect";
 import { SectionHeader } from "./SectionHeader";
-import type { OrgBranchDeptOption, ReceiverRow } from "./types";
+import type { GuestOrganization, OrgBranchDeptOption, ReceiverRow } from "./types";
 import type { ReferralFormValues } from "./referralFormSchema";
 import {
   getStaffOrganizationsApi,
@@ -17,6 +17,7 @@ import {
 import { checkResponse } from "@/utils/commonFunc";
 import { Button } from "@/components";
 import defaultAdminQueryKeys from "@/utils/adminQueryKeys";
+import { AddReceiverModal } from "./AddReceiverModal";
 
 function toOptions(list: unknown[]): OrgBranchDeptOption[] {
   if (!Array.isArray(list)) return [];
@@ -33,15 +34,16 @@ function toOptions(list: unknown[]): OrgBranchDeptOption[] {
 interface SelectReceiverSectionProps {
   stateFilter: string;
   setStateFilter: (v: string) => void;
-  onOpenAddReceiver: () => void;
+
 }
 
 export function SelectReceiverSection({
   stateFilter,
   setStateFilter,
-  onOpenAddReceiver,
+
 }: SelectReceiverSectionProps) {
-  const { control, setValue } = useFormContext<ReferralFormValues>();
+  const [receiverModalOpen, setReceiverModalOpen] = useState(false);
+  const { control, setValue, getValues } = useFormContext<ReferralFormValues>();
   const watchedReceiverRows = useWatch({ name: "receiver_rows", control });
   const { errors } = useFormState<ReferralFormValues>();
   const receiverRows = useMemo(
@@ -51,8 +53,8 @@ export function SelectReceiverSection({
 
   const receiverRowsRootError =
     errors.receiver_rows &&
-    typeof errors.receiver_rows === "object" &&
-    "message" in errors.receiver_rows
+      typeof errors.receiver_rows === "object" &&
+      "message" in errors.receiver_rows
       ? (errors.receiver_rows as { message?: string }).message
       : undefined;
 
@@ -126,7 +128,7 @@ export function SelectReceiverSection({
       setValue(
         "receiver_rows",
         newReceiverRows,
-        { shouldValidate: true,  }
+        { shouldValidate: true, }
       );
     },
     [receiverRows, setValue]
@@ -179,93 +181,117 @@ export function SelectReceiverSection({
     [receiverRows, setValue]
   );
 
+  const handleAddReceiver = (guest: GuestOrganization) => {
+    const currentGuests = getValues("guest_organizations") ?? [];
+    setValue("guest_organizations", [...currentGuests, guest], { shouldValidate: true });
+  };
+
+
+
+
   return (
-    <section
-      id="select-receiver"
-      className="bg-white border border-rcn-border rounded-2xl shadow-rcn p-4.5 mb-3.5  relative"
-    >
-      <SectionHeader
-        title="Select the Referral Receiver"
-        subtitle="Filter by state, then search and select organizations"
-        badge="Bulk referrals supported"
+    <>
+      <AddReceiverModal
+        key={receiverModalOpen ? `add-receiver-${stateFilter}` : "add-receiver-closed"}
+        isOpen={receiverModalOpen}
+        onClose={() => setReceiverModalOpen(false)}
+        onAdd={handleAddReceiver}
+
       />
-
-      <div className="border border-rcn-border/60 bg-[#eef8f1] border-[#cfe6d6] rounded-[14px] p-3 mb-3">
-        <p className="m-0 text-sm text-rcn-text">
-          Bulk referrals are supported. When a referral is sent to multiple receivers, each
-          receiver will only be able to view their own referral and will not be able to see any
-          other receivers or recipient details.
-        </p>
-      </div>
-
-      {receiverRowsRootError && (
-        <div
-          className="border border-red-300 bg-red-50 rounded-[14px] p-3 mb-3 text-sm text-red-800"
-          role="alert"
-        >
-          {receiverRowsRootError}
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-        <div>
-          <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
-            State (business location)
-          </label>
-          <CustomReactSelect
-            value={stateFilter}
-            onChange={setStateFilter}
-            options={stateFilterOptions}
-            placeholder="Select state..."
-            aria-label="State (business location)"
-            isClearable={false}
-            maxMenuHeight={280}
-          />
-          <p className="text-xs text-rcn-muted mt-1.5">
-            Select a state to narrow down organizations.
-          </p>
-        </div>
-        <div>
-          <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
-            Organization (search and select)
-          </label>
-          <CustomAsyncSelect
-            value={selectedOrgOptions}
-            onChange={handleOrganizationChange}
-            loadOptions={loadOrganizationOptions}
-            placeholder="Type to search organizations..."
-            aria-label="Organization"
-            defaultOptions={true}
-            maxMenuHeight={280}
-          />
-          <p className="text-xs text-rcn-muted mt-1.5">
-            Select one or more organizations. Then choose branch and department per row below.
-          </p>
-        </div>
-      </div>
-
-      <ReceiverRowsTable
-        receiverRows={receiverRows}
-        updateRowBranch={updateRowBranch}
-        updateRowDepartment={updateRowDepartment}
-        removeRow={removeRow}
-        receiverRowsErrors={errors.receiver_rows}
-        receiverRowsRootError={receiverRowsRootError}
-      />
-
-      <Button
-        type="button"
-        variant="primary"
-        size="md"
-        onClick={onOpenAddReceiver}
-        className="w-full mt-2.5 flex items-center justify-center gap-2.5 rounded-[14px] bg-gradient-to-b from-rcn-brand to-rcn-brand-light border border-black/6 shadow-[0_10px_18px_rgba(47,125,79,.22)] font-black text-xs"
+      <section
+        id="select-receiver"
+        className="bg-white border border-rcn-border rounded-2xl shadow-rcn p-4.5 mb-3.5  relative"
       >
-        <span className="w-6.5 h-6.5 rounded-xl bg-white/18 flex items-center justify-center text-base">
-          ＋
-        </span>
-        <span>Add Referral Receiver (if not listed)</span>
-      </Button>
-    </section>
+        <SectionHeader
+          title="Select the Referral Receiver"
+          subtitle="Filter by state, then search and select organizations"
+          badge="Bulk referrals supported"
+        />
+
+        <div className="border border-rcn-border/60 bg-[#eef8f1] border-[#cfe6d6] rounded-[14px] p-3 mb-3">
+          <p className="m-0 text-sm text-rcn-text">
+            Bulk referrals are supported. When a referral is sent to multiple receivers, each
+            receiver will only be able to view their own referral and will not be able to see any
+            other receivers or recipient details.
+          </p>
+        </div>
+
+        {receiverRowsRootError && (
+          <div
+            className="border border-red-300 bg-red-50 rounded-[14px] p-3 mb-3 text-sm text-red-800"
+            role="alert"
+          >
+            {receiverRowsRootError}
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+          <div>
+            <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
+              State (business location)
+            </label>
+            <CustomReactSelect
+              value={stateFilter}
+              onChange={setStateFilter}
+              options={stateFilterOptions}
+              placeholder="Select state..."
+              aria-label="State (business location)"
+              isClearable={false}
+              maxMenuHeight={280}
+            />
+            <p className="text-xs text-rcn-muted mt-1.5">
+              Select a state to narrow down organizations.
+            </p>
+          </div>
+          <div>
+            <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
+              Organization (search and select)
+            </label>
+            <CustomAsyncSelect
+              value={selectedOrgOptions}
+              onChange={handleOrganizationChange}
+              loadOptions={loadOrganizationOptions}
+              placeholder="Type to search organizations..."
+              aria-label="Organization"
+              defaultOptions={true}
+              maxMenuHeight={280}
+            />
+            <p className="text-xs text-rcn-muted mt-1.5">
+              Select one or more organizations. Then choose branch and department per row below.
+            </p>
+          </div>
+        </div>
+
+        <ReceiverRowsTable
+          receiverRows={receiverRows}
+          updateRowBranch={updateRowBranch}
+          updateRowDepartment={updateRowDepartment}
+          removeRow={removeRow}
+          receiverRowsErrors={errors.receiver_rows}
+          receiverRowsRootError={receiverRowsRootError}
+        />
+
+        <GuestOrganizationsTable
+          guestOrganizations={getValues("guest_organizations") ?? []}
+          removeGuestOrganization={(organizationId: string) => {
+            setValue("guest_organizations", getValues("guest_organizations")?.filter((g: GuestOrganization) => g.company_name !== organizationId), { shouldValidate: true });
+          }}
+        />
+
+        <Button
+          type="button"
+          variant="primary"
+          size="md"
+          onClick={() => setReceiverModalOpen(true)}
+          className="w-full mt-2.5 flex items-center justify-center gap-2.5 rounded-[14px] bg-gradient-to-b from-rcn-brand to-rcn-brand-light border border-black/6 shadow-[0_10px_18px_rgba(47,125,79,.22)] font-black text-xs"
+        >
+          <span className="w-6.5 h-6.5 rounded-xl bg-white/18 flex items-center justify-center text-base">
+            ＋
+          </span>
+          <span>Add Referral Receiver (if not listed)</span>
+        </Button>
+      </section>
+    </>
   );
 }
 
@@ -412,11 +438,10 @@ function ReceiverRowsTable({
   if (receiverRows.length === 0) {
     return (
       <div
-        className={`py-4 text-center text-sm border rounded-xl ${
-          receiverRowsRootError
-            ? "border-red-300 bg-red-50/80 text-red-800"
-            : "border-rcn-border bg-slate-50/50 text-rcn-muted"
-        }`}
+        className={`py-4 text-center text-sm border rounded-xl ${receiverRowsRootError
+          ? "border-red-300 bg-red-50/80 text-red-800"
+          : "border-rcn-border bg-slate-50/50 text-rcn-muted"
+          }`}
       >
         {receiverRowsRootError ? (
           <p className="m-0 font-medium" role="alert">

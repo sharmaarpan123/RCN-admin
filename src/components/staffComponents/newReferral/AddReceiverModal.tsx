@@ -1,10 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Modal, Button } from "@/components";
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Modal, Button, PhoneInputField } from "@/components";
 import { toastError } from "@/utils/toast";
-import type { Receiver } from "./types";
-import { US_STATES } from "./types";
+import type { GuestOrganization, OrgBranchDeptOption } from "./types";
+import { getStatesApi } from "@/apis/ApiCalls";
+import { checkResponse } from "@/utils/commonFunc";
+import defaultAdminQueryKeys from "@/utils/adminQueryKeys";
 
 const inputClass =
   "w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12";
@@ -12,51 +15,100 @@ const inputClass =
 interface AddReceiverModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (receiver: Receiver) => void;
-  defaultState: string;
+  onAdd: (guest: GuestOrganization) => void;
+  
 }
 
 export function AddReceiverModal({
   isOpen,
   onClose,
   onAdd,
-  defaultState,
+ 
 }: AddReceiverModalProps) {
-  const [company, setCompany] = useState("");
+  const [company_name, setCompanyName] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [fax, setFax] = useState("");
+  const [dial_code, setDialCode] = useState("+1");
+  const [phone_number, setPhoneNumber] = useState("");
+  const [fax_number, setFaxNumber] = useState("");
   const [address, setAddress] = useState("");
-  const [state, setState] = useState(defaultState);
-  const [services, setServices] = useState("");
+  const [state, setState] = useState(() =>
+    ""
+  );
 
-  useEffect(() => {
-    if (isOpen) {
-      const newState = defaultState === "ALL" ? "IL" : defaultState;
-      queueMicrotask(() => setState(newState));
-    }
-  }, [isOpen, defaultState]);
+  const { data: stateOptionsFromApi = [] } = useQuery({
+    queryKey: [...defaultAdminQueryKeys.statesList],
+    queryFn: async () => {
+      const res = await getStatesApi();
+      if (!checkResponse({ res })) return [];
+      const data = res.data?.data ?? res.data;
+      const list = Array.isArray(data) ? data : [];
+      return list
+        .map((item: { name?: string; abbreviation?: string }) => {
+          const value = item.abbreviation;
+          const label = item.name;
+          return value != null && label != null
+            ? { value: String(value), label: String(label) }
+            : null;
+        })
+        .filter((x): x is OrgBranchDeptOption => x != null);
+    },
+  });
+
+  const stateSelectOptions = stateOptionsFromApi;
 
   const handleClose = () => {
-    setCompany("");
+    setCompanyName("");
     setEmail("");
-    setPhone("");
-    setFax("");
+    setDialCode("+1");
+    setPhoneNumber("");
+    setFaxNumber("");
     setAddress("");
-    setServices("");
     onClose();
   };
 
+  const phoneValue =
+    (dial_code ?? "") + (phone_number ?? "").replace(/\D/g, "");
+
+  const handlePhoneChange = (value: string, country: { dialCode: string }) => {
+    const code = country?.dialCode ?? "+1";
+    setDialCode(code);
+    setPhoneNumber(value.slice(code.length).replace(/\D/g, "") || "");
+  };
+
   const handleSubmit = () => {
-    if (!company.trim()) {
-      toastError("Company Name is required.");
+    if (!company_name.trim()) {
+      toastError("Company name is required.");
+      return;
+    }
+    if (!email.trim()) {
+      toastError("Email is required.");
+      return;
+    }
+    if (!phone_number.trim()) {
+      toastError("Phone number is required.");
+      return;
+    }
+    if (!fax_number.trim()) {
+      toastError("Fax number is required.");
+      return;
+    }
+    if (!address.trim()) {
+      toastError("Address is required.");
       return;
     }
     if (!state) {
       toastError("State (business location) is required.");
       return;
     }
-    onAdd({ name: company.trim(), state });
+    onAdd({
+      company_name: company_name.trim(),
+      email: email.trim(),
+      phone_number: phone_number.trim(),
+      dial_code: dial_code || "+1",
+      fax_number: fax_number.trim(),
+      address: address.trim(),
+      state: state,
+    });
     handleClose();
   };
 
@@ -65,10 +117,10 @@ export function AddReceiverModal({
       <div className="flex items-start justify-between gap-3 mb-2.5">
         <div>
           <h3 id="receiverModalTitle" className="m-0 text-lg font-semibold">
-            Add Referral Receiver
+            Add Referral Receiver (if not listed)
           </h3>
           <p className="m-0 mt-1.5 text-rcn-muted text-xs font-[850]">
-            Company details (submit to add to Available Receivers).
+            All fields are required for guest organizations.
           </p>
         </div>
         <Button
@@ -89,14 +141,16 @@ export function AddReceiverModal({
           </label>
           <input
             type="text"
-            value={company}
-            onChange={(e) => setCompany(e.target.value)}
+            value={company_name}
+            onChange={(e) => setCompanyName(e.target.value)}
             placeholder="Company name"
             className={inputClass}
           />
         </div>
         <div>
-          <label className="block text-xs text-rcn-muted font-[850] mb-1.5">Email</label>
+          <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
+            Email <span className="text-rcn-danger font-black">*</span>
+          </label>
           <input
             type="email"
             value={email}
@@ -106,27 +160,31 @@ export function AddReceiverModal({
           />
         </div>
         <div>
-          <label className="block text-xs text-rcn-muted font-[850] mb-1.5">Phone Number</label>
-          <input
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="(xxx) xxx-xxxx"
-            className={inputClass}
+          <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
+            Phone Number <span className="text-rcn-danger font-black">*</span>
+          </label>
+          <PhoneInputField
+            value={phoneValue}
+            onChange={handlePhoneChange}
+            placeholder="Phone number"
           />
         </div>
         <div>
-          <label className="block text-xs text-rcn-muted font-[850] mb-1.5">Fax Number</label>
+          <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
+            Fax Number <span className="text-rcn-danger font-black">*</span>
+          </label>
           <input
             type="tel"
-            value={fax}
-            onChange={(e) => setFax(e.target.value)}
+            value={fax_number}
+            onChange={(e) => setFaxNumber(e.target.value)}
             placeholder="(xxx) xxx-xxxx"
             className={inputClass}
           />
         </div>
         <div className="md:col-span-2">
-          <label className="block text-xs text-rcn-muted font-[850] mb-1.5">Address</label>
+          <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
+            Address <span className="text-rcn-danger font-black">*</span>
+          </label>
           <input
             type="text"
             value={address}
@@ -144,22 +202,15 @@ export function AddReceiverModal({
             onChange={(e) => setState(e.target.value)}
             className={inputClass}
           >
-            <option value="" disabled>Select state</option>
-            {US_STATES.filter((s) => s.value !== "ALL").map((s) => (
+            <option value="" disabled>
+              Select state
+            </option>
+            {stateSelectOptions.map((s) => (
               <option key={s.value} value={s.value}>
                 {s.label}
               </option>
             ))}
           </select>
-        </div>
-        <div className="md:col-span-2">
-          <label className="block text-xs text-rcn-muted font-[850] mb-1.5">Services Offered</label>
-          <textarea
-            value={services}
-            onChange={(e) => setServices(e.target.value)}
-            placeholder="List services offered (e.g., Home Health, Hospice, DME, etc.)"
-            className={`${inputClass} min-h-[95px] resize-y`}
-          />
         </div>
       </div>
 
@@ -168,7 +219,7 @@ export function AddReceiverModal({
           Cancel
         </Button>
         <Button type="button" variant="primary" size="md" onClick={handleSubmit}>
-          Submit
+          Add receiver
         </Button>
       </div>
     </Modal>

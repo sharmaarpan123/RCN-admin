@@ -3,6 +3,17 @@ export interface Receiver {
   state: string;
 }
 
+/** Guest organization (unlisted receiver) for referral payload. */
+export interface GuestOrganization {
+  company_name: string;
+  email: string;
+  phone_number: string;
+  dial_code: string;
+  fax_number: string;
+  address: string;
+  state: string;
+}
+
 /** One selected receiver: organization + branch + department (for staff referral). */
 export interface ReceiverRow {
   organizationId: string;
