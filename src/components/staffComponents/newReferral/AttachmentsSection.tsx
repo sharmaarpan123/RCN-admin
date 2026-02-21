@@ -182,31 +182,25 @@ export function AttachmentsSection() {
             Wound Photos
           </label>
           <div className="relative">
-            <input
-              ref={woundPhotoInputRef}
-              type="file"
-              className="absolute inset-0 w-full min-h-[44px] opacity-0 cursor-pointer z-10 disabled:cursor-not-allowed rounded-xl"
-              disabled={uploadingFields["wound_photos"] === true}
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) handleMultiUpload("wound_photos", file);
-                e.target.value = "";
-              }}
-              aria-label="Upload wound photo"
-            />
-            <div
+
+            <label
               className={zoneClass + " min-h-[44px]"}
-              onClick={() => woundPhotoInputRef.current?.click()}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  woundPhotoInputRef.current?.click();
-                }
-              }}
-              role="button"
-              tabIndex={0}
-              aria-label="Upload wound photo"
+              htmlFor="wound_photos"
             >
+              <input
+                name="wound_photos"
+                id="wound_photos"
+                ref={woundPhotoInputRef}
+                type="file"
+                className="absolute inset-0 w-full min-h-[44px] opacity-0 cursor-pointer z-10 disabled:cursor-not-allowed rounded-xl"
+                disabled={uploadingFields["wound_photos"] === true}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleMultiUpload("wound_photos", file);
+                  e.target.value = "";
+                }}
+                aria-label="Upload wound photo"
+              />
               {uploadingFields["wound_photos"] ? (
                 <span className="text-rcn-muted flex items-center gap-2">
                   <span className="inline-block w-4 h-4 border-2 border-rcn-brand border-t-transparent rounded-full animate-spin" />
@@ -217,19 +211,21 @@ export function AttachmentsSection() {
                   Choose file to add wound photo
                 </span>
               )}
-            </div>
+            </label>
             {woundArr.length > 0 && (
               <ul className="mt-2 space-y-1">
                 {woundArr.map((url, i) => (
-                  <li key={i} className="flex items-center gap-2 text-xs">
-                    <a
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-rcn-brand truncate flex-1"
+                  <li key={i} className="flex items-center justify-between gap-2 text-xs">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPreviewUrl(url ?? "");
+                      }}
+                      className="text-xs text-rcn-brand mt-1 block truncate text-left hover:underline focus:outline-none focus:ring-0"
                     >
-                      Photo {i + 1}
-                    </a>
+                     View Photo {i + 1}
+                    </button>
                     <button
                       type="button"
                       onClick={() => removeUrlFromArray("wound_photos", i)}
@@ -249,31 +245,28 @@ export function AttachmentsSection() {
             Other Documents
           </label>
           <div className="relative">
-            <input
-              ref={otherDocsInputRef}
-              type="file"
-              className="absolute inset-0 w-full min-h-[44px] opacity-0 cursor-pointer z-10 disabled:cursor-not-allowed rounded-xl"
-              disabled={uploadingFields["other_documents"] === true}
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) handleMultiUpload("other_documents", file);
-                e.target.value = "";
-              }}
-              aria-label="Upload other document"
-            />
-            <div
+
+            <label
+              htmlFor="other_documents"
               className={zoneClass + " min-h-[44px]"}
-              onClick={() => otherDocsInputRef.current?.click()}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  otherDocsInputRef.current?.click();
-                }
-              }}
-              role="button"
+
               tabIndex={0}
               aria-label="Upload other document"
             >
+              <input
+                name="other_documents"
+                id="other_documents"
+                ref={otherDocsInputRef}
+                type="file"
+                className="absolute inset-0 w-full min-h-[44px] opacity-0 cursor-pointer z-10 disabled:cursor-not-allowed rounded-xl"
+                disabled={uploadingFields["other_documents"] === true}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleMultiUpload("other_documents", file);
+                  e.target.value = "";
+                }}
+                aria-label="Upload other document"
+              />
               {uploadingFields["other_documents"] ? (
                 <span className="text-rcn-muted flex items-center gap-2">
                   <span className="inline-block w-4 h-4 border-2 border-rcn-brand border-t-transparent rounded-full animate-spin" />
@@ -284,19 +277,22 @@ export function AttachmentsSection() {
                   Choose file to add document
                 </span>
               )}
-            </div>
+            </label>
             {otherArr.length > 0 && (
               <ul className="mt-2 space-y-1">
                 {otherArr.map((url, i) => (
-                  <li key={i} className="flex items-center gap-2 text-xs">
-                    <a
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-rcn-brand truncate flex-1"
+                  <li key={i} className="flex items-center justify-between gap-2 text-xs">
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPreviewUrl(url ?? "");
+                      }}
+                      className="text-xs text-rcn-brand mt-1 block truncate text-left hover:underline focus:outline-none focus:ring-0"
                     >
-                      Document {i + 1}
-                    </a>
+                      View Document 
+                    </button>
                     <button
                       type="button"
                       onClick={() => removeUrlFromArray("other_documents", i)}
