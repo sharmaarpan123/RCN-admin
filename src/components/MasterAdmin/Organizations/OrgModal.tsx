@@ -63,9 +63,8 @@ const createSchema = yup.object({
   name: yup.string().trim().required("Organization Name is required."),
   email: yup
     .string()
-    .trim()
-    .required("Organization Email is required.")
-    .email("Please enter a valid email."),
+    .optional()
+    .default(""),
   phone: yup.string().trim().required("Organization Phone is required."),
   ein_number: yup.string().trim().optional().default(""),
   password: yup
@@ -165,7 +164,7 @@ function buildCreatePayload(data: OrgFormValues): unknown {
   const contactPhone = parsePhone(data.contact?.tel ?? "");
   return {
     name: data.name,
-    email: data.email,
+    email: data?.contact?.email,
     password: data.password ?? "",
     dial_code: orgPhone.dial_code,
     phone_number: (data.phone ?? "").replace(/\D/g, "").slice(0, 15) || orgPhone.number,
@@ -493,20 +492,7 @@ export function OrgModalContent({
                   <p className="text-xs text-red-500 mt-1 m-0">{errors.phone.message}</p>
                 )}
               </div>
-              <div className="mb-4">
-                <label className="text-xs text-rcn-muted block mb-1.5">
-                  Organization Email <span className="text-red-500">*</span>
-                </label>
-                <input
-                  {...register("email")}
-                  type="email"
-                  className={inputCn(!!errors.email)}
-                  placeholder="contact@organization.com"
-                />
-                {errors.email && (
-                  <p className="text-xs text-red-500 mt-1 m-0">{errors.email.message}</p>
-                )}
-              </div>
+
               <div className="mb-4">
                 <label className="text-xs text-rcn-muted block mb-1.5">
                   Organization EIN (Optional)

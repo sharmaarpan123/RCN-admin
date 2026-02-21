@@ -22,7 +22,7 @@ const DEFAULT_DIAL_CODE = "1";
 
 const orgSignupSchema = yup.object({
   name: yup.string().trim().required("Organization Name is required."),
-  email: yup.string().trim().required("Organization Email is required.").email("Please enter a valid email."),
+  email: yup.string().trim().optional().default(""),
   password: yup.string().required("Password is required.").min(8, "Password must be at least 8 characters."),
   confirm_password: yup.string().required("Confirm password is required.").oneOf([yup.ref("password")], "Passwords must match."),
   dial_code: yup.string().trim().optional().default(DEFAULT_DIAL_CODE),
@@ -75,7 +75,7 @@ function buildPayload(data: OrgSignupFormValues): unknown {
   const digits = (v: string | undefined, max = 15) => (v ?? "").replace(/\D/g, "").slice(0, max) || undefined;
   return {
     name: data.name,
-    email: data.email,
+    email: data?.user_email ?? "",
     password: data.password ?? "",
     dial_code: data.dial_code ?? DEFAULT_DIAL_CODE,
     phone_number: ((data.phone_number ?? "").replace(/\D/g, "").slice(0, 15)) || (data.phone_number ?? ""),
@@ -246,7 +246,7 @@ const OrgSignup: React.FC = () => {
                     {errorMsg("name")}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 gap-3">
                     <div>
                       <label className="text-xs text-rcn-muted block mb-1.5">
                         Phone <span className="text-rcn-danger">*</span>
@@ -259,18 +259,7 @@ const OrgSignup: React.FC = () => {
                       />
                       {errorMsg("phone_number")}
                     </div>
-                    <div>
-                      <label className="text-xs text-rcn-muted block mb-1.5">
-                        Email <span className="text-rcn-danger">*</span>
-                      </label>
-                      <input
-                        {...register("email")}
-                        type="email"
-                        placeholder="contact@organization.com"
-                        className={inputClass("email")}
-                      />
-                      {errorMsg("email")}
-                    </div>
+                   
                   </div>
 
                   <div>
