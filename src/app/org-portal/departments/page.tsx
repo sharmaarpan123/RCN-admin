@@ -50,8 +50,9 @@ export default function OrgPortalDepartmentsPage() {
     },
   });
 
-  const branches: Branch[] = branchesData?.data ?? [];
-  const branchId = branchFilter || branches[0]?._id || "";
+  const branches: Branch[] = [
+    { _id: "all", name: "All Branches" }, ...(branchesData?.data ?? [])];
+  const branchId = branchFilter || branches[0]?._id || "all";
 
   const { data: deptApiData, isLoading } = useQuery({
     queryKey: [...DEPARTMENTS_QUERY_KEY, branchId],

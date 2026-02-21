@@ -14,7 +14,7 @@ interface OrgUserRow {
   last_name?: string;
   email?: string;
   is_admin?: boolean;
-  is_active?: boolean;
+  status?: number;
   org_assigned?: boolean;
   role?: string;
 }
@@ -66,7 +66,23 @@ export default function OrgPortalUsersPage() {
       { head: "Name", component: (u) => <span className="font-medium">{userDisplayName(u)}</span> },
       { head: "Email", accessor: "email", component: (u) => <span className="text-rcn-muted">{u.email || "—"}</span> },
       { head: "Role", component: (u) => (u.is_admin ? "Admin" : (u.role || "User")) },
-      { head: "Status", component: (u) => (u.is_active !== false ? "Active" : "Inactive") },
+      {
+        head: "Status",
+        component: (u) => {
+          const isActive = u.status === 1;
+          return (
+            <span
+              className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
+                isActive
+                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                  : "bg-slate-100 text-slate-600 border border-slate-200"
+              }`}
+            >
+              {isActive ? "Active" : "Inactive"}
+            </span>
+          );
+        },
+      },
       { head: "Assigned", component: (u) => (u.org_assigned ? "Yes" : "No") },
       {
         head: "Actions",

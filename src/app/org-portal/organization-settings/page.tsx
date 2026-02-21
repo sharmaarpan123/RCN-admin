@@ -351,7 +351,9 @@ function OrganizationSettingsForm({
                 onPlaceSelect={handleAddressSelect}
                 placeholder="Start typing an address..."
                 countryRestriction="us"
+                onChange={(value) => setValue("address.street", value)}
                 inputClassName={inputClass}
+                value={watch("address.street")}
                 hasError={!!(errors.address?.street ?? errors.address?.city ?? errors.address?.state ?? errors.address?.zip)}
               />
               <p className="text-xs text-rcn-muted mt-0.5 m-0">Select a suggestion to fill the fields below.</p>
@@ -359,7 +361,7 @@ function OrganizationSettingsForm({
 
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div>
+              {/* <div>
                 <label className="block text-xs text-rcn-muted mb-1.5">Street <span className="text-rcn-danger">*</span></label>
                 <Controller
                   name="address.street"
@@ -369,7 +371,7 @@ function OrganizationSettingsForm({
                   )}
                 />
                 {errors.address?.street && <p className="text-xs text-rcn-danger mt-1 m-0">{errors.address.street.message}</p>}
-              </div>
+              </div> */}
 
               <div>
                 <label className="block text-xs text-rcn-muted mb-1.5">City <span className="text-rcn-danger">*</span></label>
@@ -382,8 +384,6 @@ function OrganizationSettingsForm({
                 />
                 {errors.address?.city && <p className="text-xs text-rcn-danger mt-1 m-0">{errors.address.city.message}</p>}
               </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
               <div>
                 <label className="block text-xs text-rcn-muted mb-1.5">State <span className="text-rcn-danger">*</span></label>
                 <Controller
@@ -404,6 +404,8 @@ function OrganizationSettingsForm({
                 />
                 {errors.address?.state && <p className="text-xs text-rcn-danger mt-1 m-0">{errors.address.state.message}</p>}
               </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
               <div>
                 <label className="block text-xs text-rcn-muted mb-1.5">Zip <span className="text-rcn-danger">*</span></label>
                 <Controller

@@ -37,6 +37,8 @@ export interface AutocompleteProps {
   disabled?: boolean;
   /** Input id for labels */
   id?: string;
+  /** onChange event */
+  onChange?: (value: string) => void;
 }
 
 function getComponent(
@@ -100,6 +102,7 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
   className = "",
   inputClassName = "",
   disabled = false,
+  onChange,
   id,
 }) => {
   const [inputValue, setInputValue] = useState(value);
@@ -126,10 +129,11 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
   const handleInputChangeLocal = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const v = e.target.value;
+      onChange?.(v);
       setInputValue(v);
       onInputChange?.(v);
     },
-    [onInputChange]
+    [onChange, onInputChange]
   );
 
   const displayValue = value !== undefined && value !== "" ? value : inputValue;
@@ -161,10 +165,7 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
       <GoogleAutocomplete
         onLoad={handleLoad}
         onPlaceChanged={handlePlaceChanged}
-        // options={{
-        //   types: ["address"],
-        //   fields: ["address_components", "formatted_address", "geometry"],
-        // }}
+        
       >
         <input
           id={id}
