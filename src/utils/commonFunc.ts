@@ -90,8 +90,6 @@ export const checkResponse = ({
     setLoader?: (loading: boolean) => void,
     showError?: boolean
 }) => {
-
-    console.log(res, "dataa324")
     if (res?.data?.message === "Network Error") {
         toast.dismiss();
         toast.error("Network Error");

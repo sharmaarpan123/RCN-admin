@@ -1,20 +1,20 @@
 "use client";
 
-import React, { useState, useCallback, useRef, useEffect } from "react";
-import { useParams } from "next/navigation";
-import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
 import { getOrganizationReferralByIdApi } from "@/apis/ApiCalls";
-import { checkResponse } from "@/utils/commonFunc";
-import defaultQueryKeys from "@/utils/staffQueryKeys";
-import type { ReferralByIdApi, Company, ReceiverInstance, ChatMsg, Comm } from "@/app/staff-portal/inbox/types";
-import { fmtDate, scrollToId } from "@/app/staff-portal/inbox/helpers";
 import { DEMO_COMPANIES } from "@/app/staff-portal/inbox/demo-data";
-import { documentsToList, receiversFromData } from "@/components/staffComponents/inbox/sender/view/senderViewHelpers";
-import type { DocRow } from "@/components/staffComponents/inbox/sender/view/senderViewHelpers";
+import { fmtDate, scrollToId } from "@/app/staff-portal/inbox/helpers";
+import type { ChatMsg, Comm, Company, ReceiverInstance, ReferralByIdApi } from "@/app/staff-portal/inbox/types";
 import { SenderDetailModals } from "@/components/staffComponents/inbox/sender/view/SenderDetailModals";
 import { SenderDetailSections } from "@/components/staffComponents/inbox/sender/view/SenderDetailSections";
 import { SenderDraftPaymentSection } from "@/components/staffComponents/inbox/sender/view/SenderDraftPaymentSection";
+import type { DocRow } from "@/components/staffComponents/inbox/sender/view/senderViewHelpers";
+import { documentsToList, receiversFromData } from "@/components/staffComponents/inbox/sender/view/senderViewHelpers";
+import { checkResponse } from "@/utils/commonFunc";
+import defaultQueryKeys from "@/utils/staffQueryKeys";
+import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export default function SenderDetailPage() {
   const params = useParams<{ id: string }>();
@@ -70,7 +70,6 @@ function SenderDetailContent({ data }: { data: ReferralByIdApi }) {
   const [forwardRefId, setForwardRefId] = useState<string | null>(null);
   const [forwardSelectedCompany, setForwardSelectedCompany] = useState<Company | null>(null);
   const [chatReceiverSelection, setChatReceiverSelection] = useState<Record<string, string>>({});
-  const [deleteDocModal, setDeleteDocModal] = useState<{ kind: "api" | "local"; label: string; index: number } | null>(null);
   const chatBodyRef = useRef<HTMLDivElement>(null);
 
   const [overlay, setOverlay] = useState<LocalOverlay>(() => ({
@@ -94,44 +93,15 @@ function SenderDetailContent({ data }: { data: ReferralByIdApi }) {
   const apiDocsList = documentsToList(data.documents as Record<string, unknown> | undefined);
   const visibleApiDocs = apiDocsList.filter((d) => !overlay.deletedDocLabels.has(d.label));
   const displayDocRows: DocRow[] = [
-    ...visibleApiDocs.map((d) => ({ label: d.label, url: d.url, type: "Clinical", kind: "api" as const })),
+    ...visibleApiDocs.map((d) => ({ label: d.label, url: d.url, kind: "api" as const })),
     ...overlay.extraDocs.map((d, i) => ({ label: d.label, url: d.url, type: d.type, kind: "local" as const, localIndex: i })),
   ];
 
-  const addDoc = useCallback((_refId: string, name: string, type: string, fileName: string) => {
-    const nm = (name || "").trim();
-    if (!nm) return alert("Document name required.");
-    setOverlay((prev) => ({
-      ...prev,
-      extraDocs: [...prev.extraDocs, { label: nm, type: type || "Other", url: fileName || "" }],
-      comms: [...prev.comms, { at: new Date(), who: "Sender", msg: `Uploaded document: ${nm} (${type || "Other"}).` }],
-    }));
-  }, []);
 
-  const openDeleteDocModal = useCallback((kind: "api" | "local", label: string, index: number) => {
-    setDeleteDocModal({ kind, label, index });
-  }, []);
 
-  const confirmDeleteDoc = useCallback(() => {
-    if (!deleteDocModal) return;
-    const { kind, label, index } = deleteDocModal;
-    setOverlay((prev) => {
-      if (kind === "api") return { ...prev, deletedDocLabels: new Set(prev.deletedDocLabels).add(label), comms: [...prev.comms, { at: new Date(), who: "Sender", msg: `Deleted document: ${label}.` }] };
-      return { ...prev, extraDocs: prev.extraDocs.filter((_, i) => i !== index), comms: [...prev.comms, { at: new Date(), who: "Sender", msg: `Deleted document: ${label}.` }] };
-    });
-    setDeleteDocModal(null);
-  }, [deleteDocModal]);
 
-  const sendChatMessage = useCallback((receiverId: string, text: string) => {
-    const msg = (text || "").trim();
-    if (!msg) return;
-    setOverlay((prev) => {
-      const chat = { ...prev.chatByReceiver };
-      const t = chat[receiverId] ?? [];
-      chat[receiverId] = [...t, { at: new Date(), fromRole: "SENDER", fromName: "Sender", text: msg }];
-      return { ...prev, chatByReceiver: chat, comms: [...prev.comms, { at: new Date(), who: "Sender", msg: "Chat message sent to receiver." }] };
-    });
-  }, []);
+
+
 
   const openForward = useCallback(() => {
     setForwardRefId(refId);
@@ -177,7 +147,7 @@ function SenderDetailContent({ data }: { data: ReferralByIdApi }) {
 
   const sentAt = data.sent_at ? new Date(data.sent_at) : new Date(data.createdAt ?? 0);
   const p = data.patient ?? {};
-  const chatInputSelected = { receivers: allReceivers };
+
 
   return (
     <div className="max-w-[1280px] mx-auto p-[18px]">
@@ -222,18 +192,8 @@ function SenderDetailContent({ data }: { data: ReferralByIdApi }) {
           <div className="flex flex-col gap-3.5">
             <SenderDetailSections
               data={data}
-              overlayComms={overlay.comms}
-              refId={refId}
               allReceivers={allReceivers}
-              chatReceiverId={chatReceiverId}
-              thread={thread}
-              chatBodyRef={chatBodyRef}
               displayDocRows={displayDocRows}
-              setChatReceiverSelection={setChatReceiverSelection}
-              openDeleteDocModal={openDeleteDocModal}
-              addDoc={addDoc}
-              sendChatMessage={sendChatMessage}
-              chatInputSelected={chatInputSelected}
             />
             {isDraft && <SenderDraftPaymentSection refId={refId} />}
           </div>
@@ -250,9 +210,7 @@ function SenderDetailContent({ data }: { data: ReferralByIdApi }) {
         onSelectCompany={setForwardSelectedCompany}
         onForward={(company, customServices) => forwardRefId != null && forwardReferral(company, customServices)}
         onAddCompanyAndSelect={addCompanyAndSelect}
-        deleteDocModal={deleteDocModal}
-        onCloseDeleteDoc={() => setDeleteDocModal(null)}
-        onConfirmDeleteDoc={confirmDeleteDoc}
+
       />
     </div>
   );

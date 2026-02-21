@@ -10,6 +10,8 @@ interface ApiChatMessage {
   created_at?: string;
   at?: string;
   message?: string;
+  receiver_id?: string;
+  sender_id?: string;
 }
 
 /** Map start-chat API response to ChatMsg[]. Handles data.messages, data.conversation.messages, or data.data.messages. */
@@ -23,5 +25,7 @@ export function mapStartChatResponseToMessages(res: unknown): ChatMsg[] {
     fromName: (m.from_name ?? m.fromName ?? "—").toString(),
     text: (m.text ?? m.message ?? "").toString(),
     at: new Date((m.created_at ?? m.at ?? Date.now()) as string | number),
+    receiver_id: m.receiver_id ?? "",
+    sender_id: m.sender_id ?? "",
   }));
 }

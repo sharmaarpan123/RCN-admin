@@ -23,7 +23,7 @@ function getUploadResponseUrl(res: unknown): string {
 export function InsuranceInfoSection() {
   const { register, control, setValue, watch } = useFormContext<ReferralFormValues>();
   const { errors } = useFormState<ReferralFormValues>();
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, } = useFieldArray({
     control,
     name: "patient_insurance_information",
   });
@@ -55,8 +55,8 @@ export function InsuranceInfoSection() {
 
   const insuranceRootError =
     errors.patient_insurance_information &&
-    typeof errors.patient_insurance_information?.root === "object" &&
-    "message" in errors.patient_insurance_information?.root
+      typeof errors.patient_insurance_information?.root === "object" &&
+      "message" in errors.patient_insurance_information?.root
       ? (errors.patient_insurance_information?.root as { message?: string }).message
       : undefined;
 
@@ -111,6 +111,7 @@ export function InsuranceInfoSection() {
               <input
                 type="text"
                 {...register(`patient_insurance_information.${index}.payer`)}
+
                 placeholder="e.g., BCBS, Aetna, Medicare"
                 className={`${inputClass} ${errors.patient_insurance_information?.[index]?.payer ? "border-red-400" : ""}`}
                 aria-invalid={!!errors.patient_insurance_information?.[index]?.payer}
@@ -194,19 +195,19 @@ export function InsuranceInfoSection() {
             </label>
             {(watch(`patient_insurance_information.${index}.document`) ?? "").trim() &&
               !uploadingFields[`insurance-doc-${index}`] && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setPreviewUrl(
-                    (watch(`patient_insurance_information.${index}.document`) ?? "").trim()
-                  );
-                }}
-                className="text-xs text-rcn-brand mt-1 block truncate text-left hover:underline focus:outline-none focus:ring-0"
-              >
-                View file
-              </button>
-            )}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setPreviewUrl(
+                      (watch(`patient_insurance_information.${index}.document`) ?? "").trim()
+                    );
+                  }}
+                  className="text-xs text-rcn-brand mt-1 block truncate text-left hover:underline focus:outline-none focus:ring-0"
+                >
+                  View file
+                </button>
+              )}
           </div>
         </div>
       ))}

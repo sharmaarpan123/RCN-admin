@@ -80,4 +80,4 @@ export function getDepartmentStatusByDepartmentId(
   return departmentId ? list.find((d) => (d.department_id ?? d.department?._id) === departmentId) : undefined;
 }
 
-export type DocRow = { label: string; url: string; type: string; kind: "api" | "local"; localIndex?: number };
+export type DocRow = { label: string; url: string; kind: "api" | "local"; localIndex?: number };

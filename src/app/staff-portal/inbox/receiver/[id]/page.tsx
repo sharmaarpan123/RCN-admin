@@ -464,15 +464,12 @@ function ReceiverDetailContent({
               senderPaid={senderPaid}
               onAccept={receiverAccept}
               onReject={receiverReject}
+              openPayModal={openPayModal}
             />
             <ReceiverChatSection
               referralId={refId}
               localMessages={[]}
               chatBodyRef={chatBodyRef}
-              receiverId={receiverId ?? null}
-              chatInputSelected={{
-                receivers: currentReceiver ? [currentReceiver] : [],
-              }}
             />
           </div>
 

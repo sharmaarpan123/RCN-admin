@@ -1,7 +1,7 @@
 "use client";
 
+import { postOrganizationReferralApi } from "@/apis/ApiCalls";
 import {
-  AddReceiverModal,
   AdditionalDetailsSection,
   AttachmentsSection,
   FormActionsSection,
@@ -13,22 +13,21 @@ import {
   SenderFormHeader,
   SenderInfoSection,
   ServicesRequestedSection,
-  type GuestOrganization,
-  type ReceiverRow,
+  type ReceiverRow
 } from "@/components/staffComponents/newReferral";
 import {
   getDepartmentIdsFromReceiverRows,
   referralFormSchema,
   type ReferralFormValues,
 } from "@/components/staffComponents/newReferral/referralFormSchema";
-import { postOrganizationReferralApi } from "@/apis/ApiCalls";
-import { checkResponse, catchAsync } from "@/utils/commonFunc";
-import { toastError } from "@/utils/toast";
+import { catchAsync, checkResponse } from "@/utils/commonFunc";
 import defaultQueryKeys from "@/utils/staffQueryKeys";
-import { useQueryClient } from "@tanstack/react-query";
-import { useForm, FormProvider } from "react-hook-form";
+import { toastError } from "@/utils/toast";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { FormProvider, useForm } from "react-hook-form";
 
 const SECTION_IDS = [
   "sender-form",
@@ -43,56 +42,61 @@ const SECTION_IDS = [
   "form-actions",
 ];
 
-const defaultValues: ReferralFormValues = {
-  sender_name: "",
-  facility_name: "",
-  facility_address: "",
-  sender_email: "",
-  sender_phone_number: "",
-  sender_fax_number: "",
-  sender_dial_code: "+1",
-  receiver_rows: [],
-  speciality_ids: [],
-  additional_speciality: "",
-  additional_notes: "",
-  patient_first_name: "",
-  patient_last_name: "",
-  dob: "",
-  gender: "",
-  address_of_care: "",
-  patient_insurance_information: [{ payer: "", policy: "", plan_group: "", document: "" }],
-  patient_phone_number: "",
-  patient_dial_code: "+1",
-  primary_language: "",
-  social_security_number: "",
-  power_of_attorney: "",
-  other_information: "",
-  face_sheet: "",
-  medication_list: "",
-  discharge_summary: "",
-  wound_photos: [],
-  signed_order: "",
-  history_or_physical: "",
-  progress_notes: "",
-  other_documents: [],
-  primary_care_name: "",
-  primary_care_address: "",
-  primary_care_phone_number: "",
-  primary_care_dial_code: "+1",
-  primary_care_fax: "",
-  primary_care_email: "",
-  primary_care_npi: "",
-  guest_organizations: [],
-};
+/** Fresh initial values for the form. Returns a new object each time so reset() clears the UI. */
+function getDefaultValues(): ReferralFormValues {
+  return {
+    sender_name: "",
+    facility_name: "",
+    facility_address: "",
+    sender_email: "",
+    sender_phone_number: "",
+    sender_fax_number: "",
+    sender_dial_code: "+1",
+    receiver_rows: [],
+    speciality_ids: [],
+    additional_speciality: "",
+    additional_notes: "",
+    patient_first_name: "",
+    patient_last_name: "",
+    dob: "",
+    gender: "",
+    address_of_care: "",
+    patient_insurance_information: [{ payer: "", policy: "", plan_group: "", document: "" }],
+    patient_phone_number: "",
+    patient_dial_code: "+1",
+    primary_language: "",
+    social_security_number: "",
+    power_of_attorney: "",
+    other_information: "",
+    face_sheet: "",
+    medication_list: "",
+    discharge_summary: "",
+    wound_photos: [],
+    signed_order: "",
+    history_or_physical: "",
+    progress_notes: "",
+    other_documents: [],
+    primary_care_name: "",
+    primary_care_address: "",
+    primary_care_phone_number: "",
+    primary_care_dial_code: "+1",
+    primary_care_fax: "",
+    primary_care_email: "",
+    primary_care_npi: "",
+    guest_organizations: [],
+  };
+}
 
 export default function NewReferralPage() {
   const queryClient = useQueryClient();
   const [stateFilter, setStateFilter] = useState("ALL");
-
   const [activeSection, setActiveSection] = useState("sender-form");
 
+  const initialDefaultValues = useMemo(() => getDefaultValues(), []);
+  const router = useRouter();
+
   const methods = useForm<ReferralFormValues>({
-    defaultValues,
+    defaultValues: initialDefaultValues,
     mode: "onChange",
     resolver: yupResolver(referralFormSchema),
   });
@@ -186,7 +190,8 @@ export default function NewReferralPage() {
     catchAsync(async () => {
       const res = await postOrganizationReferralApi(payload);
       if (checkResponse({ res, showSuccess: true })) {
-        methods.reset(defaultValues, { keepDefaultValues: false, });
+        methods.reset(getDefaultValues());
+        router.push("/staff-portal/inbox/sender/" + res?.data?.data?._id);
         queryClient.invalidateQueries({ queryKey: defaultQueryKeys.referralSentList });
       }
     })();
@@ -227,7 +232,7 @@ export default function NewReferralPage() {
 
             <PcpInfoSection />
 
-            <FormActionsSection />
+            <FormActionsSection isSubmitting={methods.formState.isSubmitting} />
           </main>
         </form>
       </FormProvider>

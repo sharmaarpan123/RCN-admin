@@ -1,12 +1,10 @@
 "use client";
 
-import React from "react";
-import { useFormContext } from "react-hook-form";
 import { Button } from "@/components";
-import type { ReferralFormValues } from "./referralFormSchema";
 
-export function FormActionsSection() {
-  const { formState: { isSubmitting } } = useFormContext<ReferralFormValues>();
+export function FormActionsSection({ isSubmitting }: { isSubmitting: boolean }) {
+  
+  
 
   return (
     <section

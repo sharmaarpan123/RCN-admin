@@ -14,6 +14,8 @@ interface ReceiverAdditionalSectionProps {
   senderPaid?: boolean;
   onAccept: () => void;
   onReject: () => void;
+  openPayModal: () => void;
+
 }
 
 const ADDITIONAL_ROWS: [string, string][] = [
@@ -30,6 +32,7 @@ export function ReceiverAdditionalSection({
   senderPaid = false,
   onAccept,
   onReject,
+  openPayModal,
 }: ReceiverAdditionalSectionProps) {
   return (
     <div id="secAdditional" className={SECTION_CLASS}>
@@ -60,6 +63,7 @@ export function ReceiverAdditionalSection({
               Chat is free. To view phone, SSN, and other sensitive fields, payment is required. Use Pay & Unlock in the header to pay.
             </p>
             <div className="flex gap-2.5 flex-wrap justify-end">
+              {!senderPaid && <Button type="button" variant="primary" size="sm" onClick={openPayModal}>Pay & Unlock</Button>}
               {senderPaid && (
                 <Button type="button" variant="primary" size="sm" onClick={onAccept}>
                   Accept (sender already paid)
