@@ -59,7 +59,7 @@ export default function Header() {
             </NextLink>
 
 
-            <div className="flex gap-2.5 items-center">
+            <div className="hidden md:flex gap-2.5 items-center">
               <CustomNextLink href="/" variant="text" className={`${pathname === "/" ? "text-rcn-accent-dark" : "text-rcn-muted"}`} size="md">
                 Home
               </CustomNextLink>
@@ -83,7 +83,6 @@ export default function Header() {
               <CustomNextLink href="/org-signup" variant="primary" className="hidden md:inline-flex">
                 Register Company
               </CustomNextLink>
-              {/* </div> */}
 
               <button
                 className="md:hidden w-11 h-11 rounded-xl border border-rcn-border-light bg-[rgba(255,255,255,0.88)] cursor-pointer flex items-center justify-center"
@@ -101,21 +100,15 @@ export default function Header() {
 
           {isMenuOpen && (
             <div className="md:hidden border-t border-rcn-border-light py-2.5 px-0" aria-label="Mobile menu">
-              <a href="#features" className="block px-2.5 py-3 rounded-xl no-underline text-rcn-muted font-[750] hover:bg-[rgba(255,255,255,0.85)] hover:text-rcn-text">
-                Features
-              </a>
-              <a href="#how-it-works" className="block px-2.5 py-3 rounded-xl no-underline text-rcn-muted font-[750] hover:bg-[rgba(255,255,255,0.85)] hover:text-rcn-text">
-                How it works
-              </a>
-              <a href="#security" className="block px-2.5 py-3 rounded-xl no-underline text-rcn-muted font-[750] hover:bg-[rgba(255,255,255,0.85)] hover:text-rcn-text">
-                Security
-              </a>
-              <a href="#faq" className="block px-2.5 py-3 rounded-xl no-underline text-rcn-muted font-[750] hover:bg-[rgba(255,255,255,0.85)] hover:text-rcn-text">
-                FAQ
-              </a>
-              <a href="#contact" className="block px-2.5 py-3 rounded-xl no-underline text-rcn-muted font-[750] hover:bg-[rgba(255,255,255,0.85)] hover:text-rcn-text">
-                Contact
-              </a>
+              <CustomNextLink href="/contact-us" variant="text" className="block px-2.5 py-3 rounded-xl no-underline text-rcn-muted font-[750] hover:bg-[rgba(255,255,255,0.85)] hover:text-rcn-text">
+                About us
+              </CustomNextLink>
+              <CustomNextLink href="/about-us" variant="text" className="block px-2.5 py-3 rounded-xl no-underline text-rcn-muted font-[750] hover:bg-[rgba(255,255,255,0.85)] hover:text-rcn-text">
+                About Us
+              </CustomNextLink>
+              <CustomNextLink href="/contact-us" variant="text" className="block px-2.5 py-3 rounded-xl no-underline text-rcn-muted font-[750] hover:bg-[rgba(255,255,255,0.85)] hover:text-rcn-text">
+                Contact us
+              </CustomNextLink>
               <div className="flex gap-2.5 flex-wrap px-2.5 pt-1.5">
                 <CustomNextLink href="/login" variant="ghost">
                   User Login
