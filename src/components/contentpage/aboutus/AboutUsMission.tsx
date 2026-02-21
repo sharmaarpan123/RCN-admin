@@ -7,13 +7,13 @@ export function AboutUsMission() {
   return (
     <section className="mx-auto container px-4 sm:px-6 lg:px-8 py-12 md:py-16 ">
       <motion.div
-        className="relative rounded-2xl md:rounded-3xl overflow-hidden px-6 py-10 md:px-12 md:py-14 text-center"
+        className="relative rounded-2xl bg-rcn-gradient md:rounded-3xl overflow-hidden px-6 py-10 md:px-12 md:py-14 text-center"
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-40px" }}
         transition={{ duration: 0.5 }}
         style={{
-          background: "linear-gradient(135deg, #0F6B3A 0%, #0a4d2a 100%)",
+         
           boxShadow: "0 20px 40px rgba(15, 107, 58, 0.2)",
         }}
       >

@@ -91,7 +91,7 @@ export function AboutUsDescription() {
                 transition={{ duration: 0.4, delay: 0.05 }}
               >
                 Modern Referral{" "}
-                <span className="text-rcn-brand-light">Coordination</span>
+                <span className="text-rcn-gradient">Coordination</span>
               </motion.h2>
               <motion.p
                 className="text-rcn-muted text-base md:text-lg mb-4"

@@ -67,8 +67,8 @@ export function ContactUsContent() {
       <div className="rounded-2xl overflow-hidden shadow-xl p-4 oy-6 border border-rcn-border bg-white flex flex-col lg:flex-row">
         {/* Left: Contact Information - green panel */}
         <div
-          className="lg:w-[380px] rounded-2xl shrink-0 p-6 md:p-8 flex flex-col justify-center"
-          style={{ backgroundColor: "var(--color-rcn-brand)" }}
+          className="lg:w-[380px] rounded-2xl shrink-0 p-6 md:p-8 bg-rcn-gradient  flex flex-col justify-center"
+
         >
           <h2 className="text-xl font-bold text-white mb-3">Contact Information</h2>
           <p className="text-white/95 text-sm leading-relaxed mb-6">
@@ -154,7 +154,7 @@ export function ContactUsContent() {
                 variant="primary"
                 size="lg"
                 disabled={isSubmitting}
-                className="flex items-center justify-center gap-2 w-full text-center"
+                className="flex items-center justify-center gap-2 w-full text-center bg-rcn-gradient"
               >
                 Submit
 

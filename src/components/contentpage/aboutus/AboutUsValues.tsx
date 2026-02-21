@@ -52,9 +52,9 @@ export function AboutUsValues() {
   return (
     <section className="mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 max-w-6xl">
       <div className="text-center mb-10 md:mb-14">
-        <p className="text-rcn-brand font-semibold text-sm uppercase tracking-wide mb-2">Our Values</p>
+        <p className="text-rcn-brand text-2xl font-semibold  text-rcn-gradient uppercase tracking-wide mb-2">Our Values</p>
         <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-rcn-text mb-3">
-          Built on strong <span className="text-rcn-brand">principles</span>
+          Built on strong <span className="text-rcn-gradient">Principles</span>
         </h2>
         <p className="text-rcn-text-faded text-base md:text-lg max-w-2xl mx-auto">
           Every decision we make is guided by these core principles.

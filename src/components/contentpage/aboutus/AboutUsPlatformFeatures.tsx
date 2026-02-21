@@ -144,7 +144,7 @@ export function AboutUsPlatformFeatures() {
             transition={{ duration: 0.4, delay: 0.05 }}
           >
             Everything You Need to{" "}
-            <span className="text-rcn-brand-light">Coordinate Referrals</span>
+            <span className="text-rcn-gradient">Coordinate Referrals</span>
           </motion.h2>
           <motion.p
             className="mb-10 text-base text-rcn-muted md:text-lg"
