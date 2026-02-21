@@ -504,9 +504,7 @@ const Login: React.FC = () => {
           
           </div>
         </div>
-        <p className="text-xs text-rcn-muted mt-3 text-center">
-          Tip: open this in Chrome/Edge. Everything runs offline.
-        </p>
+       
       </div>
     </div>
   );

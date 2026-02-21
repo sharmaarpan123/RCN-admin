@@ -35,7 +35,6 @@ export function ReceiverDocsSection({ isUnlocked, receiverStatus, docList, onPay
               <thead>
                 <tr>
                   <th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">Document</th>
-                  <th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">Type</th>
                   <th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">Download</th>
                 </tr>
               </thead>
@@ -43,8 +42,7 @@ export function ReceiverDocsSection({ isUnlocked, receiverStatus, docList, onPay
                 {docList.map((d, idx) => (
                   <tr key={idx} className="border-t border-slate-200">
                     <td className="p-2.5"><strong>{d.label}</strong>{d.url ? <div className="text-rcn-muted text-xs">File: {d.url}</div> : null}</td>
-                    <td className="p-2.5">Clinical</td>
-                    <td className="p-2.5"><button type="button" onClick={() => alert(`Demo: download ${d.label}`)} className="border border-slate-200 bg-white px-2 py-1.5 rounded-xl text-xs font-extrabold shadow">Download</button></td>
+                     <td className="p-2.5"><button type="button" onClick={() => alert(`Demo: download ${d.label}`)} className="border border-slate-200 bg-white px-2 py-1.5 rounded-xl text-xs font-extrabold shadow">Download</button></td>
                   </tr>
                 ))}
               </tbody>

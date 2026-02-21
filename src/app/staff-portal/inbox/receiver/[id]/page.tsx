@@ -1,42 +1,41 @@
 "use client";
 
-import React, { useRef, useState } from "react";
-import { useParams } from "next/navigation";
-import Link from "next/link";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { loadStripe } from "@stripe/stripe-js";
 import {
   getOrganizationReferralByIdApi,
   getPaymentMethodsActiveApi,
   patchOrganizationReferralDepartmentStatusApi,
-  postOrganizationReferralDepartmentPaymentSummaryApi,
   postOrganizationReferralDepartmentPayApi,
+  postOrganizationReferralDepartmentPaymentSummaryApi,
 } from "@/apis/ApiCalls";
-import { checkResponse, catchAsync } from "@/utils/commonFunc";
-import defaultQueryKeys from "@/utils/staffQueryKeys";
-import { toastError } from "@/utils/toast";
-import type {
-  ReferralByIdApi,
-  ReceiverInstance,
-} from "@/app/staff-portal/inbox/types";
 import {
   fmtDate,
   pillClass,
   scrollToId,
 } from "@/app/staff-portal/inbox/helpers";
-import { documentsToList } from "@/components/staffComponents/inbox/sender/view/senderViewHelpers";
+import type {
+  ReferralByIdApi,
+} from "@/app/staff-portal/inbox/types";
+import { Button, StripeCardModal } from "@/components";
 import {
-  ReceiverBasicSection,
-  ReceiverDocsSection,
   ReceiverAdditionalSection,
+  ReceiverBasicSection,
   ReceiverChatSection,
+  ReceiverDocsSection,
 } from "@/components/staffComponents/inbox/receiver/view";
+import type { PaymentSummaryData } from "@/components/staffComponents/inbox/receiver/view/Modals";
 import {
   PayToUnlockModal,
   PaymentSummaryModal,
 } from "@/components/staffComponents/inbox/receiver/view/Modals";
-import type { PaymentSummaryData } from "@/components/staffComponents/inbox/receiver/view/Modals";
-import { Button, StripeCardModal } from "@/components";
+import { documentsToList } from "@/components/staffComponents/inbox/sender/view/senderViewHelpers";
+import { catchAsync, checkResponse } from "@/utils/commonFunc";
+import defaultQueryKeys from "@/utils/staffQueryKeys";
+import { toastError } from "@/utils/toast";
+import { loadStripe } from "@stripe/stripe-js";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import React, { useRef, useState } from "react";
 
 type department_status_type =
   | {
@@ -147,20 +146,9 @@ function ReceiverDetailContent({
     department_status?.department?._id ??
     null;
   const senderPaid = department_status?.is_paid_by_sender === 1;
-  const wePaid = !senderPaid && department_status?.payment_status === "paid";
   const isUnlocked = department_status?.payment_status === "paid";
 
-  const currentReceiver: ReceiverInstance | null = department_status
-    ? {
-      receiverId: receiverId ?? "unknown",
-      name: department_status.department?.name ?? "Receiver",
-      email: "",
-      status: department_status.status ?? "pending",
-      paidUnlocked: department_status.payment_status === "paid",
-      updatedAt: new Date(),
-      rejectReason: "",
-    }
-    : null;
+  
 
   const { data: methodsList } = useQuery({
     queryKey: defaultQueryKeys.paymentMethodsActive,
