@@ -22,7 +22,9 @@ type AdminOrganizationsApiResponse = {
   success?: boolean;
   message?: string;
   data: AdminOrganizationListItem[];
-  meta?: unknown;
+  meta?: {
+    total: number;
+  };
 };
 
 export function OrganizationsPage() {
@@ -64,6 +66,7 @@ export function OrganizationsPage() {
 
 
   const orgsList = useMemo(() => orgsResponse?.data ?? [], [orgsResponse?.data]);
+
 
   const openModal = (content: React.ReactNode) => setModalContent(content);
   const closeModal = () => setModalContent(null);
@@ -159,6 +162,7 @@ export function OrganizationsPage() {
       <OrganizationsTable
         isLoading={orgsLoading}
         body={orgListBody}
+        total={orgsResponse?.meta?.total ?? 0}
         setBody={setOrgListBody}
         data={orgsList}
         columns={adminOrgTableColumns({

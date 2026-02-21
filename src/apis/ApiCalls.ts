@@ -40,7 +40,7 @@ export const getAuthCreditsApi = () => AxiosInstance.get("/api/auth/credits");
 export const authLogoutApi = (authorization?: string) =>
   AxiosInstance.post(
     "/api/auth/logout",
-  
+
   );
 
 /** POST /api/auth/change-password — change password for authenticated user. */
@@ -205,7 +205,7 @@ export const updateOrganizationBranchApi = (
 export const deleteOrganizationBranchApi = (branchId: string) =>
   AxiosInstance.delete(`/api/organization/branch/${branchId}`);
 
-export const getOrganizationDepartmentsApi = (params: { branch_id: string }) =>
+export const getOrganizationDepartmentsApi = (params: unknown) =>
   AxiosInstance.get("/api/organization/department", { params });
 
 export const getOrganizationDepartmentApi = (departmentId: string) =>
@@ -386,8 +386,8 @@ export const getAdminAuthLogsApi = () =>
   AxiosInstance.get("/api/admin/auth-logs");
 
 /** GET /api/admin/financial-report — list financial report entries (admin). */
-export const getAdminFinancialReportApi = () =>
-  AxiosInstance.get("/api/admin/financial-report");
+export const getAdminFinancialReportApi = (body: unknown) =>
+  AxiosInstance.get("/api/admin/financial-report", { params: body });
 
 // ——— Staff portal (users) ———
 

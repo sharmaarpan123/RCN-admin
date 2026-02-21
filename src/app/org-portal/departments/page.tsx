@@ -55,11 +55,11 @@ export default function OrgPortalDepartmentsPage() {
   const branchId = branchFilter || branches[0]?._id || "all";
 
   const { data: deptApiData, isLoading } = useQuery({
-    queryKey: [...DEPARTMENTS_QUERY_KEY, branchId],
+    queryKey: [...DEPARTMENTS_QUERY_KEY, branchId, body.search],
     queryFn: async () => {
       if (!branchId) return { data: [] };
       try {
-        const res = await getOrganizationDepartmentsApi({ branch_id: branchId });
+        const res = await getOrganizationDepartmentsApi({ branch_id: branchId, search: body.search });
         if (!checkResponse({ res })) return { data: [] };
         return res.data;
       } catch {

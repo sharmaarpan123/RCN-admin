@@ -2,6 +2,7 @@
 
 import type { TableColumn } from "@/components";
 import { Button, DebouncedInput, TableLayout } from "@/components";
+import CustomPagination from "@/components/CustomPagination";
 import type { OrgTableRow } from "./types";
 import { INPUT_CLASS } from "./types";
 interface OrganizationsTableProps {
@@ -10,6 +11,7 @@ interface OrganizationsTableProps {
     limit: number;
     search: string;
   };
+  total: number;
   isLoading: boolean;
   setBody: (v: { page: number; limit: number; search: string }) => void;
   data: OrgTableRow[];
@@ -24,6 +26,7 @@ export function OrganizationsTable({
   columns,
   data,
   onNewOrg,
+  total,
 }: OrganizationsTableProps) {
   return (
     <div className="bg-white border border-rcn-border rounded-rcn-lg shadow-rcn p-4 mb-4">
@@ -64,12 +67,12 @@ export function OrganizationsTable({
         />
       </div>
 
-      {/* <CustomPagination
-        total={100}
+      <CustomPagination
+        total={total}
         pageSize={body.limit}
         current={body.page}
-        onChange={(page) => setBody({ ...body, page })}
-      /> */}
+        onChange={(page: number) => setBody({ ...body, page })}
+      />
     </div>
   );
 }

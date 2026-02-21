@@ -29,8 +29,7 @@ export default function StaffInboxPage() {
   const [forwardPatches, setForwardPatches] = useState<Map<string, SentReferralApi>>(new Map());
   const [companyDirectory, setCompanyDirectory] = useState<Company[]>(() => [...DEMO_COMPANIES]);
   const [role, setRole] = useState<"SENDER" | "RECEIVER">("SENDER");
-  const [statusFilter, setStatusFilter] = useState("ALL");
-  const [dateFilterDays, setDateFilterDays] = useState(30);
+
   const [senderBody, setSenderBody] = useState<SenderInboxBody>({ page: 1, limit: 10, search: "", type: "all", day: 1 });
   const [receiverBody, setReceiverBody] = useState<ReceiverInboxBody>({ page: 1, limit: 10, search: "", type: "all", day: 1 });
 
