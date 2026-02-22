@@ -375,10 +375,7 @@ const Banners: React.FC = () => {
           invalidateBanners();
           closeBannerModal();
         }}
-        onDeleteClick={(b) => {
-          setDeleteTarget(b);
-          closeBannerModal();
-        }}
+
       />
 
       <ConfirmModal

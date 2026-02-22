@@ -16,7 +16,7 @@ import { useOrganizationAuthLoginUser } from "@/store/slices/Auth/hooks";
 type InboxRefMode = "sent" | "received";
 
 type SenderStatusFilter = "all" | "draft" | "sent";
-type ReceiverStatusFilter = "all" | "pending" | "accepted" | "rejected" | "paid";
+type ReceiverStatusFilter = "all" | "pending" | "accepted" | "rejected";
 
 const PAGE_SIZE = 10;
 
@@ -111,7 +111,8 @@ export default function OrgPortalReferralDashboardPage() {
       const res = await getOrganizationReferralByOrganizationApi({
         organization_id: ownOrgId,
         type: isSent ? "sender" : "receiver",
-        status: statusParam,
+        ...(isSent && { status: statusParam }),
+        ...(!isSent && { current_status: statusParam, status: "all" }),
         page,
         limit: PAGE_SIZE,
       });
@@ -315,7 +316,7 @@ export default function OrgPortalReferralDashboardPage() {
             </div>
           ) : (
             <div className="flex gap-2 flex-wrap">
-              {(["all", "pending", "accepted", "rejected", "paid"] as const).map((value) => (
+              {(["all", "pending", "accepted", "rejected"] as const).map((value) => (
                 <Button
                   key={value}
                   variant="tab"

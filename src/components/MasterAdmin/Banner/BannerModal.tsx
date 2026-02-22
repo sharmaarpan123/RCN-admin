@@ -32,7 +32,7 @@ export interface BannerModalProps {
   editingBanner: ApiBanner | null;
   orgsList: AdminOrganizationListItem[];
   onSuccess: () => void;
-  onDeleteClick?: (banner: ApiBanner) => void;
+
 }
 
 export function BannerModal({
@@ -41,7 +41,7 @@ export function BannerModal({
   editingBanner,
   orgsList,
   onSuccess,
-  onDeleteClick,
+
 }: BannerModalProps) {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
@@ -301,19 +301,7 @@ export function BannerModal({
         <div className="flex justify-between items-center">
           <p className="text-xs text-rcn-muted m-0">Changes apply after Save.</p>
           <div className="flex gap-2">
-            {editingBanner && onDeleteClick && (
-              <Button
-                type="button"
-                variant="danger"
-                size="sm"
-                onClick={() => {
-                  onDeleteClick(editingBanner);
-                  onClose();
-                }}
-              >
-                Delete
-              </Button>
-            )}
+          
             <Button
               type="submit"
               variant="primary"
