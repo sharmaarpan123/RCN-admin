@@ -79,7 +79,7 @@ export interface AuthProfileData {
   phone_number: string;
   fax_number?: string;
   role_id: number;
-  organization_id: string;
+  organization_id: ProfileOrganization;
   status: number;
   device_token?: string;
   device_type?: string;

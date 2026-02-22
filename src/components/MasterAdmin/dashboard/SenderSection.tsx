@@ -2,7 +2,8 @@
 
 import React, { useCallback, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { CustomAsyncSelect } from "@/components";
+import { Button, CustomAsyncSelect, TableLayout, type TableColumn } from "@/components";
+import CustomPagination from "@/components/CustomPagination";
 import type { RcnSelectOption } from "@/components/CustomAsyncSelect";
 import { getAdminOrganizationsApi, getOrganizationReferralByOrganizationApi } from "@/apis/ApiCalls";
 import { checkResponse } from "@/utils/commonFunc";
@@ -16,20 +17,66 @@ export type DashboardOrg = {
   address: { state: string; zip: string };
 };
 
+/** Referral item from GET /api/organization/referral/by-organization (sender list). */
+export type SenderReferralRow = {
+  _id: string;
+  createdAt?: string;
+  sent_at?: string;
+  patient?: {
+    patient_first_name?: string;
+    patient_last_name?: string;
+    dob?: string;
+    gender?: string;
+  };
+  department_statuses?: Array<{
+    status?: string;
+    department?: { name?: string; organization_id?: string };
+  }>;
+  guest_organization_statuses?: Array<{ company_name?: string }>;
+  [key: string]: unknown;
+};
+
+type ReferralListMeta = {
+  page?: number;
+  limit?: number;
+  total?: number;
+  totalPages?: number;
+  hasNextPage?: boolean;
+  hasPrevPage?: boolean;
+};
+
 function getStatusClass(status: string) {
-  if (status === "Accepted") return "border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]";
-  if (status === "Rejected") return "border-[#f3b8b8] bg-[#fff1f2] text-[#991b1b]";
-  if (status === "Pending") return "border-[#f3d9a1] bg-[#fff8e6] text-[#7a4a00]";
-  return "";
+  const s = (status ?? "").toLowerCase();
+  if (s === "accepted" || s === "active") return "border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]";
+  if (s === "rejected") return "border-[#f3b8b8] bg-[#fff1f2] text-[#991b1b]";
+  if (s === "pending") return "border-[#f3d9a1] bg-[#fff8e6] text-[#7a4a00]";
+  return "border-rcn-border bg-[#f8fcf9] text-rcn-muted";
+}
+
+function displayStatus(status: string) {
+  const s = (status ?? "").toLowerCase();
+  if (s === "active") return "Accepted";
+  return (status ?? "—").charAt(0).toUpperCase() + (status ?? "").slice(1);
 }
 
 export interface SenderSectionProps {
-  orgs: DashboardOrg[];
   onViewReferral: (ref: Record<string, unknown>, isReceiver: false) => void;
 }
 
-export function SenderSection({ orgs, onViewReferral }: SenderSectionProps) {
+const PAGE_SIZE = 10;
+
+type StatusFilter = "all" | "draft" | "sent";
+
+const STATUS_TABS: { value: StatusFilter; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "draft", label: "Draft" },
+  { value: "sent", label: "Sent" },
+];
+
+export function SenderSection({  onViewReferral }: SenderSectionProps) {
   const [selectedOption, setSelectedOption] = useState<RcnSelectOption[]>([]);
+  const [page, setPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const selectedOrgId = selectedOption[0]?.value ?? "";
   const selectedOrgName = selectedOption[0]?.label ?? "";
 
@@ -52,31 +99,104 @@ export function SenderSection({ orgs, onViewReferral }: SenderSectionProps) {
 
   const handleChange = useCallback((options: RcnSelectOption[]) => {
     setSelectedOption(options.length ? [options[0]] : []);
+    setPage(1);
+  }, []);
+
+  const setStatus = useCallback((status: StatusFilter) => {
+    setStatusFilter(status);
+    setPage(1);
   }, []);
 
   const { data: referralsRes, isLoading } = useQuery({
-    queryKey: [...defaultQueryKeys.referralByOrganization, "sender", selectedOrgId],
+    queryKey: [...defaultQueryKeys.referralByOrganization, "sender", selectedOrgId, page, statusFilter],
     queryFn: async () => {
       if (!selectedOrgId) return { data: [], meta: null };
       const res = await getOrganizationReferralByOrganizationApi({
         organization_id: selectedOrgId,
         type: "sender",
-        status: "all",
-        page: 1,
-        limit: 100,
+        status: statusFilter,
+        page,
+        limit: PAGE_SIZE,
       });
       if (!checkResponse({ res })) return { data: [], meta: null };
-      return res.data as { data?: unknown[]; meta?: unknown };
+      return res.data as { data?: SenderReferralRow[]; meta?: ReferralListMeta };
     },
     enabled: !!selectedOrgId,
   });
 
-  const referrals = useMemo(
-    () => ((referralsRes?.data ?? []) as Record<string, unknown>[]).sort((a, b) =>
-      new Date((b.createdAt ?? b.created_at) as string).getTime() -
-      new Date((a.createdAt ?? a.created_at) as string).getTime()
-    ),
-    [referralsRes?.data]
+  const referrals = (referralsRes?.data ?? []) as SenderReferralRow[];
+  const meta = referralsRes?.meta as ReferralListMeta | undefined;
+  const total = meta?.total ?? 0;
+
+  const columns: TableColumn<SenderReferralRow>[] = useMemo(
+    () => [
+     
+      {
+        head: "Date",
+        component: (row) => (
+          <span className="text-xs">
+            {fmtDate((row.sent_at ?? row.createdAt) as string)}
+          </span>
+        ),
+      },
+      {
+        head: "Patient",
+        component: (row) => {
+          const p = row.patient;
+          const last = p?.patient_last_name ?? "";
+          const first = p?.patient_first_name ?? "";
+          const name = `${last}, ${first}`.trim() || "—";
+          const sub = [p?.dob, p?.gender].filter(Boolean).join(" • ") || "";
+          return (
+            <div className="text-xs">
+              <div>{name}</div>
+              {sub ? <div className="text-rcn-muted">{sub}</div> : null}
+            </div>
+          );
+        },
+      },
+      {
+        head: "Receiver",
+        component: (row) => {
+          const depts = row.department_statuses ?? [];
+          const guests = row.guest_organization_statuses ?? [];
+          const n = depts.length + guests.length;
+          const label = `${n} receivers`;
+          return <span className="text-xs">{label}</span>;
+        },
+      },
+      {
+        head: "Status",
+        component: (row) => {
+          const depts = row.department_statuses ?? [];
+          const first = depts[0]?.status;
+          const status = first ?? (row.is_draft ? "draft" : "sent");
+          return (
+            <span
+              className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border ${getStatusClass(status)}`}
+            >
+              {displayStatus(status)}
+            </span>
+          );
+        },
+      },
+      {
+        head: "Actions",
+        component: (row) => (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onViewReferral(row as unknown as Record<string, unknown>, false);
+            }}
+            className="border border-rcn-border bg-white px-2 py-1.5 rounded-lg cursor-pointer font-semibold text-rcn-text text-xs hover:border-[#c9ddd0] transition-colors"
+          >
+            View
+          </button>
+        ),
+      },
+    ],
+    [onViewReferral]
   );
 
   return (
@@ -103,98 +223,46 @@ export function SenderSection({ orgs, onViewReferral }: SenderSectionProps) {
         />
       </div>
 
+      {selectedOrgId && (
+        <div className="flex gap-2 flex-wrap mb-3">
+          {STATUS_TABS.map(({ value, label }) => (
+            <Button
+              key={value}
+              variant="tab"
+              size="sm"
+              active={statusFilter === value}
+              onClick={() => setStatus(value)}
+            >
+              {label}
+            </Button>
+          ))}
+        </div>
+      )}
+
       {!selectedOrgId ? (
         <div className="text-xs text-rcn-muted p-2.5 border border-dashed border-rcn-border rounded-xl">
           Select an organization to view sent referrals.
         </div>
       ) : (
-        <div className="overflow-auto">
-          <table className="w-full border-separate border-spacing-0 overflow-hidden rounded-2xl border border-rcn-border">
-            <thead>
-              <tr>
-                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">
-                  ID
-                </th>
-                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">
-                  Date
-                </th>
-                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">
-                  Patient
-                </th>
-                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">
-                  Receiver
-                </th>
-                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-2.5 py-2.5 border-b border-rcn-border text-xs text-left align-top bg-[#f6fbf7] text-rcn-dark-bg uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                <tr>
-                  <td colSpan={6} className="px-2.5 py-2.5 text-xs text-rcn-muted">
-                    Loading…
-                  </td>
-                </tr>
-              ) : referrals.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-2.5 py-2.5 text-xs text-rcn-muted">
-                    No referrals found.
-                  </td>
-                </tr>
-              ) : (
-                referrals.map((ref) => {
-                  const refId = (ref.id ?? ref._id) as string;
-                  const receiverId = (ref.receiverOrgId ?? ref.receiver_organization_id ?? ref.receiver_org_id) as string;
-                  const receiver = orgs.find((o) => o.id === receiverId);
-                  const patient = (ref.patient ?? ref.patient_info) as Record<string, unknown> | undefined;
-                  const status = (ref.status ?? ref.referral_status) as string;
-                  return (
-                    <tr key={refId}>
-                      <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top font-mono">
-                        {refId}
-                      </td>
-                      <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                        {fmtDate((ref.createdAt ?? ref.created_at) as string)}
-                      </td>
-                      <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                        {String(patient?.last ?? patient?.last_name ?? "—")}, {String(patient?.first ?? patient?.first_name ?? "—")}
-                        <div className="text-rcn-muted">
-                          {String(patient?.dob ?? "—")} • {String(patient?.gender ?? "—")}
-                        </div>
-                      </td>
-                      <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                        {String(receiver?.name ?? "—")}
-                        <div className="text-rcn-muted">
-                          {receiver ? `${receiver.address?.state ?? ""} ${receiver.address?.zip ?? ""}` : ""}
-                        </div>
-                      </td>
-                      <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                        <span
-                          className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border ${getStatusClass(status)}`}
-                        >
-                          {status}
-                        </span>
-                      </td>
-                      <td className="px-2.5 py-2.5 border-b border-rcn-border text-xs align-top">
-                        <button
-                          type="button"
-                          onClick={() => onViewReferral(ref, false)}
-                          className="border border-rcn-border bg-white px-2 py-1.5 rounded-lg cursor-pointer font-semibold text-rcn-text text-xs hover:border-[#c9ddd0] transition-colors"
-                        >
-                          View
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+        <>
+          <TableLayout<SenderReferralRow>
+            columns={columns}
+            data={referrals}
+            loader={isLoading}
+            emptyMessage="No referrals found."
+            getRowKey={(row) => row._id}
+            variant="bordered"
+            size="sm"
+          />
+          {total > 0 && (
+            <CustomPagination
+              total={total}
+              pageSize={PAGE_SIZE}
+              current={page}
+              onChange={(p) => setPage(p)}
+            />
+          )}
+        </>
       )}
     </div>
   );

@@ -44,7 +44,7 @@ export default function Footer() {
               About
             </Link>
 
-            <Link href="/contact-us" variant="text" size="sm"  className="block py-1.5">
+            <Link href="/contact-us" variant="text" size="sm" className="block py-1.5">
               Contact
             </Link>
           </div>
@@ -62,7 +62,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-4 text-rcn-muted text-xs flex items-center justify-between gap-2.5 flex-wrap">
-          <div>© {currentYear} Referral Coordination Network. <span className="text-rcn-brand font-[750]">All rights reserved.</span></div>
+          <div> <span className="text-rcn-brand font-[750]">© {currentYear} Referral Coordination Network. All rights reserved.</span></div>
           <div className="flex gap-2.5 items-center flex-wrap">
             <span className="text-rcn-muted">Need help?</span>
             <Link href="/contact-us" variant="secondary" size="sm" className="rounded-full">

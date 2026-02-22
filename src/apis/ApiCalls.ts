@@ -92,11 +92,11 @@ export const putAdminOrganizationToggleApi = (organizationId: string) =>
 export const getAdminReferralDashboardApi = () =>
   AxiosInstance.get("/api/admin/referral-dashboard");
 
-/** GET /api/organization/referral/by-organization — list referrals by organization (admin dashboard). Params: organization_id, type (sender|receiver), status (all|draft|sent), page, limit. */
+/** GET /api/organization/referral/by-organization — list referrals by organization (admin dashboard). Params: organization_id, type (sender|receiver), status (sender: all|draft|sent; receiver: all|pending|accepted|rejected|paid), page, limit. */
 export const getOrganizationReferralByOrganizationApi = (params: {
   organization_id: string;
   type: "sender" | "receiver";
-  status?: "all" | "draft" | "sent";
+  status?: "all" | "draft" | "sent" | "pending" | "accepted" | "rejected" | "paid";
   page?: number;
   limit?: number;
 }) =>
