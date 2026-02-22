@@ -23,9 +23,7 @@ function sentReferralStatus(ref: SentReferralApi): string {
 
 interface SenderInboxProps {
   referrals: SentReferralApi[];
-  setReferrals: React.Dispatch<React.SetStateAction<SentReferralApi[]>>;
-  companyDirectory: Company[];
-  setCompanyDirectory: React.Dispatch<React.SetStateAction<Company[]>>;
+ 
 
 
   meta: ReferralListMeta;
@@ -38,52 +36,19 @@ export function SenderInbox({
   body,
   setBody,
   referrals,
-  setReferrals,
-  companyDirectory,
-  setCompanyDirectory,
+
   meta,
   isLoading = false,
 }: SenderInboxProps) {
   const router = useRouter();
-  const [forwardOpen, setForwardOpen] = useState(false);
-  const [forwardRefId, setForwardRefId] = useState<string | null>(null);
-  const [forwardSelectedCompany, setForwardSelectedCompany] = useState<Company | null>(null);
-
+  
   const baseList = referrals
 
 
-  const fullRef = forwardRefId ? referrals.find((r) => r._id === forwardRefId) : null;
+  
 
-  const openForward = useCallback((id: string) => {
-    setForwardRefId(id);
-    setForwardSelectedCompany(null);
-    setForwardOpen(true);
-  }, []);
 
-  const forwardReferral = useCallback(
-    (refId: string, company: Company, customServices: string[] | null) => {
-      const rxId = "RX-FWD-" + Math.random().toString(16).slice(2, 8).toUpperCase();
-      setReferrals((prev) =>
-        prev.map((r) => {
-          if (r._id !== refId) return r;
-          const newReceiver = { receiverId: rxId, name: company.name.trim(), email: (company.email || "").trim(), status: "PENDING", paidUnlocked: false, updatedAt: new Date(), rejectReason: "", servicesRequestedOverride: customServices || null };
-          return { ...r, _localReceivers: [...(r._localReceivers ?? []), newReceiver] };
-        })
-      );
-      setForwardOpen(false);
-    },
-    [setReferrals]
-  );
 
-  const addCompanyAndSelect = useCallback(
-    (name: string, email: string) => {
-      const n = name.trim();
-      if (!n) return;
-      if (!companyDirectory.some((c) => c.name.toLowerCase() === n.toLowerCase())) setCompanyDirectory((prev) => [{ name: n, email: email.trim() }, ...prev]);
-      setForwardSelectedCompany({ name: n, email: email.trim() });
-    },
-    [companyDirectory, setCompanyDirectory]
-  );
 
   const columns: TableColumn<SentReferralApi>[] = useMemo(
     () => [
@@ -162,7 +127,7 @@ export function SenderInbox({
         ),
       },
     ],
-    [router, openForward]
+    [router]
   );
 
   return (
@@ -215,7 +180,7 @@ export function SenderInbox({
         </div>
       </section>
 
-      <ForwardModal
+      {/* <ForwardModal
         isOpen={forwardOpen}
         onClose={() => { setForwardOpen(false); setForwardRefId(null); setForwardSelectedCompany(null); }}
         refId={forwardRefId}
@@ -225,7 +190,7 @@ export function SenderInbox({
         onSelectCompany={setForwardSelectedCompany}
         onForward={(company: Company, customServices: string[] | null) => forwardRefId && forwardReferral(forwardRefId, company, customServices)}
         onAddCompanyAndSelect={addCompanyAndSelect}
-      />
+      /> */}
     </>
   );
 }

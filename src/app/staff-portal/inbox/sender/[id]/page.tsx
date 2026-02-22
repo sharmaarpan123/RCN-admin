@@ -1,9 +1,8 @@
 "use client";
 
 import { getOrganizationReferralByIdApi } from "@/apis/ApiCalls";
-import { DEMO_COMPANIES } from "@/app/staff-portal/inbox/demo-data";
 import { scrollToId } from "@/app/staff-portal/inbox/helpers";
-import type { ChatMsg, Comm, Company, ReceiverInstance, ReferralByIdApi } from "@/app/staff-portal/inbox/types";
+import type { ChatMsg, Comm, ReceiverInstance, ReferralByIdApi } from "@/app/staff-portal/inbox/types";
 import { SenderDetailSections } from "@/components/staffComponents/inbox/sender/view/SenderDetailSections";
 import { SenderDraftPaymentSection } from "@/components/staffComponents/inbox/sender/view/SenderDraftPaymentSection";
 import type { DocRow } from "@/components/staffComponents/inbox/sender/view/senderViewHelpers";
@@ -64,10 +63,7 @@ interface LocalOverlay {
 }
 
 function SenderDetailContent({ data }: { data: ReferralByIdApi }) {
-  const [companyDirectory, setCompanyDirectory] = useState<Company[]>(() => [...DEMO_COMPANIES]);
-  const [forwardOpen, setForwardOpen] = useState(false);
-  const [forwardRefId, setForwardRefId] = useState<string | null>(null);
-  const [forwardSelectedCompany, setForwardSelectedCompany] = useState<Company | null>(null);
+
   const [chatReceiverSelection, setChatReceiverSelection] = useState<Record<string, string>>({});
   const chatBodyRef = useRef<HTMLDivElement>(null);
 

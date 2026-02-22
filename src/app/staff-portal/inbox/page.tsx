@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useCallback, useMemo } from "react";
-import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
-import { getOrganizationReferralSentApi, getOrganizationReferralReceivedApi } from "@/apis/ApiCalls";
+import { getOrganizationReferralReceivedApi, getOrganizationReferralSentApi } from "@/apis/ApiCalls";
 import { checkResponse } from "@/utils/commonFunc";
 import defaultQueryKeys from "@/utils/staffQueryKeys";
-import type { Company, SentReferralApi, ReceivedReferralApi, ReferralListMeta, ReferralListResponse } from "./types";
+import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
+import { useMemo, useState } from "react";
+import type { ReceivedReferralApi, ReferralListMeta, ReferralListResponse, SentReferralApi } from "./types";
 
 const defaultMeta: ReferralListMeta = {
   page: 1,
@@ -16,8 +16,8 @@ const defaultMeta: ReferralListMeta = {
   hasNextPage: false,
   hasPrevPage: false,
 };
-import { DEMO_COMPANIES } from "./demo-data";
-import { SenderInbox, ReceiverInbox } from "@/components/staffComponents";
+
+import { ReceiverInbox, SenderInbox } from "@/components/staffComponents";
 
 export type SenderInboxType = "all" | "draft" | "sent";
 export type ReceiverInboxType = "all" | "pending" | "accepted" | "rejected" | "paid";
@@ -26,8 +26,6 @@ export type SenderInboxBody = { page: number; limit: number; search: string, typ
 export type ReceiverInboxBody = { page: number; limit: number; search: string, type: ReceiverInboxType, day: number };
 
 export default function StaffInboxPage() {
-  const [forwardPatches, setForwardPatches] = useState<Map<string, SentReferralApi>>(new Map());
-  const [companyDirectory, setCompanyDirectory] = useState<Company[]>(() => [...DEMO_COMPANIES]);
   const [role, setRole] = useState<"SENDER" | "RECEIVER">("SENDER");
 
   const [senderBody, setSenderBody] = useState<SenderInboxBody>({ page: 1, limit: 10, search: "", type: "all", day: 1 });
@@ -70,28 +68,12 @@ export default function StaffInboxPage() {
   });
 
   const baseReferrals = useMemo(() => sentResponse?.data ?? [], [sentResponse]);
-  const senderReferrals = useMemo(
-    () => baseReferrals.map((r) => forwardPatches.get(r._id) ?? r),
-    [baseReferrals, forwardPatches]
-  );
+  
   const sentMeta = sentResponse?.meta ?? defaultMeta;
   const receivedMeta = receivedResponse?.meta ?? defaultMeta;
   const baseReceivedReferrals = useMemo(() => receivedResponse?.data ?? [], [receivedResponse]);
 
-  const setSenderReferrals = useCallback(
-    (arg: React.SetStateAction<SentReferralApi[]>) => {
-      if (typeof arg === "function") {
-        setForwardPatches((prev) => {
-          const currentList = baseReferrals.map((r) => prev.get(r._id) ?? r);
-          const updatedList = (arg as (prev: SentReferralApi[]) => SentReferralApi[])(currentList);
-          const next = new Map(prev);
-          updatedList.forEach((r) => next.set(r._id, r));
-          return next;
-        });
-      }
-    },
-    [baseReferrals]
-  );
+
 
   return (
     <div className="max-w-[1280px] mx-auto p-[18px]">
@@ -137,10 +119,7 @@ export default function StaffInboxPage() {
         <SenderInbox
           body={senderBody}
           setBody={setSenderBody}
-          referrals={senderReferrals}
-          setReferrals={setSenderReferrals}
-          companyDirectory={companyDirectory}
-          setCompanyDirectory={setCompanyDirectory}
+          referrals={baseReferrals}
           meta={sentMeta}
           isLoading={isLoadingSent}
         />
