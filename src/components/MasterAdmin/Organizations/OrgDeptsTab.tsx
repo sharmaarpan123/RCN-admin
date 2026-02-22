@@ -14,6 +14,8 @@ import { useState } from "react";
 import { DeptModalContent } from "./DeptModal";
 import type { DeptTableRow } from "./types";
 import { AdminDepartmentListItem } from "./types";
+import EnableIcon from "@/assets/svg/EnableIcons";
+import DisableIcon from "@/assets/svg/DisableIcons";
 
 interface OrgDeptsTabProps {
   selectedOrgId: string;
@@ -108,7 +110,12 @@ export function OrgDeptsTab({
       component: (d) => (
         <div className="flex gap-2">
           <Button variant="secondary" size="sm" onClick={() => toggleDept(d._id)}>
-            Toggle
+            {d.status === 2 ? (
+              <EnableIcon />
+            ) : (
+              <DisableIcon
+              />
+            )}
           </Button>
           <Button variant="secondary" size="sm" onClick={() => openDeptModal(d._id)}>
             Edit

@@ -275,11 +275,14 @@ export function UserForm({
 
         {isEdit && canSubmit && (
           <div className="shrink-0 border border-rcn-border rounded-xl p-4 mt-2 bg-rcn-bg/50 min-w-[220px]">
-            <h2 className="font-bold text-sm m-0 mb-2">Manage Password</h2>
+            <h2 className="font-bold text-sm m-0 mb-2 text-end">Manage Password</h2>
             {!showPassword ? (
+              <div className="flex w-full justify-end">
+
               <Button variant="secondary" size="sm" onClick={() => setShowPassword(true)}>
                 Change Password
               </Button>
+              </div>
             ) : (
               <div className="space-y-2">
                 <div className="relative">

@@ -61,7 +61,7 @@ const floatIconVariants = {
 export function AboutUsHero() {
   return (
     <motion.section
-      className="mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12"
+      className="mx-auto px-4 sm:px-6 lg:px-8 py-2 "
       initial="hidden"
       animate="visible"
       variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.05 } } }}

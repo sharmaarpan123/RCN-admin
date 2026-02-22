@@ -45,7 +45,7 @@ export default function Header() {
         </div>
       </div> */}
 
-      <header className="sticky top-0 z-50 bg-[rgba(244,251,246,0.76)] backdrop-blur-[10px] border-b border-[rgba(220,239,227,0.85)]">
+      <header className="sticky top-0 z-50 bg-[rgba(244,251,246,0.76)] backdrop-blur-[10px] ">
         <div className="container mx-auto px-[18px]">
           <div className="flex items-center justify-between py-3 gap-3.5">
             <NextLink href="/" className="flex items-center gap-3 no-underline">
