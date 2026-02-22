@@ -1,18 +1,17 @@
 "use client";
 
-import React, { useState } from "react";
-import type { ReceiverInstance } from "@/app/staff-portal/inbox/types";
+import { useState } from "react";
 
 interface ChatInputProps {
-  selected: { receivers: ReceiverInstance[] };
+
   chatReceiverId: string | null;
   onSend: (receiverId: string, text: string) => void;
   role: "SENDER" | "RECEIVER";
 }
 
-export function ChatInput({ selected, chatReceiverId, onSend, role }: ChatInputProps) {
+export function ChatInput({ chatReceiverId, onSend }: ChatInputProps) {
   const [text, setText] = useState("");
-  const rid = role === "SENDER" ? (chatReceiverId || selected.receivers[0]?.receiverId) : (selected.receivers[0]?.receiverId ?? null);
+  const rid = chatReceiverId;
   const doSend = () => {
     if (rid && text.trim()) {
       onSend(rid, text);

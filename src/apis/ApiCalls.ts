@@ -93,13 +93,7 @@ export const getAdminReferralDashboardApi = () =>
   AxiosInstance.get("/api/admin/referral-dashboard");
 
 /** GET /api/organization/referral/by-organization — list referrals by organization (admin dashboard). Params: organization_id, type (sender|receiver), status (sender: all|draft|sent; receiver: all|pending|accepted|rejected|paid), page, limit. */
-export const getOrganizationReferralByOrganizationApi = (params: {
-  organization_id: string;
-  type: "sender" | "receiver";
-  status?: "all" | "draft" | "sent" | "pending" | "accepted" | "rejected" | "paid";
-  page?: number;
-  limit?: number;
-}) =>
+export const getOrganizationReferralByOrganizationApi = (params: unknown) =>
   AxiosInstance.get("/api/organization/referral/by-organization", { params });
 
 /** DELETE /api/admin/organization/:id — delete organization (admin). */
@@ -525,7 +519,7 @@ export const patchOrganizationReferralDepartmentStatusApi = (
   );
 
 /** POST /api/referral/chats/:referralId/start-chat — start or get conversation for a referral (receiver chat). */
-export const postReferralStartChatApi = (referralId: string, body: unknown) =>
+export const postReferralStartChatApi = (referralId: string, body?: unknown) =>
   AxiosInstance.post(`/api/referral/chats/${referralId}/start-chat`, body);
 
 /** GET /api/referral/chats — list chats (staff portal). Params: page, limit. */

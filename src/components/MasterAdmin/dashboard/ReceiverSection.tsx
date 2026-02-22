@@ -62,23 +62,21 @@ function displayStatus(status: string) {
 }
 
 export interface ReceiverSectionProps {
-  orgs: DashboardOrg[];
   onViewReferral: (ref: Record<string, unknown>, isReceiver: true) => void;
 }
 
 const PAGE_SIZE = 10;
 
-type StatusFilter = "all" | "pending" | "accepted" | "rejected" | "paid";
-
+type StatusFilter = "all" | "pending" | "accepted" | "rejected"
 const STATUS_TABS: { value: StatusFilter; label: string }[] = [
   { value: "all", label: "All" },
   { value: "pending", label: "Pending" },
   { value: "accepted", label: "Accepted" },
   { value: "rejected", label: "Rejected" },
-  { value: "paid", label: "Paid" },
+
 ];
 
-export function ReceiverSection({ orgs, onViewReferral }: ReceiverSectionProps) {
+export function ReceiverSection({ onViewReferral }: ReceiverSectionProps) {
   const [selectedOption, setSelectedOption] = useState<RcnSelectOption[]>([]);
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -119,8 +117,9 @@ export function ReceiverSection({ orgs, onViewReferral }: ReceiverSectionProps) 
       const res = await getOrganizationReferralByOrganizationApi({
         organization_id: selectedOrgId,
         type: "receiver",
-        status: statusFilter,
+        current_status: statusFilter,
         page,
+        status: "all",
         limit: PAGE_SIZE,
       });
       if (!checkResponse({ res })) return { data: [], meta: null };
@@ -135,7 +134,7 @@ export function ReceiverSection({ orgs, onViewReferral }: ReceiverSectionProps) 
 
   const columns: TableColumn<ReceiverReferralRow>[] = useMemo(
     () => [
-    
+
       {
         head: "Date",
         component: (row) => (
@@ -163,14 +162,11 @@ export function ReceiverSection({ orgs, onViewReferral }: ReceiverSectionProps) 
       {
         head: "Sender",
         component: (row) => {
-          const senderId = (row.sender_organization_id ?? row.senderOrgId ?? row.sender_org_id) as string | undefined;
-          const sender = senderId ? orgs.find((o) => o.id === senderId) : null;
-          const label = sender?.name ?? (row.facility_name as string) ?? "—";
-          const sub = sender ? `${sender.address?.state ?? ""} ${sender.address?.zip ?? ""}`.trim() : "";
+          const label = (row.facility_name as string) ?? "—";
           return (
             <div className="text-xs">
               <div>{label}</div>
-              {sub ? <div className="text-rcn-muted">{sub}</div> : null}
+
             </div>
           );
         },
@@ -193,29 +189,25 @@ export function ReceiverSection({ orgs, onViewReferral }: ReceiverSectionProps) 
       {
         head: "Actions",
         component: (row) => {
-          const billing = row.billing as { receiverOpenCharged?: boolean } | undefined;
-          const opened = billing?.receiverOpenCharged;
-          const label = opened ? "View" : "Open";
+
+
           return (
+
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 onViewReferral(row as unknown as Record<string, unknown>, true);
               }}
-              className={
-                opened
-                  ? "border border-rcn-border bg-white px-2 py-1.5 rounded-lg cursor-pointer font-semibold text-rcn-text text-xs hover:border-[#c9ddd0] transition-colors"
-                  : "logo-gradient text-white border-0 px-2 py-1.5 rounded-lg cursor-pointer font-semibold text-xs hover:opacity-90 transition-opacity"
-              }
+              className="border border-rcn-border bg-white px-2 py-1.5 rounded-lg cursor-pointer font-semibold text-rcn-text text-xs hover:border-[#c9ddd0] transition-colors"
             >
-              {label}
+              View
             </button>
           );
         },
       },
     ],
-    [orgs, onViewReferral]
+    [onViewReferral]
   );
 
   return (

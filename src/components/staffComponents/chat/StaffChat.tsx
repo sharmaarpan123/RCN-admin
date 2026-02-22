@@ -142,6 +142,8 @@ export default function ChatPage() {
   // Effective selected chat: use first in list when none selected
   const displayChat = selectedChat
 
+  console.log(selectedChat , "selectedChat")
+
   // Messages for selected chat
   const { data: messagesResponse, isLoading: isLoadingMessages } = useQuery({
     queryKey: [
@@ -193,10 +195,11 @@ export default function ChatPage() {
     referralId: string,
     _receiverId: string,
     text: string,
+    departmentId?: string,
   ) => {
     const msg = (text || "").trim();
     if (!msg) return;
-    sendMessage(referralId, msg);
+    sendMessage(referralId, msg, departmentId);
     // Optimistic refetch after a short delay so backend/socket can persist
     setTimeout(() => {
       queryClient.invalidateQueries({
@@ -208,7 +211,7 @@ export default function ChatPage() {
     }, 300);
   };
 
-  // ChatInput expects selected with receivers array
+
   const selectedForInput = useMemo(() => {
     if (!displayChat) return null;
     return {
@@ -450,10 +453,10 @@ export default function ChatPage() {
                       )}
                     </div>
                     <ChatInput
-                      selected={selectedForInput}
+
                       chatReceiverId={displayChat?.receiver_id ?? ""}
                       onSend={(rid, t) =>
-                        sendChatMessage(displayChat?.referral_id ?? "", rid, t)
+                        sendChatMessage(displayChat?.referral_id ?? "", rid, t, displayChat?.department_id ?? "")
                       }
                       role="SENDER"
                     />

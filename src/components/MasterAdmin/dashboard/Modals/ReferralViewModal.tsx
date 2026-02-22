@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
 import { Button, Modal, PreviewFile } from "@/components";
 import { fmtDate } from "@/utils/database";
 import { toastWarning } from "@/utils/toast";
+import { useState } from "react";
 
 export type DashboardOrg = {
   id: string;
@@ -58,24 +58,19 @@ export interface ReferralViewModalProps {
   onClose: () => void;
   /** Referral data (API shape: _id, patient, department_statuses, documents, etc.) */
   refData: Record<string, unknown> | null;
-  orgs: DashboardOrg[];
   isReceiver: boolean;
 }
 
-export function ReferralViewModal({ isOpen, onClose, refData, orgs, isReceiver }: ReferralViewModalProps) {
+export function ReferralViewModal({ isOpen, onClose, refData, isReceiver }: ReferralViewModalProps) {
   const [previewDocUrl, setPreviewDocUrl] = useState<string | null>(null);
 
   if (!refData) return null;
 
   const refId = (refData._id ?? refData.id) as string;
-  const senderId = (refData.sender_organization_id ?? refData.senderOrgId ?? refData.sender_org_id) as string | undefined;
-  const sender = senderId ? orgs.find((o) => o.id === senderId) : null;
-  const senderName = sender?.name ?? (refData.facility_name as string) ?? "—";
+  const senderName = (refData.facility_name as string) ?? "—";
   const refDate = (refData.sent_at ?? refData.createdAt ?? refData.created_at) as string;
   const deptStatuses = (refData.department_statuses ?? []) as Array<{ status?: string; department?: { name?: string; organization_id?: string }; payment_status?: string }>;
   const guestOrgs = (refData.guest_organization_statuses ?? []) as Array<{ company_name?: string; is_claimed?: boolean }>;
-  const firstStatus = deptStatuses[0]?.status;
-  const refStatus = firstStatus ?? (refData.is_draft ? "draft" : "sent");
   const hasPending = deptStatuses.some((d) => (d.status ?? "").toLowerCase() === "pending");
   const patient = (refData.patient ?? {}) as Record<string, unknown>;
   const insList = (refData.patient_insurance_information ?? []) as Array<{ payer?: string; policy?: string; plan_group?: string }>;
@@ -115,9 +110,7 @@ export function ReferralViewModal({ isOpen, onClose, refData, orgs, isReceiver }
               <label className="block text-[11px] text-rcn-muted font-semibold mb-1">Sender</label>
               <div className="text-[13px] p-2.5 border border-dashed border-slate-300/75 rounded-xl bg-slate-50/55">
                 {senderName}
-                {sender?.address && (
-                  <div className="text-rcn-muted text-xs mt-1">{sender.address.state} {sender.address.zip}</div>
-                )}
+
               </div>
             </div>
           </div>
@@ -164,15 +157,12 @@ export function ReferralViewModal({ isOpen, onClose, refData, orgs, isReceiver }
               <tbody>
                 {deptStatuses.map((d, i) => {
                   const dept = d.department;
-                  const orgId = dept?.organization_id;
-                  const org = orgId ? orgs.find((o) => o.id === orgId) : null;
-                  const name = org?.name ?? dept?.name ?? "—";
+                  const name = dept?.name ?? "—";
                   const status = d.status ?? "pending";
                   return (
                     <tr key={i} className="border-t border-slate-200">
                       <td className="p-2.5 align-top">
                         <strong>{name}</strong>
-                        {org?.address && <div className="text-rcn-muted text-[11px]">{org.address.state} {org.address.zip}</div>}
                       </td>
                       <td className="p-2.5">
                         <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border ${getStatusClass(status)}`}>

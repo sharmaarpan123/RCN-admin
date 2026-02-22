@@ -44,7 +44,7 @@ export function ReceiverChatSection({
     queryKey: [...defaultQueryKeys.referralChat, referralId],
     queryFn: async () => {
       const res = await postReferralStartChatApi(referralId);
-      if (!checkResponse({ res })) return null;
+      if (!checkResponse({ res , showError: false })) return null;
       const body = res.data as { data?: { messages?: ApiChatMessage[] } };
       return body?.data ?? null;
     },

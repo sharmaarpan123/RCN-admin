@@ -18,6 +18,7 @@ import { checkResponse } from "@/utils/commonFunc";
 import { Button } from "@/components";
 import defaultAdminQueryKeys from "@/utils/adminQueryKeys";
 import { AddReceiverModal } from "./AddReceiverModal";
+import { toastWarning } from "@/utils/toast";
 
 function toOptions(list: unknown[]): OrgBranchDeptOption[] {
   if (!Array.isArray(list)) return [];
@@ -90,7 +91,7 @@ export function SelectReceiverSection({
   });
 
   const stateFilterOptions: OrgBranchDeptOption[] = [
-    { value: "ALL", label: "All States" },
+
     ...stateOptionsFromApi,
   ];
 
@@ -100,6 +101,22 @@ export function SelectReceiverSection({
         stateFilter && stateFilter !== "ALL"
           ? stateOptionsFromApi.find((s) => s.value === stateFilter)?.label ?? stateFilter
           : "";
+
+
+
+      if (!stateParam && inputValue?.trim()) {
+        toastWarning("Please select a state");
+        return Promise.resolve([]);
+      }
+
+      if (!stateParam) {
+        return Promise.resolve([]);
+      }
+
+      if (!inputValue?.trim()) {
+        return Promise.resolve([]);
+      }
+
       return getStaffOrganizationsApi({
         ...(stateParam && { state: stateParam }),
         ...(inputValue.trim() && { search: inputValue.trim() }),

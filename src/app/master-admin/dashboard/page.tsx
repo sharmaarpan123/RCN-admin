@@ -25,20 +25,8 @@ const Dashboard: React.FC = () => {
   const [viewReferral, setViewReferral] = useState<Record<string, unknown> | null>(null);
   const [viewReferralIsReceiver, setViewReferralIsReceiver] = useState(false);
 
-  // GET /api/admin/organization — org list for modal sender/receiver names
-  const { data: orgsRes } = useQuery({
-    queryKey: [...defaultQueryKeys.organizationsList, "dashboard"],
-    queryFn: async () => {
-      const res = await getAdminOrganizationsApi({ limit: 500 });
-      if (!checkResponse({ res })) return { data: [] };
-      return res.data as { data?: AdminOrganizationListItem[] };
-    },
-  });
 
-  const orgs = useMemo(() => {
-    const list = orgsRes?.data ?? [];
-    return list.map(mapOrgToDashboard).filter((o) => o.id);
-  }, [orgsRes?.data]);
+
 
   const handleViewReferral = (ref: Record<string, unknown>, isReceiver: boolean) => {
     setViewReferral(ref);
@@ -61,11 +49,10 @@ const Dashboard: React.FC = () => {
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5 items-start">
         <SenderSection
-         
+
           onViewReferral={(ref) => handleViewReferral(ref, false)}
         />
         <ReceiverSection
-          orgs={orgs}
           onViewReferral={(ref) => handleViewReferral(ref, true)}
         />
       </div>
@@ -74,7 +61,7 @@ const Dashboard: React.FC = () => {
         isOpen={viewReferral !== null}
         onClose={() => setViewReferral(null)}
         refData={viewReferral}
-        orgs={orgs}
+
         isReceiver={viewReferralIsReceiver}
       />
     </>

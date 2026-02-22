@@ -382,7 +382,7 @@ export default function OrgPortalReferralDashboardPage() {
         isOpen={modalRef !== null}
         onClose={() => setModalRef(null)}
         refData={modalRef}
-        orgs={orgs}
+
         isReceiver={modalIsReceiver}
       />
     </div>
