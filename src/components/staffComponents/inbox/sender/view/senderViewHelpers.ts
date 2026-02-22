@@ -94,7 +94,7 @@ export function receiversFromData(data: ReferralByIdApi): ReceiverInstance[] {
   });
   const fromApiIds = new Set(fromApi.map((r) => r.receiverId));
   const fromDeptIds = (data.department_ids ?? [])
-    .filter((item): item is { _id: string; name?: string } => typeof item === "object" && item !== null && typeof (item as { _id?: string })._id === "string")
+    .filter((item): item is { _id: string; name: string } => typeof item === "object" && item !== null && typeof (item as { _id?: string })._id === "string")
     .filter((item) => !fromApiIds.has(item._id))
     .map((item) => ({
       receiverId: item._id,
