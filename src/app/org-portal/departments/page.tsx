@@ -21,7 +21,7 @@ interface Department {
   branch_id?: string;
 }
 
-type DeptRow = Department & { branchName?: string };
+type DeptRow = Department & { branch_id?: { _id?: string; name?: string } };
 
 const BRANCHES_QUERY_KEY = defaultQueryKeys.branchList;
 const DEPARTMENTS_QUERY_KEY = defaultQueryKeys.departmentList;
@@ -51,8 +51,8 @@ export default function OrgPortalDepartmentsPage() {
   });
 
   const branches: Branch[] = [
-    { _id: "all", name: "All Branches" }, ...(branchesData?.data ?? [])];
-  const branchId = branchFilter || branches[0]?._id || "all";
+    ...(branchesData?.data ?? [])];
+  const branchId = branchFilter || "all";
 
   const { data: deptApiData, isLoading } = useQuery({
     queryKey: [...DEPARTMENTS_QUERY_KEY, branchId, body.search],
@@ -82,7 +82,7 @@ export default function OrgPortalDepartmentsPage() {
       (row) =>
         (row.name ?? "").toLowerCase().includes(searchLower) ||
         (row._id ?? "").toLowerCase().includes(searchLower) ||
-        (row.branchName ?? "").toLowerCase().includes(searchLower)
+        (row.branch_id?.name ?? "").toLowerCase().includes(searchLower)
     )
     : data;
 
@@ -130,7 +130,7 @@ export default function OrgPortalDepartmentsPage() {
       head: "Branch",
       accessor: "branchName",
       component: (row) => (
-        <span className="text-rcn-muted">{row.branchName ?? "—"}</span>
+        <span className="text-rcn-muted">{row.branch_id?.name ?? "—"}</span>
       ),
     },
     {
@@ -164,7 +164,7 @@ export default function OrgPortalDepartmentsPage() {
               onChange={(e) => setBranchFilter(e.target.value)}
               className="w-full sm:w-auto min-w-0 px-2.5 py-2 text-sm rounded-xl border border-rcn-border bg-white focus:outline-none focus:ring-2 focus:ring-rcn-accent/30"
             >
-              {branches.map((b) => (
+              {[{ _id: "all", name: "All Branches" }, ...branches].map((b) => (
                 <option key={b._id} value={b._id}>
                   {b.name}
                 </option>
@@ -175,7 +175,7 @@ export default function OrgPortalDepartmentsPage() {
             variant="primary"
             size="md"
             onClick={openAdd}
-            disabled={!br}
+            disabled={!!!branches?.length}
           >
             + Add Department
           </Button>

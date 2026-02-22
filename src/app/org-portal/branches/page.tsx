@@ -107,7 +107,7 @@ export default function OrgPortalBranchesPage() {
                 id="branch-search"
                 value={body.search}
                 onChange={(value) => setBody((prev) => ({ ...prev, search: value }))}
-                placeholder="Search by name or ID"
+                placeholder="Search by name"
                 debounceMs={300}
               />
             </div>

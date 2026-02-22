@@ -62,7 +62,7 @@ export function DepartmentModal({
   const {
     register,
     handleSubmit,
-
+reset,
     formState: { errors },
   } = useForm<DepartmentFormValues>({
     defaultValues: { name: "", branch_id: "" },
@@ -83,6 +83,7 @@ export function DepartmentModal({
           ? await updateOrganizationDepartmentApi(vars.department_id, payload)
           : await createOrganizationDepartmentApi(payload);
         if (checkResponse({ res, showSuccess: true })) {
+          reset();
           onSuccess();
           onClose();
         }
