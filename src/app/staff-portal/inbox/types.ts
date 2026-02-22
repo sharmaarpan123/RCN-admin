@@ -66,7 +66,8 @@ export interface SentReferralApi {
   sender_dial_code?: string;
   speciality_ids?: { name: string; id: string }[];
   additional_speciality?: { name?: string; user_id?: string; _id?: string }[];
-  department_ids?: string[];
+  /** IDs only, or populated objects from GET /api/organization/referral/:id */
+  department_ids: { _id: string; name: string; organization_id?: string; branch_id?: string; status?: number }[];
   guest_organizations?: unknown[];
   additional_notes?: string;
   patient?: {

@@ -56,20 +56,57 @@ export interface DepartmentStatusApi {
   is_paid_by_sender?: number;
 }
 
-/** Build receivers list from API department_statuses + _localReceivers (as-is). Normalizes status to uppercase; paidUnlocked from payment_status === "paid". */
+/** Build a map of department _id -> name from department_ids when populated (array of objects). */
+function departmentNamesFromIds(data: ReferralByIdApi): Map<string, string> {
+  const map = new Map<string, string>();
+  const ids = data.department_ids ?? [];
+  for (const item of ids) {
+    if (item && typeof item === "object" && "name" in item && typeof (item as { name?: string }).name === "string") {
+      const id = (item as { _id?: string })._id;
+      if (id) map.set(id, (item as { name: string }).name);
+    }
+  }
+  return map;
+}
+
+/** Build receivers list from API department_statuses + _localReceivers (as-is). Normalizes status to uppercase; paidUnlocked from payment_status === "paid". Uses department_ids[].name when populated. Adds rows from department_ids when populated so received department names show even before status. */
 export function receiversFromData(data: ReferralByIdApi): ReceiverInstance[] {
+  const deptNames = departmentNamesFromIds(data);
   const dept = (data.department_statuses ?? []) as DepartmentStatusApi[];
-  const fromApi = dept.map((d, i) => ({
-    receiverId: d.department_id ?? d.department?._id ?? `dept-${i}`,
-    name: d.department?.name ?? d.organization_name ?? (d as { name?: string }).name ?? "Receiver",
-    email: "",
-    status: (d.status ?? "PENDING").toString().toUpperCase(),
-    paidUnlocked: d.payment_status === "paid",
-    updatedAt: d.updated_at ? new Date(d.updated_at) : new Date(),
-    rejectReason: "",
-    departmentId: d.department?._id ?? "",
-  }));
-  return [...fromApi, ...(data._localReceivers ?? [])];
+  const fromApi = dept.map((d, i) => {
+    const departmentId = d.department_id ?? d.department?._id ?? `dept-${i}`;
+    const name =
+      deptNames.get(departmentId) ??
+      d.department?.name ??
+      d.organization_name ??
+      (d as { name?: string }).name ??
+      "Receiver";
+    return {
+      receiverId: departmentId,
+      name,
+      email: "",
+      status: (d.status ?? "PENDING").toString().toUpperCase(),
+      paidUnlocked: d.payment_status === "paid",
+      updatedAt: d.updated_at ? new Date(d.updated_at) : new Date(),
+      rejectReason: "",
+      departmentId: departmentId,
+    };
+  });
+  const fromApiIds = new Set(fromApi.map((r) => r.receiverId));
+  const fromDeptIds = (data.department_ids ?? [])
+    .filter((item): item is { _id: string; name?: string } => typeof item === "object" && item !== null && typeof (item as { _id?: string })._id === "string")
+    .filter((item) => !fromApiIds.has(item._id))
+    .map((item) => ({
+      receiverId: item._id,
+      name: typeof item.name === "string" && item.name ? item.name : "Receiver",
+      email: "",
+      status: "PENDING",
+      paidUnlocked: false,
+      updatedAt: new Date(),
+      rejectReason: "",
+      departmentId: item._id,
+    }));
+  return [...fromApi, ...fromDeptIds, ...(data._localReceivers ?? [])];
 }
 
 /** Get department status for a given department id from referral data. */

@@ -23,7 +23,7 @@ interface ApiProfile {
   phone?: string;
   dial_code?: string;
   phone_number?: string;
-  fax?: string;
+  fax_number?: string;
   address?: string;
   role?: string;
   role_id?: number;
@@ -86,7 +86,7 @@ function getProfileDefaultValues(p: ApiProfile | null): ProfileFormValues | null
     address: p.address ?? "",
     dial_code,
     phone_number,
-    fax: p.fax ?? "",
+    fax: p.fax_number ?? "",
     notes: p.notes ?? "",
     profilePicture: p.profile_picture ?? "",
   };

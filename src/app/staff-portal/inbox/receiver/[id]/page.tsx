@@ -21,6 +21,8 @@ import {
   ReceiverBasicSection,
   ReceiverChatSection,
   ReceiverDocsSection,
+  ReceiverPrimaryCareSection,
+  ReceiverSenderInfoSection,
 } from "@/components/staffComponents/inbox/receiver/view";
 import type { PaymentSummaryData } from "@/components/staffComponents/inbox/receiver/view/Modals";
 import {
@@ -37,7 +39,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import React, { useRef, useState } from "react";
 
-type department_status_type =
+export type department_status_type =
   | {
     department_id?: string;
     department?: { _id?: string; name?: string };
@@ -329,12 +331,25 @@ function ReceiverDetailContent({
     data.documents as Record<string, unknown> | undefined,
   );
 
+  const primaryCare = (data.primary_care ?? {}) as Record<string, string | undefined>;
+  const hasPrimaryCare = Boolean(
+    primaryCare.name ||
+      primaryCare.address ||
+      primaryCare.phone_number ||
+      primaryCare.email ||
+      primaryCare.fax ||
+      primaryCare.npi,
+  );
+
   const navBtns = [
+    { id: "secSenderInfo", label: "Sender Info" },
     { id: "secBasic", label: "Basic Info" },
     { id: "secDocs", label: "Documents" },
     { id: "secAdditional", label: "Additional Info" },
+    ...(hasPrimaryCare ? [{ id: "secPrimaryCare", label: "Primary Care" }] : []),
     { id: "secChat", label: "Chat" },
   ];
+  
   return (
     <div className="max-w-[1280px] mx-auto p-[18px]">
       <div className="flex flex-wrap gap-3 items-center justify-between p-3.5 px-4 border border-slate-200 bg-white/80 backdrop-blur-md rounded-2xl shadow-[0_10px_30px_rgba(2,6,23,.07)] sticky top-2.5 z-10 mb-3.5">
@@ -430,6 +445,17 @@ function ReceiverDetailContent({
           </div>
 
           <div className="flex flex-col gap-3.5">
+            <ReceiverSenderInfoSection
+              data={{
+                sender_name: data.sender_name,
+                facility_name: data.facility_name,
+                facility_address: data.facility_address,
+                sender_email: data.sender_email,
+                sender_phone_number: data.sender_phone_number,
+                sender_fax_number: data.sender_fax_number,
+                sender_dial_code: data.sender_dial_code,
+              }}
+            />
             <ReceiverBasicSection
               isUnlocked={isUnlocked}
               receiverStatus={department_status?.status ?? "pending"}
@@ -447,11 +473,17 @@ function ReceiverDetailContent({
               onPayUnlock={openPayModal}
             />
             <ReceiverAdditionalSection
+              department_status={department_status}
               isUnlocked={isUnlocked}
               addPatient={addPatient}
               senderPaid={senderPaid}
               onAccept={receiverAccept}
               onReject={receiverReject}
+              openPayModal={openPayModal}
+            />
+            <ReceiverPrimaryCareSection
+              isUnlocked={isUnlocked}
+              primaryCare={primaryCare}
               openPayModal={openPayModal}
             />
             <ReceiverChatSection

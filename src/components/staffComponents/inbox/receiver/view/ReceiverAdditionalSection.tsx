@@ -3,11 +3,13 @@
 import React from "react";
 import { BOX_GRAD } from "@/components/staffComponents/inbox/sender/view/senderViewHelpers";
 import { Button } from "@/components";
+import { department_status_type } from "@/app/staff-portal/inbox/receiver/[id]/page";
 
 const SECTION_CLASS =
   "border border-rcn-border/60 bg-white/95 rounded-[18px] p-3.5 shadow-[0_12px_26px_rgba(2,6,23,.07)] relative overflow-hidden border-l-4 border-l-rcn-brand scroll-mt-[120px]";
 
 interface ReceiverAdditionalSectionProps {
+  department_status: department_status_type;
   isUnlocked: boolean;
   addPatient: Record<string, string | undefined>;
   /** Sender already paid for this department; show Accept only. */
@@ -27,6 +29,7 @@ const ADDITIONAL_ROWS: [string, string][] = [
 ];
 
 export function ReceiverAdditionalSection({
+  department_status,
   isUnlocked,
   addPatient,
   senderPaid = false,
@@ -63,7 +66,7 @@ export function ReceiverAdditionalSection({
               Chat is free. To view phone, SSN, and other sensitive fields, payment is required. Use Pay & Unlock in the header to pay.
             </p>
             <div className="flex gap-2.5 flex-wrap justify-end">
-              {!senderPaid && <Button type="button" variant="primary" size="sm" onClick={openPayModal}>Pay & Unlock</Button>}
+              {!senderPaid && department_status?.status !== "rejected" && <Button type="button" variant="primary" size="sm" onClick={openPayModal}>Pay & Unlock</Button>}
               {senderPaid && (
                 <Button type="button" variant="primary" size="sm" onClick={onAccept}>
                   Accept (sender already paid)

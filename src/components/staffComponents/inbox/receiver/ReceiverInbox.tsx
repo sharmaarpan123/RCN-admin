@@ -7,6 +7,7 @@ import { fmtDate, pillClass, pillLabel } from "@/app/staff-portal/inbox/helpers"
 import { ReceiverInboxBody, ReceiverInboxType } from "@/app/staff-portal/inbox/page";
 import { Button, DebouncedInput, TableLayout, type TableColumn } from "@/components";
 import CustomPagination from "@/components/CustomPagination";
+import moment from "moment";
 
 function receivedReferralStatus(ref: ReceivedReferralApi): string {
   const statuses = ref.department_statuses as { status?: string }[] | undefined;
@@ -52,15 +53,14 @@ export function ReceiverInbox({
 
   const columns: TableColumn<ReceivedReferralApi>[] = useMemo(
     () => [
-      { head: "Referral ID", component: (ref) => <span className="font-black text-[13px]">{ref._id}</span> },
-      {
+       {
         head: "Patient",
         component: (ref) => {
           const p = ref.patient;
           const last = p?.patient_last_name ?? "";
           const first = p?.patient_first_name ?? "";
           const name = `${last} ${first}`.trim() || "N/A";
-          const dob = p?.dob ?? "";
+          const dob = p?.dob ? moment(p.dob).format("YYYY, MM, DD") : "";
           return <span className="font-[850] text-[13px]">{`${name} ${dob ? `• DOB ${dob || "N/A"}` : ""}`}</span>;
         },
       },

@@ -162,21 +162,7 @@ export function InsuranceInfoSection() {
             Document
           </label>
           <div className="relative">
-            <input
-              ref={(el) => {
-                docInputRefs.current[index] = el;
-              }}
-              type="file"
-              id={`insurance-doc-${index}`}
-              className="absolute inset-0 w-full min-h-[44px] opacity-0 cursor-pointer z-10 disabled:cursor-not-allowed rounded-xl"
-              disabled={uploadingFields[`insurance-doc-${index}`] === true}
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) handleDocUpload(index, file);
-                e.target.value = "";
-              }}
-              aria-label={`Upload insurance document ${index + 1}`}
-            />
+
             <label
               htmlFor={`insurance-doc-${index}`}
               className={zoneClass}
@@ -192,6 +178,21 @@ export function InsuranceInfoSection() {
               ) : (
                 <span className="text-rcn-muted">Choose file to upload</span>
               )}
+              <input
+                ref={(el) => {
+                  docInputRefs.current[index] = el;
+                }}
+                type="file"
+                id={`insurance-doc-${index}`}
+                className="absolute inset-0 w-full min-h-[44px] opacity-0 cursor-pointer z-10 disabled:cursor-not-allowed rounded-xl"
+                disabled={uploadingFields[`insurance-doc-${index}`] === true}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleDocUpload(index, file);
+                  e.target.value = "";
+                }}
+                aria-label={`Upload insurance document ${index + 1}`}
+              />
             </label>
             {(watch(`patient_insurance_information.${index}.document`) ?? "").trim() &&
               !uploadingFields[`insurance-doc-${index}`] && (

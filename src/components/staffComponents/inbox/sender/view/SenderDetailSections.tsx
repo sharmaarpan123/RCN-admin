@@ -33,6 +33,10 @@ export function SenderDetailSections({
   const ins = data.patient_insurance_information ?? [];
   const primary = ins[0];
   const addPatient = (data.additional_patient ?? {}) as Record<string, string>;
+  const primaryCare = (data.primary_care ?? {}) as Record<string, string | undefined>;
+  const hasPrimaryCare = Boolean(
+    primaryCare.name || primaryCare.address || primaryCare.phone_number || primaryCare.email || primaryCare.fax || primaryCare.npi
+  );
   const router = useRouter();
   const [previewDocUrl, setPreviewDocUrl] = useState<string | null>(null);
   const [downloadingDoc, setDownloadingDoc] = useState<Record<string, boolean>>({});
@@ -62,8 +66,38 @@ export function SenderDetailSections({
   };
 
 
+  const senderPhoneDisplay =
+    data.sender_dial_code && data.sender_phone_number
+      ? `${data.sender_dial_code} ${data.sender_phone_number}`.trim()
+      : data.sender_phone_number ?? "";
+
   return (
     <div className="flex flex-col gap-3.5">
+      <div id="secSenderInfo" className="border border-rcn-border/60 bg-white/95 rounded-[18px] p-3.5 shadow-[0_12px_26px_rgba(2,6,23,.07)] relative overflow-hidden border-l-4 border-l-rcn-brand scroll-mt-[120px]">
+        <div className="-m-3.5 -mt-3.5 mb-3 p-3 border-b border-rcn-border/60 rounded-t-[18px] flex items-center justify-between gap-2.5" style={{ background: BOX_GRAD }}>
+          <h4 className="m-0 text-[13px] font-semibold tracking-wide flex items-center gap-2.5">
+            <span className="w-[30px] h-[30px] rounded-xl flex items-center justify-center border border-rcn-brand/25 bg-white/70 shadow">🏢</span>
+            Person/Facility Sending Referral
+          </h4>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border border-rcn-brand/25 bg-white/70 text-rcn-accent-dark">Sender</span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          {[
+            ["Sender Name", data.sender_name],
+            ["Facility Name", data.facility_name],
+            ["Facility Address", data.facility_address],
+            ["Email", data.sender_email],
+            ["Phone Number", senderPhoneDisplay],
+            ["Fax Number", data.sender_fax_number],
+          ].map(([label, val]) => (
+            <div key={String(label)} className={label === "Facility Address" ? "sm:col-span-2" : ""}>
+              <label className="block text-[11px] text-rcn-muted font-black mb-1">{label}</label>
+              <div className="text-[13px] font-[850] text-rcn-text leading-tight p-2.5  border border-dashed border-slate-300/75 rounded-xl bg-slate-50/55 " >{val || "—"}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div id="secBasic" className="border border-rcn-border/60 bg-white/95 rounded-[18px] p-3.5 shadow-[0_12px_26px_rgba(2,6,23,.07)] relative overflow-hidden border-l-4 border-l-rcn-brand scroll-mt-[120px]">
         <div className="-m-3.5 -mt-3.5 mb-3 p-3 border-b border-rcn-border/60 rounded-t-[18px] flex items-center justify-between gap-2.5" style={{ background: BOX_GRAD }}>
           <h4 className="m-0 text-[13px] font-semibold tracking-wide flex items-center gap-2.5">
@@ -88,6 +122,34 @@ export function SenderDetailSections({
               <div className="text-[13px] font-[850] text-rcn-text leading-tight p-2.5 border border-dashed border-slate-300/75 rounded-xl bg-slate-50/55">{val ?? "—"}</div>
             </div>
           ))}
+        </div>
+      </div>
+
+
+      <div id="secReceivers" className="border border-rcn-border/60 bg-white/95 rounded-[18px] p-3.5 shadow relative overflow-hidden border-l-4 border-l-rcn-brand scroll-mt-[120px]">
+        <div className="-m-3.5 -mt-3.5 mb-3 p-3 border-b border-rcn-border/60 rounded-t-[18px] flex items-center justify-between" style={{ background: BOX_GRAD }}>
+          <h4 className="m-0 text-[13px] font-semibold flex items-center gap-2.5">
+            <span className="w-[30px] h-[30px] rounded-xl flex items-center justify-center border border-rcn-brand/25 bg-white/70 shadow">📬</span>
+            Receivers List
+          </h4>
+        </div>
+        <div className="overflow-hidden rounded-[14px] border border-slate-200 bg-white">
+          <table className="w-full border-collapse text-xs">
+            <thead>
+              <tr>
+                <th className="text-left p-2.5 bg-rcn-brand/10 text-rcn-text font-black text-[11px] uppercase tracking-wide">Receiver</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data?.department_ids?.map((rx) => (
+                <tr key={rx._id} className="border-t border-slate-200">
+                  <td className="p-2.5 align-top">
+                    {(rx as { name: string }).name}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -213,9 +275,31 @@ export function SenderDetailSections({
         </div>
       </div>
 
-
-
-
+      {hasPrimaryCare && (
+        <div id="secPrimaryCare" className="border border-rcn-border/60 bg-white/95 rounded-[18px] p-3.5 shadow relative overflow-hidden border-l-4 border-l-rcn-brand scroll-mt-[120px]">
+          <div className="-m-3.5 -mt-3.5 mb-3 p-3 border-b border-rcn-border/60 rounded-t-[18px] flex items-center justify-between" style={{ background: BOX_GRAD }}>
+            <h4 className="m-0 text-[13px] font-semibold flex items-center gap-2.5">
+              <span className="w-[30px] h-[30px] rounded-xl flex items-center justify-center border border-rcn-brand/25 bg-white/70 shadow">🏥</span>
+              Primary Care <span className="text-[11px] font-normal text-rcn-muted">(optional)</span>
+            </h4>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {[
+              ["Name", primaryCare.name],
+              ["Address", primaryCare.address],
+              ["Phone", primaryCare.dial_code && primaryCare.phone_number ? `${primaryCare.dial_code} ${primaryCare.phone_number}` : primaryCare.phone_number],
+              ["Fax", primaryCare.fax],
+              ["Email", primaryCare.email],
+              ["NPI", primaryCare.npi],
+            ].map(([label, val]) => (
+              <div key={String(label)}>
+                <label className="block text-[11px] text-rcn-muted font-black mb-1">{label}</label>
+                <div className="text-[13px] font-[850] text-rcn-text leading-tight p-2.5 border border-dashed border-slate-300/75 rounded-xl bg-slate-50/55">{val ?? "—"}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <PreviewFile
         url={previewDocUrl ?? ""}
