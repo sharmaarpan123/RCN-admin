@@ -54,7 +54,7 @@ export function SenderInbox({
           const first = p?.patient_first_name ?? "";
           const name = `${last} ${first}`.trim() || "N/A";
           const dob = p?.dob ? moment(p.dob).format("YYYY, MM, DD") : "";
-          return <span className="font-[850] text-[13px]">{name} {dob ? `• DOB ${dob || "N/A"}` : ""}</span>;
+          return <span className="font-semibold text-[13px]">{name} {dob ? `• DOB ${dob || "N/A"}` : ""}</span>;
         },
       },
       {
@@ -63,7 +63,7 @@ export function SenderInbox({
           const ids = ref.speciality_ids ?? [];
           const extra = ref.additional_speciality ?? [];
           const label = ids.length > 0 ? `${ids.length} service(s)` : extra.length > 0 ? (extra[0] as { name?: string })?.name ?? "—" : "—";
-          return <span className="text-rcn-muted text-xs font-[850]">{label}</span>;
+          return <span className="text-rcn-muted text-xs font-semibold">{label}</span>;
         },
       },
       {
@@ -74,7 +74,7 @@ export function SenderInbox({
           const n = local.length || (Array.isArray(dept) ? dept.length : 0);
           const name = local[0]?.name;
           const label = n > 1 ? `${n} receivers` : name ?? (n ? "1 receiver" : "—");
-          return <span className="text-rcn-muted text-xs font-[850]">{label}</span>;
+          return <span className="text-rcn-muted text-xs font-semibold">{label}</span>;
         },
       },
       {
@@ -92,7 +92,7 @@ export function SenderInbox({
         head: "Sent Date",
         component: (ref) => {
           const d = ref.sent_at ? new Date(ref.sent_at) : ref.createdAt ? new Date(ref.createdAt) : null;
-          return <span className="text-rcn-muted text-xs font-[850]">{d ? moment(d).format("MMM D, YYYY , hh:mm a") : "—"}</span>;
+          return <span className="text-rcn-muted text-xs font-semibold">{d ? moment(d).format("MMM D, YYYY , hh:mm a") : "—"}</span>;
         },
       },
       {
@@ -108,14 +108,7 @@ export function SenderInbox({
             >
               View
             </Button>
-            {/* <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => openForward(ref._id)}
-            >
-              Forward
-            </Button> */}
+          
           </div>
         ),
       },
@@ -140,14 +133,14 @@ export function SenderInbox({
           />
           <div className="flex gap-2 flex-wrap" aria-label="Status filters">
             {[{ label: "ALL", value: "all" as SenderInboxType }, { label: "DRAFT", value: "draft" as SenderInboxType }, { label: "SENT", value: "sent" as SenderInboxType }].map((f) => (
-              <button key={f.value} type="button" onClick={() => setBody({ ...body, type: f.value as SenderInboxType })} className={`inline-flex items-center gap-1.5 px-2.5 py-2 rounded-full border cursor-pointer text-xs font-extrabold select-none ${body.type === f.value ? "bg-rcn-brand/10 border-rcn-brand/20 text-rcn-accent-dark" : "border-slate-200 bg-white text-rcn-muted"}`}>
+              <button key={f.value} type="button" onClick={() => setBody({ ...body, type: f.value as SenderInboxType })} className={`inline-flex items-center gap-1.5 px-2.5 py-2 rounded-full border cursor-pointer text-xs font-semibold select-none ${body.type === f.value ? "bg-rcn-brand/10 border-rcn-brand/20 text-rcn-accent-dark" : "border-slate-200 bg-white text-rcn-muted"}`}>
                 {f.label}
               </button>
             ))}
           </div>
           <div className="flex gap-2 flex-wrap" aria-label="Date filters">
             {[[30, "Last 30 days"], [7, "Last 7 days"], [90, "Last 90 days"], [0, "All time"]].map(([days, label]) => (
-              <button key={String(days)} type="button" onClick={() => setBody(p => ({ ...p, day: Number(days) }))} className={`inline-flex items-center gap-1.5 px-2.5 py-2 rounded-full border cursor-pointer text-xs font-extrabold select-none ${body.day === Number(days) ? "bg-rcn-brand/10 border-rcn-brand/20 text-rcn-accent-dark" : "border-slate-200 bg-white text-rcn-muted"}`}>
+              <button key={String(days)} type="button" onClick={() => setBody(p => ({ ...p, day: Number(days) }))} className={`inline-flex items-center gap-1.5 px-2.5 py-2 rounded-full border cursor-pointer text-xs font-semibold select-none ${body.day === Number(days) ? "bg-rcn-brand/10 border-rcn-brand/20 text-rcn-accent-dark" : "border-slate-200 bg-white text-rcn-muted"}`}>
                 {label}
               </button>
             ))}

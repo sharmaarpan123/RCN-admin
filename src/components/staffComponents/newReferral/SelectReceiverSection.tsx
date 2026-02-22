@@ -249,7 +249,7 @@ export function SelectReceiverSection({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
           <div>
-            <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
+            <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
               State (business location)
             </label>
             <CustomReactSelect
@@ -266,7 +266,7 @@ export function SelectReceiverSection({
             </p>
           </div>
           <div>
-            <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
+            <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
               Organization (search and select)
             </label>
             <CustomAsyncSelect

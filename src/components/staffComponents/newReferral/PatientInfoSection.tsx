@@ -31,7 +31,7 @@ export function PatientInfoSection() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
       
         <div>
-          <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
+          <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
             First Name <span className="text-rcn-danger font-black">*</span>
           </label>
           <input
@@ -45,7 +45,7 @@ export function PatientInfoSection() {
           )}
         </div>
         <div>
-          <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
+          <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
             Last Name <span className="text-rcn-danger font-black">*</span>
           </label>
           <input
@@ -59,7 +59,7 @@ export function PatientInfoSection() {
           )}
         </div>
         <div>
-          <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
+          <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
             DOB <span className="text-rcn-danger font-black">*</span>
           </label>
           <input
@@ -73,7 +73,7 @@ export function PatientInfoSection() {
           )}
         </div>
         <div>
-          <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
+          <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
             Gender <span className="text-rcn-danger font-black">*</span>
           </label>
           <select {...register("gender")} className={inputClass} value={gender}>
@@ -86,7 +86,7 @@ export function PatientInfoSection() {
           )}
         </div>
         <div className="md:col-span-2">
-          <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
+          <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
             Address of Care <span className="text-rcn-danger font-black">*</span>
           </label>
           <input

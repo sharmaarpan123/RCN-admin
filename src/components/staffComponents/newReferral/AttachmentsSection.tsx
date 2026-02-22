@@ -119,7 +119,7 @@ export function AttachmentsSection() {
           const isUploading = uploadingFields[key] === true;
           return (
             <div key={key} className="relative">
-              <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
+              <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
                 {label}
               </label>
               <div className="relative">
@@ -178,7 +178,7 @@ export function AttachmentsSection() {
         })}
 
         <div className="md:col-span-2">
-          <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
+          <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
             Wound Photos
           </label>
           <div className="relative">
@@ -241,7 +241,7 @@ export function AttachmentsSection() {
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
+          <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
             Other Documents
           </label>
           <div className="relative">

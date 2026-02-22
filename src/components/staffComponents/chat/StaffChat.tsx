@@ -249,7 +249,7 @@ export default function ChatPage() {
       <div className="border border-slate-200 bg-white/65 rounded-2xl shadow-[0_10px_30px_rgba(2,6,23,.07)] overflow-hidden">
         <div className="p-3.5 pt-3 pb-2.5 border-b border-slate-200 bg-white/90">
           <h2 className="m-0 text-sm font-semibold tracking-wide">Chat</h2>
-          <p className="m-0 mt-1 text-rcn-muted text-xs font-[850]">
+          <p className="m-0 mt-1 text-rcn-muted text-xs font-semibold">
             Communicate with receivers about referrals.
           </p>
         </div>
@@ -312,7 +312,7 @@ export default function ChatPage() {
                     >
                       <div className="flex items-start justify-between gap-2 mb-1">
                         <div className="flex-1 min-w-0">
-                          <div className="text-[11px] text-rcn-muted font-[850] truncate">
+                          <div className="text-[11px] text-rcn-muted font-bold truncate">
                             {chat.referral_sender_name ?? "—"}
                           </div>
                           {chat.last_message && (
@@ -393,7 +393,7 @@ export default function ChatPage() {
                 <div className="p-3.5 border-b border-slate-200 bg-white/90 hidden md:block">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="m-0 mt-0.5 text-xs text-rcn-muted font-[850]">
+                      <p className="m-0 mt-0.5 text-xs text-rcn-muted font-semibold">
                         {displayChat.patient_name ??
                           displayChat.referral_facility_name ??
                           "—"}
@@ -434,7 +434,7 @@ export default function ChatPage() {
                                 <div className="text-[11px] text-rcn-muted font-black mb-1 flex gap-2 flex-wrap justify-between">
                                   {m.sender_name ?? "—"}
                                 </div>
-                                <div className="text-[13px] font-[450] text-rcn-text leading-snug whitespace-pre-wrap">
+                                <div className="text-[13px] font-semibold  leading-snug whitespace-pre-wrap">
                                   {m.message}
                                 </div>
                                 <div className="text-[11px] text-rcn-muted  mb-1 flex gap-2 flex-wrap justify-end">

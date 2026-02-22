@@ -93,7 +93,7 @@ export function ReceiverChatSection({
                     <div className="text-[11px] text-rcn-muted font-black mb-1 flex gap-2 flex-wrap justify-between">
                       {m.sender_name ?? "—"} <span>{fmtDate(new Date(m.created_at ?? 0))}</span>
                     </div>
-                    <div className="text-[13px] font-[850] text-rcn-text leading-snug whitespace-pre-wrap">{m.message}</div>
+                    <div className="text-[13px] font-semibold text-rcn-text leading-snug whitespace-pre-wrap">{m.message}</div>
                   </div>
                 </div>
               );

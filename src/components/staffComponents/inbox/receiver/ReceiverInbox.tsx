@@ -61,7 +61,7 @@ export function ReceiverInbox({
           const first = p?.patient_first_name ?? "";
           const name = `${last} ${first}`.trim() || "N/A";
           const dob = p?.dob ? moment(p.dob).format("YYYY, MM, DD") : "";
-          return <span className="font-[850] text-[13px]">{`${name} ${dob ? `• DOB ${dob || "N/A"}` : ""}`}</span>;
+          return <span className="font-semibold text-[13px]">{`${name} ${dob ? `• DOB ${dob || "N/A"}` : ""}`}</span>;
         },
       },
       {
@@ -70,7 +70,7 @@ export function ReceiverInbox({
           const ids = ref.speciality_ids ?? [];
           const extra = ref.additional_speciality ?? [];
           const label = ids.length > 0 ? `${ids.length} service(s)` : extra.length > 0 ? (extra[0] as { name?: string })?.name ?? "—" : "—";
-          return <span className="text-rcn-muted text-xs font-[850]">{label}</span>;
+          return <span className="text-rcn-muted text-xs font-semibold">{label}</span>;
         },
       },
       {
@@ -88,7 +88,7 @@ export function ReceiverInbox({
         head: "Sent Date",
         component: (ref) => {
           const d = ref.sent_at ? new Date(ref.sent_at) : ref.createdAt ? new Date(ref.createdAt) : null;
-          return <span className="text-rcn-muted text-xs font-[850]">{d ? fmtDate(d) : "—"}</span>;
+          return <span className="text-rcn-muted text-xs font-semibold">{d ? fmtDate(d) : "—"}</span>;
         },
       },
       {
@@ -131,7 +131,7 @@ export function ReceiverInbox({
               key={f as ReceiverInboxType}
               type="button"
               onClick={() => setBody({ ...body, type: f as ReceiverInboxType })}
-              className={`inline-flex  items-center gap-1.5 px-2.5 py-2 rounded-full border cursor-pointer text-xs font-extrabold select-none ${body.type === f ? "bg-rcn-brand/10 border-rcn-brand/20 text-rcn-accent-dark" : "border-slate-200 bg-white text-rcn-muted"}`}
+              className={`inline-flex  items-center gap-1.5 px-2.5 py-2 rounded-full border cursor-pointer text-xs font-semibold select-none ${body.type === f ? "bg-rcn-brand/10 border-rcn-brand/20 text-rcn-accent-dark" : "border-slate-200 bg-white text-rcn-muted"}`}
             >
               {f === "all" ? "All" : f === "paid" ? "Paid/Unlocked" : f.charAt(0) + f.slice(1).toLowerCase()}
             </button>
@@ -143,7 +143,7 @@ export function ReceiverInbox({
               key={String(days)}
               type="button"
               onClick={() => setBody({ ...body, day: Number(days) })}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-2 rounded-full border cursor-pointer text-xs font-extrabold select-none ${body.day === Number(days) ? "bg-rcn-brand/10 border-rcn-brand/20 text-rcn-accent-dark" : "border-slate-200 bg-white text-rcn-muted"}`}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-2 rounded-full border cursor-pointer text-xs font-semibold select-none ${body.day === Number(days) ? "bg-rcn-brand/10 border-rcn-brand/20 text-rcn-accent-dark" : "border-slate-200 bg-white text-rcn-muted"}`}
             >
               {label}
             </button>

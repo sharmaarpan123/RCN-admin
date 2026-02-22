@@ -124,7 +124,7 @@ export function ReceiverDocsSection({
           )
         ) : (
           <div className="rounded-[14px] border border-dashed border-rcn-brand/35 bg-rcn-brand/5 p-4 text-center">
-            <p className="m-0 text-rcn-muted text-sm font-[850]">
+            <p className="m-0 text-rcn-muted text-sm font-semibold">
               Pay to view and download attached documents. Chat is free.
             </p>
             <div className="flex gap-2.5 flex-wrap justify-center mt-3">

@@ -58,7 +58,7 @@ export function ReceiverSenderInfoSection({ data }: ReceiverSenderInfoSectionPro
             <label className="block text-[11px] text-rcn-muted font-black mb-1">
               {label}
             </label>
-            <div className="text-[13px] font-[850] text-rcn-text leading-tight p-2.5 border border-dashed border-slate-300/75 rounded-xl bg-slate-50/55">
+            <div className="text-[13px] font-semibold text-rcn-text leading-tight p-2.5 border border-dashed border-slate-300/75 rounded-xl bg-slate-50/55">
               {val || "—"}
             </div>
           </div>

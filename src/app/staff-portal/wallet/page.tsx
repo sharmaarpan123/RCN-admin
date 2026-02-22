@@ -305,19 +305,19 @@ export default function WalletPage() {
                 {typeof purchaseSummary.creditAmount === "number" && (
                   <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
                     <span className="text-rcn-muted text-xs font-black">Credits</span>
-                    <p className="m-0 mt-0.5 font-[850]">{purchaseSummary.creditAmount}</p>
+                    <p className="m-0 mt-0.5 font-semibold">{purchaseSummary.creditAmount}</p>
                   </div>
                 )}
                 {purchaseSummary.payment_method_name && (
                   <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
                     <span className="text-rcn-muted text-xs font-black">Payment method</span>
-                    <p className="m-0 mt-0.5 font-[850]">{purchaseSummary.payment_method_name}</p>
+                    <p className="m-0 mt-0.5 font-semibold">{purchaseSummary.payment_method_name}</p>
                   </div>
                 )}
                 {typeof purchaseSummary.creditPrice === "number" && (
                   <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
                     <span className="text-rcn-muted text-xs font-black">Price per credit</span>
-                    <p className="m-0 mt-0.5 font-[850]">
+                    <p className="m-0 mt-0.5 font-semibold">
                       {purchaseSummary.currency ?? "USD"} {purchaseSummary.creditPrice}
                     </p>
                   </div>
@@ -325,7 +325,7 @@ export default function WalletPage() {
                 {(purchaseSummary.processingFee != null && purchaseSummary.processingFee > 0) && (
                   <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
                     <span className="text-rcn-muted text-xs font-black">Processing fee</span>
-                    <p className="m-0 mt-0.5 font-[850]">
+                    <p className="m-0 mt-0.5 font-semibold">
                       {purchaseSummary.currency ?? "USD"} {purchaseSummary.processingFee}
                       {typeof purchaseSummary.processingFeePercent === "number" && purchaseSummary.processingFeePercent > 0
                         ? ` (${purchaseSummary.processingFeePercent}%)`
@@ -337,7 +337,7 @@ export default function WalletPage() {
               {purchaseSummary.breakdown?.calculation && (
                 <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
                   <span className="text-rcn-muted text-xs font-black">Calculation</span>
-                  <p className="m-0 mt-0.5 font-[850]">{purchaseSummary.breakdown.calculation}</p>
+                  <p className="m-0 mt-0.5 font-semibold">{purchaseSummary.breakdown.calculation}</p>
                 </div>
               )}
               <div className="p-3 rounded-xl bg-rcn-brand/5 border border-rcn-brand/20">
@@ -348,7 +348,7 @@ export default function WalletPage() {
                   </span>
                 </div>
                 {purchaseSummary.breakdown?.message && (
-                  <p className="m-0 mt-1 text-[13px] font-[850] text-rcn-text">{purchaseSummary.breakdown.message}</p>
+                  <p className="m-0 mt-1 text-[13px] font-semibold text-rcn-text">{purchaseSummary.breakdown.message}</p>
                 )}
               </div>
             </div>

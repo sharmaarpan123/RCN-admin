@@ -349,7 +349,7 @@ function ReceiverDetailContent({
     ...(hasPrimaryCare ? [{ id: "secPrimaryCare", label: "Primary Care" }] : []),
     { id: "secChat", label: "Chat" },
   ];
-  
+
   return (
     <div className="max-w-[1280px] mx-auto p-[18px]">
       <div className="flex flex-wrap gap-3 items-center justify-between p-3.5 px-4 border border-slate-200 bg-white/80 backdrop-blur-md rounded-2xl shadow-[0_10px_30px_rgba(2,6,23,.07)] sticky top-2.5 z-10 mb-3.5">
@@ -392,7 +392,7 @@ function ReceiverDetailContent({
           <h2 className="m-0 text-sm font-semibold tracking-wide">
             Referral Detail
           </h2>
-          <p className="m-0 mt-1 text-rcn-muted text-xs font-[850]">
+          <p className="m-0 mt-1 text-rcn-muted text-xs font-semibold">
             Receiver view: chat is free. Patient information requires payment —
             payment flow will be added soon.
           </p>
@@ -407,7 +407,7 @@ function ReceiverDetailContent({
                   ? ` ${p.patient_last_name ?? ""}, ${p.patient_first_name ?? ""} • DOB ${p.dob ?? ""} • ${p.gender ?? ""}`
                   : "  Referral (pay to view patient details)"}
               </h3>
-              <p className="m-0 mt-1.5 text-rcn-muted text-xs font-[850]">
+              <p className="m-0 mt-1.5 text-rcn-muted text-xs font-semibold">
                 Sent: {fmtDate(sentAt)}
                 {isUnlocked && p?.address_of_care != null
                   ? ` • Address of Care: ${p.address_of_care}`

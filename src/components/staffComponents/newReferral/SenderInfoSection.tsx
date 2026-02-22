@@ -56,7 +56,7 @@ export function SenderInfoSection() {
       </p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs text-rcn-muted font-[850] mb-1.5">Sender Name</label>
+          <label className="block text-xs text-rcn-muted font-semibold mb-1.5">Sender Name</label>
           <input
             type="text"
             {...register("sender_name")}
@@ -66,7 +66,7 @@ export function SenderInfoSection() {
           />
         </div>
         <div>
-          <label className="block text-xs text-rcn-muted font-[850] mb-1.5">Facility Name</label>
+          <label className="block text-xs text-rcn-muted font-semibold mb-1.5">Facility Name</label>
           <input
             type="text"
             {...register("facility_name")}
@@ -76,7 +76,7 @@ export function SenderInfoSection() {
           />
         </div>
         <div className="md:col-span-2">
-          <label className="block text-xs text-rcn-muted font-[850] mb-1.5">Facility Address</label>
+          <label className="block text-xs text-rcn-muted font-semibold mb-1.5">Facility Address</label>
           <input
             type="text"
             {...register("facility_address")}
@@ -86,7 +86,7 @@ export function SenderInfoSection() {
           />
         </div>
         <div>
-          <label className="block text-xs text-rcn-muted font-[850] mb-1.5">Email</label>
+          <label className="block text-xs text-rcn-muted font-semibold mb-1.5">Email</label>
           <input
             type="email"
             {...register("sender_email")}
@@ -96,7 +96,7 @@ export function SenderInfoSection() {
           />
         </div>
         <div>
-          <label className="block text-xs text-rcn-muted font-[850] mb-1.5">Phone Number</label>
+          <label className="block text-xs text-rcn-muted font-semibold mb-1.5">Phone Number</label>
           <PhoneInputField
             value={senderPhoneValue}
             onChange={() => { }}
@@ -106,7 +106,7 @@ export function SenderInfoSection() {
           />
         </div>
         <div>
-          <label className="block text-xs text-rcn-muted font-[850] mb-1.5">Fax Number</label>
+          <label className="block text-xs text-rcn-muted font-semibold mb-1.5">Fax Number</label>
           <input
             type="text"
             {...register("sender_fax_number")}

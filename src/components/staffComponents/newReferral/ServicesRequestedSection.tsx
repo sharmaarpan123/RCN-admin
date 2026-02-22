@@ -125,7 +125,7 @@ export function ServicesRequestedSection() {
 
       <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-3 items-stretch mb-3">
         <div className="min-w-0 flex flex-col">
-          <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
+          <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
             Available services (multi-select)
           </label>
           <div
@@ -215,7 +215,7 @@ export function ServicesRequestedSection() {
         </div>
 
         <div className="min-w-0 flex flex-col">
-          <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
+          <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
             Requested services
           </label>
           <div
@@ -265,7 +265,7 @@ export function ServicesRequestedSection() {
       </div>
 
       <div className="mb-3">
-        <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
+        <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
           Other services: Please type
         </label>
         <textarea
@@ -283,7 +283,7 @@ export function ServicesRequestedSection() {
       </div>
 
       <div>
-        <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
+        <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
           Additional notes
         </label>
         <textarea

@@ -36,7 +36,7 @@ export function PcpInfoSection() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div className="md:col-span-2">
-          <label className="block text-xs text-rcn-muted font-[850] mb-1.5">Name</label>
+          <label className="block text-xs text-rcn-muted font-semibold mb-1.5">Name</label>
           <input
             type="text"
             {...register("primary_care_name")}
@@ -45,7 +45,7 @@ export function PcpInfoSection() {
           />
         </div>
         <div className="md:col-span-2">
-          <label className="block text-xs text-rcn-muted font-[850] mb-1.5">Address</label>
+          <label className="block text-xs text-rcn-muted font-semibold mb-1.5">Address</label>
           <input
             type="text"
             {...register("primary_care_address")}
@@ -54,7 +54,7 @@ export function PcpInfoSection() {
           />
         </div>
         <div>
-          <label className="block text-xs text-rcn-muted font-[850] mb-1.5">Tel</label>
+          <label className="block text-xs text-rcn-muted font-semibold mb-1.5">Tel</label>
           <PhoneInputField
             value={primaryCarePhoneValue}
             onChange={handlePrimaryCarePhoneChange}
@@ -62,7 +62,7 @@ export function PcpInfoSection() {
           />
         </div>
         <div>
-          <label className="block text-xs text-rcn-muted font-[850] mb-1.5">Fax</label>
+          <label className="block text-xs text-rcn-muted font-semibold mb-1.5">Fax</label>
           <input
             type="tel"
             {...register("primary_care_fax")}
@@ -71,7 +71,7 @@ export function PcpInfoSection() {
           />
         </div>
         <div>
-          <label className="block text-xs text-rcn-muted font-[850] mb-1.5">Email</label>
+          <label className="block text-xs text-rcn-muted font-semibold mb-1.5">Email</label>
           <input
             type="email"
             {...register("primary_care_email")}
@@ -80,7 +80,7 @@ export function PcpInfoSection() {
           />
         </div>
         <div>
-          <label className="block text-xs text-rcn-muted font-[850] mb-1.5">NPI</label>
+          <label className="block text-xs text-rcn-muted font-semibold mb-1.5">NPI</label>
           <input
             type="text"
             {...register("primary_care_npi")}

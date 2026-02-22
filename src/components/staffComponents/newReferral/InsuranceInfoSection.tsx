@@ -105,7 +105,7 @@ export function InsuranceInfoSection() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
+              <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
                 Payer {index === 0 && <span className="text-rcn-danger font-black">*</span>}
               </label>
               <input
@@ -123,7 +123,7 @@ export function InsuranceInfoSection() {
               )}
             </div>
             <div>
-              <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
+              <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
                 Policy # {index === 0 && <span className="text-rcn-danger font-black">*</span>}
               </label>
               <input
@@ -140,7 +140,7 @@ export function InsuranceInfoSection() {
               )}
             </div>
             <div>
-              <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
+              <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
                 Plan/Group {index === 0 && <span className="text-rcn-danger font-black">*</span>}
               </label>
               <input
@@ -158,7 +158,7 @@ export function InsuranceInfoSection() {
             </div>
           </div>
           <p className="text-xs text-rcn-muted mt-2.5">Document (optional). Upload or view.</p>
-          <label className="block text-xs text-rcn-muted font-[850] mb-1.5 mt-2.5">
+          <label className="block text-xs text-rcn-muted font-semibold mb-1.5 mt-2.5">
             Document
           </label>
           <div className="relative">

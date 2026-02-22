@@ -129,15 +129,13 @@ function SenderDetailContent({ data }: { data: ReferralByIdApi }) {
           <Link href="/staff-portal/inbox" className="text-rcn-brand hover:underline text-sm font-semibold">← Back to Inbox</Link>
         </div>
         <div className="flex items-center gap-2.5 flex-wrap justify-end">
-          {/* <button type="button" onClick={() => window.print()} className="border border-slate-200 bg-white px-2.5 py-2 rounded-xl font-extrabold text-xs shadow">Export/Print Summary</button> */}
-          {/* <button type="button" onClick={openForward} className="border border-rcn-brand/30 bg-rcn-brand/10 text-rcn-accent-dark px-2.5 py-2 rounded-xl font-extrabold text-xs shadow">Forward Referral</button> */}
-        </div>
+           </div>
       </div>
 
       <div className="border border-slate-200 bg-white/65 rounded-2xl shadow-[0_10px_30px_rgba(2,6,23,.07)] overflow-hidden">
         <div className="p-3.5 pt-3 pb-2.5 border-b border-slate-200 bg-white/90">
           <h2 className="m-0 text-sm font-semibold tracking-wide">Referral Detail</h2>
-          <p className="m-0 mt-1 text-rcn-muted text-xs font-[850]">Sender view: all receivers + per-receiver chat. Messaging at any status.</p>
+          <p className="m-0 mt-1 text-rcn-muted text-xs font-[650]">Sender view: all receivers + per-receiver chat. Messaging at any status.</p>
         </div>
         <div className="p-3 overflow-auto">
           
