@@ -26,7 +26,7 @@ export function ContactUsHero() {
         <div className="absolute inset-0  bg-[#c8e6d4]/70   z-10" />
       </div>
       <div className="relative z-20 px-6 py-10 md:py-14">
-        <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-2 text-center">Contact Us</h1>
+        <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-black mb-2 text-center">Contact Us</h1>
         <nav className="flex items-center gap-2 text-sm text-white/90" aria-label="Breadcrumb">
 
 

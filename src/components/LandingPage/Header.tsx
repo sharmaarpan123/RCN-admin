@@ -34,8 +34,8 @@ export default function Header() {
 
   return (
     <>
-      <div className="bg-linear-to-r from-[rgba(15,107,58,0.12)] to-[rgba(31,138,76,0.10)] border-b border-rcn-border-light">
-        <div className="max-w-[1120px] mx-auto px-[18px] flex items-center justify-between py-2.5 gap-3 text-[13px] text-rcn-muted">
+      {/* <div className="bg-linear-to-r from-[rgba(15,107,58,0.12)] to-[rgba(31,138,76,0.10)] border-b border-rcn-border-light">
+        <div className="container mx-auto px-[18px] flex items-center justify-between py-2.5 gap-3 text-[13px] text-rcn-muted">
           <div>Streamline referrals across clinics, hospitals, imaging centers, and specialty practices—without delays.</div>
           <div>
             <CustomNextLink href="#get-started" variant="text" size="sm">
@@ -43,13 +43,13 @@ export default function Header() {
             </CustomNextLink>
           </div>
         </div>
-      </div>
+      </div> */}
 
       <header className="sticky top-0 z-50 bg-[rgba(244,251,246,0.76)] backdrop-blur-[10px] border-b border-[rgba(220,239,227,0.85)]">
-        <div className="max-w-[1120px] mx-auto px-[18px]">
+        <div className="container mx-auto px-[18px]">
           <div className="flex items-center justify-between py-3 gap-3.5">
-            <NextLink href="#top" className="flex items-center gap-3 no-underline">
-              <div className="w-[42px] h-[42px] rounded-[14px] relative shrink-0 overflow-hidden shadow-[0_10px_22px_rgba(15,107,58,0.18)]">
+            <NextLink href="/" className="flex items-center gap-3 no-underline">
+              <div className="w-[70px] h-[70px] rounded-[14px] relative shrink-0 overflow-hidden shadow-[0_10px_22px_rgba(15,107,58,0.18)]">
                 <Image src="/logo.jpeg" alt="RCN Logo" fill className="object-cover" />
               </div>
               <div>
@@ -60,13 +60,13 @@ export default function Header() {
 
 
             <div className="hidden md:flex gap-2.5 items-center">
-              <CustomNextLink href="/" variant="text" className={`${pathname === "/" ? "text-rcn-accent-dark" : "text-rcn-muted"}`} size="md">
+              <CustomNextLink href="/" variant="text" className={`font-[750] ${pathname === "/" ? "text-rcn-accent-dark" : "text-rcn-muted"}`} size="md">
                 Home
               </CustomNextLink>
-              <CustomNextLink href="/about-us" variant="text" className={`${pathname === "/about-us" ? "text-rcn-accent-dark" : "text-rcn-muted"}`} size="md">
+              <CustomNextLink href="/about-us" variant="text" className={` font-[750] ${pathname === "/about-us" ? "text-rcn-accent-dark" : "text-rcn-muted"}`} size="md">
                 About Us
               </CustomNextLink>
-              <CustomNextLink href="/contact-us" variant="text" className={`${pathname === "/contact-us" ? "text-rcn-accent-dark" : "text-rcn-muted"}`} size="md">
+              <CustomNextLink href="/contact-us" variant="text" className={` font-[750] ${pathname === "/contact-us" ? "text-rcn-accent-dark" : "text-rcn-muted"}`} size="md">
                 Contact Us
               </CustomNextLink>
             </div>

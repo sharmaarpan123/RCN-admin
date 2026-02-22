@@ -84,7 +84,7 @@ export function AboutUsDescription() {
                 About Us
               </motion.p>
               <motion.h2
-                className="text-3xl md:text-4xl lg:text-5xl font-bold text-rcn-text leading-tight mb-6"
+                className="text-xl md:text-4xl font-bold text-rcn-text leading-tight mb-6"
                 initial={{ opacity: 0, y: 12 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-40px" }}
@@ -129,7 +129,7 @@ export function AboutUsDescription() {
                   {icon}
                 </div>
                 <div>
-                  <h3 className="font-bold text-rcn-text text-lg mb-1.5">{title}</h3>
+                  <h3 className="font-bold text-rcn-text text-sm mb-1.5">{title}</h3>
                   <p className="text-rcn-muted text-sm md:text-base">{description}</p>
                 </div>
               </motion.div>

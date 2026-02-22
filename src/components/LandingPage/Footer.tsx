@@ -10,12 +10,12 @@ export default function Footer() {
       className="mt-5 py-6.5 pb-8.5  border-rcn-border-light bg-[rgba(255,255,255,0.55)]"
       aria-label="Footer"
     >
-      <div className="max-w-[1120px] mx-auto px-[18px]">
+      <div className="container mx-auto px-[18px]">
         <div className="grid grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr] gap-4 max-md:grid-cols-2 max-[520px]:grid-cols-1">
           <div>
             <NextLink href="#top" className="flex items-center gap-2.5 no-underline">
-              <div className="w-9 h-9 rounded-[14px] bg-linear-to-br from-rcn-brand to-rcn-brand-light shadow-[0_10px_22px_rgba(15,107,58,0.18)] relative shrink-0">
-                <Image src="/logo.jpeg" alt="RCN Logo" width={36} height={36} className="object-cover" />
+              <div className="w-[50px] h-[50px] rounded-[14px] bg-linear-to-br from-rcn-brand to-rcn-brand-light shadow-[0_10px_22px_rgba(15,107,58,0.18)] relative shrink-0">
+                <Image src="/logo.jpeg" alt="RCN Logo" width={50} height={50} className="object-cover" />
               </div>
               <div>
                 <strong className="block text-sm">Referral Coordination Network</strong>
@@ -30,42 +30,42 @@ export default function Footer() {
 
           <div>
             <h4 className="m-0 mb-2 text-sm">Get Started</h4>
-            <Link href="/org-signup" variant="text" className="block py-1.5">
+            <Link href="/org-signup" variant="text" size="sm" className="block py-1.5">
               Register Company
             </Link>
-            <Link href="/login" variant="text" className="block py-1.5">
+            <Link href="/login" variant="text" size="sm" className="block py-1.5">
               User Login
             </Link>
           </div>
 
           <div>
             <h4 className="m-0 mb-2 text-sm">Resources</h4>
-            <Link href="/about-us" variant="text" className="block py-1.5">
+            <Link href="/about-us" variant="text" size="sm" className="block py-1.5">
               About
             </Link>
-           
-            <Link href="/contact-us" variant="text" className="block py-1.5">
+
+            <Link href="/contact-us" variant="text" size="sm"  className="block py-1.5">
               Contact
             </Link>
           </div>
 
           <div>
             <h4 className="m-0 mb-2 text-sm">Legal</h4>
-            <Link href="/privacy" variant="text" className="block py-1.5">
+            <Link href="/privacy-policy" variant="text" size="sm" className="block py-1.5">
               Privacy Policy
             </Link>
-            <Link href="/terms" variant="text" className="block py-1.5">
+            <Link href="/terms-and-conditions" variant="text" size="sm" className="block py-1.5">
               Terms of Use
             </Link>
-           
+
           </div>
         </div>
 
         <div className="mt-4 text-rcn-muted text-xs flex items-center justify-between gap-2.5 flex-wrap">
-          <div>© {currentYear} Referral Coordination Network. All rights reserved.</div>
+          <div>© {currentYear} Referral Coordination Network. <span className="text-rcn-brand font-[750]">All rights reserved.</span></div>
           <div className="flex gap-2.5 items-center flex-wrap">
             <span className="text-rcn-muted">Need help?</span>
-            <Link href="/support" variant="secondary" size="sm" className="rounded-full">
+            <Link href="/contact-us" variant="secondary" size="sm" className="rounded-full">
               Support Center
             </Link>
           </div>

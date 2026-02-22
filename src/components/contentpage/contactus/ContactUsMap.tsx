@@ -10,7 +10,7 @@ const MAP_EMBED_URL =
 export function ContactUsMap() {
   return (
     <motion.section
-      className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10 md:py-14"
+      className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pb-10 md:pb-14"
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       viewport={{ once: true }}

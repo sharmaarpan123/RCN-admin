@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { motion } from "framer-motion";
-import { Button } from "@/components";
+import { Button, PhoneInputField } from "@/components";
 import { postContactApi } from "@/apis/ApiCalls";
 import { checkResponse, catchAsync } from "@/utils/commonFunc";
 
@@ -16,8 +16,11 @@ const inputClass =
   "w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12";
 
 const contactFormSchema = yup.object({
+  first_name: yup.string().required("First name is required").trim(),
+  last_name: yup.string().required("Last name is required").trim(),
   email: yup.string().required("Email is required").email("Invalid email").trim(),
   phone_number: yup.string().required("Phone number is required").trim(),
+  dial_code: yup.string().required("Dial code is required").trim(),
   query: yup.string().required("Message is required").trim(),
 });
 
@@ -25,8 +28,11 @@ type ContactFormValues = yup.InferType<typeof contactFormSchema>;
 
 const defaultValues: ContactFormValues = {
   email: "",
+  first_name: "",
+  last_name: "",
   phone_number: "",
   query: "",
+  dial_code: "",
 };
 
 export function ContactUsContent() {
@@ -35,6 +41,8 @@ export function ContactUsContent() {
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<ContactFormValues>({
     mode: "onChange",
@@ -46,14 +54,26 @@ export function ContactUsContent() {
     catchAsync(async () => {
       const res = await postContactApi({
         email: data.email,
-        phone_number: data.phone_number,
+        phone_number: data.dial_code + " " + data.phone_number,
         query: data.query,
+        first_name: data.first_name,
+        last_name: data.last_name,
       });
       if (checkResponse({ res, showSuccess: true })) {
         reset(defaultValues, { keepDefaultValues: false });
         setFormKey((k) => k + 1);
       }
     })();
+  };
+
+  const phone_number = watch("phone_number");
+  const dial_code = watch("dial_code") ?? "";
+
+  const phoneValue = (dial_code ?? "") + (phone_number ?? "").replace(/\D/g, "");
+
+  const handlePhoneChange = (value: string, country: { dialCode: string }) => {
+    setValue("phone_number", value.slice(country.dialCode.length).replace(/\D/g, ""), { shouldValidate: true });
+    setValue("dial_code", country.dialCode, { shouldValidate: true });
   };
 
   return (
@@ -67,7 +87,7 @@ export function ContactUsContent() {
       <div className="rounded-2xl overflow-hidden shadow-xl p-4 oy-6 border border-rcn-border bg-white flex flex-col lg:flex-row">
         {/* Left: Contact Information - green panel */}
         <div
-          className="lg:w-[380px] rounded-2xl shrink-0 p-6 md:p-8 bg-rcn-gradient  flex flex-col justify-center"
+          className="lg:w-[380px] rounded-2xl shrink-0 p-6 md:p-8 bg-rcn-gradient  flex flex-col "
 
         >
           <h2 className="text-xl font-bold text-white mb-3">Contact Information</h2>
@@ -101,8 +121,40 @@ export function ContactUsContent() {
         </div>
 
         {/* Right: Contact Form */}
-        <div className="flex-1 p-6 md:p-8 lg:p-10">
+        <div className="flex-1 px-6 py-4 md:px-8 lg:px-10">
           <form key={formKey} onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="first_name" className="block text-sm font-medium text-rcn-text mb-1">
+                  First Name
+                </label>
+                <input
+
+                  type="text"
+                  placeholder="Ex. John"
+                  className={inputClass}
+                  {...register("first_name")}
+                />
+                {errors.first_name && (
+                  <p className="mt-1 text-xs text-rcn-danger">{errors.first_name.message}</p>
+                )}
+              </div>
+              <div>
+                <label htmlFor="last_name" className="block text-sm font-medium text-rcn-text mb-1">
+                  Last Name
+                </label>
+                <input
+
+                  type="text"
+                  placeholder="Ex. Doe"
+                  className={inputClass}
+                  {...register("last_name")}
+                />
+                {errors.last_name && (
+                  <p className="mt-1 text-xs text-rcn-danger">{errors.last_name.message}</p>
+                )}
+              </div>
+            </div>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-rcn-text mb-1">
                 Email Address
@@ -122,13 +174,11 @@ export function ContactUsContent() {
               <label htmlFor="phone_number" className="block text-sm font-medium text-rcn-text mb-1">
                 Phone Number
               </label>
-              <input
-
-                type="tel"
-                placeholder="Ex. +1 123 444 5555"
-                className={inputClass}
-                {...register("phone_number")}
+              <PhoneInputField
+                value={phoneValue}
+                onChange={handlePhoneChange}
               />
+
               {errors.phone_number && (
                 <p className="mt-1 text-xs text-rcn-danger">{errors.phone_number.message}</p>
               )}
@@ -154,14 +204,19 @@ export function ContactUsContent() {
                 variant="primary"
                 size="lg"
                 disabled={isSubmitting}
-                className="flex items-center justify-center gap-2 w-full text-center bg-rcn-gradient"
+                className="flex  items-center justify-center gap-2 w-full text-center bg-rcn-gradient"
               >
-                Submit
+                <span className="font-[450]">
+                  Submit
+                </span>
 
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <path d="M7 18C6.7 18 6.5 17.9 6.3 17.7C5.9 17.3 5.9 16.7 6.3 16.3L16.3 6.3C16.7 5.9 17.3 5.9 17.7 6.3C18.1 6.7 18.1 7.3 17.7 7.7L7.7 17.7C7.5 17.9 7.3 18 7 18Z" fill="white" />
-                  <path d="M17 17C16.4 17 16 16.6 16 16V8H8C7.4 8 7 7.6 7 7C7 6.4 7.4 6 8 6H17C17.6 6 18 6.4 18 7V16C18 16.6 17.6 17 17 17Z" fill="white" />
-                </svg>
+                <span className="bg-white rounded-[5px] p-1 ml-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M7 18C6.7 18 6.5 17.9 6.3 17.7C5.9 17.3 5.9 16.7 6.3 16.3L16.3 6.3C16.7 5.9 17.3 5.9 17.7 6.3C18.1 6.7 18.1 7.3 17.7 7.7L7.7 17.7C7.5 17.9 7.3 18 7 18Z" fill="#1A9254" />
+                    <path d="M17 17C16.4 17 16 16.6 16 16V8H8C7.4 8 7 7.6 7 7C7 6.4 7.4 6 8 6H17C17.6 6 18 6.4 18 7V16C18 16.6 17.6 17 17 17Z" fill="#1A9254" />
+                  </svg>
+
+                </span>
 
               </Button>
             </div>

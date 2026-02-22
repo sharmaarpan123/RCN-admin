@@ -20,7 +20,7 @@ export function AboutUsStatsCard() {
   return (
     <section className="relative">
     
-      <div className="mx-auto translate-y-[-150px] px-4 sm:px-6 lg:px-8 py-10 md:py-14 max-w-5xl">
+      <div className="mx-auto translate-y-[-90px] px-4 sm:px-6 lg:px-8  max-w-5xl">
         <motion.div
           className="about-us-stats-card relative rounded-2xl md:rounded-3xl overflow-hidden shadow-xl"
           initial={{ opacity: 0, y: 16 }}

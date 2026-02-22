@@ -71,8 +71,11 @@ export function AboutUsValues() {
             viewport={{ once: true, margin: "-30px" }}
             transition={{ duration: 0.4, delay: i * 0.08 }}
           >
+            <div className="flex items-center justify-center">
+
             <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-rcn-brand mb-4 shrink-0">
               {icon}
+            </div>
             </div>
             <h3 className="font-bold text-rcn-text text-lg mb-2">{title}</h3>
             <p className="text-rcn-text-faded text-sm leading-relaxed">{description}</p>

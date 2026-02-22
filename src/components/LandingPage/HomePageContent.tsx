@@ -57,7 +57,7 @@ function FAQItem({
  
 export default function HomePageContent() {
   return (
-    <main id="top" className="max-w-[1120px] mx-auto px-[18px]">
+    <main id="top" className="container mx-auto px-[18px]">
       {/* HERO */}
       <div className="py-9.5 pb-4.5">
         <div className="grid grid-cols-[1.15fr_0.85fr] gap-5.5 items-stretch max-md:grid-cols-1">
@@ -383,9 +383,9 @@ export default function HomePageContent() {
               Use your organization admin account to manage users, services offered, and coordination settings. If you need help, contact support.
             </p>
             <ul className="my-2.5 ml-4.5 pl-0 text-rcn-muted text-sm list-disc">
-              <li className="my-1.75"><Link href="/support" variant="text">Support Center</Link></li>
-              <li className="my-1.75"><Link href="/contact" variant="text">Contact Form</Link></li>
-              <li className="my-1.75"><Link href="/status" variant="text">System Status</Link></li>
+              <li className="my-1.75"><Link href="/contact-us" variant="text">Support Center</Link></li>
+              <li className="my-1.75"><Link href="/contact-us" variant="text">Contact Form</Link></li>
+             
             </ul>
           </motion.div>
 
