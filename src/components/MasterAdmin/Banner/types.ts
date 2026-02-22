@@ -74,7 +74,7 @@ export const bannerFormSchema = (isEdit: boolean) => yup.object({
         return new Date(value) > new Date(start);
       }
     ),
-  image_url: yup.string().trim().optional().default(""),
+  image_url: yup.string().trim().required("Image is required.").default(""),
   alt_text: yup.string().trim().optional().default(""),
   notes: yup.string().trim().optional().default(""),
 });

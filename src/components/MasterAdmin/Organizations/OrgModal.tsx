@@ -224,6 +224,7 @@ export type OrgModalOrg = {
   email?: string;
   ein?: string;
   enabled?: boolean;
+  status?: number;
   address?: {
     street?: string;
     suite?: string;
@@ -292,7 +293,7 @@ function orgToFormValues(org: OrgModalOrg | null): OrgFormValues {
     phone: org.phone ?? "",
     ein_number: org.ein ?? "",
     password: "",
-    enabled: org.enabled ?? true,
+    enabled: org.status === 1 ? true : false,
     address: {
       street: org.address?.street ?? "",
       suite: org.address?.suite ?? "",

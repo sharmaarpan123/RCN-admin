@@ -135,7 +135,7 @@ export function BannerModal({
         (res?.data as { data?: { url?: string }; url?: string })?.data?.url ??
         (res?.data as { url?: string })?.url ??
         "";
-      if (url) setValue("image_url", url);
+      if (url) setValue("image_url", url , { shouldValidate : true});
       else toastError("Upload succeeded but no image URL returned.");
     } catch {
       // catchAsync/toast handled by upload
@@ -261,6 +261,9 @@ export function BannerModal({
                 className={INPUT_CLASS}
               />
             </div>
+              {errors.image_url && (
+                <p className="text-xs text-red-600 mt-1">{errors.image_url.message}</p>
+              )}
 
             {watch("image_url") ? (
 
@@ -301,7 +304,7 @@ export function BannerModal({
         <div className="flex justify-between items-center">
           <p className="text-xs text-rcn-muted m-0">Changes apply after Save.</p>
           <div className="flex gap-2">
-          
+
             <Button
               type="submit"
               variant="primary"
