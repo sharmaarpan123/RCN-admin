@@ -47,6 +47,9 @@ const authSlice = createSlice({
       document.cookie = "role=; path=/;";
       state.loginUser = null;
     },
+    updateLoginUser(state, action: { payload: LoggedInUser }) {
+      state.loginUser = action.payload;
+    },
   },
 
 });
@@ -54,6 +57,7 @@ const authSlice = createSlice({
 export const {
   loginSuccess,
   logoutSuccess,
+  updateLoginUser
 } = authSlice.actions;
 
 export default authSlice.reducer;

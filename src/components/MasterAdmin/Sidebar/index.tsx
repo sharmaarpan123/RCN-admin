@@ -87,7 +87,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
         {
           path: "/master-admin/dashboard",
           label: "Referral Dashboard",
-          permissions: ["admin.dashboard"],
+          permissions: ["dashboard.read"],
         },
         {
           path: "/master-admin/organizations",
@@ -257,9 +257,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
                     onClick={(e) => {
                       onClose?.();
                     }}
-                    className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl no-underline text-inherit mx-1.5 transition-all cursor-pointer ${
-                      isActive(item.path) ? "bg-white/15" : "hover:bg-white/10"
-                    }`}
+                    className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl no-underline text-inherit mx-1.5 transition-all cursor-pointer ${isActive(item.path) ? "bg-white/15" : "hover:bg-white/10"
+                      }`}
                   >
                     {item.label}
                   </Link>

@@ -122,22 +122,25 @@ const Login: React.FC = () => {
     mutationFn: catchAsync(
       async ({ pending, otp }: { pending: PendingOtpData; otp: string }) => {
         const { loginType, user_id, redirectTo } = pending;
-    
+
+        let redirectUrl = redirectTo;
+
         const body =
           loginType === "admin"
             ? { user_id, otp }
             : {
-                user_id,
-                otp,
-                device_token: typeof window !== "undefined" ? "" : "",
-                device_type: "web",
-              };
+              user_id,
+              otp,
+              device_token: typeof window !== "undefined" ? "" : "",
+              device_type: "web",
+            };
         const res =
           loginType === "user"
             ? await authVerifyOtpApi(body)
             : loginType === "org"
               ? await organizationVerifyOtpApi(body)
               : await adminVerifyOtpApi(body);
+              
         if (checkResponse({ res, showSuccess: true })) {
           const data = res?.data?.data as {
             accessToken?: string;
@@ -149,6 +152,7 @@ const Login: React.FC = () => {
           };
 
           const token = data?.accessToken ?? data?.token ?? null;
+
           const loginUser:
             | AuthProfileData
             | StaffProfileData
@@ -160,45 +164,33 @@ const Login: React.FC = () => {
                 ? (data?.organization ?? null)
                 : data?.admin
                   ? {
-                      ...data.admin,
-                      permissions: [
-                        ...(data.permissions ?? []),
-                        {
-                          _id: "6988fd20531a3cf60a3262",
-                          key: "admin.dashboard",
-                          description: "Dashboard",
-                        },
-                      ],
-                    }
+                    ...data.admin,
+                    permissions: [
+                      ...(data.permissions ?? []),
+                    ],
+                  }
                   : null;
 
-          // const role = loginUser
-          //   ? loginRoles[loginUser.role_id as keyof typeof loginRoles]
-          //   : null;
-          // if (
-          //   role &&
-          //   ["Organization", "Admin", "Super Admin", "Staff"].includes(role)
-          // ) {
-          //   localStorage.setItem("authToken", token || "");
-          //   localStorage.setItem("role", role );
-          //   document.cookie = `authorization=${token}; path=/;`;
-          //   document.cookie = `role=${role}; path=/;`;
-          //   dispatch(loginSuccess({ token, role, loginUser }));
-          //   router.push(redirectTo);
-          //   closeOtpModal();
-          // }
 
-      
+
+
           if (
-           loginUser && loginUser.role_id
-          
+            loginUser && loginUser.role_id
           ) {
+
+            // If the admin user does not have the dashboard.read permission, redirect to the settings page
+            if (loginType === "admin" &&
+              (loginUser as AdminProfileData)?.permissions &&
+              !(loginUser as AdminProfileData)?.permissions?.map((permission: AdminPermission) => permission.key)?.includes("dashboard.read")) {
+              redirectUrl = "/master-admin/settings";
+            }
+
             localStorage.setItem("authToken", token || "");
-            localStorage.setItem("role",loginType );
+            localStorage.setItem("role", loginType);
             document.cookie = `authorization=${token}; path=/;`;
             document.cookie = `role=${loginType}; path=/;`;
-            dispatch(loginSuccess({ token, role:loginType, loginUser }));
-            router.push(redirectTo);
+            dispatch(loginSuccess({ token, role: loginType, loginUser }));
+            router.push(redirectUrl);
             closeOtpModal();
           }
         }
@@ -326,11 +318,10 @@ const Login: React.FC = () => {
                   type="button"
                   disabled={isPending}
                   onClick={() => handleLoginTypeChange(type)}
-                  className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium capitalize transition-all ${
-                    loginTypeTab === type
-                      ? "bg-white text-[#0b5d36] shadow-sm border border-[#b9e2c8]"
-                      : "text-rcn-muted cursor-pointer border border-transparent"
-                  }`}
+                  className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium capitalize transition-all ${loginTypeTab === type
+                    ? "bg-white text-[#0b5d36] shadow-sm border border-[#b9e2c8]"
+                    : "text-rcn-muted cursor-pointer border border-transparent"
+                    }`}
                 >
                   {type === "user" ? "User" : type === "org" ? "Org" : "Admin"}
                 </button>
@@ -501,10 +492,10 @@ const Login: React.FC = () => {
               </CustomNextLink>
             </div>
 
-          
+
           </div>
         </div>
-       
+
       </div>
     </div>
   );
