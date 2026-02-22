@@ -32,32 +32,30 @@ type FinancialReportApiResponse = {
   meta?: unknown;
 };
 
-type FinancialBody = { day: number };
+type FinancialBody = { days: number };
 
 const Financial: React.FC = () => {
   // Single body state (day only, like staff inbox)
-  const [body, setBody] = useState<FinancialBody>({ day: 0 });
+  const [body, setBody] = useState<FinancialBody>({ days: 0 });
 
   // API data
   const { data: financialRes, isLoading: financialLoading, isFetching: financialFetching, refetch } = useQuery({
-    queryKey: [...defaultQueryKeys.financialReportList, body.day],
+    queryKey: [...defaultQueryKeys.financialReportList, body.days],
     queryFn: async () => {
-      const res = await getAdminFinancialReportApi({ ...body });
+      const res = await getAdminFinancialReportApi({ ...body ,  });
       if (!checkResponse({ res })) return { data: undefined, meta: undefined } as FinancialReportApiResponse;
       return (res.data ?? { data: undefined, meta: undefined }) as FinancialReportApiResponse;
     },
   });
   const financialData = financialRes?.data;
-  const financialMeta = financialRes?.meta;
-
+  
   const inputClass = "w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white text-sm outline-none focus:border-[#b9d7c5] focus:shadow-[0_0_0_3px_rgba(31,122,75,0.12)]";
   const btnClass = "border border-rcn-border bg-white px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-rcn-text text-sm hover:border-[#c9ddd0] transition-colors";
-  const btnPrimaryClass = "bg-rcn-accent border-rcn-accent text-white px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-sm hover:bg-rcn-accent-dark transition-colors";
-
+  
   const getTimeRangeLabel = () => {
-    if (body.day === 0) return 'All time';
-    if (body.day === 1) return 'Today';
-    return `Last ${body.day} days`;
+    if (body.days === 0) return 'All time';
+    if (body.days === 1) return 'Today';
+    return `Last ${body.days} days`;
   };
 
   const centsToMoney = (cents: number) => (cents / 100).toFixed(2);
@@ -117,8 +115,8 @@ const Financial: React.FC = () => {
             <div className="flex flex-col gap-1.5 min-w-[220px]">
               <label className="text-xs text-rcn-muted font-semibold">Time frame</label>
               <select
-                value={body.day}
-                onChange={(e) => setBody((prev) => ({ ...prev, day: Number(e.target.value) }))}
+                value={body.days}
+                onChange={(e) => setBody((prev) => ({ ...prev, days: Number(e.target.value) }))}
                 className={inputClass}
               >
                 <option value={0}>All time</option>
@@ -133,9 +131,7 @@ const Financial: React.FC = () => {
               <button onClick={() => refetch()} className={btnClass}>{financialFetching ? "Refreshing..." : "Refresh"}</button>
             </div>
           </div>
-          <p className="text-xs text-rcn-muted mt-2 mb-0">
-            Time frame: {getTimeRangeLabel()} • Tip: Print lets you &quot;Save as PDF&ldquo;.
-          </p>
+        
         </div>
 
         {/* Financial Summary Cards */}
