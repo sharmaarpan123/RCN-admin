@@ -88,6 +88,20 @@ export const updateAdminOrganizationApi = (
 export const putAdminOrganizationToggleApi = (organizationId: string) =>
   AxiosInstance.put(`/api/admin/organization/toggle/${organizationId}`);
 
+/** GET /api/admin/referral-dashboard — admin dashboard summary (KPIs, etc.). */
+export const getAdminReferralDashboardApi = () =>
+  AxiosInstance.get("/api/admin/referral-dashboard");
+
+/** GET /api/organization/referral/by-organization — list referrals by organization (admin dashboard). Params: organization_id, type (sender|receiver), status (all|draft|sent), page, limit. */
+export const getOrganizationReferralByOrganizationApi = (params: {
+  organization_id: string;
+  type: "sender" | "receiver";
+  status?: "all" | "draft" | "sent";
+  page?: number;
+  limit?: number;
+}) =>
+  AxiosInstance.get("/api/organization/referral/by-organization", { params });
+
 /** DELETE /api/admin/organization/:id — delete organization (admin). */
 export const deleteAdminOrganizationApi = (organizationId: string) =>
   AxiosInstance.delete(`/api/admin/organization/${organizationId}`);
