@@ -2,9 +2,8 @@
 
 import { getOrganizationReferralByIdApi } from "@/apis/ApiCalls";
 import { DEMO_COMPANIES } from "@/app/staff-portal/inbox/demo-data";
-import { fmtDate, scrollToId } from "@/app/staff-portal/inbox/helpers";
+import { scrollToId } from "@/app/staff-portal/inbox/helpers";
 import type { ChatMsg, Comm, Company, ReceiverInstance, ReferralByIdApi } from "@/app/staff-portal/inbox/types";
-import { SenderDetailModals } from "@/components/staffComponents/inbox/sender/view/SenderDetailModals";
 import { SenderDetailSections } from "@/components/staffComponents/inbox/sender/view/SenderDetailSections";
 import { SenderDraftPaymentSection } from "@/components/staffComponents/inbox/sender/view/SenderDraftPaymentSection";
 import type { DocRow } from "@/components/staffComponents/inbox/sender/view/senderViewHelpers";
@@ -14,7 +13,7 @@ import defaultQueryKeys from "@/utils/staffQueryKeys";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function SenderDetailPage() {
   const params = useParams<{ id: string }>();
@@ -103,35 +102,35 @@ function SenderDetailContent({ data }: { data: ReferralByIdApi }) {
 
 
 
-  const openForward = useCallback(() => {
-    setForwardRefId(refId);
-    setForwardSelectedCompany(null);
-    setForwardOpen(true);
-  }, [refId]);
+  // const openForward = useCallback(() => {
+  //   setForwardRefId(refId);
+  //   setForwardSelectedCompany(null);
+  //   setForwardOpen(true);
+  // }, [refId]);
 
-  const forwardReferral = useCallback((company: Company, customServices: string[] | null) => {
-    const rxId = "RX-FWD-" + Math.random().toString(16).slice(2, 8).toUpperCase();
-    const rec: ReceiverInstance = { receiverId: rxId, name: company.name.trim(), email: (company.email || "").trim(), status: "PENDING", paidUnlocked: false, updatedAt: new Date(), rejectReason: "", servicesRequestedOverride: customServices ?? null };
-    setOverlay((prev) => ({
-      ...prev,
-      receivers: [...prev.receivers, rec],
-      chatByReceiver: { ...prev.chatByReceiver, [rxId]: [] },
-      comms: [...prev.comms, { at: new Date(), who: "Sender", msg: `Forwarded referral to ${company.name.trim()}${company.email ? " (" + company.email.trim() + ")" : ""}${customServices?.length ? " • Services: " + customServices.join(", ") : ""}.` }],
-    }));
-    setChatReceiverSelection((s) => ({ ...s, [refId]: rxId }));
-    setForwardOpen(false);
-    setTimeout(() => scrollToId("secReceivers"), 0);
-  }, [refId]);
+  // const forwardReferral = useCallback((company: Company, customServices: string[] | null) => {
+  //   const rxId = "RX-FWD-" + Math.random().toString(16).slice(2, 8).toUpperCase();
+  //   const rec: ReceiverInstance = { receiverId: rxId, name: company.name.trim(), email: (company.email || "").trim(), status: "PENDING", paidUnlocked: false, updatedAt: new Date(), rejectReason: "", servicesRequestedOverride: customServices ?? null };
+  //   setOverlay((prev) => ({
+  //     ...prev,
+  //     receivers: [...prev.receivers, rec],
+  //     chatByReceiver: { ...prev.chatByReceiver, [rxId]: [] },
+  //     comms: [...prev.comms, { at: new Date(), who: "Sender", msg: `Forwarded referral to ${company.name.trim()}${company.email ? " (" + company.email.trim() + ")" : ""}${customServices?.length ? " • Services: " + customServices.join(", ") : ""}.` }],
+  //   }));
+  //   setChatReceiverSelection((s) => ({ ...s, [refId]: rxId }));
+  //   setForwardOpen(false);
+  //   setTimeout(() => scrollToId("secReceivers"), 0);
+  // }, [refId]);
 
-  const addCompanyAndSelect = useCallback(
-    (name: string, email: string) => {
-      const n = name.trim();
-      if (!n) return;
-      if (!companyDirectory.some((c) => c.name.toLowerCase() === n.toLowerCase())) setCompanyDirectory((prev) => [{ name: n, email: email.trim() }, ...prev]);
-      setForwardSelectedCompany({ name: n, email: email.trim() });
-    },
-    [companyDirectory]
-  );
+  // const addCompanyAndSelect = useCallback(
+  //   (name: string, email: string) => {
+  //     const n = name.trim();
+  //     if (!n) return;
+  //     if (!companyDirectory.some((c) => c.name.toLowerCase() === n.toLowerCase())) setCompanyDirectory((prev) => [{ name: n, email: email.trim() }, ...prev]);
+  //     setForwardSelectedCompany({ name: n, email: email.trim() });
+  //   },
+  //   [companyDirectory]
+  // );
 
   const isDraft = data.is_draft === true;
 
@@ -145,8 +144,7 @@ function SenderDetailContent({ data }: { data: ReferralByIdApi }) {
     ...(isDraft ? [{ id: "secPayment", label: "Payment & Send" }] : []),
   ];
 
-  const sentAt = data.sent_at ? new Date(data.sent_at) : new Date(data.createdAt ?? 0);
-  const p = data.patient ?? {};
+
 
 
   return (
@@ -156,8 +154,8 @@ function SenderDetailContent({ data }: { data: ReferralByIdApi }) {
           <Link href="/staff-portal/inbox" className="text-rcn-brand hover:underline text-sm font-semibold">← Back to Inbox</Link>
         </div>
         <div className="flex items-center gap-2.5 flex-wrap justify-end">
-          <button type="button" onClick={() => window.print()} className="border border-slate-200 bg-white px-2.5 py-2 rounded-xl font-extrabold text-xs shadow">Export/Print Summary</button>
-          <button type="button" onClick={openForward} className="border border-rcn-brand/30 bg-rcn-brand/10 text-rcn-accent-dark px-2.5 py-2 rounded-xl font-extrabold text-xs shadow">Forward Referral</button>
+          {/* <button type="button" onClick={() => window.print()} className="border border-slate-200 bg-white px-2.5 py-2 rounded-xl font-extrabold text-xs shadow">Export/Print Summary</button> */}
+          {/* <button type="button" onClick={openForward} className="border border-rcn-brand/30 bg-rcn-brand/10 text-rcn-accent-dark px-2.5 py-2 rounded-xl font-extrabold text-xs shadow">Forward Referral</button> */}
         </div>
       </div>
 
@@ -195,7 +193,7 @@ function SenderDetailContent({ data }: { data: ReferralByIdApi }) {
         </div>
       </div>
 
-      <SenderDetailModals
+      {/* <SenderDetailModals
         forwardOpen={forwardOpen}
         onCloseForward={() => { setForwardOpen(false); setForwardRefId(null); setForwardSelectedCompany(null); }}
         forwardRefId={forwardRefId}
@@ -206,7 +204,7 @@ function SenderDetailContent({ data }: { data: ReferralByIdApi }) {
         onForward={(company, customServices) => forwardRefId != null && forwardReferral(company, customServices)}
         onAddCompanyAndSelect={addCompanyAndSelect}
 
-      />
+      /> */}
     </div>
   );
 }

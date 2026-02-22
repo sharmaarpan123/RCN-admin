@@ -107,8 +107,7 @@ export function StaffBranches() {
               <thead>
                 <tr className="bg-slate-50 border-b border-rcn-border">
                   <th className="text-left px-4 py-3 font-semibold">Branch</th>
-                  <th className="text-left px-4 py-3 font-semibold">Organization</th>
-                  <th className="text-left px-4 py-3 font-semibold">Status</th>
+                   <th className="text-left px-4 py-3 font-semibold">Status</th>
                 </tr>
               </thead>
               <tbody>

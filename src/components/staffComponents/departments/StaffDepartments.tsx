@@ -126,9 +126,7 @@ export function StaffDepartments() {
                     Department
                   </th>
                   <th className="text-left px-4 py-3 font-semibold">Branch</th>
-                  <th className="text-left px-4 py-3 font-semibold">
-                    Organization
-                  </th>
+                 
                   <th className="text-left px-4 py-3 font-semibold">Status</th>
                 </tr>
               </thead>
@@ -147,9 +145,7 @@ export function StaffDepartments() {
                       </div>
                     </td>
                     <td className="px-4 py-3 text-rcn-text">{row.branch}</td>
-                    <td className="px-4 py-3 text-rcn-text">
-                      {row.organization}
-                    </td>
+                   
                     <td className="px-4 py-3">
                       <span
                         className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${

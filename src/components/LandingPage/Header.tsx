@@ -54,7 +54,7 @@ export default function Header() {
               </div>
               <div>
                 <strong className="block text-sm tracking-wide">Referral Coordination Network</strong>
-                <span className="block text-xs text-rcn-muted">Send & Receive Referrals • Track • Secure Documents</span>
+                <span className="block text-xs text-rcn-muted">Connect. Refer. Coordinate.</span>
               </div>
             </NextLink>
 

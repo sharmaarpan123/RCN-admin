@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { DocRow } from "./senderViewHelpers";
 import { BOX_GRAD } from "./senderViewHelpers";
+import { postReferralStartChatApi } from "@/apis/ApiCalls";
+import { catchAsync, checkResponse } from "@/utils/commonFunc";
 
 interface SenderDetailSectionsProps {
   data: ReferralByIdApi;
@@ -35,8 +37,10 @@ export function SenderDetailSections({
   const [previewDocUrl, setPreviewDocUrl] = useState<string | null>(null);
   const [downloadingDoc, setDownloadingDoc] = useState<Record<string, boolean>>({});
 
-  const startChatWithReceiver = (referralId: string) => {
-    router.push(`/staff-portal/chat?RedirectedReferralId=${referralId}`);
+  const startChatWithReceiver = async (referralId: string, departmentId: string) => {
+    const res = await postReferralStartChatApi(referralId, { department_id: departmentId });
+    if (!checkResponse({ res })) return;
+    router.push(`/staff-portal/chat?RedirectedReferralId=${referralId}&department_id=${departmentId}`);
   };
 
   const downloadDoc = async (url: string, key: string) => {
@@ -103,7 +107,7 @@ export function SenderDetailSections({
                 <th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">Status</th>
                 <th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">Last Update</th>
                 <th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">Payment</th>
-                {/* <th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">Actions</th> */}
+                <th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -118,9 +122,9 @@ export function SenderDetailSections({
                   <td className="p-2.5"><span className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border ${pillClass(rx.status)}`}>{pillLabel(rx.status)}</span></td>
                   <td className="p-2.5">{fmtDate(rx.updatedAt)}</td>
                   <td className="p-2.5">{rx.paidUnlocked ? <span className={`inline-flex px-2.5 py-1.5 rounded-full text-[11px] font-black border ${pillClass("PAID")}`}>Paid</span> : <span className={`inline-flex px-2.5 py-1.5 rounded-full text-[11px] font-black border ${pillClass("PENDING")}`}>Not paid</span>}</td>
-                  {/* <td className="p-2.5">
-                    <button type="button" onClick={() => startChatWithReceiver(rx.receiverId)} className="border border-rcn-brand/25 bg-rcn-brand/10 text-rcn-accent-dark px-2 py-1.5 rounded-xl font-extrabold text-xs shadow mr-1">Chat</button>
-                  </td> */}
+                  <td className="p-2.5">
+                    <button type="button" onClick={() => startChatWithReceiver(data?._id, rx.departmentId)} className="border border-rcn-brand/25 bg-rcn-brand/10 text-rcn-accent-dark px-2 py-1.5 rounded-xl font-extrabold text-xs shadow mr-1">Chat</button>
+                  </td>
                 </tr>
               ))}
             </tbody>

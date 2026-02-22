@@ -43,8 +43,8 @@ export function documentsToList(documents: Record<string, unknown> | undefined):
 
 /** Department status item from API (GET /api/organization/referral/:id). */
 export interface DepartmentStatusApi {
-  department_id?: string;
-  department?: { _id?: string; name?: string };
+  department_id: string;
+  department: { _id?: string; name?: string };
   status?: string;
   payment_status?: string;
   organization_name?: string;
@@ -67,6 +67,7 @@ export function receiversFromData(data: ReferralByIdApi): ReceiverInstance[] {
     paidUnlocked: d.payment_status === "paid",
     updatedAt: d.updated_at ? new Date(d.updated_at) : new Date(),
     rejectReason: "",
+    departmentId: d.department?._id ?? "",
   }));
   return [...fromApi, ...(data._localReceivers ?? [])];
 }

@@ -96,7 +96,7 @@ export const checkResponse = ({
         return false;
     }
 
-    if (res?.status == 200) {
+    if (res?.status == 200 && res?.data?.success) {
 
         if (setData) setData(res?.data?.data);
         if (setTotal) setTotal(res?.data?.total);
@@ -109,13 +109,14 @@ export const checkResponse = ({
         if (setLoader) setLoader(false);
         return true;
     } else {
+
         if (showError) {
             toast.dismiss();
+            const response = res?.response?.data?.message ? res?.response : res?.data
             let errorsMessage: string =
-                (typeof res?.data?.message === "string" ? res?.data?.message : null) ||
-                "Something went wrong!";
+                response?.data.message || "Something went wrong!";
 
-            if (res?.data?.message === "Validation failed") {
+            if (response?.data.message === "Validation failed") {
                 const errors = res?.data?.errors;
                 if (Array.isArray(errors) && errors.length > 0) {
                     const first = errors[0] as { field?: string; message?: string };
@@ -131,7 +132,7 @@ export const checkResponse = ({
                 )
             );
         }
-        console.log(res?.data?.message, "Error in check response");
+
         if (setLoader) setLoader(false);
         return false;
     }
@@ -146,7 +147,7 @@ export const downloadUrl = (url: string, filename = "image") => {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-  };
+};
 
 export const detectUserTimezone = () => {
     try {

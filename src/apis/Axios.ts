@@ -49,7 +49,7 @@ AxiosInstance.interceptors.response.use(
                 logout()
             }
         }
-        return Promise.reject(error);
+        return error
     }
 );
 

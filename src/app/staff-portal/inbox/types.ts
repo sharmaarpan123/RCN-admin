@@ -12,6 +12,7 @@ export interface ReceiverInstance {
   updatedAt: Date;
   rejectReason: string;
   servicesRequestedOverride?: string[] | null;
+  departmentId: string;
 }
 
 export interface Doc {

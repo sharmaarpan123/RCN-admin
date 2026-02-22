@@ -525,8 +525,8 @@ export const patchOrganizationReferralDepartmentStatusApi = (
   );
 
 /** POST /api/referral/chats/:referralId/start-chat — start or get conversation for a referral (receiver chat). */
-export const postReferralStartChatApi = (referralId: string) =>
-  AxiosInstance.post(`/api/referral/chats/${referralId}/start-chat`);
+export const postReferralStartChatApi = (referralId: string, body: unknown) =>
+  AxiosInstance.post(`/api/referral/chats/${referralId}/start-chat`, body);
 
 /** GET /api/referral/chats — list chats (staff portal). Params: page, limit. */
 export const getReferralChatsApi = (params?: { page?: number; limit?: number }) =>
