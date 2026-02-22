@@ -2,34 +2,30 @@
 import { getAuthProfileApi } from "@/apis/ApiCalls";
 import { MasterAdminHeader, Sidebar } from "@/components/MasterAdmin";
 import { updateLoginUser } from "@/store/slices/Auth/authSlice";
-import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
+import defaultQueryKeys from "@/utils/adminQueryKeys";
+import { checkResponse } from "@/utils/commonFunc";
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { AdminProfileData } from "./types/profile";
 
 const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [profile, setProfile] = useState<AdminProfileData | null>(null);
-    const [loading, setLoading] = useState(true);
-    const dispatch = useDispatch();
-    useEffect(() => {
-        const fetchProfile = async () => {
-            try {
-                const response = await getAuthProfileApi();
-                if (response?.data?.success) {
-                    setProfile(response.data.data);
-                    dispatch(updateLoginUser(response.data.data as AdminProfileData));
-                }
-            } catch (error) {
-                console.error("Failed to fetch profile:", error);
-                toast.error("Failed to load profile");
-            } finally {
-                setLoading(false);
-            }
-        };
 
-        fetchProfile();
-    }, []);
+
+    const dispatch = useDispatch();
+
+    const { data: profile, isLoading: isLoadingProfile } = useQuery({
+        queryKey: defaultQueryKeys.profile,
+        queryFn: async () => {
+            const res = await getAuthProfileApi();
+            if (!checkResponse({ res })) return null;
+            const raw = res.data as { data?: AdminProfileData; success?: boolean };
+            const profile = raw?.data ?? null;
+            dispatch(updateLoginUser(profile as AdminProfileData));
+            return profile && typeof profile === "object" ? profile : null;
+        },
+    });
 
 
     return (
@@ -42,8 +38,8 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 <div className="md:ml-0 ml-0">
                     <MasterAdminHeader
                         setIsMobileMenuOpen={setIsMobileMenuOpen}
-                        profile={profile}
-                        loading={loading}
+                        profile={profile as AdminProfileData | null}
+                        loading={isLoadingProfile}
                     />
                     {children}
                 </div>

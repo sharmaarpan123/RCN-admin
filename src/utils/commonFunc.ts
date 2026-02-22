@@ -83,7 +83,7 @@ export const checkResponse = ({
     setLoader,
     showError = true,
 }: {
-    res: AxiosResponse,
+    res: AxiosResponse & { response?: { data: { message: string } } },
     setData?: React.Dispatch<React.SetStateAction<any>>,
     setTotal?: React.Dispatch<React.SetStateAction<any>>,
     showSuccess?: boolean,
@@ -132,7 +132,7 @@ export const checkResponse = ({
                 )
             );
         }
-
+       
         if (setLoader) setLoader(false);
         return false;
     }
