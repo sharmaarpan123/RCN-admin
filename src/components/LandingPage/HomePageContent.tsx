@@ -48,7 +48,7 @@ function FAQItem({
       transition={{ duration: 0.35, delay: index * 0.05 }}
     >
       <details className="border border-rcn-border-light bg-[rgba(255,255,255,0.82)] rounded-2xl px-3.5 py-3 shadow-[0_10px_30px_rgba(2,44,22,0.08)]">
-        <summary className="cursor-pointer font-[850]">{question}</summary>
+        <summary className="cursor-pointer font-[550]">{question}</summary>
         <p className="text-rcn-muted my-2.5 mt-2.5 mb-0 text-sm">{answer}</p>
       </details>
     </motion.div>
@@ -134,7 +134,7 @@ export default function HomePageContent() {
           >
             <div className="px-4.5 pt-4.5 pb-0 flex items-center justify-between gap-3">
               <h3 className="m-0 text-sm tracking-wide">Quick Start</h3>
-              <span className="text-xs font-black text-rcn-brand bg-[rgba(15,107,58,0.10)] border border-[rgba(15,107,58,0.18)] px-2.5 py-1.5 rounded-full whitespace-nowrap">
+              <span className="text-[11px]  font-semibold text-rcn-brand bg-[rgba(15,107,58,0.10)] border border-[rgba(15,107,58,0.18)] px-2.5 py-1.5 rounded-full whitespace-nowrap">
                 Built for coordination
               </span>
             </div>
@@ -153,7 +153,7 @@ export default function HomePageContent() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.35, delay: 0.15 + i * 0.06 }}
                   >
-                    <b className="block text-lg">{item.title}</b>
+                    <p className="block text-lg font-semibold">{item.title}</p>
                     <span className="block text-xs text-rcn-muted mt-0.5">{item.sub}</span>
                   </motion.div>
                 ))}
@@ -163,11 +163,11 @@ export default function HomePageContent() {
                 <b className="text-rcn-text">New organization?</b>
                 {" "}Register your company once, then invite users and start coordinating referrals.
                 <div className="mt-2">
-                  <Link href="/org-signup" variant="text">Register a company</Link>
+                  <Link href="/org-signup" variant="text" className="font-semibold">Register a company</Link>
                   {" • "}
-                  <Link href="/user-register" variant="text">Create a user</Link>
+                  <Link href="/user-register" variant="text" className="font-semibold">Create a user</Link>
                   {" • "}
-                  <Link href="/login" variant="text">Sign in</Link>
+                  <Link href="/login" variant="text" className="font-semibold">Sign in</Link>
                 </div>
               </div>
             </div>
@@ -264,7 +264,7 @@ export default function HomePageContent() {
               {...cardInView(i)}
             >
               <div className="w-[30px] h-[30px] rounded-xl grid place-items-center bg-linear-to-br from-rcn-brand to-rcn-brand-light text-white font-black mb-2.5">{step.num}</div>
-              <b className="block mb-1">{step.title}</b>
+              <p className="block mb-1">{step.title}</p>
               <span className="block text-rcn-muted text-[13px]">{step.desc}</span>
             </motion.div>
           ))}
@@ -383,8 +383,8 @@ export default function HomePageContent() {
               Use your organization admin account to manage users, services offered, and coordination settings. If you need help, contact support.
             </p>
             <ul className="my-2.5 ml-4.5 pl-0 text-rcn-muted text-sm list-disc">
-              <li className="my-1.75"><Link href="/contact-us" variant="text">Support Center</Link></li>
-              <li className="my-1.75"><Link href="/contact-us" variant="text">Contact Form</Link></li>
+              <li className="my-1.75"><Link href="/contact-us" variant="text" className="font-semibold">Support Center</Link></li>
+              <li className="my-1.75"><Link href="/contact-us"   variant="text" className="font-semibold">Contact Form</Link></li>
              
             </ul>
           </motion.div>

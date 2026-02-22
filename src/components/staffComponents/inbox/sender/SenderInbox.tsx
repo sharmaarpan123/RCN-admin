@@ -23,7 +23,7 @@ function sentReferralStatus(ref: SentReferralApi): string {
 
 interface SenderInboxProps {
   referrals: SentReferralApi[];
- 
+
 
 
   meta: ReferralListMeta;
@@ -41,18 +41,12 @@ export function SenderInbox({
   isLoading = false,
 }: SenderInboxProps) {
   const router = useRouter();
-  
+
   const baseList = referrals
-
-
-  
-
-
-
 
   const columns: TableColumn<SentReferralApi>[] = useMemo(
     () => [
-       {
+      {
         head: "Patient",
         component: (ref) => {
           const p = ref.patient;

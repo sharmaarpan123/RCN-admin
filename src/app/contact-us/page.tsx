@@ -13,7 +13,7 @@ const ContactUsPage = () => {
             <div className="contact-us-gradient py-2">
                 <ContactUsHero />
                 <ContactUsContent />
-                <ContactUsMap />
+                {/* <ContactUsMap /> */}
             </div>
             <Footer />
         </>

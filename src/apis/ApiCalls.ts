@@ -328,6 +328,9 @@ export const uploadFileApi = (file: File) => {
   });
 };
 
+/** GET /api/banners — public list of banners (landing page). */
+export const getBannersApi = () => AxiosInstance.get("/api/banners");
+
 /** GET /api/admin/banners — list banners (admin). */
 export const getAdminBannersApi = () => AxiosInstance.get("/api/admin/banners");
 

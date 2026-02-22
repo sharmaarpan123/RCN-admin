@@ -126,7 +126,7 @@ select option {
 
 .contact-us-gradient {
   background:
-    linear-gradient(0deg, #ffffff 0%, #ffffff 10%, transparent 10%),
+    /* linear-gradient(0deg, #ffffff 0%, #ffffff 10%, transparent 5%), */
     linear-gradient(0deg, #DBFCE8 0%, rgba(219, 252, 232, 0) 100%),
     linear-gradient(180deg, #DBFCE8 0%, rgba(219, 252, 232, 0) 10%);
 }

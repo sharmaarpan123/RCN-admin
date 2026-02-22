@@ -1,8 +1,7 @@
 "use client";
 
-import React from "react";
+import { CustomNextLink } from "@/components";
 import { motion } from "framer-motion";
-import { Button, CustomNextLink } from "@/components";
 
 const HERO_BG_IMAGE = "/about-us/Hero-sec-img.png";
 
@@ -130,9 +129,7 @@ export function AboutUsHero() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
               </CustomNextLink>
-              <Button variant="secondary" size="lg" className="border-white/40 bg-white/90 text-rcn-text hover:bg-white">
-                Watch Demo
-              </Button>
+
             </motion.div>
           </div>
 
