@@ -60,13 +60,13 @@ export default function Header() {
 
 
             <div className="hidden md:flex gap-2.5 items-center">
-              <CustomNextLink href="/" variant="text" className={`font-[750] ${pathname === "/" ? "text-rcn-accent-dark" : "text-rcn-muted"}`} size="md">
+              <CustomNextLink href="/" variant="text" className={`font-[550] ${pathname === "/" ? "text-rcn-accent-dark" : "text-rcn-muted"}`} size="md">
                 Home
               </CustomNextLink>
-              <CustomNextLink href="/about-us" variant="text" className={` font-[750] ${pathname === "/about-us" ? "text-rcn-accent-dark" : "text-rcn-muted"}`} size="md">
+              <CustomNextLink href="/about-us" variant="text" className={` font-[550] ${pathname === "/about-us" ? "text-rcn-accent-dark" : "text-rcn-muted"}`} size="md">
                 About Us
               </CustomNextLink>
-              <CustomNextLink href="/contact-us" variant="text" className={` font-[750] ${pathname === "/contact-us" ? "text-rcn-accent-dark" : "text-rcn-muted"}`} size="md">
+              <CustomNextLink href="/contact-us" variant="text" className={` font-[550] ${pathname === "/contact-us" ? "text-rcn-accent-dark" : "text-rcn-muted"}`} size="md">
                 Contact Us
               </CustomNextLink>
             </div>

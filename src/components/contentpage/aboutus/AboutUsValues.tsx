@@ -77,8 +77,8 @@ export function AboutUsValues() {
               {icon}
             </div>
             </div>
-            <h3 className="font-bold text-rcn-text text-lg mb-2">{title}</h3>
-            <p className="text-rcn-text-faded text-sm leading-relaxed">{description}</p>
+            <h3 className="font-bold text-rcn-text text-lg mb-2 text-center">{title}</h3>
+            <p className="text-rcn-text-faded text-sm leading-relaxed text-center">{description}</p>
           </motion.div>
         ))}
       </div>
