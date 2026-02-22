@@ -308,6 +308,13 @@ function ServiceForm({
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-full">
+        Loading...      </div>
+    );
+  }
+
   return (
     <div>
       <div className="flex justify-between items-center mb-4">

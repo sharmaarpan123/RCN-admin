@@ -5,7 +5,7 @@ import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useMutation } from "@tanstack/react-query";
-import { Button, Modal } from "@/components";
+import { Button, Modal, PreviewFile } from "@/components";
 import {
   createAdminBannerApi,
   updateAdminBannerApi,
@@ -24,6 +24,7 @@ import {
   PLACEMENT_OPTIONS,
   SCOPE_OPTIONS,
 } from "./types";
+import Image from "next/image";
 
 export interface BannerModalProps {
   isOpen: boolean;
@@ -43,9 +44,10 @@ export function BannerModal({
   onDeleteClick,
 }: BannerModalProps) {
   const [uploadingImage, setUploadingImage] = useState(false);
-
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const {
     register,
+    watch,
     handleSubmit,
     reset,
     setValue,
@@ -259,12 +261,14 @@ export function BannerModal({
                 className={INPUT_CLASS}
               />
             </div>
-            <input
-              type="url"
-              {...register("image_url")}
-              placeholder="https://... or upload above"
-              className={INPUT_CLASS + " mt-1.5"}
-            />
+
+            {watch("image_url") ? (
+
+              <Image src={watch("image_url") as string} onClick={() => setImagePreviewUrl(watch("image_url") as string)} alt="Banner Image" className="p-2" width={100} height={100} />
+            ) : (
+              <p className="text-xs text-rcn-muted mt-1">No image uploaded</p>
+            )}
+
             {uploadingImage && (
               <p className="text-xs text-rcn-muted mt-1">Uploading…</p>
             )}
@@ -321,6 +325,7 @@ export function BannerModal({
           </div>
         </div>
       </form>
+      <PreviewFile url={imagePreviewUrl ?? ""} isOpen={!!imagePreviewUrl} onClose={() => setImagePreviewUrl(null)} />
     </Modal>
   );
 }

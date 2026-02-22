@@ -39,10 +39,11 @@ const PrivacyPolicyPage = () => {
 
     if (isLoading) {
         return (
-            <div className="max-w-3xl mx-auto px-4 py-8">
+            <div className=" w-full text-center mx-auto px-4 py-8">
                 <p className="text-rcn-muted">Loading…</p>
             </div>
         );
+
     }
 
     if (error || !page) {

@@ -45,7 +45,7 @@ export function OrganizationsTable({
           <label className="text-xs text-rcn-muted">Search (Name or Location)</label>
 
           <DebouncedInput
-            placeholder="Name, street, city, state, zip"
+            placeholder="Search by name"
             value={body.search}
             onChange={(value) => setBody({ ...body, search: value })}
             className={INPUT_CLASS}

@@ -240,7 +240,7 @@ export const deleteOrganizationDepartmentApi = (departmentId: string) =>
 
 /** GET /api/cms/slug/:slug — get CMS page by slug (public, for privacy-policy, terms, etc.). */
 export const getCmsBySlugApi = (slug: string) =>
-  AxiosInstance.get(`api/admin/cms/6984f490531a3cf60a0a9f01`);
+  AxiosInstance.get(`api/cms/` + slug);
 
 /** GET /api/admin/cms — list CMS pages (admin). */
 export const getAdminCmsListApi = () => AxiosInstance.get("/api/admin/cms");

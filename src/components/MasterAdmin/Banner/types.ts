@@ -35,7 +35,12 @@ export type ApiBanner = {
   __v?: number;
 };
 
-const todayEnd = () => new Date(new Date().setHours(23, 59, 59, 999));
+const yesterdayEnd = () => {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  d.setHours(23, 59, 59, 999);
+  return d;
+};
 
 export const bannerFormSchema = (isEdit: boolean) => yup.object({
   name: yup.string().trim().required("Banner name is required."),
@@ -52,7 +57,7 @@ export const bannerFormSchema = (isEdit: boolean) => yup.object({
     .test(
       "start-after-today",
       "Start date must be after today.",
-      (value) => isEdit ? true : !value || new Date(value) > todayEnd()
+      (value) => isEdit ? true : !value || new Date(value) > yesterdayEnd()
     ),
   end_date: yup
     .string()
