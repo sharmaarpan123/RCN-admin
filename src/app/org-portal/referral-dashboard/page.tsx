@@ -1,11 +1,17 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { TableColumn } from "@/components";
-import { Button, DebouncedInput, TableLayout } from "@/components";
+import { Button, CustomAsyncSelect, DebouncedInput, TableLayout } from "@/components";
+import type { RcnSelectOption } from "@/components/CustomAsyncSelect";
 import CustomPagination from "@/components/CustomPagination";
-import { getAuthProfileApi, getOrganizationReferralByOrganizationApi } from "@/apis/ApiCalls";
+import {
+  getAuthProfileApi,
+  getOrganizationBranchesApi,
+  getOrganizationDepartmentsApi,
+  getOrganizationReferralByOrganizationApi,
+} from "@/apis/ApiCalls";
 import { checkResponse } from "@/utils/commonFunc";
 import { fmtDate } from "@/utils/database";
 import type { AuthProfileData } from "../types/profile";
@@ -83,9 +89,49 @@ export default function OrgPortalReferralDashboardPage() {
   const [senderStatusFilter, setSenderStatusFilter] = useState<SenderStatusFilter>("all");
   const [receiverStatusFilter, setReceiverStatusFilter] = useState<ReceiverStatusFilter>("all");
   const [page, setPage] = useState(1);
+  const [branchOption, setBranchOption] = useState<RcnSelectOption[]>([]);
+  const [departmentOption, setDepartmentOption] = useState<RcnSelectOption[]>([]);
   const [modalRef, setModalRef] = useState<Record<string, unknown> | null>(null);
   const [modalIsReceiver, setModalIsReceiver] = useState(false);
   const { loginUser } = useOrganizationAuthLoginUser();
+
+  const branchId = branchOption[0]?.value ?? "";
+  const departmentId = departmentOption[0]?.value ?? "";
+
+  const loadBranchOptions = useCallback(async (inputValue: string): Promise<RcnSelectOption[]> => {
+    const res = await getOrganizationBranchesApi({ search: inputValue.trim() || "", limit: 50 });
+    if (!checkResponse({ res })) return [];
+    const raw = res.data as { data?: { _id: string; name: string }[] };
+    const list = raw?.data ?? [];
+    return list.map((b) => ({ value: b._id, label: b.name ?? "" })).filter((o) => o.value && o.label);
+  }, []);
+
+  const loadDepartmentOptions = useCallback(
+    async (inputValue: string): Promise<RcnSelectOption[]> => {
+      if (!branchId) return [];
+      const res = await getOrganizationDepartmentsApi({
+        branch_id: branchId,
+        search: inputValue.trim() || "",
+        limit: 50,
+      });
+      if (!checkResponse({ res })) return [];
+      const raw = res.data as { data?: { _id: string; name: string }[] };
+      const list = raw?.data ?? [];
+      return list.map((d) => ({ value: d._id, label: d.name ?? "" })).filter((o) => o.value && o.label);
+    },
+    [branchId]
+  );
+
+  const handleBranchChange = useCallback((options: RcnSelectOption[]) => {
+    setBranchOption(options.length ? [options[0]] : []);
+    setDepartmentOption([]);
+    setPage(1);
+  }, []);
+
+  const handleDepartmentChange = useCallback((options: RcnSelectOption[]) => {
+    setDepartmentOption(options.length ? [options[0]] : []);
+    setPage(1);
+  }, []);
 
   const { data: profileData } = useQuery({
     queryKey: ["auth", "profile"],
@@ -105,7 +151,7 @@ export default function OrgPortalReferralDashboardPage() {
   const ownOrgId = loginUser?.organization_id?._id;
 
   const { data: referralsRes, isLoading } = useQuery({
-    queryKey: ["organization", "referral", "by-org", ownOrgId, inboxRefMode, statusParam, page],
+    queryKey: ["organization", "referral", "by-org", ownOrgId, inboxRefMode, statusParam, page, branchId, departmentId],
     queryFn: async () => {
       if (!ownOrgId) return { data: [], meta: null };
       const res = await getOrganizationReferralByOrganizationApi({
@@ -115,6 +161,8 @@ export default function OrgPortalReferralDashboardPage() {
         ...(!isSent && { current_status: statusParam, status: "all" }),
         page,
         limit: PAGE_SIZE,
+        ...(branchId && { branch_id: branchId }),
+        ...(departmentId && { department_id: departmentId }),
       });
       if (!checkResponse({ res })) return { data: [], meta: null };
       return res.data as { data?: ReferralRow[]; meta?: ReferralListMeta };
@@ -330,7 +378,28 @@ export default function OrgPortalReferralDashboardPage() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div>
+              <label className="block text-xs text-rcn-muted mb-1.5">Branch</label>
+              <CustomAsyncSelect
+                value={branchOption}
+                onChange={handleBranchChange}
+                loadOptions={loadBranchOptions}
+                placeholder="All branches"
+                aria-label="Filter by branch"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-rcn-muted mb-1.5">Department</label>
+              <CustomAsyncSelect
+                value={departmentOption}
+                onChange={handleDepartmentChange}
+                loadOptions={loadDepartmentOptions}
+                placeholder={branchId ? "All departments" : "Select branch first"}
+                aria-label="Filter by department"
+                isDisabled={!branchId}
+              />
+            </div>
             <div>
               <label className="block text-xs text-rcn-muted mb-1.5">Search</label>
               <DebouncedInput
@@ -344,7 +413,12 @@ export default function OrgPortalReferralDashboardPage() {
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => { setSearch(""); setPage(1); }}
+                onClick={() => {
+                  setSearch("");
+                  setBranchOption([]);
+                  setDepartmentOption([]);
+                  setPage(1);
+                }}
               >
                 Clear Filters
               </Button>
