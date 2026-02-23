@@ -55,7 +55,7 @@ const TermsAndConditionsPage = () => {
 
     return (
         <>
-            <Header />
+          
             <div className="container min-h-screen mx-auto px-4 py-8">
                 <article>
                     <h1 className="text-2xl font-bold mb-6">{page.name}</h1>

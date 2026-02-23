@@ -1,11 +1,9 @@
 "use client";
 
-import React from "react";
-import { useQuery } from "@tanstack/react-query";
 import { getCmsBySlugApi } from "@/apis/ApiCalls";
-import { checkResponse } from "@/utils/commonFunc";
-import Header from "@/components/LandingPage/Header";
 import Footer from "@/components/LandingPage/Footer";
+import { checkResponse } from "@/utils/commonFunc";
+import { useQuery } from "@tanstack/react-query";
 
 const CMS_SLUG = "privacy-policy";
 
@@ -56,7 +54,7 @@ const PrivacyPolicyPage = () => {
 
     return (
         <>
-            <Header />
+           
             <div className="container min-h-screen mx-auto px-4 py-8">
                 <article>
                     <h1 className="text-2xl font-bold mb-6">{page.name}</h1>

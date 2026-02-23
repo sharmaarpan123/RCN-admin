@@ -26,7 +26,7 @@ export interface PaymentMethodOption {
   key: string;
 }
 
-const PAYMENT_METHODS_EXCLUDED_FROM_WEBSITE = ["apple_pay", "google_pay"];
+const PAYMENT_METHODS_EXCLUDED_FROM_WEBSITE = ["apple", "google"];
 const CARD_KEYS_REQUIRING_STRIPE = ["card"];
 
 interface SenderDraftPaymentSectionProps {
@@ -176,7 +176,7 @@ export function SenderDraftPaymentSection({ refId }: SenderDraftPaymentSectionPr
             Draft
           </span>
         </div>
-        <p className="text-rcn-muted text-xs font-[850] mb-3">
+        <p className="text-rcn-muted text-xs font-semibold mb-3">
           Choose who pays for this referral. Receiver can pay to unlock (referral sent for free) or
           you can pay as sender.
         </p>
@@ -189,7 +189,7 @@ export function SenderDraftPaymentSection({ refId }: SenderDraftPaymentSectionPr
               onChange={() => setPaymentSource("free")}
               className="rounded-full border-rcn-border"
             />
-            <span className="text-sm font-[850]">Receiver pays</span>
+            <span className="text-sm font-semibold">Receiver pays</span>
             <span className="text-rcn-muted text-xs">
               (Referral sent for free; receiver pays to unlock patient info)
             </span>
@@ -202,7 +202,7 @@ export function SenderDraftPaymentSection({ refId }: SenderDraftPaymentSectionPr
               onChange={() => setPaymentSource("payment")}
               className="rounded-full border-rcn-border"
             />
-            <span className="text-sm font-[850]">Sender pays</span>
+            <span className="text-sm font-semibold">Sender pays</span>
             <span className="text-rcn-muted text-xs">(You pay for the referral)</span>
           </label>
           {paymentSource === "payment" && (
@@ -249,35 +249,35 @@ export function SenderDraftPaymentSection({ refId }: SenderDraftPaymentSectionPr
             <div className="text-sm text-rcn-text space-y-3">
               {paymentSummary.referral_id && (
                 <div>
-                  <span className="text-rcn-muted text-xs font-black">Referral ID</span>
-                  <p className="m-0 mt-0.5 font-[850]">{paymentSummary.referral_id}</p>
+                  <span className="text-xs font-black">Referral ID</span>
+                  <p className="m-0 mt-0.5 font-semibold">{paymentSummary.referral_id}</p>
                 </div>
               )}
               <div className="grid grid-cols-2 gap-2">
                 {typeof paymentSummary.total_recipients === "number" && (
                   <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                    <span className="text-rcn-muted text-xs font-black">Recipients</span>
-                    <p className="m-0 mt-0.5 font-[850]">{paymentSummary.total_recipients}</p>
+                    <span className=" text-xs font-black">Recipients</span>
+                    <p className="m-0 mt-0.5 font-semibold">{paymentSummary.total_recipients}</p>
                   </div>
                 )}
                 {typeof paymentSummary.total_departments === "number" && (
                   <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                    <span className="text-rcn-muted text-xs font-black">Departments</span>
-                    <p className="m-0 mt-0.5 font-[850]">{paymentSummary.total_departments}</p>
+                    <span className=" text-xs font-black">Departments</span>
+                    <p className="m-0 mt-0.5 font-semibold">{paymentSummary.total_departments}</p>
                   </div>
                 )}
                 {paymentSummary.source != null && (
                   <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                    <span className="text-rcn-muted text-xs font-black">Payment by</span>
-                    <p className="m-0 mt-0.5 font-[850]">
+                    <span className=" text-xs font-black">Payment by</span>
+                    <p className="m-0 mt-0.5 font-semibold">
                       {paymentSummary.source === "free" ? "Receiver pays" : "Sender pays"}
                     </p>
                   </div>
                 )}
                 {(paymentSummary.amount != null || paymentSummary.currency) && (
                   <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                    <span className="text-rcn-muted text-xs font-black">Amount</span>
-                    <p className="m-0 mt-0.5 font-[850]">
+                    <span className=" text-xs font-black">Amount</span>
+                    <p className="m-0 mt-0.5 font-semibold">
                       {paymentSummary.currency ? `${paymentSummary.currency} ` : ""}
                       {typeof paymentSummary.amount === "number"
                         ? paymentSummary.amount
@@ -288,14 +288,14 @@ export function SenderDraftPaymentSection({ refId }: SenderDraftPaymentSectionPr
               </div>
               {paymentSummary.breakdown?.message && (
                 <div className="p-3 rounded-xl bg-rcn-brand/5 border border-rcn-brand/20">
-                  <p className="m-0 text-[13px] font-[850] text-rcn-text">
+                  <p className="m-0 text-[13px] font-semibold text-rcn-text">
                     {paymentSummary.breakdown.message}
                   </p>
                 </div>
               )}
             </div>
           ) : (
-            <p className="m-0 text-rcn-muted text-sm">No summary data.</p>
+            <p className="m-0  text-sm">No summary data.</p>
           )}
           <div className="flex gap-2.5 justify-end mt-4">
             <Button

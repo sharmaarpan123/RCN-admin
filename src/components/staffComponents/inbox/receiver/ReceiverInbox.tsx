@@ -94,7 +94,7 @@ export function ReceiverInbox({
         head: "Sent Date",
         component: (ref) => {
           const d = ref.sent_at ? new Date(ref.sent_at) : ref.createdAt ? new Date(ref.createdAt) : null;
-          return <span className="text-rcn-muted text-xs font-semibold">{d ? fmtDate(d) : "—"}</span>;
+          return <span className="text-rcn-muted text-xs font-semibold">{d ? moment(d).format("DD , MM , YYYY , hh:mm a") : "—"}</span>;
         },
       },
       {

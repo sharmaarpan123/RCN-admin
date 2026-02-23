@@ -19,13 +19,10 @@ export default function Footer() {
               </div>
               <div>
                 <strong className="block text-sm">Referral Coordination Network</strong>
-                <span className="block text-xs text-rcn-muted">Built for speed, clarity, and secure coordination</span>
+                <span className="block text-xs text-rcn-muted">Connect. Refer. Coordinate.</span>
               </div>
             </NextLink>
-            <p className="text-rcn-muted text-sm my-2.5 mt-2.5 mb-0 max-w-[52ch]">
-              One place for organizations to send and receive referrals, share documents, and track progress—helping
-              patients get care without delay.
-            </p>
+           
           </div>
 
           <div>

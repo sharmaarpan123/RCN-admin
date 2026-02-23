@@ -76,7 +76,7 @@ export function OrganizationsPage() {
   const invalidateBranches = () =>
     queryClient.invalidateQueries({ queryKey: defaultQueryKeys.organizationBranchesList });
 
-   
+
 
   const closeBranchModal = () =>
     setBranchModal((prev) => ({ ...prev, isOpen: false, branchId: null, presetOrgId: undefined, branch: null }));
@@ -105,7 +105,7 @@ export function OrganizationsPage() {
   const runToggleBranch = catchAsync(async (branchId: string) => {
     const res = await putAdminBranchToggleApi(branchId);
     if (checkResponse({ res, showSuccess: true })) invalidateBranches();
-  
+
   });
 
   const toggleBranch = (branchId: string) => runToggleBranch(branchId);
@@ -115,7 +115,7 @@ export function OrganizationsPage() {
     if (checkResponse({ res, showSuccess: true })) {
       invalidateOrgs();
       queryClient.invalidateQueries({ queryKey: [...defaultQueryKeys.organizationDetail, organizationId] });
-    } 
+    }
   });
 
   const toggleOrganization = (organizationId: string) => runToggleOrganization(organizationId);
@@ -150,7 +150,7 @@ export function OrganizationsPage() {
       <OrgModalContent
         isOpen={orgModal.isOpen}
         orgId={orgModal.editId ?? undefined}
-        onClose={() => setOrgModal((prev) => ({ ...prev, isOpen: false }))}
+        onClose={() => setOrgModal((prev) => ({ ...prev, editId: null, isOpen: false }))}
       />
 
 

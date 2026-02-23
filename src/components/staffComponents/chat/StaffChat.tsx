@@ -15,6 +15,7 @@ import { useSocket } from "@/contexts/SocketContext";
 import type { RootState } from "@/store";
 import { ChatInput } from "@/components/staffComponents/ChatInput";
 import { useRouter, useSearchParams } from "next/navigation";
+import moment from "moment";
 export const dynamic = "force-dynamic";
 
 const CHAT_LIST_PAGE = 1;
@@ -142,7 +143,7 @@ export default function ChatPage() {
   // Effective selected chat: use first in list when none selected
   const displayChat = selectedChat
 
-  console.log(selectedChat , "selectedChat")
+  console.log(selectedChat, "selectedChat")
 
   // Messages for selected chat
   const { data: messagesResponse, isLoading: isLoadingMessages } = useQuery({
@@ -313,7 +314,7 @@ export default function ChatPage() {
                       <div className="flex items-start justify-between gap-2 mb-1">
                         <div className="flex-1 min-w-0">
                           <div className="text-[11px] text-rcn-muted font-bold truncate">
-                            {chat.referral_sender_name ?? "—"}
+                            {chat.is_sender ? chat.receiver_name ?? "—" : chat.referral_sender_name ?? "—"}
                           </div>
                           {chat.last_message && (
                             <div className="text-[11px] text-rcn-muted truncate mt-1">
@@ -439,7 +440,7 @@ export default function ChatPage() {
                                 </div>
                                 <div className="text-[11px] text-rcn-muted  mb-1 flex gap-2 flex-wrap justify-end">
                                   <span>
-                                    {fmtDate(new Date(m.created_at ?? 0))}
+                                    {moment(m.created_at ?? 0).format("DD , MM , YYYY , hh:mm a")}
                                   </span>
                                 </div>
                               </div>
