@@ -3,6 +3,7 @@
 import { getOrganizationBranchesApi, deleteOrganizationBranchApi } from "@/apis/ApiCalls";
 import type { TableColumn } from "@/components";
 import { Button, TableLayout, DebouncedInput, TableActions, ConfirmModal } from "@/components";
+import CustomPagination from "@/components/CustomPagination";
 import { BranchModal } from "@/components/OrgComponent/Branch";
 import { catchAsync, checkResponse } from "@/utils/commonFunc";
 import defaultQueryKeys from "@/utils/orgQueryKeys";
@@ -20,26 +21,28 @@ const BRANCHES_QUERY_KEY = defaultQueryKeys.branchList;
 export default function OrgPortalBranchesPage() {
   const [modal, setModal] = useState<{ mode: "add" } | { mode: "edit"; id: string; name: string } | null>(null);
   const [deleteBranch, setDeleteBranch] = useState<{ id: string; name: string } | null>(null);
-  const [body, setBody] = useState<{ search: string }>({ search: "" });
+  const [body, setBody] = useState<{ search: string, limit: number, page: number }>({ search: "", limit: 10, page: 1 });
   const queryClient = useQueryClient();
 
   const { data: apiData, isLoading } = useQuery({
-    queryKey: [...BRANCHES_QUERY_KEY, body.search],
+    queryKey: [...BRANCHES_QUERY_KEY, body.search, body.page],
     queryFn: async () => {
       try {
-        const res = await getOrganizationBranchesApi({ search: body.search });
+        const res = await getOrganizationBranchesApi({ search: body.search, limit: body.limit, page: body.page });
         if (!checkResponse({ res })) {
-          return [];
+          return { data: [], meta: { total: 0 } };
         }
         return res.data;
       } catch {
-        return [];
+        return { data: [], meta: { total: 0 } };
       }
     },
   });
 
 
   const branches = apiData?.data ?? [];
+
+  const total = apiData?.meta?.total ?? 0;
 
   const openAdd = () => setModal({ mode: "add" });
 
@@ -131,6 +134,14 @@ export default function OrgPortalBranchesPage() {
               loader={isLoading}
               wrapperClassName="min-w-[260px]"
               getRowKey={(row) => row._id}
+            />
+          </div>
+          <div className="text-right text-xs text-rcn-muted mt-2">
+            <CustomPagination
+              total={total}
+              pageSize={body.limit}
+              current={body.page}
+              onChange={(page) => { setBody((prev) => ({ ...prev, page })) }}
             />
           </div>
         </div>

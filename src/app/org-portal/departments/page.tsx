@@ -3,6 +3,7 @@
 import { getOrganizationBranchesApi, getOrganizationDepartmentsApi, deleteOrganizationDepartmentApi } from "@/apis/ApiCalls";
 import type { TableColumn } from "@/components";
 import { Button, TableLayout, DebouncedInput, TableActions, ConfirmModal } from "@/components";
+import CustomPagination from "@/components/CustomPagination";
 import { DepartmentModal } from "@/components/OrgComponent/Department";
 import { catchAsync, checkResponse } from "@/utils/commonFunc";
 import defaultQueryKeys from "@/utils/orgQueryKeys";
@@ -19,6 +20,7 @@ interface Department {
   _id: string;
   name: string;
   branch_id?: string;
+  meta?: { total: number };
 }
 
 type DeptRow = Department & { branch_id?: { _id?: string; name?: string } };
@@ -28,7 +30,7 @@ const DEPARTMENTS_QUERY_KEY = defaultQueryKeys.departmentList;
 
 export default function OrgPortalDepartmentsPage() {
   const [branchFilter, setBranchFilter] = useState<string>("");
-  const [body, setBody] = useState<{ search: string }>({ search: "" });
+  const [body, setBody] = useState<{ search: string, limit: number, page: number }>({ search: "", limit: 10, page: 1 });
   const [modal, setModal] = useState<
     | { mode: "add" }
     | { mode: "edit"; departmentId: string }
@@ -55,11 +57,11 @@ export default function OrgPortalDepartmentsPage() {
   const branchId = branchFilter || "all";
 
   const { data: deptApiData, isLoading } = useQuery({
-    queryKey: [...DEPARTMENTS_QUERY_KEY, branchId, body.search],
+    queryKey: [...DEPARTMENTS_QUERY_KEY, branchId, body.search, body.page],
     queryFn: async () => {
       if (!branchId) return { data: [] };
       try {
-        const res = await getOrganizationDepartmentsApi({ branch_id: branchId, search: body.search });
+        const res = await getOrganizationDepartmentsApi({ branch_id: branchId, search: body.search, limit: body.limit, page: body.page });
         if (!checkResponse({ res })) return { data: [] };
         return res.data;
       } catch {
@@ -72,7 +74,7 @@ export default function OrgPortalDepartmentsPage() {
 
   const data = deptApiData?.data ?? [];
 
-
+  const total = deptApiData?.meta?.total ?? 0;
 
   const emptyMessage = !branches.length
     ? "No branches yet. Create a branch first."
@@ -199,12 +201,20 @@ export default function OrgPortalDepartmentsPage() {
             <TableLayout<DeptRow>
               columns={columns}
               data={data}
-              body={body}
+              body={body as { search: string, limit: number, page: number }}
               setBody={(patch) => setBody((prev) => ({ ...prev, ...patch }))}
               emptyMessage={emptyMessage}
               loader={isLoading}
               wrapperClassName="min-w-[260px]"
               getRowKey={(row) => row._id}
+            />
+          </div>
+          <div className="text-right text-xs text-rcn-muted mt-2">
+            <CustomPagination
+              total={total}
+              pageSize={body.limit}
+              current={body.page}
+              onChange={(page) => { setBody((prev) => ({ ...prev, page })) }}
             />
           </div>
         </div>
