@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -30,7 +30,7 @@ type OrgFormValues = {
   phone: string;
   ein_number: string;
   password: string;
-  enabled: boolean;
+  enabled: "false" | "true";
   address: {
     street: string;
     suite: string;
@@ -61,17 +61,14 @@ const addressSchema = {
 
 const createSchema = yup.object({
   name: yup.string().trim().required("Organization Name is required."),
-  email: yup
-    .string()
-    .optional()
-    .default(""),
+  email: yup.string().optional().default(""),
   phone: yup.string().trim().required("Organization Phone is required."),
   ein_number: yup.string().trim().optional().default(""),
   password: yup
     .string()
     .required("Password is required.")
     .min(8, "Password must be at least 8 characters."),
-  enabled: yup.boolean().optional().default(true),
+  enabled: yup.string().optional().default("true"),
   address: yup.object({
     ...addressSchema,
     latitude: yup.number().nullable().required("Please select an address."),
@@ -85,7 +82,11 @@ const createSchema = yup.object({
       .trim()
       .optional()
       .default("")
-      .test("email", "Please enter a valid contact email.", (v) => !v || isValidEmail((v ?? "") as string)),
+      .test(
+        "email",
+        "Please enter a valid contact email.",
+        (v) => !v || isValidEmail((v ?? "") as string),
+      ),
     tel: yup.string().trim().optional().default(""),
     fax: yup.string().trim().optional().default(""),
   }),
@@ -101,7 +102,7 @@ const updateSchema = yup.object({
   phone: yup.string().trim().required("Organization Phone is required."),
   ein_number: yup.string().trim().optional().default(""),
   password: yup.string().optional(),
-  enabled: yup.boolean().optional().default(true),
+  enabled: yup.string().optional().default("true"),
   address: yup.object(addressSchema),
   contact: yup.object({
     firstName: yup.string().trim().optional().default(""),
@@ -111,7 +112,11 @@ const updateSchema = yup.object({
       .trim()
       .optional()
       .default("")
-      .test("email", "Please enter a valid contact email.", (v) => !v || isValidEmail((v ?? "") as string)),
+      .test(
+        "email",
+        "Please enter a valid contact email.",
+        (v) => !v || isValidEmail((v ?? "") as string),
+      ),
     tel: yup.string().trim().optional().default(""),
     fax: yup.string().trim().optional().default(""),
   }),
@@ -141,7 +146,7 @@ const defaultCreateValues: OrgFormValues = {
   phone: "",
   ein_number: "",
   password: "",
-  enabled: true,
+  enabled: "true",
   address: { ...defaultAddress },
   contact: { ...defaultContact },
 };
@@ -167,7 +172,8 @@ function buildCreatePayload(data: OrgFormValues): unknown {
     email: data?.contact?.email,
     password: data.password ?? "",
     dial_code: orgPhone.dial_code,
-    phone_number: (data.phone ?? "").replace(/\D/g, "").slice(0, 15) || orgPhone.number,
+    phone_number:
+      (data.phone ?? "").replace(/\D/g, "").slice(0, 15) || orgPhone.number,
     ein_number: s(data.ein_number),
     street: s(data.address?.street),
     suite: s(data.address?.suite),
@@ -181,7 +187,9 @@ function buildCreatePayload(data: OrgFormValues): unknown {
     user_last_name: s(data.contact?.lastName),
     user_email: s(data.contact?.email),
     user_dial_code: contactPhone.dial_code,
-    user_phone_number: (data.contact?.tel ?? "").replace(/\D/g, "").slice(0, 15) || contactPhone.number,
+    user_phone_number:
+      (data.contact?.tel ?? "").replace(/\D/g, "").slice(0, 15) ||
+      contactPhone.number,
     user_fax_number: s(data.contact?.fax),
   };
 }
@@ -194,7 +202,8 @@ function buildUpdatePayload(data: OrgFormValues): unknown {
     name: data.name,
     email: data.email,
     dial_code: orgPhone.dial_code,
-    phone_number: (data.phone ?? "").replace(/\D/g, "").slice(0, 15) || orgPhone.number,
+    phone_number:
+      (data.phone ?? "").replace(/\D/g, "").slice(0, 15) || orgPhone.number,
     ein_number: s(data.ein_number),
     street: s(data.address?.street),
     suite: s(data.address?.suite),
@@ -206,9 +215,12 @@ function buildUpdatePayload(data: OrgFormValues): unknown {
     user_last_name: s(data.contact?.lastName),
     user_email: s(data.contact?.email),
     user_dial_code: contactPhone.dial_code,
-    user_phone_number: (data.contact?.tel ?? "").replace(/\D/g, "").slice(0, 15) || contactPhone.number,
+    user_phone_number:
+      (data.contact?.tel ?? "").replace(/\D/g, "").slice(0, 15) ||
+      contactPhone.number,
     user_fax_number: s(data.contact?.fax),
-    status: data.enabled === true || (data.enabled as unknown) === "true" ? 1 : 2,
+    status:
+      data.enabled === "true" ? 1 : 2,
   };
   if (data.address?.latitude != null && data.address?.longitude != null) {
     payload.latitude = data.address.latitude;
@@ -223,7 +235,7 @@ export type OrgModalOrg = {
   phone?: string;
   email?: string;
   ein?: string;
-  enabled?: boolean;
+  enabled?: "false" | "true";
   status?: number;
   address?: {
     street?: string;
@@ -249,17 +261,34 @@ export interface OrgModalContentProps {
 }
 
 /** Map GET /api/admin/organization/:id response to OrgModalOrg. */
-function mapApiResponseToOrgModalOrg(raw: Record<string, unknown>): OrgModalOrg {
+function mapApiResponseToOrgModalOrg(
+  raw: Record<string, unknown>,
+): OrgModalOrg {
+  console.log(raw, "raw")
   const str = (v: unknown) => (v ?? "").toString().trim();
   const org = (raw.organization ?? raw) as Record<string, unknown>;
   const contact = raw.organization
-    ? (raw as { first_name?: unknown; last_name?: unknown; email?: unknown; dial_code?: unknown; phone_number?: unknown; fax_number?: unknown })
+    ? (raw as {
+      first_name?: unknown;
+      last_name?: unknown;
+      email?: unknown;
+      dial_code?: unknown;
+      phone_number?: unknown;
+      fax_number?: unknown;
+    })
     : null;
-  const phone = [org.dial_code, org.phone_number].filter(Boolean).map(String).join(" ").trim()
-    || str(org.phone_number);
+  const phone =
+    [org.dial_code, org.phone_number]
+      .filter(Boolean)
+      .map(String)
+      .join(" ")
+      .trim() || str(org.phone_number);
   const contactTel = contact
-    ? [contact.dial_code, contact.phone_number].filter(Boolean).map(String).join(" ").trim()
-    || str(contact.phone_number)
+    ? [contact.dial_code, contact.phone_number]
+      .filter(Boolean)
+      .map(String)
+      .join(" ")
+      .trim() || str(contact.phone_number)
     : "";
   return {
     _id: str(org._id),
@@ -267,7 +296,7 @@ function mapApiResponseToOrgModalOrg(raw: Record<string, unknown>): OrgModalOrg 
     email: str(org.email),
     phone: phone || str(org.phone),
     ein: str(org.ein_number ?? org.ein),
-    enabled: org.status !== undefined ? org.status === 1 : true,
+    enabled: raw.status == 1 ? "true" : "false",
     address: {
       street: str(org.street),
       suite: str(org.suite ?? org.apt),
@@ -293,7 +322,7 @@ function orgToFormValues(org: OrgModalOrg | null): OrgFormValues {
     phone: org.phone ?? "",
     ein_number: org.ein ?? "",
     password: "",
-    enabled: org.status === 1 ? true : false,
+    enabled: org.enabled ?? "true",
     address: {
       street: org.address?.street ?? "",
       suite: org.address?.suite ?? "",
@@ -323,11 +352,12 @@ export function OrgModalContent({
   const queryClient = useQueryClient();
   const isEdit = Boolean(orgId);
 
-
-
-
   // api is not working, so we are using the org from the props till it is fixed
-  const { data: orgResponse, isLoading: orgLoading, error: orgError } = useQuery({
+  const {
+    data: orgResponse,
+    isLoading: orgLoading,
+    error: orgError
+  } = useQuery({
     queryKey: [...defaultQueryKeys.organizationDetail, orgId],
     queryFn: async () => {
       if (!orgId) return null;
@@ -337,10 +367,12 @@ export function OrgModalContent({
       const raw = payload?.data ?? res.data;
       return raw as OrgModalOrg;
     },
+
     enabled: isEdit && !!orgId,
   });
 
-  // const orgResponse = org;
+
+
 
   const fetchedOrg = useMemo((): OrgModalOrg | null => {
     if (!isEdit || !orgResponse) return null;
@@ -349,8 +381,12 @@ export function OrgModalContent({
 
   const formValues = useMemo(
     () => (isEdit ? orgToFormValues(fetchedOrg) : defaultCreateValues),
-    [isEdit, fetchedOrg]
+    [isEdit, fetchedOrg],
   );
+
+  console.log(fetchedOrg, orgResponse, "formValues")
+
+
 
   const {
     register,
@@ -366,15 +402,33 @@ export function OrgModalContent({
   });
 
   const handleAddressSelect = (address: AddressResult) => {
-    setValue("address.street", address.formatted_address, { shouldValidate: true, shouldDirty: true });
-    setValue("address.suite", address.suite, { shouldValidate: true, shouldDirty: true });
-    setValue("address.city", address.city, { shouldValidate: true, shouldDirty: true });
-    setValue("address.zip_code", address.zip_code, { shouldValidate: true, shouldDirty: true });
+    setValue("address.street", address.formatted_address, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+    setValue("address.suite", address.suite, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+    setValue("address.city", address.city, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+    setValue("address.zip_code", address.zip_code, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
     if (address.latitude != null) {
-      setValue("address.latitude", address.latitude, { shouldValidate: true, shouldDirty: true });
+      setValue("address.latitude", address.latitude, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
     }
     if (address.longitude != null) {
-      setValue("address.longitude", address.longitude, { shouldValidate: true, shouldDirty: true });
+      setValue("address.longitude", address.longitude, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
     }
   };
 
@@ -382,7 +436,9 @@ export function OrgModalContent({
     mutationFn: catchAsync(async (payload: unknown) => {
       const res = await createAdminOrganizationApi(payload);
       if (checkResponse({ res, showSuccess: true })) {
-        queryClient.invalidateQueries({ queryKey: [...defaultQueryKeys.organizationsList] });
+        queryClient.invalidateQueries({
+          queryKey: [...defaultQueryKeys.organizationsList],
+        });
         onClose();
       }
     }),
@@ -391,12 +447,17 @@ export function OrgModalContent({
   const updateMutation = useMutation({
     mutationFn: catchAsync(
       async (vars: { organizationId: string; payload: unknown }) => {
-        const res = await updateAdminOrganizationApi(vars.organizationId, vars.payload);
+        const res = await updateAdminOrganizationApi(
+          vars.organizationId,
+          vars.payload,
+        );
         if (checkResponse({ res, showSuccess: true })) {
-          queryClient.invalidateQueries({ queryKey: [...defaultQueryKeys.organizationsList] });
+          queryClient.invalidateQueries({
+            queryKey: [...defaultQueryKeys.organizationsList],
+          });
           onClose();
         }
-      }
+      },
     ),
   });
 
@@ -426,19 +487,22 @@ export function OrgModalContent({
         .map((item: { name?: string; abbreviation?: string }) => {
           const value = item.name;
           const label = item.name;
-          return value != null && label != null ? { value: String(value), label: String(label) } : null;
+          return value != null && label != null
+            ? { value: String(value), label: String(label) }
+            : null;
         })
         .filter((x): x is RcnSelectOption => x != null);
     },
   });
-
-
+  console.log(watch("enabled"), "enabled")
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      {isEdit && orgLoading && (<div className="bg-white border border-rcn-border rounded-rcn-lg shadow-rcn p-4 mb-4 text-sm text-rcn-muted">
-        Loading organization…
-      </div>)}
+      {isEdit && orgLoading && (
+        <div className="bg-white border border-rcn-border rounded-rcn-lg shadow-rcn p-4 mb-4 text-sm text-rcn-muted">
+          Loading organization…
+        </div>
+      )}
       {isEdit && orgError && (
         <div className="bg-white border border-rcn-border rounded-rcn-lg shadow-rcn p-4 mb-4 text-sm text-red-600">
           Failed to load organization. Please try again.
@@ -469,7 +533,9 @@ export function OrgModalContent({
                   placeholder="e.g. Northlake Medical Center"
                 />
                 {errors.name && (
-                  <p className="text-xs text-red-500 mt-1 m-0">{errors.name.message}</p>
+                  <p className="text-xs text-red-500 mt-1 m-0">
+                    {errors.name.message}
+                  </p>
                 )}
               </div>
               <div className="mb-4">
@@ -491,7 +557,9 @@ export function OrgModalContent({
                   )}
                 />
                 {errors.phone && (
-                  <p className="text-xs text-red-500 mt-1 m-0">{errors.phone.message}</p>
+                  <p className="text-xs text-red-500 mt-1 m-0">
+                    {errors.phone.message}
+                  </p>
                 )}
               </div>
 
@@ -507,8 +575,13 @@ export function OrgModalContent({
               </div>
               {isEdit && (
                 <div className="mb-4">
-                  <label className="text-xs text-rcn-muted block mb-1.5">Enabled</label>
-                  <select {...register("enabled")} className={inputCn(false)}>
+                  <label className="text-xs text-rcn-muted block mb-1.5">
+                    Enabled
+                  </label>
+                  <select
+                    {...register("enabled")}
+                    className={inputCn(false)}
+                  >
                     <option value="true">Enabled</option>
                     <option value="false">Disabled</option>
                   </select>
@@ -527,7 +600,9 @@ export function OrgModalContent({
                     autoComplete="new-password"
                   />
                   {errors.password && (
-                    <p className="text-xs text-red-500 mt-1 m-0">{errors.password.message}</p>
+                    <p className="text-xs text-red-500 mt-1 m-0">
+                      {errors.password.message}
+                    </p>
                   )}
                 </div>
               )}
@@ -535,10 +610,14 @@ export function OrgModalContent({
 
             <div className="col-span-1">
               <div className="bg-white border border-rcn-border rounded-2xl p-4 mb-4">
-                <h3 className="text-sm font-semibold m-0 mb-3">Organization Address</h3>
+                <h3 className="text-sm font-semibold m-0 mb-3">
+                  Organization Address
+                </h3>
 
                 <div className="mb-3">
-                  <label className="text-xs text-rcn-muted block mb-1.5">Street</label>
+                  <label className="text-xs text-rcn-muted block mb-1.5">
+                    Street
+                  </label>
                   <Autocomplete
                     onPlaceSelect={handleAddressSelect}
                     placeholder="Start typing an address..."
@@ -552,34 +631,48 @@ export function OrgModalContent({
                   </p>
                   {(errors.address?.latitude ?? errors.address?.longitude) && (
                     <p className="text-xs text-red-500 mt-1 m-0">
-                      {errors.address?.latitude?.message ?? errors.address?.longitude?.message}
+                      {errors.address?.latitude?.message ??
+                        errors.address?.longitude?.message}
                     </p>
                   )}
                 </div>
 
-
                 <div className="mb-3">
-                  <label className="text-xs text-rcn-muted block mb-1.5">Apt/Suite</label>
+                  <label className="text-xs text-rcn-muted block mb-1.5">
+                    Apt/Suite
+                  </label>
                   <Controller
                     name="address.suite"
                     control={control}
                     render={({ field }) => (
-                      <input {...field} value={field.value ?? ""} className={inputCn(false)} />
+                      <input
+                        {...field}
+                        value={field.value ?? ""}
+                        className={inputCn(false)}
+                      />
                     )}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-2 mb-3">
                   <div>
-                    <label className="text-xs text-rcn-muted block mb-1.5">City</label>
+                    <label className="text-xs text-rcn-muted block mb-1.5">
+                      City
+                    </label>
                     <Controller
                       name="address.city"
                       control={control}
                       render={({ field }) => (
-                        <input {...field} value={field.value ?? ""} className={inputCn(!!errors.address?.city)} />
+                        <input
+                          {...field}
+                          value={field.value ?? ""}
+                          className={inputCn(!!errors.address?.city)}
+                        />
                       )}
                     />
                     {errors.address?.city && (
-                      <p className="text-xs text-red-500 mt-1 m-0">{errors.address.city.message}</p>
+                      <p className="text-xs text-red-500 mt-1 m-0">
+                        {errors.address.city.message}
+                      </p>
                     )}
                   </div>
                   <div>
@@ -598,12 +691,18 @@ export function OrgModalContent({
                           aria-label="State"
                           isClearable
                           maxMenuHeight={280}
-                          controlClassName={errors.address?.state ? "!border-red-500" : undefined}
+                          controlClassName={
+                            errors.address?.state
+                              ? "!border-red-500"
+                              : undefined
+                          }
                         />
                       )}
                     />
                     {errors.address?.state && (
-                      <p className="text-xs text-red-500 mt-1 m-0">{errors.address.state.message}</p>
+                      <p className="text-xs text-red-500 mt-1 m-0">
+                        {errors.address.state.message}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -615,11 +714,17 @@ export function OrgModalContent({
                     name="address.zip_code"
                     control={control}
                     render={({ field }) => (
-                      <input {...field} value={field.value ?? ""} className={inputCn(!!errors.address?.zip_code)} />
+                      <input
+                        {...field}
+                        value={field.value ?? ""}
+                        className={inputCn(!!errors.address?.zip_code)}
+                      />
                     )}
                   />
                   {errors.address?.zip_code && (
-                    <p className="text-xs text-red-500 mt-1 m-0">{errors.address.zip_code.message}</p>
+                    <p className="text-xs text-red-500 mt-1 m-0">
+                      {errors.address.zip_code.message}
+                    </p>
                   )}
                 </div>
               </div>
@@ -630,14 +735,18 @@ export function OrgModalContent({
                 </h3>
                 <div className="grid grid-cols-2 gap-2 mb-3">
                   <div>
-                    <label className="text-xs text-rcn-muted block mb-1.5">First Name</label>
+                    <label className="text-xs text-rcn-muted block mb-1.5">
+                      First Name
+                    </label>
                     <input
                       {...register("contact.firstName")}
                       className={inputCn(!!errors.contact?.firstName)}
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-rcn-muted block mb-1.5">Last Name</label>
+                    <label className="text-xs text-rcn-muted block mb-1.5">
+                      Last Name
+                    </label>
                     <input
                       {...register("contact.lastName")}
                       className={inputCn(!!errors.contact?.lastName)}
@@ -645,19 +754,25 @@ export function OrgModalContent({
                   </div>
                 </div>
                 <div className="mb-3">
-                  <label className="text-xs text-rcn-muted block mb-1.5">Email</label>
+                  <label className="text-xs text-rcn-muted block mb-1.5">
+                    Email
+                  </label>
                   <input
                     {...register("contact.email")}
                     type="email"
                     className={inputCn(!!errors.contact?.email)}
                   />
                   {errors.contact?.email && (
-                    <p className="text-xs text-red-500 mt-1 m-0">{errors.contact.email.message}</p>
+                    <p className="text-xs text-red-500 mt-1 m-0">
+                      {errors.contact.email.message}
+                    </p>
                   )}
                 </div>
                 <div className="grid grid-cols-2 gap-2 mb-0">
                   <div>
-                    <label className="text-xs text-rcn-muted block mb-1.5">Telephone</label>
+                    <label className="text-xs text-rcn-muted block mb-1.5">
+                      Telephone
+                    </label>
                     <Controller
                       name="contact.tel"
                       control={control}
@@ -673,7 +788,9 @@ export function OrgModalContent({
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-rcn-muted block mb-1.5">Fax</label>
+                    <label className="text-xs text-rcn-muted block mb-1.5">
+                      Fax
+                    </label>
                     <input
                       {...register("contact.fax")}
                       className={inputCn(false)}

@@ -76,6 +76,8 @@ export function OrganizationsPage() {
   const invalidateBranches = () =>
     queryClient.invalidateQueries({ queryKey: defaultQueryKeys.organizationBranchesList });
 
+   
+
   const closeBranchModal = () =>
     setBranchModal((prev) => ({ ...prev, isOpen: false, branchId: null, presetOrgId: undefined, branch: null }));
 
@@ -103,13 +105,17 @@ export function OrganizationsPage() {
   const runToggleBranch = catchAsync(async (branchId: string) => {
     const res = await putAdminBranchToggleApi(branchId);
     if (checkResponse({ res, showSuccess: true })) invalidateBranches();
+  
   });
 
   const toggleBranch = (branchId: string) => runToggleBranch(branchId);
 
   const runToggleOrganization = catchAsync(async (organizationId: string) => {
     const res = await putAdminOrganizationToggleApi(organizationId);
-    if (checkResponse({ res, showSuccess: true })) invalidateOrgs();
+    if (checkResponse({ res, showSuccess: true })) {
+      invalidateOrgs();
+      queryClient.invalidateQueries({ queryKey: [...defaultQueryKeys.organizationDetail, organizationId] });
+    } 
   });
 
   const toggleOrganization = (organizationId: string) => runToggleOrganization(organizationId);

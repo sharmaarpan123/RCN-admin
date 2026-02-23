@@ -56,7 +56,8 @@ export default function StaffInboxPage() {
         page: receiverBody.page,
         limit: receiverBody.limit,
         search: receiverBody.search || undefined,
-        type: receiverBody.type as ReceiverInboxType,
+        type: "all",
+        status: receiverBody.type as ReceiverInboxType,
         day: receiverBody.day,
       });
       if (!checkResponse({ res })) return { data: [], meta: defaultMeta };

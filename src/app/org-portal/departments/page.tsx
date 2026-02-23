@@ -69,31 +69,19 @@ export default function OrgPortalDepartmentsPage() {
     enabled: !!branchId,
   });
 
-  const br = branches.find((b: Branch) => b._id === branchId) ?? null;
-  const data: DeptRow[] = useMemo(() => {
-    const list = deptApiData?.data ?? [];
-    const branchName = br?.name;
-    return list.map((dp: Department) => ({ ...dp, branchName }));
-  }, [deptApiData?.data, br?.name]);
 
-  const searchLower = body.search.trim().toLowerCase();
-  const filteredData = searchLower
-    ? data.filter(
-      (row) =>
-        (row.name ?? "").toLowerCase().includes(searchLower) ||
-        (row._id ?? "").toLowerCase().includes(searchLower) ||
-        (row.branch_id?.name ?? "").toLowerCase().includes(searchLower)
-    )
-    : data;
+  const data = deptApiData?.data ?? [];
 
-  const emptyMessage = !br
+
+
+  const emptyMessage = !branches.length
     ? "No branches yet. Create a branch first."
     : body.search.trim()
       ? "No departments match your search."
       : 'No departments in this branch. Click "+ Add Department" to create one.';
 
   const openAdd = () => {
-    if (!br) return;
+    if (!branches.length) return;
     setModal({ mode: "add" });
   };
 
@@ -175,7 +163,7 @@ export default function OrgPortalDepartmentsPage() {
             variant="primary"
             size="md"
             onClick={openAdd}
-            disabled={!!!branches?.length}
+          // disabled={!!!branches?.length}
           >
             + Add Department
           </Button>
@@ -210,7 +198,7 @@ export default function OrgPortalDepartmentsPage() {
           <div className="border border-rcn-border rounded-xl overflow-hidden">
             <TableLayout<DeptRow>
               columns={columns}
-              data={filteredData}
+              data={data}
               body={body}
               setBody={(patch) => setBody((prev) => ({ ...prev, ...patch }))}
               emptyMessage={emptyMessage}

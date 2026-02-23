@@ -47,13 +47,19 @@ export function SenderInbox({
   const columns: TableColumn<SentReferralApi>[] = useMemo(
     () => [
       {
+        head: "Referral ID",
+        component: (ref) => {
+          return <span className="text-rcn-muted text-xs font-semibold">{ref._id}</span>;
+        },
+      },
+      {
         head: "Patient",
         component: (ref) => {
           const p = ref.patient;
           const last = p?.patient_last_name ?? "";
           const first = p?.patient_first_name ?? "";
           const name = `${last} ${first}`.trim() || "N/A";
-          const dob = p?.dob ? moment(p.dob).format("YYYY, MM, DD") : "";
+          const dob = p?.dob ? moment(p.dob).format("DD , MM , YYYY") : "";
           return <span className="font-semibold text-[13px]">{name} {dob ? `• DOB ${dob || "N/A"}` : ""}</span>;
         },
       },

@@ -53,6 +53,12 @@ export function ReceiverInbox({
 
   const columns: TableColumn<ReceivedReferralApi>[] = useMemo(
     () => [
+      {
+        head: "Referral ID",
+        component: (ref) => {
+          return <span className="text-rcn-muted text-xs font-semibold">{ref._id}</span>;
+        },
+      },
        {
         head: "Patient",
         component: (ref) => {
@@ -60,7 +66,7 @@ export function ReceiverInbox({
           const last = p?.patient_last_name ?? "";
           const first = p?.patient_first_name ?? "";
           const name = `${last} ${first}`.trim() || "N/A";
-          const dob = p?.dob ? moment(p.dob).format("YYYY, MM, DD") : "";
+          const dob = p?.dob ? moment(p.dob).format("DD , MM , YYYY") : "";
           return <span className="font-semibold text-[13px]">{`${name} ${dob ? `• DOB ${dob || "N/A"}` : ""}`}</span>;
         },
       },
@@ -126,7 +132,7 @@ export function ReceiverInbox({
           aria-label="Search inbox"
         />
         <div className="flex gap-2 flex-wrap" aria-label="Status filters">
-          {["all", "pending", "accepted", "rejected", "paid"].map((f) => (
+          {["all", "pending", "accepted", "rejected"].map((f) => (
             <button
               key={f as ReceiverInboxType}
               type="button"
