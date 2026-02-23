@@ -88,7 +88,7 @@ function AdBannerSkeleton() {
   );
 }
 
-export default function AdBanner({ placement }: { placement: "right_sidebar" | "top_banner" }) {
+export default function AdBanner({ placement }: { placement?: "right_sidebar" | "top_banner" }) {
   const [currentAdIndex, setCurrentAdIndex] = useState(0);
 
   const { data: apiBanners, isLoading } = useQuery({

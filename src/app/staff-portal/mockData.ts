@@ -3,11 +3,6 @@
  * Replaces database.ts usage for profile and wallet.
  */
 
-export const MOCK_SESSION = {
-  userId: "staff-1",
-  orgId: "org_northlake",
-  role: "STAFF",
-};
 
 export interface StaffUser {
   id: string;
