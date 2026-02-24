@@ -20,7 +20,12 @@ const userModalSchema = yup.object({
     .required("Email is required.")
     .email("Please enter a valid email."),
   dial_code: yup.string().trim().optional().default(""),
-  phone_number: yup.string().trim().optional().default(""),
+  phone_number: yup
+    .string()
+    .trim()
+    .optional()
+    .default("")
+    .test("min-length", "Invalid number", (val) => !val || val.length >= 7),
   fax_number: yup.string().trim().optional().default(""),
 
   organization_id: yup.string().trim().optional().default(""),

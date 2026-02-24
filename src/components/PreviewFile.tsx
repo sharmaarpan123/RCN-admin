@@ -38,7 +38,7 @@ function PreviewImageWithLoader({ url }: { url: string }) {
 export function PreviewFile({ url, isOpen, onClose, fileType = "image" }: PreviewFileProps) {
   const isImage = fileType === "image";
   return (
-    <Modal isOpen={isOpen} onClose={onClose} maxWidth="100vw" locked={false}>
+    <Modal isOpen={isOpen} onClose={onClose} maxWidth="70vw" locked={false}>
       <div className="relative -m-4 flex h-[88vh] min-h-[400px] w-full flex-col">
         <div
           

@@ -438,17 +438,18 @@ const Banners: React.FC = () => {
                           href={b.link_url || "#"}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="block"
+                          className="block relative"
+                          style={{
+                            width: "220px",
+                            height: "180px",
+                          }}
+
                         >
                           <Image
-                            width={320}
-                            height={180}
+                            fill
                             src={b.image_url}
                             alt={b.alt_text || b.name}
-                            className="w-full rounded-xl"
-                            style={{
-                              maxWidth: previewPlacement === "right_sidebar" ? "320px" : "100%",
-                            }}
+                            className="object-contain"
                           />
                         </a>
                       ) : (

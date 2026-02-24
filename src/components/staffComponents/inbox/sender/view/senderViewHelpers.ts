@@ -12,7 +12,16 @@ export interface PaymentSummaryData {
   source?: string;
   amount?: number;
   currency?: string | null;
-  breakdown?: { message?: string; [key: string]: unknown };
+  breakdown?: {
+    message?: string;
+    calculation?: string;
+    price_per_referral?: number;
+    processing_fee_per_referral?: number;
+    processing_fee_percent?: number;
+    total_per_referral?: number;
+    payment_method_name?: string;
+    [key: string]: unknown;
+  };
 }
 
 /** Flatten API documents object into list of { label, url } for display. Use as-is. */

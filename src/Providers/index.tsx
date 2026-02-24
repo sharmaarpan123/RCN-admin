@@ -7,6 +7,7 @@ import ReactQueryProvider from "./ReactQueryClient";
 import { ToastProvider } from "@/Providers/ToastProvider";
 import { GoogleMapsProvider } from "@/contexts/GoogleMapsContext";
 import { SocketProvider } from "@/contexts/SocketContext";
+import FirebaseProvider from "./FirebaseProvider";
 // import FirebaseProvider from "./FirebaseProvider";
 
 const CommonProvider = ({ children }: { children: React.ReactNode }) => {
@@ -16,11 +17,13 @@ const CommonProvider = ({ children }: { children: React.ReactNode }) => {
         <ToastProvider />
         <ReactQueryProvider>
           <Provider store={store}>
-            <GoogleMapsProvider>
-              <SocketProvider>
-                {children}
-              </SocketProvider>
-            </GoogleMapsProvider>
+            <FirebaseProvider>
+              <GoogleMapsProvider>
+                <SocketProvider>
+                  {children}
+                </SocketProvider>
+              </GoogleMapsProvider>
+            </FirebaseProvider>
           </Provider>
         </ReactQueryProvider>
       </Progressbar>

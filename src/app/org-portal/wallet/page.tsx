@@ -439,15 +439,12 @@ export default function OrgPortalWalletPage() {
                     </p>
                   </div>
                 )}
-                {purchaseSummary.processingFee != null && purchaseSummary.processingFee > 0 && (
+                {purchaseSummary.processingFee != null  && (
                   <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
                     <span className="text-rcn-muted text-xs font-black">Processing fee</span>
                     <p className="m-0 mt-0.5 font-semibold">
                       {purchaseSummary.currency ?? "USD"} {purchaseSummary.processingFee}
-                      {typeof purchaseSummary.processingFeePercent === "number" &&
-                      purchaseSummary.processingFeePercent > 0
-                        ? ` (${purchaseSummary.processingFeePercent}%)`
-                        : ""}
+                     
                     </p>
                   </div>
                 )}

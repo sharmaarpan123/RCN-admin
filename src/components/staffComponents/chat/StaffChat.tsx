@@ -440,7 +440,7 @@ export default function ChatPage() {
                                 </div>
                                 <div className="text-[11px] text-rcn-muted  mb-1 flex gap-2 flex-wrap justify-end">
                                   <span>
-                                    {moment(m.created_at ?? 0).format("DD , MM , YYYY , hh:mm a")}
+                                    {moment(m.created_at ?? 0).format("DD/MM/YYYY , hh:mm a")}
                                   </span>
                                 </div>
                               </div>

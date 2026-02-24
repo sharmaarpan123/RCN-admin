@@ -286,6 +286,24 @@ export function SenderDraftPaymentSection({ refId }: SenderDraftPaymentSectionPr
                   </div>
                 )}
               </div>
+              {(paymentSummary.breakdown?.processing_fee_per_referral != null) && (
+                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                  <span className="text-xs font-black text-rcn-muted">Processing fee</span>
+                  <p className="m-0 mt-0.5 font-semibold">
+                    {paymentSummary.currency ?? "$"}{" "}
+                    {typeof paymentSummary.breakdown.processing_fee_per_referral === "number"
+                      ? paymentSummary.breakdown.processing_fee_per_referral
+                      : "0"}
+
+                  </p>
+                </div>
+              )}
+              {paymentSummary.breakdown?.calculation && (
+                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                  <span className="text-xs font-black text-rcn-muted">Calculation</span>
+                  <p className="m-0 mt-0.5 font-semibold">{paymentSummary.breakdown.calculation}</p>
+                </div>
+              )}
               {paymentSummary.breakdown?.message && (
                 <div className="p-3 rounded-xl bg-rcn-brand/5 border border-rcn-brand/20">
                   <p className="m-0 text-[13px] font-semibold text-rcn-text">

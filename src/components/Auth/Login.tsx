@@ -15,18 +15,17 @@ import {
 } from "@/app/master-admin/types/profile";
 import { AuthProfileData } from "@/app/org-portal/types/profile";
 import type { StaffProfileData } from "@/app/staff-portal/types/profile";
+import { useFirebase } from "@/Providers/FirebaseProvider";
 import { loginSuccess } from "@/store/slices/Auth/authSlice";
 import { catchAsync, checkResponse } from "@/utils/commonFunc";
-import { loginRoles } from "@/utils/const";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useMutation } from "@tanstack/react-query";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import React, { useCallback, useRef } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
 import * as yup from "yup";
-import { toastSuccess } from "../../utils/toast";
 import Button from "../Button";
 import CustomNextLink from "../CustomNextLink";
 import Modal from "../Modal";
@@ -70,6 +69,14 @@ const Login: React.FC = () => {
     Array(OTP_LENGTH).fill(""),
   );
   const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  // const { getFCMToken, token, isSupported, requestPermission } = useFirebase();
+
+
+  // useEffect(() => {
+
+  //   requestPermission();
+
+  // }, [isSupported, requestPermission]);
 
   const [loginTypeTab, setLoginTypeTab] = React.useState<LoginType>("org");
   const dispatch = useDispatch();
@@ -140,7 +147,7 @@ const Login: React.FC = () => {
             : loginType === "org"
               ? await organizationVerifyOtpApi(body)
               : await adminVerifyOtpApi(body);
-              
+
         if (checkResponse({ res, showSuccess: true })) {
           const data = res?.data?.data as {
             accessToken?: string;

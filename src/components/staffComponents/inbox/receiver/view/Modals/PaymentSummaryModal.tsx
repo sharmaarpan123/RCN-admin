@@ -8,7 +8,15 @@ export interface PaymentSummaryData {
   referral_id?: string;
   amount?: number;
   currency?: string | null;
-  breakdown?: { message?: string };
+  breakdown?: {
+    message?: string;
+    calculation?: string;
+    price_per_referral?: number;
+    processing_fee_per_referral?: number;
+    processing_fee_percent?: number;
+    total_amount?: number;
+    payment_method_name?: string;
+  };
 }
 
 interface PaymentSummaryModalProps {
@@ -47,6 +55,21 @@ export function PaymentSummaryModal({
                   {summary.currency ? `${summary.currency} ` : ""}
                   {summary.amount ?? "—"}
                 </p>
+              </div>
+            )}
+            {(summary.breakdown?.processing_fee_per_referral != null) && (
+              <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                <span className="text-rcn-muted text-xs font-black">Processing fee</span>
+                <p className="m-0 mt-0.5 font-[850]">
+                  {summary.currency ?? "USD"} {typeof summary.breakdown.processing_fee_per_referral === "number" ? summary.breakdown.processing_fee_per_referral : "0"}
+                 
+                </p>
+              </div>
+            )}
+            {summary.breakdown?.calculation && (
+              <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                <span className="text-rcn-muted text-xs font-black">Calculation</span>
+                <p className="m-0 mt-0.5 font-[850] text-rcn-text">{summary.breakdown.calculation}</p>
               </div>
             )}
             {summary.breakdown?.message && (

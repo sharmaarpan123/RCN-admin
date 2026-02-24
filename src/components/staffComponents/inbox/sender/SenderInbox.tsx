@@ -59,7 +59,7 @@ export function SenderInbox({
           const last = p?.patient_last_name ?? "";
           const first = p?.patient_first_name ?? "";
           const name = `${last} ${first}`.trim() || "N/A";
-          const dob = p?.dob ? moment(p.dob).format("DD , MM , YYYY") : "";
+          const dob = p?.dob ? moment(p.dob).format("DD/MM/YYYY") : "";
           return <span className="font-semibold text-[13px]">{name} {dob ? `• DOB ${dob || "N/A"}` : ""}</span>;
         },
       },
@@ -98,7 +98,7 @@ export function SenderInbox({
         head: "Sent Date",
         component: (ref) => {
           const d = ref.sent_at ? new Date(ref.sent_at) : ref.createdAt ? new Date(ref.createdAt) : null;
-          return <span className="text-rcn-muted text-xs font-semibold">{d ? moment(d).format("DD , MM , YYYY , hh:mm a") : "—"}</span>;
+          return <span className="text-rcn-muted text-xs font-semibold">{d ? moment(d).format("DD/MM/YYYY , hh:mm a") : "—"}</span>;
         },
       },
       {
