@@ -213,6 +213,10 @@ export const updateOrganizationBranchApi = (
 export const deleteOrganizationBranchApi = (branchId: string) =>
   AxiosInstance.delete(`/api/organization/branch/${branchId}`);
 
+/** POST /api/organization/branch/:branchId/credits/assign — assign credits to a branch. */
+export const postOrganizationBranchCreditsAssignApi = (branchId: string, body: { amount: number }) =>
+  AxiosInstance.post(`/api/organization/branch/${branchId}/credits/assign`, body);
+
 export const getOrganizationDepartmentsApi = (params: unknown) =>
   AxiosInstance.get("/api/organization/department", { params });
 
