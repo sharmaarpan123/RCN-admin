@@ -132,8 +132,7 @@ const adminBranchTableColumns = ({
       component: (b) => (
         <>
           <b>{b.name ?? "—"}</b>{" "}
-          <span className="text-rcn-muted font-mono text-[11px]">({b._id})</span>
-        </>
+           </>
       ),
     },
     {

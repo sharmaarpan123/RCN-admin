@@ -303,30 +303,7 @@ export function ReferralViewModal({ isOpen, onClose, refData, isReceiver }: Refe
           </div>
         )}
 
-        {/* Accept/Reject (receiver view, pending) */}
-        {isReceiver && hasPending && (
-          <div className="flex gap-2 pt-2">
-            <Button
-              variant="primary"
-              onClick={() => {
-                toastWarning("Accept/Reject functionality will be available with API integration.");
-                onClose();
-              }}
-              className="logo-gradient text-white border-0 px-4 py-2.5 rounded-xl cursor-pointer font-semibold text-sm hover:opacity-90 transition-opacity"
-            >
-              Accept Referral
-            </Button>
-            <Button
-              variant="danger"
-              onClick={() => {
-                toastWarning("Accept/Reject functionality will be available with API integration.");
-                onClose();
-              }}
-            >
-              Reject Referral
-            </Button>
-          </div>
-        )}
+        
       </div>
 
       <PreviewFile url={previewDocUrl ?? ""} isOpen={!!previewDocUrl} onClose={() => setPreviewDocUrl(null)} />

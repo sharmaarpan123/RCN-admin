@@ -88,8 +88,7 @@ export function OrgDeptsTab({
       component: (d) => (
         <>
           <b>{d.name}</b>{" "}
-          <span className="text-rcn-muted font-mono text-[11px]">({d._id})</span>
-        </>
+            </>
       ),
     },
     {

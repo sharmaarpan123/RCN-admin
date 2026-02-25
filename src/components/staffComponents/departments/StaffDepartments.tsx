@@ -103,7 +103,7 @@ export function StaffDepartments() {
           <DebouncedInput
             value={search}
             onChange={setSearch}
-            placeholder="Search by department, branch, organization, or ID"
+            placeholder="Search by department name"
           />
         </div>
 

@@ -364,7 +364,7 @@ export default function StaffProfilePage() {
                   id="password"
                   type={showPassword.newPassword ? "text" : "password"}
                   {...registerPassword("password")}
-                  className={INPUT_CLASS}
+                  className={`${INPUT_CLASS} pr-10`}
                   placeholder="Enter new password"
                   autoComplete="new-password"
                 />
@@ -423,7 +423,7 @@ export default function StaffProfilePage() {
                   id="confirmPassword"
                   type={showPassword.confirmPassword ? "text" : "password"}
                   {...registerPassword("confirmPassword")}
-                  className={INPUT_CLASS}
+                  className={`${INPUT_CLASS} pr-10`}
                   placeholder="Confirm new password"
                   autoComplete="new-password"
                 />

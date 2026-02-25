@@ -91,7 +91,7 @@ export function StaffBranches() {
           <DebouncedInput
             value={search}
             onChange={setSearch}
-            placeholder="Search by branch name, organization, or ID"
+            placeholder="Search by branch name"
           />
         </div>
 
