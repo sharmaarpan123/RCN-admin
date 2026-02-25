@@ -17,6 +17,7 @@ import type { RootState } from "@/store";
 import { ChatInput } from "@/components/staffComponents/ChatInput";
 import { useRouter, useSearchParams } from "next/navigation";
 import moment from "moment";
+import { useStaffAuthLoginUser } from "@/store/slices/Auth/hooks";
 export const dynamic = "force-dynamic";
 
 const CHAT_LIST_PAGE = 1;
@@ -87,6 +88,8 @@ export default function ChatPage() {
   const searchParams = useSearchParams();
   const ReferredReferralId = searchParams.get("RedirectedReferralId");
 
+
+
   // Close mobile sidebar when body scroll is locked
   useEffect(() => {
     if (mobileSidebarOpen) document.body.style.overflow = "hidden";
@@ -106,7 +109,7 @@ export default function ChatPage() {
     queryFn: async (): Promise<ApiChatListResponse> => {
       const res = await getReferralChatsApi({
         page: CHAT_LIST_PAGE,
-        limit: 2,
+        limit: CHAT_LIST_LIMIT,
       });
       if (!checkResponse({ res })) {
         return {

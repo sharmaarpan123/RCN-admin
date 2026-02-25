@@ -38,17 +38,17 @@ function StaffPortalSidebarBanner() {
     refetchOnWindowFocus: false,
   });
 
-//   const { data: profile, isLoading: isLoadingProfile } = useQuery({
-//     queryKey: defaultStaffQueryKeys.profile,
-//     queryFn: async () => {
-//         const res = await getAuthProfileApi();
-//         if (!checkResponse({ res })) return null;
-//         const raw = res.data as { data?: StaffProfileData; success?: boolean };
-//         const profile = raw?.data ?? null;
-//         dispatch(updateLoginUser(profile as StaffProfileData));
-//         return profile && typeof profile === "object" ? profile : null;
-//     },
-// });
+  useQuery({
+    queryKey: defaultStaffQueryKeys.profile,
+    queryFn: async () => {
+      const res = await getAuthProfileApi();
+      if (!checkResponse({ res })) return null;
+      const raw = res.data as { data?: StaffProfileData; success?: boolean };
+      const profile = raw?.data ?? null;
+      dispatch(updateLoginUser(profile as StaffProfileData));
+      return profile && typeof profile === "object" ? profile : null;
+    },
+  });
 
   useEffect(() => {
     if (ads.length <= 1) return;

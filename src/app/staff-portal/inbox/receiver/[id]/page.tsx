@@ -38,6 +38,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import React, { useRef, useState } from "react";
+import { useStaffAuthLoginUser } from "@/store/slices/Auth/hooks";
 
 export type department_status_type =
   | {
@@ -138,7 +139,8 @@ function ReceiverDetailContent({
   const [summary, setSummary] = useState<PaymentSummaryData | null>(null);
   const [stripeOpen, setStripeOpen] = useState(false);
   const [stripePmId, setStripePmId] = useState("");
-
+  const {loginUser} = useStaffAuthLoginUser();
+  console.log(loginUser, "loginUser")
   const refId = data._id;
   const department_status = (data.department_statuses ??
     [])[0] as department_status_type;
