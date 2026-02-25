@@ -151,7 +151,7 @@ export default function OrgPortalReferralDashboardPage() {
   const ownOrgId = loginUser?.organization_id?._id;
 
   const { data: referralsRes, isLoading } = useQuery({
-    queryKey: ["organization", "referral", "by-org", ownOrgId, inboxRefMode, statusParam, page, branchId, departmentId],
+    queryKey: ["organization", "referral", "by-org", ownOrgId, inboxRefMode, statusParam, page, branchId, departmentId , search],
     queryFn: async () => {
       if (!ownOrgId) return { data: [], meta: null };
       const res = await getOrganizationReferralByOrganizationApi({
@@ -160,6 +160,7 @@ export default function OrgPortalReferralDashboardPage() {
         ...(isSent && { status: statusParam }),
         ...(!isSent && { current_status: statusParam, status: "all" }),
         page,
+        ...(search && { search }),
         limit: PAGE_SIZE,
         ...(branchId && { branch_id: branchId }),
         ...(departmentId && { department_id: departmentId }),

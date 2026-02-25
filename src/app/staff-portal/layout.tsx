@@ -1,6 +1,6 @@
 "use client";
 
-import { getBannersApi } from "@/apis/ApiCalls";
+import { getAuthProfileApi, getBannersApi } from "@/apis/ApiCalls";
 import { ConfirmModal, CustomNextLink } from "@/components";
 import { parseBannersResponse, type ApiBannerDisplay } from "@/components/LandingPage/AdBanner";
 import Image from "next/image";
@@ -8,6 +8,11 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { updateLoginUser } from "@/store/slices/Auth/authSlice";
+import defaultStaffQueryKeys from "@/utils/staffQueryKeys";
+import { checkResponse } from "@/utils/commonFunc";
+import { StaffProfileData } from "@/app/staff-portal/types/profile";
+import { useDispatch } from "react-redux";
 
 const NAV = [
   { href: "/staff-portal/profile", label: "Profile" },
@@ -22,6 +27,7 @@ const NAV = [
 /** Fetches same banners API as AdBanner, renders one card at bottom of sidebar (not fixed). */
 function StaffPortalSidebarBanner() {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const dispatch = useDispatch();
   const { data: ads = [] } = useQuery({
     queryKey: ["banners"],
     queryFn: async () => {
@@ -31,6 +37,18 @@ function StaffPortalSidebarBanner() {
     staleTime: 60_000,
     refetchOnWindowFocus: false,
   });
+
+//   const { data: profile, isLoading: isLoadingProfile } = useQuery({
+//     queryKey: defaultStaffQueryKeys.profile,
+//     queryFn: async () => {
+//         const res = await getAuthProfileApi();
+//         if (!checkResponse({ res })) return null;
+//         const raw = res.data as { data?: StaffProfileData; success?: boolean };
+//         const profile = raw?.data ?? null;
+//         dispatch(updateLoginUser(profile as StaffProfileData));
+//         return profile && typeof profile === "object" ? profile : null;
+//     },
+// });
 
   useEffect(() => {
     if (ads.length <= 1) return;
