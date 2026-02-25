@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -23,11 +23,12 @@ const DEFAULT_DIAL_CODE = "1";
 const inputClass =
   "w-full px-2.5 py-2 text-sm rounded-xl border border-rcn-border bg-white focus:outline-none focus:ring-2 focus:ring-rcn-accent/30";
 
-/** Form shape aligned with organization-settings: nested address and contact. */
+/** Form shape aligned with org-signup: dial_code + phone_number for org and contact. */
 type OrgFormValues = {
   name: string;
   email: string;
-  phone: string;
+  dial_code: string;
+  phone_number: string;
   ein_number: string;
   password: string;
   enabled: "false" | "true";
@@ -44,7 +45,8 @@ type OrgFormValues = {
     firstName: string;
     lastName: string;
     email: string;
-    tel: string;
+    dial_code: string;
+    phone_number: string;
     fax: string;
   };
 };
@@ -62,7 +64,12 @@ const addressSchema = {
 const createSchema = yup.object({
   name: yup.string().trim().required("Organization Name is required."),
   email: yup.string().optional().default(""),
-  phone: yup.string().trim().required("Organization Phone is required.").test("min-length", "Invalid number", (val) =>val.length >= 7),
+  dial_code: yup.string().trim().optional().default(DEFAULT_DIAL_CODE),
+  phone_number: yup
+    .string()
+    .trim()
+    .required("Organization Phone is required.")
+    .test("min-length", "Invalid number", (val) => (val ?? "").length >= 7),
   ein_number: yup.string().trim().optional().default(""),
   password: yup
     .string()
@@ -87,7 +94,13 @@ const createSchema = yup.object({
         "Please enter a valid contact email.",
         (v) => !v || isValidEmail((v ?? "") as string),
       ),
-    tel: yup.string().trim().optional().default(""),
+    dial_code: yup.string().trim().optional().default(DEFAULT_DIAL_CODE),
+    phone_number: yup
+      .string()
+      .trim()
+      .optional()
+      .default("")
+      .test("min-length", "Invalid number", (val) => !val || (val ?? "").length >= 7),
     fax: yup.string().trim().optional().default(""),
   }),
 }) as yup.ObjectSchema<OrgFormValues>;
@@ -99,7 +112,12 @@ const updateSchema = yup.object({
     .trim()
     .required("Organization Email is required.")
     .email("Please enter a valid email."),
-  phone: yup.string().trim().required("Organization Phone is required.").test("min-length", "Invalid number", (val) =>val.length >= 7),
+  dial_code: yup.string().trim().optional().default(DEFAULT_DIAL_CODE),
+  phone_number: yup
+    .string()
+    .trim()
+    .required("Organization Phone is required.")
+    .test("min-length", "Invalid number", (val) => (val ?? "").length >= 7),
   ein_number: yup.string().trim().optional().default(""),
   password: yup.string().optional(),
   enabled: yup.string().optional().default("true"),
@@ -117,7 +135,13 @@ const updateSchema = yup.object({
         "Please enter a valid contact email.",
         (v) => !v || isValidEmail((v ?? "") as string),
       ),
-    tel: yup.string().trim().default("").test("min-length", "Invalid number", (val) =>val.length >= 7),
+    dial_code: yup.string().trim().optional().default(DEFAULT_DIAL_CODE),
+    phone_number: yup
+      .string()
+      .trim()
+      .optional()
+      .default("")
+      .test("min-length", "Invalid number", (val) => !val || (val ?? "").length >= 7),
     fax: yup.string().trim().optional().default(""),
   }),
 }) as yup.ObjectSchema<OrgFormValues>;
@@ -136,14 +160,16 @@ const defaultContact = {
   firstName: "",
   lastName: "",
   email: "",
-  tel: "",
+  dial_code: DEFAULT_DIAL_CODE,
+  phone_number: "",
   fax: "",
 };
 
 const defaultCreateValues: OrgFormValues = {
   name: "",
   email: "",
-  phone: "",
+  dial_code: DEFAULT_DIAL_CODE,
+  phone_number: "",
   ein_number: "",
   password: "",
   enabled: "true",
@@ -151,29 +177,16 @@ const defaultCreateValues: OrgFormValues = {
   contact: { ...defaultContact },
 };
 
-/** Parse full phone string (from PhoneInputField) to dial_code + number for API. */
-function parsePhone(phone: string): { dial_code: string; number: string } {
-  const digits = (phone ?? "").replace(/\D/g, "");
-  if (digits.length >= 11 && digits.startsWith("1")) {
-    return { dial_code: "1", number: digits.slice(1) };
-  }
-  if (digits.length >= 10) {
-    return { dial_code: "1", number: digits.slice(-10) };
-  }
-  return { dial_code: DEFAULT_DIAL_CODE, number: digits };
-}
+const digits = (v: string | undefined, max = 15) => (v ?? "").replace(/\D/g, "").slice(0, max) || undefined;
 
 function buildCreatePayload(data: OrgFormValues): unknown {
   const s = (v: string | undefined) => (v ?? "").trim() || undefined;
-  const orgPhone = parsePhone(data.phone ?? "");
-  const contactPhone = parsePhone(data.contact?.tel ?? "");
   return {
     name: data.name,
-    email: data?.contact?.email,
+    email: s(data?.contact?.email),
     password: data.password ?? "",
-    dial_code: orgPhone.dial_code,
-    phone_number:
-      (data.phone ?? "").replace(/\D/g, "").slice(0, 15) || orgPhone.number,
+    dial_code: data.dial_code ?? DEFAULT_DIAL_CODE,
+    phone_number: digits(data.phone_number) ?? "",
     ein_number: s(data.ein_number),
     street: s(data.address?.street),
     suite: s(data.address?.suite),
@@ -186,24 +199,19 @@ function buildCreatePayload(data: OrgFormValues): unknown {
     user_first_name: s(data.contact?.firstName),
     user_last_name: s(data.contact?.lastName),
     user_email: s(data.contact?.email),
-    user_dial_code: contactPhone.dial_code,
-    user_phone_number:
-      (data.contact?.tel ?? "").replace(/\D/g, "").slice(0, 15) ||
-      contactPhone.number,
+    user_dial_code: data.contact?.dial_code ?? DEFAULT_DIAL_CODE,
+    user_phone_number: digits(data.contact?.phone_number),
     user_fax_number: s(data.contact?.fax),
   };
 }
 
 function buildUpdatePayload(data: OrgFormValues): unknown {
   const s = (v: string | undefined) => (v ?? "").trim() || undefined;
-  const orgPhone = parsePhone(data.phone ?? "");
-  const contactPhone = parsePhone(data.contact?.tel ?? "");
   const payload: Record<string, unknown> = {
     name: data.name,
     email: data.email,
-    dial_code: orgPhone.dial_code,
-    phone_number:
-      (data.phone ?? "").replace(/\D/g, "").slice(0, 15) || orgPhone.number,
+    dial_code: data.dial_code ?? DEFAULT_DIAL_CODE,
+    phone_number: digits(data.phone_number) ?? "",
     ein_number: s(data.ein_number),
     street: s(data.address?.street),
     suite: s(data.address?.suite),
@@ -214,13 +222,10 @@ function buildUpdatePayload(data: OrgFormValues): unknown {
     user_first_name: s(data.contact?.firstName),
     user_last_name: s(data.contact?.lastName),
     user_email: s(data.contact?.email),
-    user_dial_code: contactPhone.dial_code,
-    user_phone_number:
-      (data.contact?.tel ?? "").replace(/\D/g, "").slice(0, 15) ||
-      contactPhone.number,
+    user_dial_code: data.contact?.dial_code ?? DEFAULT_DIAL_CODE,
+    user_phone_number: digits(data.contact?.phone_number),
     user_fax_number: s(data.contact?.fax),
-    status:
-      data.enabled === "true" ? 1 : 2,
+    status: data.enabled === "true" ? 1 : 2,
   };
   if (data.address?.latitude != null && data.address?.longitude != null) {
     payload.latitude = data.address.latitude;
@@ -233,6 +238,8 @@ export type OrgModalOrg = {
   _id: string;
   name?: string;
   phone?: string;
+  dial_code?: string;
+  phone_number?: string;
   email?: string;
   ein?: string;
   enabled?: "false" | "true";
@@ -249,6 +256,8 @@ export type OrgModalOrg = {
     last?: string;
     email?: string;
     tel?: string;
+    dial_code?: string;
+    phone_number?: string;
     fax?: string;
   };
 };
@@ -264,7 +273,6 @@ export interface OrgModalContentProps {
 function mapApiResponseToOrgModalOrg(
   raw: Record<string, unknown>,
 ): OrgModalOrg {
-  console.log(raw, "raw")
   const str = (v: unknown) => (v ?? "").toString().trim();
   const org = (raw.organization ?? raw) as Record<string, unknown>;
   const contact = raw.organization
@@ -295,7 +303,8 @@ function mapApiResponseToOrgModalOrg(
     name: str(org.name),
     email: str(org.email),
     phone: phone || str(org.phone),
-    ein: str(org.ein_number ?? org.ein),
+    dial_code: str(org.dial_code) || DEFAULT_DIAL_CODE,
+    phone_number: str(org.phone_number),
     enabled: raw.status == 1 ? "true" : "false",
     address: {
       street: str(org.street),
@@ -309,6 +318,8 @@ function mapApiResponseToOrgModalOrg(
       last: contact ? str(contact.last_name) : "",
       email: contact ? str(contact.email) : "",
       tel: contactTel,
+      dial_code: contact ? str(contact.dial_code) || DEFAULT_DIAL_CODE : DEFAULT_DIAL_CODE,
+      phone_number: contact ? str(contact.phone_number) : "",
       fax: contact ? str((contact as { fax_number?: unknown }).fax_number) : "",
     },
   };
@@ -319,7 +330,8 @@ function orgToFormValues(org: OrgModalOrg | null): OrgFormValues {
   return {
     name: org.name ?? "",
     email: org.email ?? "",
-    phone: org.phone ?? "",
+    dial_code: org.dial_code ?? DEFAULT_DIAL_CODE,
+    phone_number: org.phone_number ?? "",
     ein_number: org.ein ?? "",
     password: "",
     enabled: org.enabled ?? "true",
@@ -336,7 +348,8 @@ function orgToFormValues(org: OrgModalOrg | null): OrgFormValues {
       firstName: org.contact?.first ?? "",
       lastName: org.contact?.last ?? "",
       email: org.contact?.email ?? "",
-      tel: org.contact?.tel ?? "",
+      dial_code: org.contact?.dial_code ?? DEFAULT_DIAL_CODE,
+      phone_number: org.contact?.phone_number ?? "",
       fax: org.contact?.fax ?? "",
     },
   };
@@ -496,7 +509,6 @@ export function OrgModalContent({
         .filter((x): x is RcnSelectOption => x != null);
     },
   });
-  console.log(watch("enabled"), "enabled")
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -544,23 +556,21 @@ export function OrgModalContent({
                 <label className="text-xs text-rcn-muted block mb-1.5">
                   Organization Phone <span className="text-red-500">*</span>
                 </label>
-                <Controller
-                  name="phone"
-                  control={control}
-                  render={({ field }) => (
-                    <PhoneInputField
-                      value={field.value ?? ""}
-                      onChange={field.onChange}
-                      country="us"
-                      placeholder="(312) 555-0100"
-                      hasError={!!errors.phone}
-                      inputProps={{ required: true }}
-                    />
-                  )}
+                <PhoneInputField
+                  value={(watch("dial_code") ?? "") + (watch("phone_number") ?? "").replace(/\D/g, "")}
+                  onChange={(value, country) => {
+                    const code = String(country?.dialCode ?? DEFAULT_DIAL_CODE);
+                    setValue("dial_code", code, { shouldValidate: true });
+                    setValue("phone_number", value.slice(code.length) || "", { shouldValidate: true });
+                  }}
+                  country="us"
+                  placeholder="(312) 555-0100"
+                  hasError={!!errors.phone_number}
+                  inputProps={{ required: true }}
                 />
-                {errors.phone && (
+                {errors.phone_number && (
                   <p className="text-xs text-red-500 mt-1 m-0">
-                    {errors.phone.message}
+                    {errors.phone_number.message}
                   </p>
                 )}
               </div>
@@ -818,19 +828,22 @@ export function OrgModalContent({
                     <label className="text-xs text-rcn-muted block mb-1.5">
                       Telephone
                     </label>
-                    <Controller
-                      name="contact.tel"
-                      control={control}
-                      render={({ field }) => (
-                        <PhoneInputField
-                          value={field.value ?? ""}
-                          onChange={field.onChange}
-                          country="us"
-                          placeholder="(312) 555-0102"
-                          hasError={!!errors.contact?.tel}
-                        />
-                      )}
+                    <PhoneInputField
+                      value={(watch("contact.dial_code") ?? "") + (watch("contact.phone_number") ?? "").replace(/\D/g, "")}
+                      onChange={(value, country) => {
+                        const code = String(country?.dialCode ?? DEFAULT_DIAL_CODE);
+                        setValue("contact.dial_code", code, { shouldValidate: true });
+                        setValue("contact.phone_number", value.slice(code.length) || "", { shouldValidate: true });
+                      }}
+                      country="us"
+                      placeholder="(312) 555-0102"
+                      hasError={!!errors.contact?.phone_number}
                     />
+                    {errors.contact?.phone_number && (
+                      <p className="text-xs text-red-500 mt-1 m-0">
+                        {errors.contact.phone_number.message}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="text-xs text-rcn-muted block mb-1.5">

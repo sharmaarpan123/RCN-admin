@@ -1,10 +1,9 @@
 import * as yup from "yup";
 
-export const PLACEMENTS = ["right_sidebar", "header_strip", "login_right"] as const;
+export const PLACEMENTS = ["left_sidebar", "header_strip"] as const;
 export const PLACEMENT_OPTIONS = [
-  { value: "right_sidebar", label: "Right Sidebar" },
+  { value: "left_sidebar", label: "Left Sidebar" },
   { value: "header_strip", label: "Header Strip" },
-  { value: "login_right", label: "Login Right" },
 ];
 
 export const SCOPES = ["organization_specific", "global"] as const;
@@ -45,7 +44,7 @@ const yesterdayEnd = () => {
 export const bannerFormSchema = (isEdit: boolean) => yup.object({
   name: yup.string().trim().required("Banner name is required."),
   link_url: yup.string().trim().optional().default(""),
-  placement: yup.string().oneOf([...PLACEMENTS]).required().default("right_sidebar"),
+  placement: yup.string().oneOf([...PLACEMENTS]).required().default("left_sidebar"),
   scope: yup.string().oneOf([...SCOPES]).required().default("global"),
   organization_id: yup.string().trim().optional().default(""),
   status: yup.number().oneOf([0, 1]).required().default(1),
@@ -84,7 +83,7 @@ export type BannerFormValues = yup.InferType<ReturnType<typeof bannerFormSchema>
 export const defaultFormValues: BannerFormValues = {
   name: "",
   link_url: "",
-  placement: "right_sidebar",
+  placement: "left_sidebar",
   scope: "global",
   organization_id: "",
   status: 1,

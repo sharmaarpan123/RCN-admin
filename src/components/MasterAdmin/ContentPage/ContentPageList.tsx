@@ -204,9 +204,7 @@ export function ContentPageList() {
             Add and edit content pages (e.g. About, Terms, Privacy).
           </p>
         </div>
-        {/* <button type="button" onClick={openNew} className={BTN_PRIMARY_CLASS}>
-          + New Page
-        </button> */}
+      
       </div>
 
       <div className="flex flex-wrap gap-2.5 items-end mt-3">

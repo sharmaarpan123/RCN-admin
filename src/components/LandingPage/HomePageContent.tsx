@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "@/components/CustomNextLink";
+import AdBanner from "./AdBanner";
 
 const sectionMotion = {
   initial: { opacity: 0, y: 16 },
@@ -54,7 +55,7 @@ function FAQItem({
     </motion.div>
   );
 }
- 
+
 export default function HomePageContent() {
   return (
     <main id="top" className="container mx-auto px-[18px]">
@@ -126,49 +127,61 @@ export default function HomePageContent() {
           </motion.div>
 
           <motion.aside
-            className="bg-[rgba(255,255,255,0.82)] border border-rcn-border-light rounded-[18px] shadow-[0_10px_30px_rgba(2,44,22,0.08)] overflow-hidden relative"
+            className="bg-[rgba(255,255,255,0.82)] px-4.5 pb-4.5 pt-3.5 border border-rcn-border-light rounded-[18px] shadow-[0_10px_30px_rgba(2,44,22,0.08)] overflow-hidden relative"
             aria-label="Quick start panel"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45, delay: 0.08 }}
           >
-            <div className="px-4.5 pt-4.5 pb-0 flex items-center justify-between gap-3">
-              <h3 className="m-0 text-sm tracking-wide">Quick Start</h3>
-              <span className="text-[11px]  font-semibold text-rcn-brand bg-[rgba(15,107,58,0.10)] border border-[rgba(15,107,58,0.18)] px-2.5 py-1.5 rounded-full whitespace-nowrap">
-                Built for coordination
-              </span>
-            </div>
-            <div className="px-4.5 pb-4.5 pt-3.5">
-              <div className="grid grid-cols-2 gap-3 mt-3">
-                {[
-                  { title: "Send Referrals", sub: "Create, attach docs, forward, track" },
-                  { title: "Receive Referrals", sub: "Review, accept/decline, update status" },
-                  { title: "Users & Roles", sub: "Admins, coordinators, clinical staff" },
-                  { title: "Directory", sub: "Find receiving organizations quickly" },
-                ].map((item, i) => (
-                  <motion.div
-                    key={item.title}
-                    className="p-3 rounded-[14px] border border-rcn-border-light bg-linear-to-b from-[rgba(244,251,246,0.8)] to-[rgba(255,255,255,0.9)]"
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.35, delay: 0.15 + i * 0.06 }}
-                  >
-                    <p className="block text-lg font-semibold">{item.title}</p>
-                    <span className="block text-xs text-rcn-muted mt-0.5">{item.sub}</span>
-                  </motion.div>
-                ))}
-              </div>
 
-              <div className="mt-3 rounded-[14px] border border-dashed border-[rgba(15,107,58,0.35)] p-3 bg-[rgba(15,107,58,0.05)] text-rcn-muted text-[13px]">
-                <b className="text-rcn-text">New organization?</b>
-                {" "}Register your company once, then invite users and start coordinating referrals.
-                <div className="mt-2">
-                  <Link href="/org-signup" variant="text" className="font-semibold">Register a company</Link>
-                  {" • "}
-                  <Link href="/user-register" variant="text" className="font-semibold">Create a user</Link>
-                  {" • "}
-                  <Link href="/login" variant="text" className="font-semibold">Sign in</Link>
+            <div className="flex flex-col md:flex-row gap-2">
+              <div>
+                <div className="px-4.5 pt-4.5 pb-4 ">
+                  <h3 className="m-0 text-sm tracking-wide mb-2">Quick Start</h3>
+                  <span className="text-[11px]  font-semibold text-rcn-brand bg-[rgba(15,107,58,0.10)] border border-[rgba(15,107,58,0.18)] px-2.5 py-1.5 rounded-full whitespace-nowrap">
+                    Built for coordination
+                  </span>
                 </div>
+                <div className="flex gap-3 ">
+
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { title: "Send Referrals", sub: "Create, attach docs, forward, track" },
+                      { title: "Receive Referrals", sub: "Review, accept/decline, update status" },
+                      { title: "Users & Roles", sub: "Admins, coordinators, clinical staff" },
+                      { title: "Directory", sub: "Find receiving organizations quickly" },
+                    ].map((item, i) => (
+                      <motion.div
+                        key={item.title}
+                        className="p-3 rounded-[14px] border border-rcn-border-light bg-linear-to-b from-[rgba(244,251,246,0.8)] to-[rgba(255,255,255,0.9)]"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.35, delay: 0.15 + i * 0.06 }}
+                      >
+                        <p className="block text-lg font-semibold">{item.title}</p>
+                        <span className="block text-xs text-rcn-muted mt-0.5">{item.sub}</span>
+                      </motion.div>
+                    ))}
+                  </div>
+
+
+                </div>
+              </div>
+              <AdBanner
+                placement="right_sidebar"
+              />
+
+
+            </div>
+            <div className="mt-3 rounded-[14px] border border-dashed border-[rgba(15,107,58,0.35)] p-3 bg-[rgba(15,107,58,0.05)] text-rcn-muted text-[13px]">
+              <b className="text-rcn-text">New organization?</b>
+              {" "}Register your company once, then invite users and start coordinating referrals.
+              <div className="mt-2">
+                <Link href="/org-signup" variant="text" className="font-semibold">Register a company</Link>
+                {" • "}
+                <Link href="/user-register" variant="text" className="font-semibold">Create a user</Link>
+                {" • "}
+                <Link href="/login" variant="text" className="font-semibold">Sign in</Link>
               </div>
             </div>
           </motion.aside>
@@ -384,8 +397,8 @@ export default function HomePageContent() {
             </p>
             <ul className="my-2.5 ml-4.5 pl-0 text-rcn-muted text-sm list-disc">
               <li className="my-1.75"><Link href="/contact-us" variant="text" className="font-semibold">Support Center</Link></li>
-              <li className="my-1.75"><Link href="/contact-us"   variant="text" className="font-semibold">Contact Form</Link></li>
-             
+              <li className="my-1.75"><Link href="/contact-us" variant="text" className="font-semibold">Contact Form</Link></li>
+
             </ul>
           </motion.div>
 

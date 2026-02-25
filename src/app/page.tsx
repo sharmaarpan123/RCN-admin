@@ -17,7 +17,7 @@ export default function Home() {
       }}
     >
       <Header />
-      <AdBanner />
+      
 
       <HomePageContent />
 

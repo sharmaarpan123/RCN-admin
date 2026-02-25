@@ -127,7 +127,7 @@ export function ReceiverInbox({
           id="receiver-inbox-search"
           value={body.search}
           onChange={(value) => setBody({ ...body, search: value, page: 1 })}
-          placeholder="Search patient, DOB, referral ID…"
+          placeholder="Search patient, referral ID..."
           className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-[13px] text-rcn-text"
           aria-label="Search inbox"
         />

@@ -39,7 +39,7 @@ const Banners: React.FC = () => {
   const [scopeFilter, setScopeFilter] = useState("");
   const [orgFilter, setOrgFilter] = useState("");
 
-  const [previewPlacement, setPreviewPlacement] = useState<string>("right_sidebar");
+  const [previewPlacement, setPreviewPlacement] = useState<string>("left_sidebar");
 
   const [isBannerModalOpen, setIsBannerModalOpen] = useState(false);
   const [editingBannerId, setEditingBannerId] = useState<string | null>(null);

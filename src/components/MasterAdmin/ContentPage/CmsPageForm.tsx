@@ -27,7 +27,7 @@ export function CmsPageForm({ page, onClose, onSave, isSaving = false }: CmsPage
   const [content, setContent] = useState(page?.content ?? "");
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
 
-  const effectiveSlug = slugManuallyEdited ? slug : slugFromTitle(name);
+  const effectiveSlug = slugManuallyEdited ? slug : ""
 
   const handleSubmit = () => {
     const trimmedName = name.trim();

@@ -133,7 +133,7 @@ export function SenderInbox({
             id="sender-inbox-search"
             value={body.search}
             onChange={(value) => setBody({ ...body, search: value })}
-            placeholder="Search patient, DOB, receiver, referral ID…"
+            placeholder="Search patient, referral ID..."
             className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-[13px] text-rcn-text"
             aria-label="Search inbox"
           />

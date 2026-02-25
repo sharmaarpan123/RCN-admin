@@ -34,9 +34,9 @@ export interface ApiBannerDisplay {
   notes?: string;
 }
 
-const PLACEMENT_SIDEBAR = "right_sidebar";
+export const PLACEMENT_SIDEBAR = "right_sidebar";
 
-function isWithinDateRange(start?: string, end?: string): boolean {
+export function isWithinDateRange(start?: string, end?: string): boolean {
   if (!start && !end) return true;
   const now = Date.now();
   if (start && new Date(start).getTime() > now) return false;
@@ -44,7 +44,7 @@ function isWithinDateRange(start?: string, end?: string): boolean {
   return true;
 }
 
-function parseBannersResponse(body: unknown): ApiBannerDisplay[] {
+export function parseBannersResponse(body: unknown): ApiBannerDisplay[] {
   const raw = body as { success?: boolean; data?: unknown[] };
   const list = Array.isArray(raw?.data) ? raw.data : [];
   return list
@@ -117,7 +117,7 @@ export default function AdBanner({ placement }: { placement?: "right_sidebar" | 
   const currentAd = ads[currentAdIndex];
 
   return (
-    <aside className="hidden 2xl:block fixed right-4 top-28 w-[300px] z-60" aria-label="Sponsored banner">
+    <aside className="block  w-full md:w-[300px] " aria-label="Sponsored banner">
       <div className="bg-[rgba(255,255,255,0.86)] border border-rcn-border-light rounded-rcn-lg shadow-[0_10px_30px_rgba(2,44,22,0.08)] overflow-hidden" role="complementary">
         <div className="flex items-center justify-between gap-2.5 px-3.5 py-3 border-b border-rcn-border-light bg-linear-to-br from-[rgba(15,107,58,0.10)] to-[rgba(31,138,76,0.08)]">
           <div className="text-[11px] tracking-[0.14em] uppercase text-rcn-muted font-black">
@@ -126,7 +126,7 @@ export default function AdBanner({ placement }: { placement?: "right_sidebar" | 
         </div>
 
         <div className="p-3.5">
-          <div className="h-40 rounded-[18px] border border-[rgba(15,107,58,0.14)] bg-slate-100 relative overflow-hidden">
+          <div className="h-[220px] rounded-[18px] border border-[rgba(15,107,58,0.14)] bg-slate-100 relative overflow-hidden">
             {currentAd.linkUrl ? (
               <CustomNextLink href={currentAd.linkUrl} className="block w-full h-full" target="_blank" rel="noopener noreferrer">
                 <Image
@@ -149,33 +149,11 @@ export default function AdBanner({ placement }: { placement?: "right_sidebar" | 
               />
             )}
           </div>
-          <div className="mt-3 mb-1.5 text-base font-black tracking-tight">
-            {currentAd.name}
-          </div>
-          {currentAd.altText && (
-            <p className="m-0 text-rcn-muted text-[13px] leading-snug">
-              {currentAd.altText}
-            </p>
-          )}
-          {currentAd.linkUrl && (
-            <div className="mt-3">
-              <CustomNextLink
-                href={currentAd.linkUrl}
-                variant="primary"
-                size="sm"
-                className="rounded-full"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Learn more
-              </CustomNextLink>
-            </div>
-          )}
+
+
         </div>
 
-        <div className="px-3.5 py-3 border-t border-dashed border-[rgba(15,107,58,0.22)] bg-[rgba(15,107,58,0.05)] text-rcn-muted text-xs leading-snug">
-          {currentAd.notes ?? ""}
-        </div>
+
       </div>
     </aside>
   );
