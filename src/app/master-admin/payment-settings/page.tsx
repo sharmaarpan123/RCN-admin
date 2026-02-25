@@ -283,7 +283,7 @@ const PaymentSettings: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
           {/* Payment Methods */}
           <div className="bg-white border border-rcn-border rounded-2xl shadow-none p-4">
-            <h3 className="text-sm font-semibold m-0 mb-2.5">Payment Methods</h3>
+            <h3 className="text-sm font-semibold m-0 mb-2.5">Referral Payment Methods</h3>
             <p className="text-xs text-rcn-muted m-0 mb-2.5">
               Enable/disable the payment methods available in the network.
             </p>
