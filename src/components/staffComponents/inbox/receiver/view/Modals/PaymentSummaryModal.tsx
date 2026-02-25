@@ -66,12 +66,7 @@ export function PaymentSummaryModal({
                 </p>
               </div>
             )}
-            {summary.breakdown?.calculation && (
-              <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                <span className="text-rcn-muted text-xs font-black">Calculation</span>
-                <p className="m-0 mt-0.5 font-[850] text-rcn-text">{summary.breakdown.calculation}</p>
-              </div>
-            )}
+          
             {summary.breakdown?.message && (
               <div className="p-3 rounded-xl bg-rcn-brand/5 border border-rcn-brand/20">
                 <p className="m-0 text-[13px] font-[850] text-rcn-text">{summary.breakdown.message}</p>

@@ -405,7 +405,7 @@ export default function OrgPortalReferralDashboardPage() {
               <DebouncedInput
                 value={search}
                 onChange={(value) => setSearch(value)}
-                placeholder="Search patient / organization / service..."
+                placeholder="Search patient"
                 debounceMs={300}
               />
             </div>
@@ -435,10 +435,7 @@ export default function OrgPortalReferralDashboardPage() {
               getRowKey={(r) => r._id}
               variant="bordered"
               size="sm"
-              onRowClick={(r) => {
-                setModalRef(r as unknown as Record<string, unknown>);
-                setModalIsReceiver(!isSent);
-              }}
+            
             />
           </div>
 

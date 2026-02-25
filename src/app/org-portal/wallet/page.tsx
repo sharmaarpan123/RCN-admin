@@ -15,7 +15,8 @@ import {
 import { checkResponse, catchAsync } from "@/utils/commonFunc";
 import defaultQueryKeys from "@/utils/orgQueryKeys";
 import Modal from "@/components/Modal";
-import { Button, StripeCardModal } from "@/components";
+import { Button, StripeCardModal, TableLayout } from "@/components";
+import type { TableColumn } from "@/components";
 
 const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
   ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
@@ -52,6 +53,15 @@ interface BranchOption {
   _id: string;
   name: string;
 }
+
+type BranchCreditsRow = {
+  branch_id: string;
+  branch_name?: string;
+  credits_assigned?: number;
+  credits_used?: number;
+  credits_remaining?: number;
+  remaining_credits?: number;
+};
 
 export default function OrgPortalWalletPage() {
   const queryClient = useQueryClient();
@@ -201,7 +211,7 @@ export default function OrgPortalWalletPage() {
       if (hasClientSecret) {
         toastSuccess(
           (res.data as { message?: string })?.message ??
-            "Payment confirmed. Credits added. It may take a few minutes to appear in your account."
+          "Payment confirmed. Credits added. It may take a few minutes to appear in your account."
         );
       }
       onCloseSummary();
@@ -245,6 +255,13 @@ export default function OrgPortalWalletPage() {
     typeof creditsData?.organization_credits === "number" ? creditsData.organization_credits : 0;
   const branchSummary = creditsData?.branch_credits_summary ?? [];
 
+  const branchCreditsColumns: TableColumn<BranchCreditsRow>[] = [
+    { head: "Branch", accessor: "branch_name", component: (row) => <span className="font-medium">{row.branch_name ?? "—"}</span> },
+    { head: "Assigned", accessor: "credits_assigned", component: (row) => row.credits_assigned ?? 0 },
+    { head: "Used", accessor: "credits_used", component: (row) => row.credits_used ?? 0 },
+    { head: "Remaining", accessor: "credits_remaining", component: (row) => row.credits_remaining ?? row.remaining_credits ?? 0 },
+  ];
+
   if (creditsLoading) {
     return (
       <div>
@@ -273,30 +290,14 @@ export default function OrgPortalWalletPage() {
       {branchSummary.length > 0 && (
         <div className="mb-6 bg-white rounded-2xl border border-slate-200 shadow-[0_10px_30px_rgba(2,6,23,.07)] overflow-hidden">
           <h2 className="text-base font-semibold m-0 p-4 border-b border-slate-200">Credits by branch</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm border-collapse">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-200">
-                  <th className="text-left p-3 font-semibold text-rcn-muted">Branch</th>
-                  <th className="text-right p-3 font-semibold text-rcn-muted">Assigned</th>
-                  <th className="text-right p-3 font-semibold text-rcn-muted">Used</th>
-                  <th className="text-right p-3 font-semibold text-rcn-muted">Remaining</th>
-                </tr>
-              </thead>
-              <tbody>
-                {branchSummary.map((row) => (
-                  <tr key={row.branch_id} className="border-b border-slate-100 last:border-0">
-                    <td className="p-3 font-medium">{row.branch_name ?? "—"}</td>
-                    <td className="p-3 text-right">{row.credits_assigned ?? 0}</td>
-                    <td className="p-3 text-right">{row.credits_used ?? 0}</td>
-                    <td className="p-3 text-right font-semibold">
-                      {row.credits_remaining ?? row.remaining_credits ?? 0}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <TableLayout<BranchCreditsRow>
+            columns={branchCreditsColumns}
+            data={branchSummary}
+            getRowKey={(row) => row.branch_id}
+            emptyMessage="No branch credits data."
+            variant="bordered"
+            wrapperClassName="min-w-0"
+          />
         </div>
       )}
 
@@ -439,22 +440,17 @@ export default function OrgPortalWalletPage() {
                     </p>
                   </div>
                 )}
-                {purchaseSummary.processingFee != null  && (
+                {purchaseSummary.processingFee != null && (
                   <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
                     <span className="text-rcn-muted text-xs font-black">Processing fee</span>
                     <p className="m-0 mt-0.5 font-semibold">
                       {purchaseSummary.currency ?? "USD"} {purchaseSummary.processingFee}
-                     
+
                     </p>
                   </div>
                 )}
               </div>
-              {purchaseSummary.breakdown?.calculation && (
-                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                  <span className="text-rcn-muted text-xs font-black">Calculation</span>
-                  <p className="m-0 mt-0.5 font-semibold">{purchaseSummary.breakdown.calculation}</p>
-                </div>
-              )}
+
               <div className="p-3 rounded-xl bg-rcn-brand/5 border border-rcn-brand/20">
                 <div className="flex justify-between items-center">
                   <span className="text-rcn-muted text-xs font-black">Total</span>

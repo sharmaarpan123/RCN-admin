@@ -12,7 +12,7 @@ type SocketContextValue = {
   socket: Socket | null;
   connected: boolean;
   onlineUserIds: string[];
-  sendMessage: (referralId: string, message: string , departmentId?: string) => void;
+  sendMessage: (referralId: string, message: string, departmentId?: string, callBack?: (data: unknown) => void) => void;
 };
 
 const SocketContext = createContext<SocketContextValue>({
@@ -75,11 +75,15 @@ export function SocketProvider({ children }: SocketProviderProps) {
     };
   }, [queryClient]);
 
-  const sendMessage = useCallback((referralId: string, message: string, departmentId?: string) => {
+  const sendMessage = useCallback((referralId: string, message: string, departmentId?: string, callBack?: (data: unknown) => void) => {
     const s = socketRef.current;
-    console.log(departmentId ,"departmentId")
+    console.log(departmentId, "departmentId")
     if (s?.connected) {
-      s.emit("send_message", { referralId, message, departmentId: departmentId ?? "" });
+      s.emit("send_message", { referralId, message, departmentId: departmentId ?? "" }, (data: unknown) => {
+        callBack?.(data)
+
+
+      });
     }
   }, []);
 

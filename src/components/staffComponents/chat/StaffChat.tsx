@@ -8,6 +8,7 @@ import {
   getReferralChatsApi,
   getReferralChatMessagesApi,
   postReferralChatReadApi,
+  postReferralStartChatApi,
 } from "@/apis/ApiCalls";
 import { checkResponse } from "@/utils/commonFunc";
 import defaultQueryKeys from "@/utils/staffQueryKeys";
@@ -105,7 +106,7 @@ export default function ChatPage() {
     queryFn: async (): Promise<ApiChatListResponse> => {
       const res = await getReferralChatsApi({
         page: CHAT_LIST_PAGE,
-        limit: CHAT_LIST_LIMIT,
+        limit: 2,
       });
       if (!checkResponse({ res })) {
         return {
@@ -200,16 +201,16 @@ export default function ChatPage() {
   ) => {
     const msg = (text || "").trim();
     if (!msg) return;
-    sendMessage(referralId, msg, departmentId);
-    // Optimistic refetch after a short delay so backend/socket can persist
-    setTimeout(() => {
+    sendMessage(referralId, msg, departmentId, () => {
       queryClient.invalidateQueries({
         queryKey: defaultQueryKeys.referralChatMessages,
       });
       queryClient.invalidateQueries({
         queryKey: defaultQueryKeys.referralChatList,
       });
-    }, 300);
+    });
+    // Optimistic refetch after a short delay so backend/socket can persist
+
   };
 
 
@@ -230,6 +231,22 @@ export default function ChatPage() {
     };
   }, [displayChat]);
 
+  const getRedirectedChat = async (ReferredReferralId: string) => {
+    const res = await postReferralStartChatApi(ReferredReferralId);
+    if (!checkResponse({ res })) return;
+
+    const findItemFromTheCurrentList =
+      chatList.find((c) => c.referral_id ===
+        ReferredReferralId) ?? null;
+
+    setSelectedChat(
+      findItemFromTheCurrentList ?? res?.data?.data
+    );
+
+    router.replace(`/staff-portal/chat`);
+
+  };
+
   useEffect(() => {
     if (
       chatList?.length &&
@@ -237,10 +254,7 @@ export default function ChatPage() {
       typeof ReferredReferralId === "string"
     ) {
       queueMicrotask(() => {
-        setSelectedChat(
-          chatList.find((c) => c.referral_id === ReferredReferralId) ?? null,
-        );
-        router.replace(`/staff-portal/chat`);
+        getRedirectedChat(ReferredReferralId);
       });
     }
   }, [ReferredReferralId, chatList, router]);
@@ -397,6 +411,7 @@ export default function ChatPage() {
                       <p className="m-0 mt-0.5 text-xs text-rcn-muted font-semibold">
                         {displayChat.patient_name ??
                           displayChat.referral_facility_name ??
+                          displayChat.referral_id ??
                           "—"}
                       </p>
                     </div>
@@ -455,7 +470,7 @@ export default function ChatPage() {
                     </div>
                     <ChatInput
 
-                      chatReceiverId={displayChat?.receiver_id ?? ""}
+                      chatReceiverId={displayChat?.referral_id ?? ""}
                       onSend={(rid, t) =>
                         sendChatMessage(displayChat?.referral_id ?? "", rid, t, displayChat?.department_id ?? "")
                       }
