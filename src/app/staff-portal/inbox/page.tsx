@@ -28,8 +28,8 @@ export type ReceiverInboxBody = { page: number; limit: number; search: string, t
 export default function StaffInboxPage() {
   const [role, setRole] = useState<"SENDER" | "RECEIVER">("SENDER");
 
-  const [senderBody, setSenderBody] = useState<SenderInboxBody>({ page: 1, limit: 10, search: "", type: "all", day: 1 });
-  const [receiverBody, setReceiverBody] = useState<ReceiverInboxBody>({ page: 1, limit: 10, search: "", type: "all", day: 1 });
+  const [senderBody, setSenderBody] = useState<SenderInboxBody>({ page: 1, limit: 10, search: "", type: "all", day: 30 });
+  const [receiverBody, setReceiverBody] = useState<ReceiverInboxBody>({ page: 1, limit: 10, search: "", type: "all", day: 30 });
 
   const { data: sentResponse, isLoading: isLoadingSent } = useQuery({
     queryKey: [...defaultQueryKeys.referralSentList, senderBody.page, senderBody.search, senderBody.type, senderBody.day],
@@ -39,7 +39,7 @@ export default function StaffInboxPage() {
         limit: senderBody.limit,
         search: senderBody.search || undefined,
         type: senderBody.type as SenderInboxType,
-        day: senderBody.day,
+        days: senderBody.day,
       });
       if (!checkResponse({ res })) return { data: [], meta: defaultMeta };
       const raw = res.data as { data?: SentReferralApi[]; meta?: ReferralListMeta };
@@ -58,7 +58,7 @@ export default function StaffInboxPage() {
         search: receiverBody.search || undefined,
         type: "all",
         status: receiverBody.type as ReceiverInboxType,
-        day: receiverBody.day,
+        days: receiverBody.day,
       });
       if (!checkResponse({ res })) return { data: [], meta: defaultMeta };
       const raw = res.data as { data?: ReceivedReferralApi[]; meta?: ReferralListMeta };

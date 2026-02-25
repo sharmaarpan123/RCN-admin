@@ -144,7 +144,7 @@ export function ReceiverInbox({
           ))}
         </div>
         <div className="flex gap-2 flex-wrap" aria-label="Date filters">
-          {[[30, "Last 30 days"], [7, "Last 7 days"], [90, "Last 90 days"], [3650, "All time"]].map(([days, label]) => (
+          {[[30, "Last 30 days"], [7, "Last 7 days"], [90, "Last 90 days"], [0, "All time"]].map(([days, label]) => (
             <button
               key={String(days)}
               type="button"
