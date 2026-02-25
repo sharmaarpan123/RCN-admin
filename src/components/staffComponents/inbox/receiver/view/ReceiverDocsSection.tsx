@@ -18,6 +18,7 @@ interface ReceiverDocsSectionProps {
   isUnlocked: boolean;
   receiverStatus: string;
   docList: DocItem[];
+  
   onPayUnlock: () => void;
 }
 
@@ -25,6 +26,7 @@ export function ReceiverDocsSection({
   isUnlocked,
   receiverStatus,
   docList,
+ 
   onPayUnlock,
 }: ReceiverDocsSectionProps) {
   const [downloadingDoc, setDownloadingDoc] = useState<Record<string, boolean>>(

@@ -30,7 +30,7 @@ const userFormSchema = yup.object({
     .required("Email is required.")
     .email("Please enter a valid email."),
   dialCode: yup.string().trim().optional().default(DEFAULT_DIAL_CODE),
-  phone_number: yup.string().trim().required("Phone number is required.").default(""),
+  phone_number: yup.string().trim().required("Phone number is required.").default("").test("min-length", "Invalid number", (val) =>val.length >= 7),
   faxNumber: yup.string().trim().default(""),
 
 

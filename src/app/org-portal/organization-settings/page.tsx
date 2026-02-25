@@ -63,7 +63,7 @@ const DEF_CONTACT: OrgContact = {
 const orgSettingsSchema = yup.object({
   name: yup.string().trim().default(""),
   dial_code: yup.string().trim().optional().default(DEFAULT_DIAL_CODE),
-  phone_number: yup.string().trim().required("Organization Phone is required."),
+  phone_number: yup.string().trim().required("Organization Phone is required.").test("min-length", "Invalid number", (val) =>val.length >= 7),
   email: yup
     .string()
     .trim()
@@ -91,7 +91,7 @@ const orgSettingsSchema = yup.object({
       .default("")
       .test("email", "Please enter a valid Contact Person Email (or leave blank).", (v) => !v || isValidEmail(v)),
     dial_code: yup.string().trim().optional().default(DEFAULT_DIAL_CODE),
-    phone_number: yup.string().trim().default(""),
+    phone_number: yup.string().trim().default("").test("min-length", "Invalid number", (val) =>val.length >= 7),
     fax: yup.string().trim().default(""),
   }),
 });

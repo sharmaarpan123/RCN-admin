@@ -150,7 +150,7 @@ function ReceiverDetailContent({
   const senderPaid = department_status?.is_paid_by_sender === 1;
   const isUnlocked = department_status?.payment_status === "paid";
 
-  
+
 
   const { data: methodsList } = useQuery({
     queryKey: defaultQueryKeys.paymentMethodsActive,
@@ -334,11 +334,11 @@ function ReceiverDetailContent({
   const primaryCare = (data.primary_care ?? {}) as Record<string, string | undefined>;
   const hasPrimaryCare = Boolean(
     primaryCare.name ||
-      primaryCare.address ||
-      primaryCare.phone_number ||
-      primaryCare.email ||
-      primaryCare.fax ||
-      primaryCare.npi,
+    primaryCare.address ||
+    primaryCare.phone_number ||
+    primaryCare.email ||
+    primaryCare.fax ||
+    primaryCare.npi,
   );
 
   const navBtns = [
@@ -409,7 +409,7 @@ function ReceiverDetailContent({
               </h3>
               <p className="m-0 mt-1.5 text-rcn-muted text-xs font-semibold">
                 Sent: {fmtDate(sentAt)}
-                {isUnlocked && p?.address_of_care != null
+                {senderPaid && p?.address_of_care != null
                   ? ` • Address of Care: ${p.address_of_care}`
                   : ""}
               </p>

@@ -1,15 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { changePasswordApi, getAuthProfileApi, putUserProfileApi } from "@/apis/ApiCalls";
+import { Button, PhoneInputField } from "@/components";
+import { catchAsync, checkResponse } from "@/utils/commonFunc";
+import defaultQueryKeys from "@/utils/staffQueryKeys";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
-import { yupResolver } from "@hookform/resolvers/yup";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { toastSuccess } from "@/utils/toast";
-import { getAuthProfileApi, putUserProfileApi, changePasswordApi } from "@/apis/ApiCalls";
-import { checkResponse, catchAsync } from "@/utils/commonFunc";
-import defaultQueryKeys from "@/utils/staffQueryKeys";
-import { Button, PhoneInputField } from "@/components";
 
 /** API profile shape (snake_case from GET /api/auth/profile) */
 interface ApiProfile {
@@ -45,7 +44,7 @@ const profileSchema = yup.object({
     .email("Please enter a valid email address."),
   address: yup.string().trim().optional().default(""),
   dial_code: yup.string().trim().optional().default("+1"),
-  phone_number: yup.string().trim().optional().default(""),
+  phone_number: yup.string().trim().default("").test("min-length", "Invalid number", (val) =>val.length >= 7),
   fax: yup
     .string()
     .trim()
@@ -303,6 +302,9 @@ export default function StaffProfilePage() {
                 onChange={handlePhoneChange}
                 placeholder="(312) 555-0100"
               />
+              {errors.phone_number && (
+                <p className="text-red-600 text-xs mt-1 m-0" role="alert">{errors.phone_number.message}</p>
+              )}
             </div>
             <div>
               <label htmlFor="fax" className="block text-xs font-black text-rcn-muted mb-1.5">

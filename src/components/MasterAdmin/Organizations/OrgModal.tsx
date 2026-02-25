@@ -62,7 +62,7 @@ const addressSchema = {
 const createSchema = yup.object({
   name: yup.string().trim().required("Organization Name is required."),
   email: yup.string().optional().default(""),
-  phone: yup.string().trim().required("Organization Phone is required."),
+  phone: yup.string().trim().required("Organization Phone is required.").test("min-length", "Invalid number", (val) =>val.length >= 7),
   ein_number: yup.string().trim().optional().default(""),
   password: yup
     .string()
@@ -99,7 +99,7 @@ const updateSchema = yup.object({
     .trim()
     .required("Organization Email is required.")
     .email("Please enter a valid email."),
-  phone: yup.string().trim().required("Organization Phone is required."),
+  phone: yup.string().trim().required("Organization Phone is required.").test("min-length", "Invalid number", (val) =>val.length >= 7),
   ein_number: yup.string().trim().optional().default(""),
   password: yup.string().optional(),
   enabled: yup.string().optional().default("true"),
@@ -117,7 +117,7 @@ const updateSchema = yup.object({
         "Please enter a valid contact email.",
         (v) => !v || isValidEmail((v ?? "") as string),
       ),
-    tel: yup.string().trim().optional().default(""),
+    tel: yup.string().trim().default("").test("min-length", "Invalid number", (val) =>val.length >= 7),
     fax: yup.string().trim().optional().default(""),
   }),
 }) as yup.ObjectSchema<OrgFormValues>;

@@ -278,7 +278,7 @@ const adminUserFormSchema = yup.object({
     .required("Email is required.")
     .email("Please enter a valid email."),
   dial_code: yup.string().trim().optional().default(""),
-  phone_number: yup.string().trim().optional().default(""),
+  phone_number: yup.string().trim().optional().default("").test("min-length", "Invalid number", (val) =>val.length >= 7),
   role_id: yup.number().required("Role is required."),
   status: yup.number().oneOf([0, 1]).required().default(1),
   password: yup

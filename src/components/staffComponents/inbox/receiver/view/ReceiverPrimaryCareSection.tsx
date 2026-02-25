@@ -44,12 +44,12 @@ export function ReceiverPrimaryCareSection({
       : primaryCare.phone_number;
 
   const rows: [string, string | undefined][] = [
-    ["Name", primaryCare.name],
-    ["Address", primaryCare.address],
-    ["Phone", phoneDisplay],
-    ["Fax", primaryCare.fax],
-    ["Email", primaryCare.email],
-    ["NPI", primaryCare.npi],
+    ["Name", primaryCare.name || "—"],
+    ["Address", primaryCare.address || "—"],
+    ["Phone", phoneDisplay || "—"],
+    ["Fax", primaryCare.fax || "—"],
+    ["Email", primaryCare.email || "—"],
+    ["NPI", primaryCare.npi || "—"],
   ];
 
   return (

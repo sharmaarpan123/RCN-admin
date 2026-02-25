@@ -25,7 +25,7 @@ const profileSchema = yup.object({
     .required("Email is required.")
     .email("Please enter a valid email."),
   dialCode: yup.string().trim().optional().default(DEFAULT_DIAL_CODE),
-  phone_number: yup.string().trim().optional().default(""),
+  phone_number: yup.string().trim().default("").test("min-length", "Invalid number", (val) =>val.length >= 7),
 
 });
 
