@@ -200,7 +200,7 @@ export default function OrgPortalReferralDashboardPage() {
             head: "Patient",
             component: (row) => {
               const p = row.patient;
-              const name = `${p?.patient_last_name ?? ""}, ${p?.patient_first_name ?? ""}`.trim() || "—";
+              const name = `${p?.patient_last_name ?? ""} ${p?.patient_first_name ?? ""}`.trim() || "—";
               const sub = [p?.dob, p?.gender].filter(Boolean).join(" • ") || "";
               return (
                 <div className="text-xs">
@@ -257,7 +257,7 @@ export default function OrgPortalReferralDashboardPage() {
             head: "Patient",
             component: (row) => {
               const p = row.patient;
-              const name = `${p?.patient_last_name ?? ""}, ${p?.patient_first_name ?? ""}`.trim() || "—";
+              const name = `${p?.patient_last_name ?? ""} ${p?.patient_first_name ?? ""}`.trim() || "—";
               const sub = [p?.dob, p?.gender].filter(Boolean).join(" • ") || "";
               return (
                 <div className="text-xs">
