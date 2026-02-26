@@ -54,7 +54,7 @@ export const updateOrganizationProfileApi = (body: unknown) =>
 export const organizationLoginApi = (body: unknown) =>
   AxiosInstance.post("/api/organization/login", body);
 
-export const adminLoginApi = (body: { email: string; password: string }) =>
+export const adminLoginApi = (body: unknown) =>
   AxiosInstance.post("/api/admin/login", body);
 
 export const authVerifyOtpApi = (body: unknown) =>

@@ -101,14 +101,14 @@ const Login: React.FC = () => {
   }, []);
 
   const { isPending, mutate: mutateLogin } = useMutation({
-    mutationFn: catchAsync(async (variables: LoginFormValues) => {
-      const { email, password, loginType: type } = variables;
+    mutationFn: catchAsync(async (variables: LoginFormValues & { device_token?: string, device_type?: string }) => {
+      const { email, password, loginType: type , device_token, device_type } = variables;
       const res =
         type === "user"
-          ? await authLoginApi({ email: email.trim(), password })
+          ? await authLoginApi({ email: email.trim(), password, device_token, device_type })
           : type === "org"
-            ? await organizationLoginApi({ email: email.trim(), password })
-            : await adminLoginApi({ email: email.trim(), password });
+            ? await organizationLoginApi({ email: email.trim(), password, device_token, device_type })
+            : await adminLoginApi({ email: email.trim(), password, device_token, device_type });
       if (checkResponse({ res, showSuccess: true })) {
         const data = res?.data?.data as { user_id?: string };
 
@@ -264,7 +264,7 @@ const Login: React.FC = () => {
       device_token: typeof window !== "undefined" ? getFCMToken() : "",
       device_type: "web",
     }
-    mutateLogin(body);
+    mutateLogin(body as LoginFormValues & { device_token?: string, device_type?: string });
   };
 
   const inputBaseClass =

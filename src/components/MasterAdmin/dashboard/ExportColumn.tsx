@@ -17,6 +17,7 @@ import type {
   AdminBranchListItem,
   AdminDepartmentListItem,
 } from "@/components/MasterAdmin/Organizations/types";
+import PrintIcon from "@/assets/svg/PrintIcon";
 
 export function ExportColumn() {
   const [exporting, setExporting] = useState(false);
@@ -122,12 +123,12 @@ export function ExportColumn() {
         const text = res.data instanceof Blob ? await res.data.text() : String(res.data);
         const err = text
           ? (() => {
-              try {
-                return JSON.parse(text)?.message ?? text;
-              } catch {
-                return text;
-              }
-            })()
+            try {
+              return JSON.parse(text)?.message ?? text;
+            } catch {
+              return text;
+            }
+          })()
           : "Export failed.";
         toastError(err);
         return;
@@ -155,80 +156,105 @@ export function ExportColumn() {
     }
   };
 
+  const selectClass =
+    "min-h-[42px] w-full min-w-0 rounded-xl border border-rcn-border bg-white pl-3 pr-8 py-2 text-sm text-rcn-text outline-none focus:ring-2 focus:ring-rcn-accent/30 focus:border-rcn-accent appearance-none bg-[length:12px] bg-[right_0.5rem_center] bg-no-repeat";
+
   return (
-    <div className="border border-rcn-border rounded-2xl p-3 my-2 flex flex-wrap items-center gap-3">
-      <strong className="text-rcn-dark-bg">Export referrals (Excel)</strong>
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex flex-col gap-1">
-          <label className="text-xs text-rcn-muted">Organization</label>
-          <div className="min-w-[180px]">
-            <CustomAsyncSelect
-              value={selectedOrg}
-              onChange={handleOrgChange}
-              loadOptions={loadOrgOptions}
-              placeholder="All organizations"
-              aria-label="Filter by organization"
-              defaultOptions={true}
-            />
+    <div className="border border-rcn-border rounded-2xl bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] my-2 overflow-hidden">
+      <div className="px-4 py-3 border-b border-rcn-border bg-slate-50/80">
+        <h3 className="text-sm font-semibold text-rcn-dark-bg m-0">Export referrals</h3>
+        <p className="text-xs text-rcn-muted mt-0.5 m-0">
+          Filter by organization, branch, or department and download as Excel (.xlsx).
+        </p>
+      </div>
+      <div className="p-4 space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-rcn-muted">Organization</label>
+            <div className="min-w-0">
+              <CustomAsyncSelect
+                value={selectedOrg}
+                onChange={handleOrgChange}
+                loadOptions={loadOrgOptions}
+                placeholder="All organizations"
+                aria-label="Filter by organization"
+                defaultOptions={true}
+              />
+            </div>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-rcn-muted">Branch</label>
+            <div className="min-w-0">
+              <CustomAsyncSelect
+                value={selectedBranch}
+                onChange={handleBranchChange}
+                loadOptions={loadBranchOptions}
+                placeholder="All branches"
+                aria-label="Filter by branch"
+                isDisabled={!selectedOrgId}
+                defaultOptions={true}
+              />
+            </div>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-rcn-muted">Department</label>
+            <div className="min-w-0">
+              <CustomAsyncSelect
+                value={selectedDept}
+                onChange={handleDeptChange}
+                loadOptions={loadDeptOptions}
+                placeholder="All departments"
+                aria-label="Filter by department"
+                isDisabled={!selectedOrgId}
+                defaultOptions={true}
+              />
+            </div>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-rcn-muted">Type</label>
+            <select
+              value={exportReferralType}
+              onChange={(e) =>
+                setExportReferralType((e.target.value || "") as "sent" | "received" | "")
+              }
+              className={selectClass}
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`,
+              }}
+            >
+              <option value="">All</option>
+              <option value="sent">Sent</option>
+              <option value="received">Received</option>
+            </select>
           </div>
         </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-xs text-rcn-muted">Branch</label>
-          <div className="min-w-[160px]">
-            <CustomAsyncSelect
-              value={selectedBranch}
-              onChange={handleBranchChange}
-              loadOptions={loadBranchOptions}
-              placeholder="All branches"
-              aria-label="Filter by branch"
-              isDisabled={!selectedOrgId}
-              defaultOptions={true}
-            />
+        <div className="flex flex-wrap items-end gap-3 pt-1">
+          <div className="flex flex-col gap-1.5 min-w-[140px]">
+            <label className="text-xs font-medium text-rcn-muted">Period</label>
+            <select
+              value={exportDays === "" ? "" : String(exportDays)}
+              onChange={(e) => setExportDays(e.target.value === "" ? "" : Number(e.target.value))}
+              className={selectClass}
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`,
+              }}
+            >
+              <option value="">All time</option>
+              <option value="1">Today</option>
+              <option value="7">Last 7 days</option>
+              <option value="30">Last 30 days</option>
+            </select>
           </div>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handleExportExcel}
+            disabled={exporting}
+            className="min-h-[42px] px-4"
+          >
+            {exporting ? "Exporting…" : <PrintIcon size={24} />}
+          </Button>
         </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-xs text-rcn-muted">Department</label>
-          <div className="min-w-[160px]">
-            <CustomAsyncSelect
-              value={selectedDept}
-              onChange={handleDeptChange}
-              loadOptions={loadDeptOptions}
-              placeholder="All departments"
-              aria-label="Filter by department"
-              isDisabled={!selectedOrgId}
-              defaultOptions={true}
-            />
-          </div>
-        </div>
-        <select
-          value={exportReferralType}
-          onChange={(e) =>
-            setExportReferralType((e.target.value || "") as "sent" | "received" | "")
-          }
-          className="rounded-xl border border-rcn-border bg-white px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-rcn-accent/30"
-        >
-          <option value="">All</option>
-          <option value="sent">Sent</option>
-          <option value="received">Received</option>
-        </select>
-        <select
-          value={exportDays === "" ? "" : String(exportDays)}
-          onChange={(e) => setExportDays(e.target.value === "" ? "" : Number(e.target.value))}
-          className="rounded-xl border border-rcn-border bg-white px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-rcn-accent/30"
-        >
-          <option value="">All time</option>
-          <option value="1">Today</option>
-          <option value="7">Last 7 days</option>
-          <option value="30">Last 30 days</option>
-        </select>
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={handleExportExcel}
-          disabled={exporting}
-        >
-          {exporting ? "Exporting…" : "Export Excel"}
-        </Button>
       </div>
     </div>
   );
