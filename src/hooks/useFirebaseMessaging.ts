@@ -27,7 +27,7 @@ const getToken = async (messaging: Messaging) => {
 
   try {
     const token = await getTokenFirebase(messaging, {
-      vapidKey: process.env.NEXT_PUBLIC_FIREBASE_DOCTOR_VAPID_KEY
+      vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY
     });
 
     if (token) {

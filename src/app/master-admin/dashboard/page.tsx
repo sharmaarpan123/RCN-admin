@@ -1,32 +1,15 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { checkResponse } from "@/utils/commonFunc";
-import defaultQueryKeys from "@/utils/adminQueryKeys";
-import { getAdminOrganizationsApi } from "@/apis/ApiCalls";
+import React, { useState } from "react";
 import { StatsCards } from "@/components/MasterAdmin/dashboard/StatsCards";
 import { SenderSection } from "@/components/MasterAdmin/dashboard/SenderSection";
 import { ReceiverSection } from "@/components/MasterAdmin/dashboard/ReceiverSection";
 import { ReferralViewModal } from "@/components/MasterAdmin/dashboard/Modals/ReferralViewModal";
-import type { AdminOrganizationListItem } from "@/components/MasterAdmin/Organizations/types";
-
-/** Map admin org list item to dashboard org shape (id, name, address). */
-function mapOrgToDashboard(o: AdminOrganizationListItem) {
-  const org = o.organization;
-  return {
-    id: o.organization_id ?? o._id ?? "",
-    name: org?.name ?? "",
-    address: { state: org?.state ?? "", zip: org?.zip_code ?? "" },
-  };
-}
+import { ExportColumn } from "@/components/MasterAdmin/dashboard/ExportColumn";
 
 const Dashboard: React.FC = () => {
   const [viewReferral, setViewReferral] = useState<Record<string, unknown> | null>(null);
   const [viewReferralIsReceiver, setViewReferralIsReceiver] = useState(false);
-
-
-
 
   const handleViewReferral = (ref: Record<string, unknown>, isReceiver: boolean) => {
     setViewReferral(ref);
@@ -45,8 +28,9 @@ const Dashboard: React.FC = () => {
             Select Sender and/or Receiver organizations
           </div>
         </div>
-
       </div>
+
+      <ExportColumn />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5 items-start">
         <SenderSection
 

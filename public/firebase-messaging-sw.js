@@ -7,13 +7,14 @@ importScripts(
 );
 
 const firebaseConfig = {
-  apiKey: "",
-  authDomain: "",
-  projectId: "",
-  storageBucket: "",
-  messagingSenderId: "",
-  appId: "",
-  measurementId: "",
+
+  apiKey: "AIzaSyAyRZQgwYij2-2CUvcA5a8czaBXa4jW9IU",
+  authDomain: "rcn-5c1c7.firebaseapp.com",
+  projectId: "rcn-5c1c7",
+  storageBucket: "rcn-5c1c7.firebasestorage.app",
+  messagingSenderId: "716665168454",
+  appId: "1:716665168454:web:5615063bb0c4f3f99e2047",
+  measurementId: "G-MS9VN072LF"
 };
 
 // Initialize Firebase
