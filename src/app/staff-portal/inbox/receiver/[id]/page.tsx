@@ -14,6 +14,7 @@ import {
 } from "@/app/staff-portal/inbox/helpers";
 import type {
   ReferralByIdApi,
+  DepartmentStatus,
 } from "@/app/staff-portal/inbox/types";
 import { Button, StripeCardModal } from "@/components";
 import {
@@ -139,11 +140,20 @@ function ReceiverDetailContent({
   const [summary, setSummary] = useState<PaymentSummaryData | null>(null);
   const [stripeOpen, setStripeOpen] = useState(false);
   const [stripePmId, setStripePmId] = useState("");
-  const {loginUser} = useStaffAuthLoginUser();
+  const { loginUser } = useStaffAuthLoginUser();
   console.log(loginUser, "loginUser")
   const refId = data._id;
-  const department_status = (data.department_statuses ??
-    [])[0] as department_status_type;
+
+  const receiverDepartmentIds = loginUser?.user_departments?.map((d) => d._id) ?? [];
+
+
+
+
+
+
+
+
+  const department_status = data.department_statuses?.find((d: DepartmentStatus) => receiverDepartmentIds.includes(d.department_id ?? "")) as department_status_type;
 
   const receiverId =
     department_status?.department_id ??

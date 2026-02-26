@@ -1,3 +1,14 @@
+export interface DepartmentStatus {
+  department_id: string;
+  department: { _id?: string; name?: string };
+  status?: string;
+  payment_status?: string;
+  organization_name?: string;
+  name?: string;
+  updated_at?: string;
+  paid_by_user_id?: string | null;
+  department_user_id?: string | null;
+}
 export interface Company {
   name: string;
   email: string;
@@ -81,7 +92,7 @@ export interface SentReferralApi {
   additional_patient?: Record<string, unknown>;
   documents?: Record<string, unknown>;
   primary_care?: Record<string, unknown>;
-  department_statuses?: unknown[];
+  department_statuses?: DepartmentStatus[];
   /** UI-only: added when user forwards from inbox (not from API). */
   _localReceivers?: ReceiverInstance[];
 }
