@@ -543,7 +543,7 @@ export function OrgModalContent({
                 </label>
                 <input
                   {...register("name")}
-                  className={inputCn(!!errors.name)}
+                  className={`${inputCn(!!errors.name)} pr-10`}
                   placeholder="e.g. Northlake Medical Center"
                 />
                 {errors.name && (
@@ -609,7 +609,7 @@ export function OrgModalContent({
                     <input
                       {...register("password")}
                       type={showPassword.password ? "text" : "password"}
-                      className={inputCn(!!errors.password)}
+                      className={`${inputCn(!!errors.password)} pr-10`}
                       placeholder="Min. 8 characters"
                       autoComplete="new-password"
                     />

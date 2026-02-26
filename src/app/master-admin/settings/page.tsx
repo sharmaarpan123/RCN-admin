@@ -270,7 +270,7 @@ const Settings: React.FC = () => {
                       {...registerPassword("password")}
                       type="password"
                       placeholder="Enter new password"
-                      className={inputClass}
+                      className={`${inputClass} pr-10`}
                     />
                     <button
                       type="button"
@@ -328,7 +328,7 @@ const Settings: React.FC = () => {
                       {...registerPassword("confirmPassword")}
                       type="password"
                       placeholder="Re-enter new password"
-                      className={inputClass}
+                      className={`${inputClass} pr-10`}
                     />
                     <button
                       type="button"
