@@ -102,7 +102,7 @@ const Login: React.FC = () => {
 
   const { isPending, mutate: mutateLogin } = useMutation({
     mutationFn: catchAsync(async (variables: LoginFormValues & { device_token?: string, device_type?: string }) => {
-      const { email, password, loginType: type , device_token, device_type } = variables;
+      const { email, password, loginType: type, device_token, device_type } = variables;
       const res =
         type === "user"
           ? await authLoginApi({ email: email.trim(), password, device_token, device_type })
@@ -257,11 +257,16 @@ const Login: React.FC = () => {
     }
   }, [pendingOtp]);
 
-  const onSubmit = (data: LoginFormValues) => {
+  const onSubmit = async (data: LoginFormValues) => {
 
+    const token = await getFCMToken();
+
+
+
+console.log(token ,"token")
     const body = {
       ...data,
-      device_token: typeof window !== "undefined" ? getFCMToken() : "",
+      device_token: token,
       device_type: "web",
     }
     mutateLogin(body as LoginFormValues & { device_token?: string, device_type?: string });

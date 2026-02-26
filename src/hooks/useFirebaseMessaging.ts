@@ -49,7 +49,7 @@ export const useFirebaseMessaging = () => {
   const [isSupported, setIsSupported] = useState(false);
   const [notification, setNotification] = useState<MessagePayload | null>(null);
   const [messaging, setMessaging] = useState<Messaging | null>(null);
-  const [userRole] = useState<string | null>(null);
+
 
 
   const [callData, setCallData] = useState<{
@@ -153,7 +153,7 @@ export const useFirebaseMessaging = () => {
   };
 
   const getFCMToken = async () => {
-    if (!messaging || !userRole) return null;
+    if (!messaging) return null;
     return await getToken(messaging);
   };
 
