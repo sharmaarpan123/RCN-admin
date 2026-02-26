@@ -69,14 +69,14 @@ const Login: React.FC = () => {
     Array(OTP_LENGTH).fill(""),
   );
   const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  // const { getFCMToken, token, isSupported, requestPermission } = useFirebase();
+  const { getFCMToken, token, isSupported, requestPermission } = useFirebase();
 
 
-  // useEffect(() => {
+  useEffect(() => {
 
-  //   requestPermission();
+    requestPermission();
 
-  // }, [isSupported, requestPermission]);
+  }, [isSupported, requestPermission]);
 
   const [loginTypeTab, setLoginTypeTab] = React.useState<LoginType>("org");
   const dispatch = useDispatch();
@@ -258,7 +258,13 @@ const Login: React.FC = () => {
   }, [pendingOtp]);
 
   const onSubmit = (data: LoginFormValues) => {
-    mutateLogin(data);
+
+    const body = {
+      ...data,
+      device_token: typeof window !== "undefined" ? getFCMToken() : "",
+      device_type: "web",
+    }
+    mutateLogin(body);
   };
 
   const inputBaseClass =

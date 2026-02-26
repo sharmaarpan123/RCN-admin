@@ -31,7 +31,7 @@ import {
   PaymentSummaryModal,
 } from "@/components/staffComponents/inbox/receiver/view/Modals";
 import { documentsToList } from "@/components/staffComponents/inbox/sender/view/senderViewHelpers";
-import { catchAsync, checkResponse } from "@/utils/commonFunc";
+import { catchAsync, checkResponse, printPdf } from "@/utils/commonFunc";
 import defaultQueryKeys from "@/utils/staffQueryKeys";
 import { toastError } from "@/utils/toast";
 import { loadStripe } from "@stripe/stripe-js";
@@ -40,6 +40,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import React, { useRef, useState } from "react";
 import { useStaffAuthLoginUser } from "@/store/slices/Auth/hooks";
+import PrintIcon from "@/assets/svg/PrintIcon.jsx";
 
 export type department_status_type =
   | {
@@ -362,10 +363,15 @@ function ReceiverDetailContent({
     { id: "secChat", label: "Chat" },
   ];
 
+
+  const printPdfHandler = async (data: ReferralByIdApi) => {
+    printPdf(data?.pdf_export_url ?? "");
+  };
+
   return (
     <div className="max-w-[1280px] mx-auto p-[18px]">
       <div className="flex flex-wrap gap-3 items-center justify-between p-3.5 px-4 border border-slate-200 bg-white/80 backdrop-blur-md rounded-2xl shadow-[0_10px_30px_rgba(2,6,23,.07)] sticky top-2.5 z-10 mb-3.5">
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center justify-between gap-2.5">
           <Link
             href="/staff-portal/inbox"
             className="text-rcn-brand hover:underline text-sm font-semibold"
@@ -374,6 +380,11 @@ function ReceiverDetailContent({
           </Link>
         </div>
         <div className="flex gap-2 flex-wrap justify-end">
+          <Button variant="primary" size="sm" onClick={() => printPdfHandler(data)}>
+            <PrintIcon size={24} />
+
+          </Button>
+
           {department_status?.status === "pending" && senderPaid ? (
             <>
               {btn(receiverAccept, "Accept", true, statusLoading)}

@@ -132,7 +132,7 @@ export const checkResponse = ({
                 )
             );
         }
-       
+
         if (setLoader) setLoader(false);
         return false;
     }
@@ -157,5 +157,41 @@ export const detectUserTimezone = () => {
     } catch (error) {
         console.warn("Failed to detect timezone:", error);
         return "America/New_York"; // Fallback timezone
+    }
+};
+
+export const printPdf = async (url: string) => {
+    try {
+        const token = localStorage.getItem("token");
+
+        const response = await fetch(
+            url,
+            {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error("Failed to fetch PDF");
+        }
+
+        const blob = await response.blob();
+        const pdfUrl = window.URL.createObjectURL(blob);
+
+        const iframe = document.createElement("iframe");
+        iframe.style.display = "none";
+        iframe.src = pdfUrl;
+
+        document.body.appendChild(iframe);
+
+        iframe.onload = () => {
+            iframe.contentWindow?.focus();
+            iframe.contentWindow?.print();
+        };
+    } catch (error) {
+        console.error("Print error:", error);
     }
 };

@@ -95,6 +95,7 @@ export interface SentReferralApi {
   department_statuses?: DepartmentStatus[];
   /** UI-only: added when user forwards from inbox (not from API). */
   _localReceivers?: ReceiverInstance[];
+  pdf_export_url?: string;
 }
 
 /** GET /api/organization/referral/:id — response data as-is (do not reshape). */

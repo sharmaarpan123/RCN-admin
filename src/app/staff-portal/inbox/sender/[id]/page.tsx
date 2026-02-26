@@ -3,16 +3,18 @@
 import { getOrganizationReferralByIdApi } from "@/apis/ApiCalls";
 import { scrollToId } from "@/app/staff-portal/inbox/helpers";
 import type { ChatMsg, Comm, ReceiverInstance, ReferralByIdApi } from "@/app/staff-portal/inbox/types";
+import { Button } from "@/components";
 import { SenderDetailSections } from "@/components/staffComponents/inbox/sender/view/SenderDetailSections";
 import { SenderDraftPaymentSection } from "@/components/staffComponents/inbox/sender/view/SenderDraftPaymentSection";
 import type { DocRow } from "@/components/staffComponents/inbox/sender/view/senderViewHelpers";
 import { documentsToList, receiversFromData } from "@/components/staffComponents/inbox/sender/view/senderViewHelpers";
-import { checkResponse } from "@/utils/commonFunc";
+import { checkResponse, downloadUrl, printPdf } from "@/utils/commonFunc";
 import defaultQueryKeys from "@/utils/staffQueryKeys";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import PrintIcon from "@/assets/svg/PrintIcon.jsx";
 
 export default function SenderDetailPage() {
   const params = useParams<{ id: string }>();
@@ -98,7 +100,7 @@ function SenderDetailContent({ data }: { data: ReferralByIdApi }) {
 
 
 
-  
+
 
   const isDraft = data.is_draft === true;
 
@@ -120,6 +122,10 @@ function SenderDetailContent({ data }: { data: ReferralByIdApi }) {
   ];
 
 
+  const printPdfHandler = async (data: ReferralByIdApi) => {
+    printPdf(data?.pdf_export_url ?? "");
+  };
+
 
 
   return (
@@ -129,32 +135,22 @@ function SenderDetailContent({ data }: { data: ReferralByIdApi }) {
           <Link href="/staff-portal/inbox" className="text-rcn-brand hover:underline text-sm font-semibold">← Back to Inbox</Link>
         </div>
         <div className="flex items-center gap-2.5 flex-wrap justify-end">
-           </div>
+        </div>
       </div>
 
       <div className="border border-slate-200 bg-white/65 rounded-2xl shadow-[0_10px_30px_rgba(2,6,23,.07)] overflow-hidden">
-        <div className="p-3.5 pt-3 pb-2.5 border-b border-slate-200 bg-white/90">
-          <h2 className="m-0 text-sm font-semibold tracking-wide">Referral Detail</h2>
-          <p className="m-0 mt-1 text-rcn-muted text-xs font-[650]">Sender view: all receivers + per-receiver chat. Messaging at any status.</p>
-        </div>
-        <div className="p-3 overflow-auto">
-          
-
-          <div className="border border-rcn-brand/20 rounded-2xl bg-white/95 shadow-[0_12px_26px_rgba(2,6,23,.07)] p-2.5  z-4 mb-3" aria-label="Quick Jump Navigation">
-            <div className="flex items-center justify-between gap-2.5 mb-2">
-              <strong className="text-xs tracking-wide">Quick Jump</strong>
-              <span className="text-[11px] text-rcn-muted font-extrabold">Jump to any section</span>
-            </div>
-            <div className="flex gap-2 flex-wrap">
-              {navBtns.map((b) => (
-                <button key={b.id} type="button" onClick={() => scrollToId(b.id)} className="inline-flex items-center gap-2 px-2.5 py-2 rounded-full border border-rcn-brand/20 bg-rcn-brand/10 text-rcn-accent-dark font-black text-xs shadow-[0_8px_16px_rgba(2,6,23,.05)] hover:border-rcn-brand/30 hover:bg-rcn-brand/10">
-                  <span className="w-2.5 h-2.5 rounded-full bg-linear-to-b from-rcn-brand/85 to-rcn-brand-light/75 shadow-[0_6px_12px_rgba(15,107,58,.18)]" aria-hidden />
-                  {b.label}
-                </button>
-              ))}
-            </div>
+        <div className="p-3.5 pt-3 pb-2.5  flex items-center justify-between">
+          <div className="border-b border-slate-200 bg-white/90">
+            <h2 className="m-0 text-sm font-semibold tracking-wide">Referral Detail</h2>
+            <p className="m-0 mt-1 text-rcn-muted text-xs font-[650]">Sender view: all receivers + per-receiver chat. Messaging at any status.</p>
           </div>
 
+          <Button variant="primary" size="sm" onClick={() => printPdfHandler(data)}>
+            <PrintIcon size={24} />
+          </Button>
+
+        </div>
+        <div className="p-3 overflow-auto">
           <div className="flex flex-col gap-3.5">
             <SenderDetailSections
               data={data}
@@ -166,7 +162,7 @@ function SenderDetailContent({ data }: { data: ReferralByIdApi }) {
         </div>
       </div>
 
-     
+
     </div>
   );
 }
