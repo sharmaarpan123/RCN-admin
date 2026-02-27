@@ -31,7 +31,7 @@ import {
   PaymentSummaryModal,
 } from "@/components/staffComponents/inbox/receiver/view/Modals";
 import { documentsToList } from "@/components/staffComponents/inbox/sender/view/senderViewHelpers";
-import { catchAsync, checkResponse, printPdf } from "@/utils/commonFunc";
+import { catchAsync, checkResponse, downloadFile } from "@/utils/commonFunc";
 import defaultQueryKeys from "@/utils/staffQueryKeys";
 import { toastError } from "@/utils/toast";
 import { loadStripe } from "@stripe/stripe-js";
@@ -364,8 +364,8 @@ function ReceiverDetailContent({
   ];
 
 
-  const printPdfHandler = async (data: ReferralByIdApi) => {
-    printPdf(data?.pdf_export_url ?? "");
+  const downloadPdfHandler = async (data: ReferralByIdApi) => {
+    downloadFile(data?.pdf_export_url ?? "");
   };
 
   return (
@@ -380,7 +380,7 @@ function ReceiverDetailContent({
           </Link>
         </div>
         <div className="flex gap-2 flex-wrap justify-end">
-          <Button variant="primary" size="sm" onClick={() => printPdfHandler(data)}>
+          <Button variant="primary" size="sm" onClick={() => downloadPdfHandler(data)}>
             <PrintIcon size={24} />
 
           </Button>

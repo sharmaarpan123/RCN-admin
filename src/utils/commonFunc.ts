@@ -160,38 +160,12 @@ export const detectUserTimezone = () => {
     }
 };
 
-export const printPdf = async (url: string) => {
-    try {
-        const token = localStorage.getItem("token");
+export const downloadFile = async (url: string) => {
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "pdf";
+    a.target = "_blank";
+    a.click();
+    a.remove();
 
-        const response = await fetch(
-            url,
-            {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
-        );
-
-        if (!response.ok) {
-            throw new Error("Failed to fetch PDF");
-        }
-
-        const blob = await response.blob();
-        const pdfUrl = window.URL.createObjectURL(blob);
-
-        const iframe = document.createElement("iframe");
-        iframe.style.display = "none";
-        iframe.src = pdfUrl;
-
-        document.body.appendChild(iframe);
-
-        iframe.onload = () => {
-            iframe.contentWindow?.focus();
-            iframe.contentWindow?.print();
-        };
-    } catch (error) {
-        console.error("Print error:", error);
-    }
 };

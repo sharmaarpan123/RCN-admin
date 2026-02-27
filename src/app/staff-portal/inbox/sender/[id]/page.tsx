@@ -1,20 +1,19 @@
 "use client";
 
 import { getOrganizationReferralByIdApi } from "@/apis/ApiCalls";
-import { scrollToId } from "@/app/staff-portal/inbox/helpers";
 import type { ChatMsg, Comm, ReceiverInstance, ReferralByIdApi } from "@/app/staff-portal/inbox/types";
+import PrintIcon from "@/assets/svg/PrintIcon.jsx";
 import { Button } from "@/components";
 import { SenderDetailSections } from "@/components/staffComponents/inbox/sender/view/SenderDetailSections";
 import { SenderDraftPaymentSection } from "@/components/staffComponents/inbox/sender/view/SenderDraftPaymentSection";
 import type { DocRow } from "@/components/staffComponents/inbox/sender/view/senderViewHelpers";
 import { documentsToList, receiversFromData } from "@/components/staffComponents/inbox/sender/view/senderViewHelpers";
-import { checkResponse, downloadUrl, printPdf } from "@/utils/commonFunc";
+import { checkResponse, downloadFile } from "@/utils/commonFunc";
 import defaultQueryKeys from "@/utils/staffQueryKeys";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import PrintIcon from "@/assets/svg/PrintIcon.jsx";
 
 export default function SenderDetailPage() {
   const params = useParams<{ id: string }>();
@@ -122,8 +121,8 @@ function SenderDetailContent({ data }: { data: ReferralByIdApi }) {
   ];
 
 
-  const printPdfHandler = async (data: ReferralByIdApi) => {
-    printPdf(data?.pdf_export_url ?? "");
+  const downloadPdfHandler = async (data: ReferralByIdApi) => {
+    await downloadFile(data?.pdf_export_url ?? "");
   };
 
 
@@ -145,7 +144,7 @@ function SenderDetailContent({ data }: { data: ReferralByIdApi }) {
             <p className="m-0 mt-1 text-rcn-muted text-xs font-[650]">Sender view: all receivers + per-receiver chat. Messaging at any status.</p>
           </div>
 
-          <Button variant="primary" size="sm" onClick={() => printPdfHandler(data)}>
+          <Button variant="primary" size="sm" onClick={() => downloadPdfHandler(data)}>
             <PrintIcon size={24} />
           </Button>
 

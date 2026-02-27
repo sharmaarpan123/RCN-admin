@@ -35,7 +35,7 @@ export function SenderInfoSection() {
     setValue("sender_email", org.email ?? "", { shouldValidate: true });
     setValue("sender_dial_code", org.dial_code ?? "+1", { shouldValidate: true });
     setValue("sender_phone_number", (org.phone_number ?? "").replace(/\D/g, ""), { shouldValidate: true });
-    setValue("sender_fax_number", "", { shouldValidate: true });
+    setValue("sender_fax_number", (loginUser.fax_number ?? ""), { shouldValidate: true });
   }, [loginUser, setValue]);
 
 

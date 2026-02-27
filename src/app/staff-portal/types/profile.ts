@@ -66,6 +66,7 @@ export interface StaffProfileData {
   createdAt: string;
   updatedAt: string;
   device_token?: string;
+  fax_number?: string;
   organization: StaffProfileOrganization;
   user_branches: StaffProfileBranch[];
   user_departments: StaffProfileDepartment[];
