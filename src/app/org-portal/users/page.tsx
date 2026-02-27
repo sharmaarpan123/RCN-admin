@@ -61,6 +61,8 @@ export default function OrgPortalUsersPage() {
     if (deleteUser) deleteUserMutation(deleteUser.id);
   };
 
+  console.log(apiData , "apiData 121212")
+
   const columns: TableColumn<OrgUserRow>[] = useMemo(
     () => [
       { head: "Name", component: (u) => <span className="font-medium">{userDisplayName(u)}</span> },
@@ -83,7 +85,7 @@ export default function OrgPortalUsersPage() {
           );
         },
       },
-      { head: "Assigned", component: (u) => (u.org_assigned ? "Yes" : "No") },
+      { head: "Assigned", component: (u) => (u.departments?.length > 0 ? "Yes" : "No") },
       {
         head: "Actions",
         tdClassName: "text-left whitespace-nowrap",

@@ -32,9 +32,9 @@ export function SenderInfoSection() {
     setValue("facility_name", org.name ?? "", { shouldValidate: true });
     const addressParts = [org.street, org.city, org.state, org.zip_code].filter(Boolean);
     setValue("facility_address", addressParts.join(", "), { shouldValidate: true });
-    setValue("sender_email", org.email ?? "", { shouldValidate: true });
-    setValue("sender_dial_code", org.dial_code ?? "+1", { shouldValidate: true });
-    setValue("sender_phone_number", (org.phone_number ?? "").replace(/\D/g, ""), { shouldValidate: true });
+    setValue("sender_email", loginUser.email ?? "", { shouldValidate: true });
+    setValue("sender_dial_code", loginUser.dial_code ?? "+1", { shouldValidate: true });
+    setValue("sender_phone_number", (loginUser.phone_number ?? "").replace(/\D/g, ""), { shouldValidate: true });
     setValue("sender_fax_number", (loginUser.fax_number ?? ""), { shouldValidate: true });
   }, [loginUser, setValue]);
 

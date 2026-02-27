@@ -116,9 +116,21 @@ export function ExportColumn() {
       if (selectedDept[0]?.value) params.department_id = selectedDept[0].value;
       if (exportReferralType) params.referral_type = exportReferralType;
       if (exportDays !== "" && exportDays !== null) params.days = Number(exportDays);
+
+      if (params.branch_id && !params.department_id) {
+        delete params.branch_id;
+      }
+      
+      if (params.department_id) {
+        delete params.branch_id;
+        delete params.organization_id;
+      }
+
+
       const res = (await getAdminReferralsExportExcelApi(
         Object.keys(params).length ? params : undefined
       )) as AxiosResponse<Blob>;
+      console.log(res, "res 121212")
       if (res.status !== 200 || !(res.data instanceof Blob)) {
         const text = res.data instanceof Blob ? await res.data.text() : String(res.data);
         const err = text

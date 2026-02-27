@@ -115,8 +115,7 @@ export function StaffBranches() {
                   <tr key={row.id} className="border-b border-rcn-border last:border-b-0">
                     <td className="px-4 py-3">
                       <div className="font-medium text-rcn-text">{row.name}</div>
-                      <div className="text-xs text-rcn-muted mt-0.5">{row.id}</div>
-                    </td>
+                     </td>
                    
                     <td className="px-4 py-3">
                       <span
