@@ -47,6 +47,17 @@ export const authLogoutApi = (authorization?: string) =>
 export const changePasswordApi = (body: { password: string }) =>
   AxiosInstance.post("/api/auth/change-password", body);
 
+/** POST /api/auth/forgot-password — request password reset; sends OTP to email. */
+export const postAuthForgotPasswordApi = (body: { email: string }) =>
+  AxiosInstance.post("/api/auth/forgot-password", body);
+
+/** POST /api/auth/reset-password — reset password with OTP. */
+export const postAuthResetPasswordApi = (body: {
+  email: string;
+  otp: string;
+  password: string;
+}) => AxiosInstance.post("/api/auth/reset-password", body);
+
 /** PUT /api/organization/profile — update organization and contact (org portal). */
 export const updateOrganizationProfileApi = (body: unknown) =>
   AxiosInstance.put("/api/organization/profile", body);

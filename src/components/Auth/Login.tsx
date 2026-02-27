@@ -8,6 +8,8 @@ import {
   authVerifyOtpApi,
   organizationLoginApi,
   organizationVerifyOtpApi,
+  postAuthForgotPasswordApi,
+  postAuthResetPasswordApi,
 } from "@/apis/ApiCalls";
 import {
   AdminPermission,
@@ -79,6 +81,12 @@ const Login: React.FC = () => {
   }, [isSupported, requestPermission]);
 
   const [loginTypeTab, setLoginTypeTab] = React.useState<LoginType>("org");
+  const [forgotModalOpen, setForgotModalOpen] = React.useState(false);
+  const [forgotStep, setForgotStep] = React.useState<"email" | "otp">("email");
+  const [forgotEmail, setForgotEmail] = React.useState("");
+  const [forgotOtp, setForgotOtp] = React.useState("");
+  const [forgotNewPassword, setForgotNewPassword] = React.useState("");
+  const [showForgotNewPassword, setShowForgotNewPassword] = React.useState(false);
   const dispatch = useDispatch();
   const {
     register,
@@ -99,6 +107,35 @@ const Login: React.FC = () => {
     setPendingOtp(null);
     setOtpDigits(Array(OTP_LENGTH).fill(""));
   }, []);
+
+  const closeForgotModal = useCallback(() => {
+    setForgotModalOpen(false);
+    setForgotStep("email");
+    setForgotEmail("");
+    setForgotOtp("");
+    setForgotNewPassword("");
+    setShowForgotNewPassword(false);
+  }, []);
+
+  const { isPending: isForgotPending, mutate: mutateForgotPassword } = useMutation({
+    mutationFn: catchAsync(async () => {
+      const res = await postAuthForgotPasswordApi({ email: forgotEmail.trim() });
+      if (checkResponse({ res, showSuccess: true })) setForgotStep("otp");
+    }),
+  });
+
+  const { isPending: isResetPending, mutate: mutateResetPassword } = useMutation({
+    mutationFn: catchAsync(async () => {
+      const res = await postAuthResetPasswordApi({
+        email: forgotEmail.trim(),
+        otp: forgotOtp.trim(),
+        password: forgotNewPassword,
+      });
+      if (checkResponse({ res, showSuccess: true })) {
+        closeForgotModal();
+      }
+    }),
+  });
 
   const { isPending, mutate: mutateLogin } = useMutation({
     mutationFn: catchAsync(async (variables: LoginFormValues & { device_token?: string, device_type?: string }) => {
@@ -258,18 +295,25 @@ const Login: React.FC = () => {
   }, [pendingOtp]);
 
   const onSubmit = async (data: LoginFormValues) => {
-
     const token = await getFCMToken();
-
-
-
-console.log(token ,"token")
     const body = {
       ...data,
       device_token: token,
       device_type: "web",
-    }
-    mutateLogin(body as LoginFormValues & { device_token?: string, device_type?: string });
+    };
+    mutateLogin(body as LoginFormValues & { device_token?: string; device_type?: string });
+  };
+
+  const onSubmitForgotEmail = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail.trim()) return;
+    mutateForgotPassword();
+  };
+
+  const onSubmitResetPassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotOtp.trim() || !forgotNewPassword || forgotNewPassword.length < 8) return;
+    mutateResetPassword();
   };
 
   const inputBaseClass =
@@ -425,6 +469,13 @@ console.log(token ,"token")
                     {errors.password.message}
                   </p>
                 )}
+                <button
+                  type="button"
+                  onClick={() => setForgotModalOpen(true)}
+                  className="text-xs text-rcn-brand hover:underline mt-1 self-start p-0 border-0 bg-transparent cursor-pointer"
+                >
+                  Forgot password?
+                </button>
               </div>
 
               <div className="flex flex-wrap gap-3 mt-3 justify-end items-center">
@@ -433,6 +484,111 @@ console.log(token ,"token")
                 </Button>
               </div>
             </form>
+
+            <Modal
+              isOpen={forgotModalOpen}
+              onClose={closeForgotModal}
+              maxWidth="400px"
+              locked={false}
+            >
+              <div className="p-2 w-full">
+                <h3 className="font-semibold text-lg m-0">
+                  {forgotStep === "email" ? "Forgot password" : "Reset password"}
+                </h3>
+                <p className="text-sm text-rcn-muted m-0 mt-1">
+                  {forgotStep === "email"
+                    ? "Enter your email and we'll send you a one-time code."
+                    : "Enter the code sent to your email and your new password."}
+                </p>
+                {forgotStep === "email" ? (
+                  <form onSubmit={onSubmitForgotEmail} className="mt-5">
+                    <div className="flex flex-col gap-1.5 mb-4">
+                      <label className="text-xs text-rcn-muted">Email</label>
+                      <input
+                        type="email"
+                        value={forgotEmail}
+                        onChange={(e) => setForgotEmail(e.target.value)}
+                        placeholder="your@email.com"
+                        className={inputBaseClass}
+                        required
+                      />
+                    </div>
+                    <div className="flex gap-2 justify-end">
+                      <Button variant="secondary" size="sm" type="button" onClick={closeForgotModal}>
+                        Cancel
+                      </Button>
+                      <Button variant="primary" size="sm" type="submit" disabled={isForgotPending}>
+                        {isForgotPending ? "Sending…" : "Send code"}
+                      </Button>
+                    </div>
+                  </form>
+                ) : (
+                  <form onSubmit={onSubmitResetPassword} className="mt-5">
+                    <div className="flex flex-col gap-1.5 mb-3">
+                      <label className="text-xs text-rcn-muted">OTP (6 digits)</label>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={6}
+                        value={forgotOtp}
+                        onChange={(e) => setForgotOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                        placeholder="000000"
+                        className={inputBaseClass}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5 mb-4">
+                      <label className="text-xs text-rcn-muted">New password (min 8 characters)</label>
+                      <div className="relative">
+                        <input
+                          type={showForgotNewPassword ? "text" : "password"}
+                          value={forgotNewPassword}
+                          onChange={(e) => setForgotNewPassword(e.target.value)}
+                          placeholder="••••••••"
+                          className={inputBaseClass}
+                          style={{ paddingRight: "2.5rem" }}
+                          minLength={8}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowForgotNewPassword(!showForgotNewPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-rcn-muted hover:text-rcn-dark-text transition-colors cursor-pointer p-0 border-0 bg-transparent"
+                          tabIndex={-1}
+                        >
+                          {!showForgotNewPassword ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="pointer-events-none">
+                              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                              <line x1="1" y1="1" x2="23" y2="23"></line>
+                            </svg>
+                          ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="pointer-events-none">
+                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                              <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 justify-end">
+                      <Button variant="secondary" size="sm" type="button" onClick={closeForgotModal}>
+                        Cancel
+                      </Button>
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        type="submit"
+                        disabled={
+                          isResetPending ||
+                          forgotOtp.length < 6 ||
+                          forgotNewPassword.length < 8
+                        }
+                      >
+                        {isResetPending ? "Resetting…" : "Reset password"}
+                      </Button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            </Modal>
 
             <Modal
               isOpen={!!pendingOtp}
