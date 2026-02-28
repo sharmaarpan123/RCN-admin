@@ -58,6 +58,7 @@ type PendingOtpData = {
   loginType: LoginType;
   user_id: string;
   redirectTo: string;
+  device_token?: string;
 };
 
 const Login: React.FC = () => {
@@ -157,7 +158,7 @@ const Login: React.FC = () => {
               ? "/org-portal"
               : "/master-admin/dashboard";
 
-        setPendingOtp({ loginType: type, user_id: user_id ?? "", redirectTo });
+        setPendingOtp({ loginType: type, user_id: user_id ?? "", redirectTo , device_token: device_token ?? "" });
       }
     }),
   });
@@ -165,17 +166,17 @@ const Login: React.FC = () => {
   const { isPending: isVerifyPending, mutate: mutateVerifyOtp } = useMutation({
     mutationFn: catchAsync(
       async ({ pending, otp }: { pending: PendingOtpData; otp: string }) => {
-        const { loginType, user_id, redirectTo } = pending;
+        const { loginType, user_id, redirectTo, device_token } = pending;
 
         let redirectUrl = redirectTo;
 
         const body =
           loginType === "admin"
-            ? { user_id, otp }
+            ? { user_id, otp  ,  device_token: device_token ?? "", device_type: "web", }
             : {
               user_id,
               otp,
-              device_token: typeof window !== "undefined" ? "" : "",
+              device_token: device_token ?? "",
               device_type: "web",
             };
         const res =
