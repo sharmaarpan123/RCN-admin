@@ -17,6 +17,7 @@ interface OrgUserRow {
   status?: number;
   org_assigned?: boolean;
   role?: string;
+  departments?: unknown[];
 }
 
 function userDisplayName(u: OrgUserRow): string {
@@ -85,7 +86,7 @@ export default function OrgPortalUsersPage() {
           );
         },
       },
-      { head: "Assigned", component: (u) => (u.departments?.length > 0 ? "Yes" : "No") },
+      { head: "Assigned", component: (u) => ((u.departments?.length ?? 0) > 0 ? "Yes" : "No") },
       {
         head: "Actions",
         tdClassName: "text-left whitespace-nowrap",
