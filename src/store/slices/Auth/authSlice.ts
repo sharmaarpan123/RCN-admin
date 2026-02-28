@@ -43,6 +43,7 @@ const authSlice = createSlice({
     logoutSuccess(state) {
       localStorage.removeItem("authToken");
       localStorage.removeItem("role");
+      
       document.cookie = "authorization=; path=/;";
       document.cookie = "role=; path=/;";
       state.loginUser = null;

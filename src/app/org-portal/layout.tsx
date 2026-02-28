@@ -1,10 +1,14 @@
 "use client";
 
+import { authLogoutApi } from "@/apis/ApiCalls";
+import { logout } from "@/apis/Axios";
 import { ConfirmModal } from "@/components";
+import { logoutSuccess } from "@/store/slices/Auth/authSlice";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 
 const NAV = [
   { href: "/org-portal/users", label: "User Manage" },
@@ -25,24 +29,29 @@ function OrgPortalSidebar({
   const pathname = usePathname();
   const router = useRouter();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-
+  const dispatch = useDispatch();
+  
   const handleLogoutClick = () => setShowLogoutModal(true);
 
-  const handleLogoutConfirm = () => {
-    setShowLogoutModal(false);
-    setSidebarOpen(false);
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("role");
-    document.cookie =
-      "authorization=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-    document.cookie = "role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-    router.push("/login");
+  const handleLogoutConfirm = async () => {
+    try {
+      await authLogoutApi();
+    } catch (error) {
+      console.error("Logout API failed", error);
+    } finally {
+      setShowLogoutModal(false);
+      setSidebarOpen(false);
+      dispatch(logoutSuccess());
+      logout();
+      router.push("/login");
+      return;
+    }
   };
 
   return (
     <>
-    <aside
-      className={`
+      <aside
+        className={`
         fixed lg:relative inset-y-0 left-0 z-50 lg:z-auto
         w-[280px] shrink-0 h-screen overflow-auto flex flex-col
         bg-rcn-dark-bg text-rcn-dark-text p-4 border-r border-white/10
@@ -50,71 +59,70 @@ function OrgPortalSidebar({
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         lg:sticky lg:top-0
       `}
-      aria-label="Organization portal navigation"
-    >
-      <div className="relative flex flex-col gap-2.5 px-2.5 py-3 border-b border-white/10 mb-3">
-        <button
-          type="button"
-          onClick={() => setSidebarOpen(false)}
-          aria-label="Close menu"
-          className="lg:hidden absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-lg text-rcn-dark-text/80 hover:bg-white/10"
-        >
-          ✕
-        </button>
-        <div className="w-10 h-10 rounded-xl relative shrink-0 overflow-hidden shadow-[0_8px_18px_rgba(0,0,0,0.25)]">
-          <Image src="/logo.jpeg" alt="RCN Logo" fill className="object-cover" />
-        </div>
-        <div>
-          <h1 className="text-sm font-semibold m-0 leading-tight">Referral Coordination Network</h1>
-          <p className="text-xs text-rcn-dark-text/80 m-0">Organization Portal</p>
-        </div>
-      </div>
-
-      <div className="bg-[rgba(255,255,255,.10)] rounded-xl p-2.5 border border-white/10">
-
-      <nav className="space-y-1 flex-1">
-        {NAV.map(({ href, label }) => (
-          <Link
-            key={href}
-            href={href}
-            onClick={() => {
-              setSidebarOpen(false);
-            }}
-            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl no-underline text-inherit mx-1.5 transition-all ${
-              pathname === href ? "bg-white/15" : "hover:bg-white/10"
-            }`}
+        aria-label="Organization portal navigation"
+      >
+        <div className="relative flex flex-col gap-2.5 px-2.5 py-3 border-b border-white/10 mb-3">
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Close menu"
+            className="lg:hidden absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-lg text-rcn-dark-text/80 hover:bg-white/10"
           >
-            {label}
-          </Link>
-        ))}
-      </nav>
-      </div>
+            ✕
+          </button>
+          <div className="w-10 h-10 rounded-xl relative shrink-0 overflow-hidden shadow-[0_8px_18px_rgba(0,0,0,0.25)]">
+            <Image src="/logo.jpeg" alt="RCN Logo" fill className="object-cover" />
+          </div>
+          <div>
+            <h1 className="text-sm font-semibold m-0 leading-tight">Referral Coordination Network</h1>
+            <p className="text-xs text-rcn-dark-text/80 m-0">Organization Portal</p>
+          </div>
+        </div>
+
+        <div className="bg-[rgba(255,255,255,.10)] rounded-xl p-2.5 border border-white/10">
+
+          <nav className="space-y-1 flex-1">
+            {NAV.map(({ href, label }) => (
+              <Link
+                key={href}
+                href={href}
+                onClick={() => {
+                  setSidebarOpen(false);
+                }}
+                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl no-underline text-inherit mx-1.5 transition-all ${pathname === href ? "bg-white/15" : "hover:bg-white/10"
+                  }`}
+              >
+                {label}
+              </Link>
+            ))}
+          </nav>
+        </div>
 
 
-      <div className="border-t border-white/10 pt-3 mt-2">
-        <button
-          type="button"
-          onClick={handleLogoutClick}
-          className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl w-full text-left mx-1.5 transition-all text-rcn-dark-text hover:bg-white/10"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-            <polyline points="16 17 21 12 16 7" />
-            <line x1="21" y1="12" x2="9" y2="12" />
-          </svg>
-          Logout
-        </button>
-      </div>
+        <div className="border-t border-white/10 pt-3 mt-2">
+          <button
+            type="button"
+            onClick={handleLogoutClick}
+            className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl w-full text-left mx-1.5 transition-all text-rcn-dark-text hover:bg-white/10"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+            Logout
+          </button>
+        </div>
 
-      
-    </aside>
-    <ConfirmModal
-    type="logout"
-    isOpen={showLogoutModal}
-    onClose={() => setShowLogoutModal(false)}
-    onConfirm={handleLogoutConfirm}
-  />
-  </>
+
+      </aside>
+      <ConfirmModal
+        type="logout"
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleLogoutConfirm}
+      />
+    </>
   );
 }
 

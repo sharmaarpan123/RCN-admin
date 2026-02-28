@@ -19,6 +19,7 @@ export default function Header() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { loginUser } = useSelector((state: RootState) => state.auth);
+  console.log(loginUser , "loginUser")
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -69,16 +70,7 @@ export default function Header() {
         confirmDisabled={isLoggingOut}
       />
 
-      {/* <div className="bg-linear-to-r from-[rgba(15,107,58,0.12)] to-[rgba(31,138,76,0.10)] border-b border-rcn-border-light">
-        <div className="container mx-auto px-[18px] flex items-center justify-between py-2.5 gap-3 text-[13px] text-rcn-muted">
-          <div>Streamline referrals across clinics, hospitals, imaging centers, and specialty practices—without delays.</div>
-          <div>
-            <CustomNextLink href="#get-started" variant="text" size="sm">
-              Get started
-            </CustomNextLink>
-          </div>
-        </div>
-      </div> */}
+      
 
 
       <header className="sticky top-0 z-50 bg-[rgba(244,251,246,0.76)] backdrop-blur-[10px] ">

@@ -1,6 +1,6 @@
 "use client";
 
-import { getAuthProfileApi, getBannersApi } from "@/apis/ApiCalls";
+import { authLogoutApi, getAuthProfileApi, getBannersApi } from "@/apis/ApiCalls";
 import { ConfirmModal, CustomNextLink } from "@/components";
 import { parseBannersResponse, type ApiBannerDisplay } from "@/components/LandingPage/AdBanner";
 import Image from "next/image";
@@ -8,11 +8,12 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { updateLoginUser } from "@/store/slices/Auth/authSlice";
+import { logoutSuccess, updateLoginUser } from "@/store/slices/Auth/authSlice";
 import defaultStaffQueryKeys from "@/utils/staffQueryKeys";
 import { checkResponse } from "@/utils/commonFunc";
 import { StaffProfileData } from "@/app/staff-portal/types/profile";
 import { useDispatch } from "react-redux";
+import { logout } from "@/apis/Axios";
 
 const NAV = [
   { href: "/staff-portal/profile", label: "Profile" },
@@ -112,18 +113,22 @@ function StaffPortalSidebar({
   const pathname = usePathname();
   const router = useRouter();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-
+  const dispatch = useDispatch();
   const handleLogoutClick = () => setShowLogoutModal(true);
 
-  const handleLogoutConfirm = () => {
-    setShowLogoutModal(false);
-    setSidebarOpen(false);
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("role");
-    document.cookie =
-      "authorization=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-    document.cookie = "role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-    router.push("/login");
+  const handleLogoutConfirm = async () => {
+    try {
+      await authLogoutApi();
+    } catch (error) {
+      console.error("Logout API failed", error);
+    } finally {
+      setShowLogoutModal(false);
+      setSidebarOpen(false);
+      dispatch(logoutSuccess());
+      logout();
+      router.push("/login");
+      return;
+    }
   };
 
   return (
