@@ -11,6 +11,7 @@ import ConfirmModal from "../../ConfirmModal";
 import { useAdminAuthLoginUser } from "@/store/slices/Auth/hooks";
 import { logoutSuccess } from "@/store/slices/Auth/authSlice";
 import { authLogoutApi } from "@/apis/ApiCalls";
+import { logout } from "@/apis/Axios";
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -72,6 +73,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
     } finally {
       setIsLoggingOut(false);
       setShowLogoutModal(false);
+      logout();
       dispatch(logoutSuccess());
       onClose?.();
       router.push("/login");

@@ -124,8 +124,8 @@ function StaffPortalSidebar({
     } finally {
       setShowLogoutModal(false);
       setSidebarOpen(false);
-      dispatch(logoutSuccess());
       logout();
+      dispatch(logoutSuccess());
       router.push("/login");
       return;
     }

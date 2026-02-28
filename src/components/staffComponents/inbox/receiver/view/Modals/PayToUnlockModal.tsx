@@ -46,7 +46,7 @@ export function PayToUnlockModal({
           <span className="text-2xl">💳</span> Pay to Unlock
         </h3>
         <p className="m-0 mb-4 text-rcn-muted text-xs font-[850]">
-          Pay with organization credits or a payment method to unlock additional patient information.
+          Pay with payment method to unlock additional patient information.
         </p>
         <div className="space-y-3">
           <label className="flex items-center gap-2.5 cursor-pointer">

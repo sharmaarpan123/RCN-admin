@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Button from "../Button";
 import ConfirmModal from "../ConfirmModal";
+import { logout } from "@/apis/Axios";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -55,7 +56,9 @@ export default function Header() {
     } finally {
       setIsLoggingOut(false);
       setShowLogoutModal(false);
+      logout();
       dispatch(logoutSuccess());
+
       router.push("/login");
     }
   };

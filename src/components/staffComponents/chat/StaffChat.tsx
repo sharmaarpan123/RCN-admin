@@ -147,7 +147,7 @@ export default function ChatPage() {
   // Effective selected chat: use first in list when none selected
   const displayChat = selectedChat
 
-  
+
 
   // Messages for selected chat
   const { data: messagesResponse, isLoading: isLoadingMessages } = useQuery({
@@ -333,6 +333,7 @@ export default function ChatPage() {
                           <div className="text-[11px] text-rcn-muted font-bold truncate">
                             {chat.is_sender ? chat.receiver_name ?? "—" : chat.referral_sender_name ?? "—"}
                           </div>
+                          {chat.referral_id?.slice(-8) ?? "—"}
                           {chat.last_message && (
                             <div className="text-[11px] text-rcn-muted truncate mt-1">
                               {(chat.last_message.message ?? "").toString()}

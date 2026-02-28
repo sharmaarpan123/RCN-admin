@@ -30,7 +30,7 @@ function OrgPortalSidebar({
   const router = useRouter();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const dispatch = useDispatch();
-  
+
   const handleLogoutClick = () => setShowLogoutModal(true);
 
   const handleLogoutConfirm = async () => {
@@ -41,8 +41,8 @@ function OrgPortalSidebar({
     } finally {
       setShowLogoutModal(false);
       setSidebarOpen(false);
-      dispatch(logoutSuccess());
       logout();
+      dispatch(logoutSuccess());
       router.push("/login");
       return;
     }
