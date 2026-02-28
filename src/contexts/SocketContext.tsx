@@ -5,6 +5,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { io, type Socket } from "socket.io-client";
 import { getCookie } from "@/utils/commonFunc";
 import defaultQueryKeys from "@/utils/staffQueryKeys";
+import { RootState } from "@/store";
+import { useSelector } from "react-redux";
 
 const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -36,13 +38,15 @@ export function SocketProvider({ children }: SocketProviderProps) {
   const [connected, setConnected] = useState(false);
   const [onlineUserIds, setOnlineUserIds] = useState<string[]>([]);
   const queryClient = useQueryClient();
+  const authToken = useSelector((s: RootState) => s.auth.token) as string | null;
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const token = getCookie("authorization");
+    const token = authToken
+    console.log(token, "token")
     if (!token) return;
-
+    console.log(token, "1 token")
     const s = io(SOCKET_URL, {
       auth: { token },
     });
@@ -73,13 +77,14 @@ export function SocketProvider({ children }: SocketProviderProps) {
       setConnected(false);
       setOnlineUserIds([]);
     };
-  }, [queryClient]);
+  }, [queryClient , authToken]);
 
   const sendMessage = useCallback((referralId: string, message: string, departmentId?: string, callBack?: (data: unknown) => void) => {
     const s = socketRef.current;
-    console.log(departmentId, "departmentId")
+    const body = { referralId, message, departmentId: departmentId ?? "" }
     if (s?.connected) {
-      s.emit("send_message", { referralId, message, departmentId: departmentId ?? "" }, (data: unknown) => {
+      console.log(body, "send body")
+      s.emit("send_message", body, (data: unknown) => {
         callBack?.(data)
 
 
