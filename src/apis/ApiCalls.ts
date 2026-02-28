@@ -26,7 +26,18 @@ export const updateAdminProfileApi = (body: {
 export const putUserProfileApi = (body: unknown) => AxiosInstance.put("/api/users/profile", body);
 
 /** GET /api/auth/credits — get current referral credits for authenticated user/org. */
-export const getAuthCreditsApi = () => AxiosInstance.get("/api/auth/credits");
+export const getAuthCreditsApi = (params?: {
+  include_transactions?: boolean;
+  page?: number;
+  limit?: number;
+}) =>
+  AxiosInstance.get("/api/auth/credits", {
+    params: {
+      include_transactions: params?.include_transactions ?? false,
+      ...(params?.include_transactions && params?.page != null && { page: params.page }),
+      ...(params?.include_transactions && params?.limit != null && { limit: params.limit }),
+    },
+  });
 
 export const authLogoutApi = (authorization?: string) =>
   AxiosInstance.post(

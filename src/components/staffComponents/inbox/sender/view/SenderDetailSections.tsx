@@ -207,7 +207,6 @@ export function SenderDetailSections({
             <span className="w-[30px] h-[30px] rounded-xl flex items-center justify-center border border-rcn-brand/25 bg-white/70 shadow">📬</span>
             Receivers & Status
           </h4>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border border-rcn-brand/25 bg-white/70 text-rcn-accent-dark">Message at any status</span>
         </div>
         <div className="overflow-hidden rounded-[14px] border border-slate-200 bg-white">
           <table className="w-full border-collapse text-xs">

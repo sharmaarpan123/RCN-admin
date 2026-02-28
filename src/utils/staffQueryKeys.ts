@@ -9,6 +9,7 @@ const defaultQueryKeys = {
   referralChatMessages: ["staff", "referral", "chats", "messages"],
   paymentMethodsActive: ["staff", "payment-methods", "active"],
   credits: ["staff", "credits"],
+  creditsTransactions: ["staff", "credits", "transactions"],
   profile: ["staff", "profile"],
 };
 

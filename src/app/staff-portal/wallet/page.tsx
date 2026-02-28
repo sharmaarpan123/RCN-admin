@@ -14,6 +14,7 @@ import { checkResponse, catchAsync } from "@/utils/commonFunc";
 import defaultQueryKeys from "@/utils/staffQueryKeys";
 import Modal from "@/components/Modal";
 import { Button, StripeCardModal } from "@/components";
+import { TransactionList } from "@/components/staffComponents/wallet/TransactionList";
 
 const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
   ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
@@ -156,6 +157,7 @@ export default function WalletPage() {
       onCloseSummary();
       setCreditAmount("");
       queryClient.invalidateQueries({ queryKey: defaultQueryKeys.credits });
+      queryClient.invalidateQueries({ queryKey: defaultQueryKeys.creditsTransactions });
     }),
   });
 
@@ -292,6 +294,7 @@ export default function WalletPage() {
           </Button>
         </div>
       </div>
+      <TransactionList />
 
       <Modal isOpen={summaryModalOpen} onClose={onCloseSummary} maxWidth="560px">
         <div className="p-4">
@@ -322,17 +325,17 @@ export default function WalletPage() {
                     </p>
                   </div>
                 )}
-                {(purchaseSummary.processingFee != null ) && (
+                {(purchaseSummary.processingFee != null) && (
                   <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
                     <span className="text-rcn-muted text-xs font-black">Processing fee</span>
                     <p className="m-0 mt-0.5 font-semibold">
                       {purchaseSummary.currency ?? "USD"} {typeof purchaseSummary.processingFee === "number" ? purchaseSummary.processingFee : "0"}
-                      
+
                     </p>
                   </div>
                 )}
               </div>
-            
+
               <div className="p-3 rounded-xl bg-rcn-brand/5 border border-rcn-brand/20">
                 <div className="flex justify-between items-center">
                   <span className="text-rcn-muted text-xs font-black">Total</span>

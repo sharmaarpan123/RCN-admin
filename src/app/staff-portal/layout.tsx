@@ -91,6 +91,8 @@ function StaffPortalSidebarBanner() {
             )}
           </div>
 
+          <div className="text-center text-xs mt-2 line-clamp-2">{current.altText} </div>
+
 
 
         </div>
