@@ -116,7 +116,7 @@ export function SenderDetailSections({
             ["Date of Birth (DOB)", p.dob],
             ["Gender", p.gender],
             ["Address of Care", p.address_of_care],
-            ["Services Requested", (data.speciality_ids?.map((x) => x.name) ?? []).join(", ")],
+            ["Services Requested", ([...(data.speciality_ids || []), ...(data.additional_speciality || [])]?.map((x) => x.name) ?? []).join(", ")],
           ].map(([label, val]) => (
             <div key={String(label)}>
               <label className="block text-[11px] text-rcn-muted font-black mb-1">{label}</label>
@@ -140,7 +140,7 @@ export function SenderDetailSections({
                     {docUrl && (
                       <Button
                         type="button"
-                        variant="ghost"
+                        variant="primary"
                         size="sm"
                         onClick={() => setPreviewDocUrl(docUrl)}
                         className="text-xs text-rcn-brand font-semibold hover:underline"
@@ -311,7 +311,7 @@ export function SenderDetailSections({
             ["Phone Number (Must)", addPatient.phone_number],
             ["Primary Language", addPatient.primary_language],
             ["Representative / Power of Attorney", addPatient.power_of_attorney],
-            ["Social Security Number", addPatient.social_security_number],
+            ["Social Security Number", addPatient.social_security_number ? `XXX-XX-${addPatient.social_security_number?.slice(-4)}` : "—"],
             ["Other Information", addPatient.other_information ?? "—"],
           ].map(([label, val], i) => (
             <div key={i} className={i === 4 ? "sm:col-span-2" : ""}>

@@ -41,6 +41,7 @@ export function InsuranceInfoSection() {
     setUploading(key, true);
     catchAsync(async () => {
       const res = await uploadFileApi(file);
+      if(!checkResponse({ res })) return;
       const url = getUploadResponseUrl(res?.data);
       if (url) {
         setValue(`patient_insurance_information.${index}.document`, url, {
@@ -184,6 +185,7 @@ export function InsuranceInfoSection() {
                 }}
                 type="file"
                 id={`insurance-doc-${index}`}
+                accept={"application/pdf, image/*"}
                 className="absolute inset-0 w-full min-h-[44px] opacity-0 cursor-pointer z-10 disabled:cursor-not-allowed rounded-xl"
                 disabled={uploadingFields[`insurance-doc-${index}`] === true}
                 onChange={(e) => {

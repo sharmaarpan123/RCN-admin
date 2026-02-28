@@ -106,13 +106,8 @@ export const getAdminReferralDashboardApi = () =>
   AxiosInstance.get("/api/admin/referral-dashboard");
 
 /** GET /api/admin/referrals/export-excel — export referrals as .xlsx. Auth: Admin. Query (all optional): organization_id, branch_id, department_id, referral_type ("sent"|"received"), days (0=all, 1=today, >1=last N days). Returns blob. */
-export const getAdminReferralsExportExcelApi = (params?: {
-  organization_id?: string;
-  branch_id?: string;
-  department_id?: string;
-  referral_type?: "sent" | "received";
-  days?: number;
-}) =>
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const getAdminReferralsExportExcelApi = (params?: unknown) : any =>
   AxiosInstance.get("/api/admin/referrals/export-excel", {
     params,
     responseType: "blob",

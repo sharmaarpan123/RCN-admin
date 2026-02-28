@@ -9,9 +9,9 @@ import {
   getAdminOrganizationBranchesApi,
   getAdminOrganizationDepartmentsApi,
 } from "@/apis/ApiCalls";
-import { checkResponse } from "@/utils/commonFunc";
+import { catchAsync, checkResponse } from "@/utils/commonFunc";
 import { toastSuccess, toastError } from "@/utils/toast";
-import type { AxiosResponse } from "axios";
+import type { AxiosError, AxiosResponse } from "axios";
 import type {
   AdminOrganizationListItem,
   AdminBranchListItem,
@@ -101,7 +101,7 @@ export function ExportColumn() {
     setSelectedDept(options.length ? [options[options.length - 1]] : []);
   }, []);
 
-  const handleExportExcel = async () => {
+  const handleExportExcel = catchAsync(async () => {
     setExporting(true);
     try {
       const params: {
@@ -120,31 +120,26 @@ export function ExportColumn() {
       if (params.branch_id && !params.department_id) {
         delete params.branch_id;
       }
-      
+
       if (params.department_id) {
         delete params.branch_id;
         delete params.organization_id;
       }
 
 
-      const res = (await getAdminReferralsExportExcelApi(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const res: any = (await getAdminReferralsExportExcelApi(
         Object.keys(params).length ? params : undefined
-      )) as AxiosResponse<Blob>;
-      console.log(res, "res 121212")
-      if (res.status !== 200 || !(res.data instanceof Blob)) {
-        const text = res.data instanceof Blob ? await res.data.text() : String(res.data);
-        const err = text
-          ? (() => {
-            try {
-              return JSON.parse(text)?.message ?? text;
-            } catch {
-              return text;
-            }
-          })()
-          : "Export failed.";
-        toastError(err);
+      ));
+
+      if (res?.response?.data?.type.includes("application/json")) {
+        const text = await res?.response?.data.text();
+        const json = JSON.parse(text);
+        toastError(json?.message || "Export failed.");
         return;
       }
+
+
       const blob = res.data;
       const disposition = res.headers?.["content-disposition"];
       const filenameMatch =
@@ -162,11 +157,12 @@ export function ExportColumn() {
       window.URL.revokeObjectURL(url);
       toastSuccess("Referrals exported successfully.");
     } catch (e) {
+      console.log(e, "error1111")
       toastError(e instanceof Error ? e.message : "Export failed.");
     } finally {
       setExporting(false);
     }
-  };
+  });
 
   const selectClass =
     "min-h-[42px] w-full min-w-0 rounded-xl border border-rcn-border bg-white pl-3 pr-8 py-2 text-sm text-rcn-text outline-none focus:ring-2 focus:ring-rcn-accent/30 focus:border-rcn-accent appearance-none bg-[length:12px] bg-[right_0.5rem_center] bg-no-repeat";

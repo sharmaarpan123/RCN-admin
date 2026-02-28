@@ -104,6 +104,9 @@ export function AdditionalDetailsSection() {
             onBlur={() => setValue("social_security_number", formatSSN(watch("social_security_number") ?? ""), { shouldValidate: true })}
             className={inputClass}
           />
+          {errors.social_security_number && (
+            <p className="text-xs text-rcn-danger mt-1 m-0">{errors.social_security_number.message}</p>
+          )}  
         </div>
         <div>
           <label className="block text-xs text-rcn-muted font-semibold mb-1.5">

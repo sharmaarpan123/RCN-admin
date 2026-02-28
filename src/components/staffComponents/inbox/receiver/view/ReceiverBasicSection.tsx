@@ -82,7 +82,7 @@ export function ReceiverBasicSection({
                     {docUrl && (
                       <Button
                         type="button"
-                        variant="ghost"
+                        variant="primary"
                         size="sm"
                         onClick={() => setPreviewDocUrl(docUrl)}
                         className="text-xs text-rcn-brand font-semibold hover:underline"

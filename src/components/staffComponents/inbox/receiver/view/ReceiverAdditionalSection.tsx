@@ -53,7 +53,11 @@ export function ReceiverAdditionalSection({
           <div key={key} className={i === 4 ? "sm:col-span-2" : ""}>
             <label className="block text-[11px] text-rcn-muted font-black mb-1">{label}</label>
             <div className="text-[13px] font-semibold text-rcn-text leading-tight p-2.5 border border-dashed border-slate-300/75 rounded-xl bg-slate-50/55">
-              {addPatient[key] ?? "—"}
+              {
+                key === "social_security_number" && addPatient[key]
+                  ? `XXX-XX-${addPatient[key]?.slice(-4)}` :
+                  addPatient[key] ?? "—"
+              }
             </div>
           </div>
         ))}

@@ -101,13 +101,13 @@ export function ServicesRequestedSection() {
   };
 
   const onAddAdditionalSpeciality = () => {
-    console.log("add hit")
+   
     setValue("additional_speciality", [...additional_speciality, additionalSpecialties], { shouldValidate: true });
     setAdditionalSpecialties(p => "");
   };
 
   const removeAdditionalSpeciality = (specialty: string) => {
-    console.log("revmoe hit")
+   
     setValue("additional_speciality", additional_speciality.filter((s: string) => s !== specialty), { shouldValidate: true });
   };
 

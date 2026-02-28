@@ -136,7 +136,7 @@ export function TransactionList() {
         component: (row) => (
           <span className="text-[13px] font-semibold text-rcn-text">
             {row.direction === "in" ? "+" : row.direction === "out" ? "−" : ""}
-            {typeof row.amount === "number" ? row.amount : "—"} {row.currency ?? "USD"}
+            {typeof row.metadata?.amount_paid === "number" ? row.metadata?.amount_paid : (row?.amount || "—")} {row.currency ?? "USD"}
           </span>
         ),
       },

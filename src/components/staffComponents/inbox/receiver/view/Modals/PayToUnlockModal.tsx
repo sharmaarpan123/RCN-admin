@@ -57,7 +57,7 @@ export function PayToUnlockModal({
               onChange={() => onPaySourceChange("credit")}
               className="rounded-full border-rcn-border"
             />
-            <span className="text-sm font-[850]">Use organization credits</span>
+            <span className="text-sm font-[850]">Use credits</span>
           </label>
           <label className="flex items-center gap-2.5 cursor-pointer">
             <input

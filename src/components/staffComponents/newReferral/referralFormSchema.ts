@@ -17,7 +17,7 @@ export const guestOrganizationItemSchema = yup.object({
   email: yup.string().trim().required("Email is required").email("Valid email is required"),
   phone_number: yup.string().trim().required("Phone number is required"),
   dial_code: yup.string().trim().optional().default("+1"),
-  fax_number: yup.string().trim().required("Fax number is required").max(15, "Fax number cannot exceed 15 characters"),
+  fax_number: yup.string().trim().required("Fax number is required").max(10, "Fax number cannot exceed 10 characters"),
   address: yup.string().trim().required("Address is required"),
   state: yup.string().trim().required("State is required"),
 });
@@ -85,11 +85,22 @@ export const referralFormSchema = yup.object({
     .array()
     .of(yup.string().min(1))
     .default([])
-    .test(
-      "at-least-one-service",
-      "Select at least one requested service, or describe other services below.",
-      (ids) => Array.isArray(ids) && ids.length > 0
-    ),
+    .when("additional_speciality", ([additional_speciality], schema) => {
+      console.log(additional_speciality ,"additional_speciality")
+      const hasAdditional =
+        Array.isArray(additional_speciality) &&
+        additional_speciality.some((val) => val && val?.trim() !== "");
+
+      return hasAdditional
+        ? schema.notRequired()
+        : schema
+          .min(
+            1,
+            "Select at least one requested service, or describe other services below."
+          )
+          .required();
+    }),
+
   additional_speciality: yup.array().of(yup.string().trim().default("")).optional().default([]),
   additional_notes: yup.string().trim().optional().default(""),
   patient_first_name: yup.string().trim().required("First name is required"),
@@ -117,7 +128,16 @@ export const referralFormSchema = yup.object({
   patient_phone_number: yup.string().trim().required("Patient phone number is required"),
   patient_dial_code: yup.string().trim().optional().default("+1"),
   primary_language: yup.string().trim().optional().default(""),
-  social_security_number: yup.string().trim().optional().default(""),
+  social_security_number: yup
+    .string()
+    .trim()
+    .optional()
+    .default("")
+    .test(
+      "ssn-length",
+      "Incomplete Social Security Number",
+      (value) => !value || value.length === 11
+    ),
   power_of_attorney: yup.string().trim().optional().default(""),
   other_information: yup.string().trim().optional().default(""),
   face_sheet: yup.string().trim().optional().default(""),
@@ -132,7 +152,7 @@ export const referralFormSchema = yup.object({
   primary_care_address: yup.string().trim().optional().default(""),
   primary_care_phone_number: yup.string().trim().optional().default(""),
   primary_care_dial_code: yup.string().trim().optional().default("+1"),
-  primary_care_fax: yup.string().trim().optional().default("").max(15 , "Fax number cannot exceed 15 characters"),
+  primary_care_fax: yup.string().trim().optional().default("").max(10, "Fax number cannot exceed 10 characters"),
   primary_care_email: yup.string().trim().optional().default(""),
   primary_care_npi: yup.string().trim().optional().default(""),
   guest_organizations: yup

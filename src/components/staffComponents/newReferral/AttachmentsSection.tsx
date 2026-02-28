@@ -54,6 +54,7 @@ export function AttachmentsSection() {
     setUploading(key, true);
     catchAsync(async () => {
       const res = await uploadFileApi(file);
+      if(!checkResponse({ res })) return;
       const url = getUploadResponseUrl(res?.data);
       if (url) {
         setValue(key, url, { shouldValidate: true });
@@ -73,6 +74,7 @@ export function AttachmentsSection() {
     setUploading(field, true);
     catchAsync(async () => {
       const res = await uploadFileApi(file);
+      if(!checkResponse({ res })) return;
       const url = getUploadResponseUrl(res?.data);
       if (url) {
         const current = field === "wound_photos" ? wound_photos : other_documents;
@@ -193,6 +195,8 @@ export function AttachmentsSection() {
                 id="wound_photos"
                 ref={woundPhotoInputRef}
                 type="file"
+                accept={"application/pdf, image/*"}
+                 
                 className="absolute inset-0 w-full min-h-[44px] opacity-0 cursor-pointer z-10 disabled:cursor-not-allowed rounded-xl"
                 disabled={uploadingFields["wound_photos"] === true}
                 onChange={(e) => {
@@ -260,6 +264,8 @@ export function AttachmentsSection() {
                 ref={otherDocsInputRef}
                 type="file"
                 className="absolute inset-0 w-full min-h-[44px] opacity-0 cursor-pointer z-10 disabled:cursor-not-allowed rounded-xl"
+                accept={"application/pdf, image/*"}
+                 
                 disabled={uploadingFields["other_documents"] === true}
                 onChange={(e) => {
                   const file = e.target.files?.[0];
