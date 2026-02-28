@@ -150,6 +150,7 @@ export default function AdBanner({ placement }: { placement?: "right_sidebar" | 
             )}
           </div>
 
+          <div className="text-center text-xs mt-2 line-clamp-2">{currentAd.altText}</div>
 
         </div>
 

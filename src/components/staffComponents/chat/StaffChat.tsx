@@ -147,7 +147,7 @@ export default function ChatPage() {
   // Effective selected chat: use first in list when none selected
   const displayChat = selectedChat
 
-  console.log(selectedChat, "selectedChat")
+  
 
   // Messages for selected chat
   const { data: messagesResponse, isLoading: isLoadingMessages } = useQuery({
