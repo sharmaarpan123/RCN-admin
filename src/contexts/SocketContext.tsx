@@ -44,7 +44,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const token = authToken
-    console.log(token, "token")
+ 
     if (!token) return;
     console.log(token, "1 token")
     const s = io(SOCKET_URL, {
