@@ -564,8 +564,8 @@ export const getReferralChatMessagesApi = (
   });
 
 /** POST /api/referral/chats/:chatId/read — mark chat as read. */
-export const postReferralChatReadApi = (chatId: string) =>
-  AxiosInstance.post(`/api/referral/chats/${chatId}/read`);
+export const postReferralChatReadApi = (chatId: string, departmentId: string) =>
+  AxiosInstance.post(`/api/referral/chats/${chatId}/read`, { department_id: departmentId });
 
 /** POST /api/contact — public contact form (email, phone_number, query). */
 export const postContactApi = (body: unknown) => AxiosInstance.post("/api/contact", body);

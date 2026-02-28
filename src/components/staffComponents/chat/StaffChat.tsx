@@ -181,7 +181,7 @@ export default function ChatPage() {
   // Mark chat as read when selecting
   useEffect(() => {
     if (!displayChat?.referral_id) return;
-    postReferralChatReadApi(displayChat.referral_id).then((res) => {
+    postReferralChatReadApi(displayChat.referral_id , displayChat.department_id ?? "").then((res) => {
       checkResponse({ res });
       queryClient.invalidateQueries({
         queryKey: defaultQueryKeys.referralChatList,

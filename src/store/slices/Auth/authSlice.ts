@@ -43,10 +43,15 @@ const authSlice = createSlice({
     logoutSuccess(state) {
       localStorage.removeItem("authToken");
       localStorage.removeItem("role");
-      
+      localStorage.removeItem("persist:auth");
       document.cookie = "authorization=; path=/;";
       document.cookie = "role=; path=/;";
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 0);
       state.loginUser = null;
+      state.token = null;
+      state.role = null;
     },
     updateLoginUser(state, action: { payload: LoggedInUser }) {
       state.loginUser = action.payload;

@@ -42,6 +42,7 @@ export function middleware(req: NextRequest) {
   const homeForRole = getRoleHome(role);
   const loggedIn = isLoggedIn(token, role);
 
+
   if (pathname === "/login" || pathname.startsWith("/login/")) {
     if (loggedIn && homeForRole) {
       return buildRedirect(req, homeForRole);
