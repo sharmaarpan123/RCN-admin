@@ -413,10 +413,19 @@ export default function ChatPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="m-0 mt-0.5 text-xs text-rcn-muted font-semibold">
-                        {displayChat.patient_name ??
-                          displayChat.referral_facility_name ??
-                          displayChat.referral_id ??
-                          "—"}
+                        {
+                          displayChat.referral_facility_name &&
+                          <p>
+
+                            {displayChat.referral_facility_name ??
+                              "—"}
+                          </p>}
+                        <p>
+
+                          {
+                            displayChat.referral_id ??
+                            "—"}
+                        </p>
                       </p>
                     </div>
                   </div>
