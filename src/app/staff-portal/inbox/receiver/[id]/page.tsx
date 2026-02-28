@@ -333,12 +333,12 @@ function ReceiverDetailContent({
 
   const p = data.patient ?? {};
   const ins = data.patient_insurance_information ?? [];
-  const primary = ins[0];
+
   const addPatient = (data.additional_patient ?? {}) as Record<string, string>;
   const sentAt = data.sent_at
     ? new Date(data.sent_at)
     : new Date(data.createdAt ?? 0);
-  const servicesForDisplay = data.speciality_ids ?? [];
+  const servicesForDisplay = [...(data.speciality_ids || []), ...(data.additional_speciality || [])];
 
   const docList = documentsToList(
     data.documents as Record<string, unknown> | undefined,
@@ -480,10 +480,10 @@ function ReceiverDetailContent({
               }}
             />
             <ReceiverBasicSection
-              isUnlocked={isUnlocked}
+
               receiverStatus={department_status?.status ?? "pending"}
               patient={p}
-              primaryInsurance={primary}
+
               additionalInsurances={ins}
               servicesForDisplay={servicesForDisplay}
               onPayUnlock={openPayModal}

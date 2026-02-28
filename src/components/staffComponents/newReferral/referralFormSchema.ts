@@ -90,7 +90,7 @@ export const referralFormSchema = yup.object({
       "Select at least one requested service, or describe other services below.",
       (ids) => Array.isArray(ids) && ids.length > 0
     ),
-  additional_speciality: yup.string().trim().optional().default(""),
+  additional_speciality: yup.array().of(yup.string().trim().default("")).optional().default([]),
   additional_notes: yup.string().trim().optional().default(""),
   patient_first_name: yup.string().trim().required("First name is required"),
   patient_last_name: yup.string().trim().required("Last name is required"),

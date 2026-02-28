@@ -59,7 +59,7 @@ export function ReceiverAdditionalSection({
         ))}
       </div>
       {!isUnlocked && (
-        <div className="absolute inset-0 rounded-[18px] bg-slate-900/45 flex items-center justify-center p-4">
+        <div className="absolute inset-0 rounded-[18px] bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="w-full max-w-[520px] rounded-2xl bg-white/95 border border-slate-200 shadow-[0_20px_50px_rgba(2,6,23,.25)] p-3.5">
             <h5 className="m-0 text-[13px] font-semibold">Locked: Additional Patient Information</h5>
             <p className="m-0 mt-1.5 mb-3 text-rcn-muted text-xs font-semibold">

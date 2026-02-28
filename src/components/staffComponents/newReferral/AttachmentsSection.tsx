@@ -136,6 +136,7 @@ export function AttachmentsSection() {
                     }}
                     type="file"
                     name={key}
+                    accept={"application/pdf, image/*"}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 disabled:cursor-not-allowed"
                     disabled={isUploading}
                     onChange={(e) => {

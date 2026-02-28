@@ -18,7 +18,7 @@ interface ReceiverDocsSectionProps {
   isUnlocked: boolean;
   receiverStatus: string;
   docList: DocItem[];
-  
+
   onPayUnlock: () => void;
 }
 
@@ -26,7 +26,7 @@ export function ReceiverDocsSection({
   isUnlocked,
   receiverStatus,
   docList,
- 
+
   onPayUnlock,
 }: ReceiverDocsSectionProps) {
   const [downloadingDoc, setDownloadingDoc] = useState<Record<string, boolean>>(
@@ -73,7 +73,7 @@ export function ReceiverDocsSection({
             {isUnlocked ? "Downloadable" : "Pay to view"}
           </span>
         </div>
-        {isUnlocked ? (
+        {
           docList.length > 0 ? (
             <div className="overflow-hidden rounded-[14px] border border-slate-200 bg-white">
               <table className="w-full border-collapse text-xs">
@@ -92,27 +92,27 @@ export function ReceiverDocsSection({
                     <tr key={idx} className="border-t border-slate-200">
                       <td className="p-2.5">
                         <strong>{d.label}</strong>
-                        {d.url ? (
-                          <div className="text-rcn-muted text-xs">
-                            File: {d.url}
-                          </div>
-                        ) : null}
+
                       </td>
                       <td className="p-2.5 flex gap-2">
-                        <Button
-                          type="button"
-                          onClick={() => setPreviewDocUrl(d.url)}
-                          className="border border-rcn-brand/25 bg-rcn-brand/10 text-rcn-accent-dark px-2 py-1.5 rounded-xl text-xs font-extrabold shadow"
-                        >
-                          View document
-                        </Button>
-                        <Button
-                          type="button"
-                          onClick={() => downloadDoc(d.url, d.label)}
-                          className="border border-rcn-brand/25 bg-rcn-brand/10 text-rcn-accent-dark px-2 py-1.5 rounded-xl text-xs font-extrabold shadow"
-                        >
-                          {downloadingDoc[d.label] ? <span className="animate-spin">🔄</span> : "Download"}
-                        </Button>
+                        {
+                          !isUnlocked ? (<Button type="button" variant="primary" size="sm" onClick={onPayUnlock}>Pay to View or Download</Button>)
+                            : <>
+                              <Button
+                                type="button"
+                                onClick={() => setPreviewDocUrl(d.url)}
+                                className="border border-rcn-brand/25 bg-rcn-brand/10 text-rcn-accent-dark px-2 py-1.5 rounded-xl text-xs font-extrabold shadow"
+                              >
+                                View document
+                              </Button>
+                              <Button
+                                type="button"
+                                onClick={() => downloadDoc(d.url, d.label)}
+                                className="border border-rcn-brand/25 bg-rcn-brand/10 text-rcn-accent-dark px-2 py-1.5 rounded-xl text-xs font-extrabold shadow"
+                              >
+                                {downloadingDoc[d.label] ? <span className="animate-spin">🔄</span> : "Download"}
+                              </Button>
+                            </>}
                       </td>
                     </tr>
                   ))}
@@ -124,32 +124,15 @@ export function ReceiverDocsSection({
               No documents attached.
             </div>
           )
-        ) : (
-          <div className="rounded-[14px] border border-dashed border-rcn-brand/35 bg-rcn-brand/5 p-4 text-center">
-            <p className="m-0 text-rcn-muted text-sm font-semibold">
-              Pay to view and download attached documents. Chat is free.
-            </p>
-            <div className="flex gap-2.5 flex-wrap justify-center mt-3">
-              {receiverStatus === "ACCEPTED" && (
-                <button
-                  type="button"
-                  onClick={onPayUnlock}
-                  className="border border-rcn-brand/25 bg-rcn-brand/10 text-rcn-accent-dark px-2.5 py-2 rounded-xl font-extrabold text-xs shadow"
-                >
-                  Pay & Unlock
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-        <div className="mt-3 border border-dashed border-rcn-brand/35 rounded-[14px] bg-rcn-brand/5 p-3">
+        }
+        {/* <div className="mt-3 border border-dashed border-rcn-brand/35 rounded-[14px] bg-rcn-brand/5 p-3">
           <div className="flex justify-between gap-2.5 mb-2.5">
             <strong className="text-xs">Upload Documents</strong>
           </div>
           <div className="text-rcn-muted text-xs">
             All documents are downloadable after payment.
           </div>
-        </div>
+        </div> */}
       </div>
     </>
   );

@@ -59,7 +59,7 @@ export function ReceiverInbox({
           return <span className="text-rcn-muted text-xs font-semibold">{ref._id}</span>;
         },
       },
-       {
+      {
         head: "Patient",
         component: (ref) => {
           const p = ref.patient;
@@ -75,8 +75,8 @@ export function ReceiverInbox({
         component: (ref) => {
           const ids = ref.speciality_ids ?? [];
           const extra = ref.additional_speciality ?? [];
-          const label = ids.length > 0 ? `${ids.length} service(s)` : extra.length > 0 ? (extra[0] as { name?: string })?.name ?? "—" : "—";
-          return <span className="text-rcn-muted text-xs font-semibold">{label}</span>;
+          const label = ids?.length || 0 + extra?.length || 0;
+          return <span className="text-rcn-muted text-xs font-semibold">{label} services</span>;
         },
       },
       {
@@ -94,8 +94,8 @@ export function ReceiverInbox({
         head: "Sent Date",
         component: (ref) => {
           const d = ref.sent_at ? new Date(ref.sent_at) : ref.createdAt ? new Date(ref.createdAt) : null;
-            return <span className="text-rcn-muted text-xs font-semibold">{d ? moment(d).format("DD/MM/YYYY , hh:mm a") : "—"}</span>;
-          },
+          return <span className="text-rcn-muted text-xs font-semibold">{d ? moment(d).format("DD/MM/YYYY , hh:mm a") : "—"}</span>;
+        },
       },
       {
         head: "Actions",

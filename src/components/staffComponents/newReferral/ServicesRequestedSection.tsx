@@ -9,6 +9,7 @@ import { checkResponse } from "@/utils/commonFunc";
 import defaultQueryKeys from "@/utils/staffQueryKeys";
 import { SectionHeader } from "./SectionHeader";
 import type { ReferralFormValues } from "./referralFormSchema";
+import RemoveCrossIcon from "@/assets/svg/RemoveCrossIcon";
 
 const moveBtnBase =
   "min-w-[44px] min-h-[44px] w-12 h-12 md:w-10 md:h-10 !p-0 flex items-center justify-center text-lg md:text-base touch-manipulation active:scale-95";
@@ -23,6 +24,9 @@ export function ServicesRequestedSection() {
   const speciality_ids = useWatch({ name: "speciality_ids" }) ?? [];
   const additional_speciality = useWatch({ name: "additional_speciality" }) ?? "";
   const additional_notes = useWatch({ name: "additional_notes" }) ?? "";
+  const [additionalSpecialties, setAdditionalSpecialties] = useState<string>("");
+
+
 
   const specialityIdsRootError =
     errors.speciality_ids &&
@@ -96,8 +100,19 @@ export function ServicesRequestedSection() {
     }
   };
 
+  const onAddAdditionalSpeciality = () => {
+    console.log("add hit")
+    setValue("additional_speciality", [...additional_speciality, additionalSpecialties], { shouldValidate: true });
+    setAdditionalSpecialties(p => "");
+  };
+
+  const removeAdditionalSpeciality = (specialty: string) => {
+    console.log("revmoe hit")
+    setValue("additional_speciality", additional_speciality.filter((s: string) => s !== specialty), { shouldValidate: true });
+  };
+
   const inputClass =
-    "w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal min-h-[95px] resize-y focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12";
+    "w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal min-h-[44px] resize-y focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12";
 
   return (
     <section
@@ -268,19 +283,51 @@ export function ServicesRequestedSection() {
         <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
           Other services: Please type
         </label>
-        <textarea
-          value={additional_speciality}
-          onChange={(e) => setValue("additional_speciality", e.target.value, { shouldValidate: true })}
-          placeholder="Type any additional services needed..."
-          className={`${inputClass} ${errors.additional_speciality ? "border-red-400" : ""}`}
-          aria-invalid={!!errors.additional_speciality}
-        />
+        <div className="flex flex-row gap-2">
+          <input
+            className={inputClass}
+            value={additionalSpecialties}
+            onChange={(e) => setAdditionalSpecialties(e.target.value)}
+            placeholder="Type any additional services needed..."
+          />
+        </div>
+        <Button
+          disabled={!additionalSpecialties.trim()}
+          type="button"
+          variant="primary"
+          className="my-2 w-full"
+          onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+            e.preventDefault();
+            onAddAdditionalSpeciality()
+          }} >
+          Add Service
+        </Button>
         {errors.additional_speciality?.message && (
           <p className="text-xs text-red-600 mt-1 m-0" role="alert">
             {errors.additional_speciality.message}
           </p>
         )}
       </div>
+
+      {additional_speciality.length > 0 && (
+        <div className="my-3">
+
+          <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
+            Other services Requested
+          </label>
+          <div className="flex flex-row gap-2 border rounded p-2 flex-wrap">
+            {additional_speciality.map((specialty: string, index: number) => (
+              <div key={index} className="flex flex-row gap-2 border p-2 rounded items-center justify-between" >
+                <p>{specialty}</p>
+                <div className="cursor-pointer" onClick={(e: React.MouseEvent<HTMLDivElement>) => { e.preventDefault(); removeAdditionalSpeciality(specialty) }}>
+                  <RemoveCrossIcon size="20px" color="red" />
+                </div>
+              </div>
+            ))}
+
+          </div>
+        </div>
+      )}
 
       <div>
         <label className="block text-xs text-rcn-muted font-semibold mb-1.5">

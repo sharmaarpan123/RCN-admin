@@ -68,8 +68,8 @@ export function SenderInbox({
         component: (ref) => {
           const ids = ref.speciality_ids ?? [];
           const extra = ref.additional_speciality ?? [];
-          const label = ids.length > 0 ? `${ids.length} service(s)` : extra.length > 0 ? (extra[0] as { name?: string })?.name ?? "—" : "—";
-          return <span className="text-rcn-muted text-xs font-semibold">{label}</span>;
+          const label = ids?.length || 0 + extra?.length || 0;
+          return <span className="text-rcn-muted text-xs font-semibold">{label} services</span>;
         },
       },
       {
@@ -114,7 +114,7 @@ export function SenderInbox({
             >
               View
             </Button>
-          
+
           </div>
         ),
       },

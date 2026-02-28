@@ -36,12 +36,16 @@ function PreviewImageWithLoader({ url }: { url: string }) {
 }
 
 export function PreviewFile({ url, isOpen, onClose, fileType = "image" }: PreviewFileProps) {
-  const isImage = fileType === "image";
+  let isImage = fileType === "image";
+  const isPdf = url.split(".").pop()?.toLowerCase() === "pdf";
+  if (isPdf) {
+    isImage = false;
+  }
   return (
     <Modal isOpen={isOpen} onClose={onClose} maxWidth="70vw" locked={false}>
       <div className="relative -m-4 flex h-[88vh] min-h-[400px] w-full flex-col">
         <div
-          
+
           onClick={onClose}
           className="absolute cursor-pointer right-2 bg-rcn-accent top-2 z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-black/6 text-slate-600 hover:bg-black/12 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-rcn-brand"
           aria-label="Close preview"
@@ -59,9 +63,10 @@ export function PreviewFile({ url, isOpen, onClose, fileType = "image" }: Previe
           >
             <path d="M18 6 6 18" />
             <path d="m6 6 12 12" />
-          </svg> 
+          </svg>
         </div>
         {
+
           isImage ? (
             <PreviewImageWithLoader key={url} url={url} />
           ) : (
