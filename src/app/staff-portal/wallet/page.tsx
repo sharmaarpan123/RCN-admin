@@ -294,6 +294,8 @@ export default function WalletPage() {
           </Button>
         </div>
       </div>
+
+      
       <TransactionList />
 
       <Modal isOpen={summaryModalOpen} onClose={onCloseSummary} maxWidth="560px">

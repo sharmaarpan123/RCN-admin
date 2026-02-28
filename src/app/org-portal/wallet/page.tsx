@@ -17,6 +17,7 @@ import defaultQueryKeys from "@/utils/orgQueryKeys";
 import Modal from "@/components/Modal";
 import { Button, StripeCardModal, TableLayout } from "@/components";
 import type { TableColumn } from "@/components";
+import { TransactionList } from "@/components/OrgComponent/wallet/TransactionList";
 
 const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
   ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
@@ -217,6 +218,7 @@ export default function OrgPortalWalletPage() {
       onCloseSummary();
       setCreditAmount("");
       queryClient.invalidateQueries({ queryKey: defaultQueryKeys.credits });
+      queryClient.invalidateQueries({ queryKey: defaultQueryKeys.creditsTransactions });
     }),
   });
 
@@ -498,6 +500,8 @@ export default function OrgPortalWalletPage() {
         isSubmitting={isSummaryPending}
         description="Enter your card details to purchase credits."
       />
+
+      <TransactionList  />
     </div>
   );
 }

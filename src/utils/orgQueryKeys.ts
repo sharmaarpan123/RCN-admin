@@ -7,6 +7,7 @@ const defaultQueryKeys = {
   user: ["organization", "user", "detail"],
   userDetailForAssignBranches: ["organization", "user", "detail", "assign", "branches"],
   credits: ["organization", "credits"],
+  creditsTransactions: ["organization", "credits", "transactions"],
   paymentMethodsActive: ["organization", "payment-methods", "active"],
 };
 

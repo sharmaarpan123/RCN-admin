@@ -4,15 +4,12 @@ import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getAuthCreditsApi } from "@/apis/ApiCalls";
 import { checkResponse } from "@/utils/commonFunc";
-import defaultQueryKeys from "@/utils/staffQueryKeys";
+import defaultQueryKeys from "@/utils/orgQueryKeys";
 import { TableLayout } from "@/components";
 import type { TableColumn } from "@/components";
 import CustomPagination from "@/components/CustomPagination";
 
-/** Optional: pass from org portal so transactions use org query keys. */
-export interface TransactionListProps {
-  queryKeyPrefix?: string[];
-}
+
 
 /** Transaction item from GET /api/auth/credits with include_transactions */
 export interface CreditTransaction {
@@ -96,17 +93,17 @@ export function TransactionList() {
   const transactionColumns: TableColumn<CreditTransaction>[] = useMemo(
     () => [
       {
-        head: "Date",   
+        head: "Date",
         component: (row) => (
           <span className="text-[13px] text-rcn-text">
             {row.createdAt
               ? new Date(row.createdAt).toLocaleDateString(undefined, {
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })
               : "—"}
           </span>
         ),
@@ -121,11 +118,10 @@ export function TransactionList() {
         head: "Direction",
         component: (row) => (
           <span
-            className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${
-              row.direction === "in"
-                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                : "bg-slate-100 text-slate-600 border border-slate-200"
-            }`}
+            className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${row.direction === "in"
+              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+              : "bg-slate-100 text-slate-600 border border-slate-200"
+              }`}
           >
             {row.direction === "in" ? "In" : row.direction === "out" ? "Out" : "—"}
           </span>
