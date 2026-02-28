@@ -10,7 +10,7 @@ const inputClass =
   "w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12";
 
 export function PcpInfoSection() {
-  const { register, watch, setValue } = useFormContext<ReferralFormValues>();
+  const { register, watch, setValue, formState: { errors } } = useFormContext<ReferralFormValues>();
 
   const primaryCareDialCode = watch("primary_care_dial_code") ?? "";
   const primaryCarePhone = watch("primary_care_phone_number") ?? "";
@@ -69,6 +69,9 @@ export function PcpInfoSection() {
             placeholder="(xxx) xxx-xxxx"
             className={inputClass}
           />
+          {errors.primary_care_fax && (
+            <p className="text-xs text-rcn-danger mt-1 m-0">{errors.primary_care_fax.message}</p>
+          )}
         </div>
         <div>
           <label className="block text-xs text-rcn-muted font-semibold mb-1.5">Email</label>

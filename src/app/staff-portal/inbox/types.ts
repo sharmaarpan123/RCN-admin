@@ -88,7 +88,7 @@ export interface SentReferralApi {
     gender?: string;
     address_of_care?: string;
   };
-  patient_insurance_information?: { payer?: string; policy?: string; plan_group?: string; document?: string }[];
+  patient_insurance_information?: { _id?: string; payer?: string; policy?: string; plan_group?: string; document?: string }[];
   additional_patient?: Record<string, unknown>;
   documents?: Record<string, unknown>;
   primary_care?: Record<string, unknown>;

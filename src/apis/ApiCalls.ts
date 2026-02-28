@@ -23,16 +23,7 @@ export const updateAdminProfileApi = (body: {
 }) => AxiosInstance.put("/api/admin/user/" + body._id, body);
 
 /** PUT /api/users/profile — update authenticated user profile. */
-export const putUserProfileApi = (body: {
-  first_name?: string;
-  last_name?: string;
-  profile_picture?: string;
-  email?: string;
-  phone?: string;
-  fax?: string;
-  address?: string;
-  notes?: string;
-}) => AxiosInstance.put("/api/users/profile", body);
+export const putUserProfileApi = (body: unknown) => AxiosInstance.put("/api/users/profile", body);
 
 /** GET /api/auth/credits — get current referral credits for authenticated user/org. */
 export const getAuthCreditsApi = () => AxiosInstance.get("/api/auth/credits");

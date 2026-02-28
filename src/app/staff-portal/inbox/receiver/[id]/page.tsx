@@ -483,7 +483,6 @@ function ReceiverDetailContent({
 
               receiverStatus={department_status?.status ?? "pending"}
               patient={p}
-
               additionalInsurances={ins}
               servicesForDisplay={servicesForDisplay}
               onPayUnlock={openPayModal}

@@ -17,7 +17,7 @@ export const guestOrganizationItemSchema = yup.object({
   email: yup.string().trim().required("Email is required").email("Valid email is required"),
   phone_number: yup.string().trim().required("Phone number is required"),
   dial_code: yup.string().trim().optional().default("+1"),
-  fax_number: yup.string().trim().required("Fax number is required"),
+  fax_number: yup.string().trim().required("Fax number is required").max(15, "Fax number cannot exceed 15 characters"),
   address: yup.string().trim().required("Address is required"),
   state: yup.string().trim().required("State is required"),
 });
@@ -132,7 +132,7 @@ export const referralFormSchema = yup.object({
   primary_care_address: yup.string().trim().optional().default(""),
   primary_care_phone_number: yup.string().trim().optional().default(""),
   primary_care_dial_code: yup.string().trim().optional().default("+1"),
-  primary_care_fax: yup.string().trim().optional().default(""),
+  primary_care_fax: yup.string().trim().optional().default("").max(15 , "Fax number cannot exceed 15 characters"),
   primary_care_email: yup.string().trim().optional().default(""),
   primary_care_npi: yup.string().trim().optional().default(""),
   guest_organizations: yup

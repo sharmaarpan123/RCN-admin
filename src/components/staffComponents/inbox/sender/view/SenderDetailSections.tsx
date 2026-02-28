@@ -28,6 +28,7 @@ export function SenderDetailSections({
 
   displayDocRows,
 
+
 }: SenderDetailSectionsProps) {
   const p = data.patient ?? {};
   const ins = data.patient_insurance_information ?? [];
@@ -70,6 +71,8 @@ export function SenderDetailSections({
     data.sender_dial_code && data.sender_phone_number
       ? `${data.sender_dial_code} ${data.sender_phone_number}`.trim()
       : data.sender_phone_number ?? "";
+
+  const hasValue = (v: string | null | undefined) => (v ?? "").toString().trim() !== "";
 
   return (
     <div className="flex flex-col gap-3.5">
@@ -114,8 +117,6 @@ export function SenderDetailSections({
             ["Gender", p.gender],
             ["Address of Care", p.address_of_care],
             ["Services Requested", (data.speciality_ids?.map((x) => x.name) ?? []).join(", ")],
-            ["Primary Insurance", primary ? `${primary.payer ?? ""} • Policy: ${primary.policy ?? ""}` : ""],
-            ["Additional Insurances", ins.length > 1 ? ins.slice(1).map((x) => `${x.payer ?? ""} • ${x.policy ?? ""}`).join(" | ") : "None"],
           ].map(([label, val]) => (
             <div key={String(label)}>
               <label className="block text-[11px] text-rcn-muted font-black mb-1">{label}</label>
@@ -123,6 +124,53 @@ export function SenderDetailSections({
             </div>
           ))}
         </div>
+        {ins?.length ? (
+          <div className="mt-3.5 space-y-3">
+            <h5 className="text-[11px] text-rcn-muted font-black uppercase tracking-wide mb-2">Primary  Insurances</h5>
+            {ins.map((x, index) => {
+              const { payer, policy, plan_group, document } = x;
+              const docUrl = hasValue(document) ? (document ?? "").trim() : null;
+              return (
+                <div
+                  key={x._id ?? `ins-${index}`}
+                  className="rounded-xl border border-slate-200/90 bg-slate-50/40 p-3 shadow-sm"
+                >
+                  <div className="flex items-center justify-between gap-2 mb-2.5">
+                    <span className="text-[11px] font-black text-rcn-muted">Insurance #{index + 1}</span>
+                    {docUrl && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setPreviewDocUrl(docUrl)}
+                        className="text-xs text-rcn-brand font-semibold hover:underline"
+                      >
+                        View document
+                      </Button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    {[
+                      ["Payer", payer],
+                      ["Policy", policy],
+                      ["Plan Group", plan_group],
+                    ].map(([label, val]) => (
+                      <div key={String(label)}>
+                        <label className="block text-[11px] text-rcn-muted font-black mb-1">{label}</label>
+                        <div className="text-[13px] font-semibold text-rcn-text leading-tight p-2 border border-dashed border-slate-300/75 rounded-lg bg-white/80">
+                          {hasValue(val) ? val : "—"}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {!docUrl && (
+                    <p className="text-[11px] text-rcn-muted mt-2 italic">No document attached</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ) : null}
       </div>
 
 
@@ -215,7 +263,7 @@ export function SenderDetailSections({
                 <tbody>
                   {displayDocRows.map((d, idx) => (
                     <tr key={idx} className="border-t border-slate-200">
-                      <td className="p-2.5"><strong>{d.label}</strong>{d.url && <div className="text-rcn-muted text-xs">File: {d.url}</div>}</td>
+                      <td className="p-2.5"><strong>{d.label}</strong></td>
                       <td className="p-2.5">
                         {d.url ? (
                           <div className="flex gap-2">

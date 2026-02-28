@@ -10,6 +10,14 @@ import { useFormState } from "react-hook-form";
 const inputClass =
   "w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12";
 
+/** Format raw digits as XXX-XX-XXXX; input can contain digits and hyphens. */
+function formatSSN(value: string): string {
+  const digits = (value ?? "").replace(/\D/g, "").slice(0, 9);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 5) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+  return `${digits.slice(0, 3)}-${digits.slice(3, 5)}-${digits.slice(5)}`;
+}
+
 export function AdditionalDetailsSection() {
   const { register, watch, setValue } = useFormContext<ReferralFormValues>();
   const { errors } = useFormState<ReferralFormValues>();
@@ -85,8 +93,15 @@ export function AdditionalDetailsSection() {
           </label>
           <input
             type="text"
-            {...register("social_security_number")}
+            inputMode="numeric"
+            autoComplete="off"
             placeholder="XXX-XX-XXXX"
+            {...register("social_security_number")}
+            onChange={(e) => {
+              const formatted = formatSSN(e.target.value);
+              setValue("social_security_number", formatted, { shouldValidate: true });
+            }}
+            onBlur={() => setValue("social_security_number", formatSSN(watch("social_security_number") ?? ""), { shouldValidate: true })}
             className={inputClass}
           />
         </div>

@@ -44,7 +44,7 @@ const profileSchema = yup.object({
     .email("Please enter a valid email address."),
   address: yup.string().trim().optional().default(""),
   dial_code: yup.string().trim().optional().default("+1"),
-  phone_number: yup.string().trim().default("").test("min-length", "Invalid number", (val) =>val.length >= 7),
+  phone_number: yup.string().trim().default("").test("min-length", "Invalid number", (val) => val.length >= 7),
   fax: yup
     .string()
     .trim()
@@ -155,16 +155,17 @@ export default function StaffProfilePage() {
       const last_name = values.lastName.trim();
       const email = values.email.trim().toLowerCase();
       const phone = `${values.dial_code ?? ""}${(values.phone_number ?? "").replace(/\D/g, "")}`.trim() || undefined;
-      const body: Parameters<typeof putUserProfileApi>[0] = {
+      const body = {
         first_name,
         last_name,
         email: email || undefined,
         phone,
+        fax_number: (values.fax ?? "").trim() || undefined,
         fax: (values.fax ?? "").trim() || undefined,
         address: values.address.trim() || undefined,
         notes: values.notes.trim() || undefined,
       };
-      if (values.profilePicture) body.profile_picture = values.profilePicture;
+      // if (values.profilePicture) body.profile_picture = values.profilePicture;
       const res = await putUserProfileApi(body);
       if (!checkResponse({ res, showSuccess: true })) return;
       queryClient.invalidateQueries({ queryKey: defaultQueryKeys.profile });
@@ -353,7 +354,7 @@ export default function StaffProfilePage() {
       {activeTab === "password" && (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-[0_10px_30px_rgba(2,6,23,.07)] p-6">
           <h2 className="text-lg font-semibold m-0 mb-4">Change password</h2>
-         <form onSubmit={handleSubmitPassword((data) => changePassword(data))} className="max-w-md space-y-4">
+          <form onSubmit={handleSubmitPassword((data) => changePassword(data))} className="max-w-md space-y-4">
             <div>
               <label htmlFor="password" className="block text-xs font-black text-rcn-muted mb-1.5">
                 New password <span className="text-red-500">*</span>
