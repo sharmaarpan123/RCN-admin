@@ -1,6 +1,7 @@
 import { initializeAppHandler } from '@/lib/firebase';
 import { getMessaging, getToken as getTokenFirebase, MessagePayload, Messaging, onMessage } from 'firebase/messaging';
 import { useCallback, useEffect, useState } from 'react';
+import {  toastSuccess } from '@/utils/toast';
 
 // Function to handle foreground messages
 const onMessageListener = (messaging: Messaging) => {
@@ -13,6 +14,7 @@ const onMessageListener = (messaging: Messaging) => {
   return new Promise((resolve) => {
     onMessage(messaging, (payload: MessagePayload) => {
       console.log('Message received in foreground:', payload);
+      new Notification(payload.notification?.title || 'New Message');
       resolve(payload);
     });
   });
@@ -90,7 +92,7 @@ export const useFirebaseMessaging = () => {
           setNotification(payload);
 
 
-
+          
 
         })
         .catch((error) => {
