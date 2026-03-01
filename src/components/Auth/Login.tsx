@@ -72,7 +72,7 @@ const Login: React.FC = () => {
     Array(OTP_LENGTH).fill(""),
   );
   const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const { getFCMToken, token, isSupported, requestPermission } = useFirebase();
+  const { getFCMToken, token: firebaseToken, isSupported, requestPermission } = useFirebase();
 
 
   useEffect(() => {
@@ -158,7 +158,7 @@ const Login: React.FC = () => {
               ? "/org-portal"
               : "/master-admin/dashboard";
 
-        setPendingOtp({ loginType: type, user_id: user_id ?? "", redirectTo , device_token: device_token ?? "" });
+        setPendingOtp({ loginType: type, user_id: user_id ?? "", redirectTo, device_token: device_token ?? "" });
       }
     }),
   });
@@ -172,7 +172,7 @@ const Login: React.FC = () => {
 
         const body =
           loginType === "admin"
-            ? { user_id, otp  ,  device_token: device_token ?? "", device_type: "web", }
+            ? { user_id, otp, device_token: device_token ?? "", device_type: "web", }
             : {
               user_id,
               otp,
@@ -296,6 +296,10 @@ const Login: React.FC = () => {
   }, [pendingOtp]);
 
   const onSubmit = async (data: LoginFormValues) => {
+
+    if (!firebaseToken) {
+      await requestPermission()
+    }
     const token = await getFCMToken();
     const body = {
       ...data,
