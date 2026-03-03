@@ -91,7 +91,7 @@ export default function NewReferralPage() {
   const queryClient = useQueryClient();
   const [stateFilter, setStateFilter] = useState("ALL");
   const [activeSection, setActiveSection] = useState("sender-form");
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const initialDefaultValues = useMemo(() => getDefaultValues(), []);
   const router = useRouter();
 
@@ -188,14 +188,17 @@ export default function NewReferralPage() {
           }))
           : undefined,
     };
-    catchAsync(async () => {
+    setIsSubmitting(true);
+    return catchAsync(async () => {
       const res = await postOrganizationReferralApi(payload);
-      if (checkResponse({ res, showSuccess: true })) {
+      if (checkResponse({ res, showSuccess: true , setLoader: setIsSubmitting })) {
         methods.reset(getDefaultValues());
         router.push("/staff-portal/inbox/sender/" + res?.data?.data?._id);
         queryClient.invalidateQueries({ queryKey: defaultQueryKeys.referralSentList });
       }
-    })();
+    })().finally(() => {
+      setIsSubmitting(false);
+    });
   };
 
 
@@ -233,7 +236,7 @@ export default function NewReferralPage() {
 
             <PcpInfoSection />
 
-            <FormActionsSection isSubmitting={methods.formState.isSubmitting} />
+            <FormActionsSection isSubmitting={isSubmitting} />
           </main>
         </form>
       </FormProvider>

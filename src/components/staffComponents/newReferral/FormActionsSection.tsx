@@ -2,10 +2,11 @@
 
 import { Button } from "@/components";
 
-export function FormActionsSection({ isSubmitting }: { isSubmitting: boolean }) {
-  
-  
-
+export function FormActionsSection({
+  isSubmitting,
+}: {
+  isSubmitting: boolean;
+}) {
   return (
     <section
       id="form-actions"
@@ -26,7 +27,7 @@ export function FormActionsSection({ isSubmitting }: { isSubmitting: boolean }) 
         disabled={isSubmitting}
         className="border border-rcn-brand/30  text-rcn-accent-dark px-3 py-2.5 rounded-xl font-extrabold text-xs shadow"
       >
-        {isSubmitting ? "Submitting…" : "Submit Referral"}
+        {isSubmitting ? "Proceeding…" : "Proceed"}
       </Button>
     </section>
   );

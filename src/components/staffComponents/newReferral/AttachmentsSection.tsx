@@ -38,8 +38,26 @@ export function AttachmentsSection() {
   const { watch, setValue } = useFormContext<ReferralFormValues>();
   const wound_photos = watch("wound_photos") ?? [];
   const other_documents = watch("other_documents") ?? [];
+  const face_sheet = watch("face_sheet") ?? "";
+  const medication_list = watch("medication_list") ?? "";
+  const discharge_summary = watch("discharge_summary") ?? "";
+  const signed_order = watch("signed_order") ?? "";
+  const history_or_physical = watch("history_or_physical") ?? "";
+  const progress_notes = watch("progress_notes") ?? "";
 
-  const [uploadingFields, setUploadingFields] = useState<Record<string, boolean>>({});
+  const attachmentsValuesMap ={
+    face_sheet: face_sheet,
+    medication_list: medication_list,
+    discharge_summary: discharge_summary,
+    signed_order: signed_order,
+    history_or_physical: history_or_physical,
+    progress_notes: progress_notes,
+  }
+
+
+  const [uploadingFields, setUploadingFields] = useState<
+    Record<string, boolean>
+  >({});
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const setUploading = (key: string, value: boolean) => {
@@ -54,7 +72,7 @@ export function AttachmentsSection() {
     setUploading(key, true);
     catchAsync(async () => {
       const res = await uploadFileApi(file);
-      if(!checkResponse({ res })) return;
+      if (!checkResponse({ res })) return;
       const url = getUploadResponseUrl(res?.data);
       if (url) {
         setValue(key, url, { shouldValidate: true });
@@ -69,15 +87,16 @@ export function AttachmentsSection() {
 
   const handleMultiUpload = (
     field: "wound_photos" | "other_documents",
-    file: File
+    file: File,
   ) => {
     setUploading(field, true);
     catchAsync(async () => {
       const res = await uploadFileApi(file);
-      if(!checkResponse({ res })) return;
+      if (!checkResponse({ res })) return;
       const url = getUploadResponseUrl(res?.data);
       if (url) {
-        const current = field === "wound_photos" ? wound_photos : other_documents;
+        const current =
+          field === "wound_photos" ? wound_photos : other_documents;
         const arr = Array.isArray(current) ? [...current] : [];
         arr.push(url);
         setValue(field, arr, { shouldValidate: true });
@@ -92,12 +111,16 @@ export function AttachmentsSection() {
 
   const removeUrlFromArray = (
     field: "wound_photos" | "other_documents",
-    index: number
+    index: number,
   ) => {
     const current = field === "wound_photos" ? wound_photos : other_documents;
     const arr = Array.isArray(current) ? [...current] : [];
     arr.splice(index, 1);
     setValue(field, arr, { shouldValidate: true });
+  };
+
+  const removeUrl = (key: SingleUrlKey) => {
+    setValue(key, "", { shouldValidate: true });
   };
 
   const woundArr = Array.isArray(wound_photos) ? wound_photos : [];
@@ -115,8 +138,8 @@ export function AttachmentsSection() {
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {ATTACHMENT_FIELDS.map(({ key, label }) => {
-          const value = watch(key as SingleUrlKey) as string | undefined;
+        {ATTACHMENT_FIELDS.map(({ key, label }) => { 
+          const value = attachmentsValuesMap[key as keyof typeof attachmentsValuesMap] as string | undefined;
           const currentUrl = (value ?? "").trim();
           const isUploading = uploadingFields[key] === true;
           return (
@@ -125,10 +148,8 @@ export function AttachmentsSection() {
                 {label}
               </label>
               <div className="relative">
-
                 <label
                   className={zoneClass}
-
                   aria-label={`Upload ${label}`}
                   htmlFor={key}
                 >
@@ -164,16 +185,25 @@ export function AttachmentsSection() {
                   )}
                 </label>
                 {currentUrl && !isUploading && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setPreviewUrl(currentUrl);
-                    }}
-                    className="text-xs text-rcn-brand mt-1 block truncate text-left hover:underline focus:outline-none focus:ring-0"
-                  >
-                    View file
-                  </button>
+                  <div className="flex items-center gap-2 justify-between">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPreviewUrl(currentUrl);
+                      }}
+                      className="text-xs text-rcn-brand mt-1 block truncate text-left hover:underline focus:outline-none focus:ring-0"
+                    >
+                      View file
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeUrl(key as SingleUrlKey)}
+                      className="text-red-600 hover:underline shrink-0  text-xs"
+                    >
+                      Remove
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
@@ -185,7 +215,6 @@ export function AttachmentsSection() {
             Wound Photos
           </label>
           <div className="relative">
-
             <label
               className={zoneClass + " min-h-[44px]"}
               htmlFor="wound_photos"
@@ -196,7 +225,6 @@ export function AttachmentsSection() {
                 ref={woundPhotoInputRef}
                 type="file"
                 accept={"application/pdf, image/*"}
-                 
                 className="absolute inset-0 w-full min-h-[44px] opacity-0 cursor-pointer z-10 disabled:cursor-not-allowed rounded-xl"
                 disabled={uploadingFields["wound_photos"] === true}
                 onChange={(e) => {
@@ -220,7 +248,10 @@ export function AttachmentsSection() {
             {woundArr.length > 0 && (
               <ul className="mt-2 space-y-1">
                 {woundArr.map((url, i) => (
-                  <li key={i} className="flex items-center justify-between gap-2 text-xs">
+                  <li
+                    key={i}
+                    className="flex items-center justify-between gap-2 text-xs"
+                  >
                     <button
                       type="button"
                       onClick={(e) => {
@@ -250,11 +281,9 @@ export function AttachmentsSection() {
             Other Documents
           </label>
           <div className="relative">
-
             <label
               htmlFor="other_documents"
               className={zoneClass + " min-h-[44px]"}
-
               tabIndex={0}
               aria-label="Upload other document"
             >
@@ -265,7 +294,6 @@ export function AttachmentsSection() {
                 type="file"
                 className="absolute inset-0 w-full min-h-[44px] opacity-0 cursor-pointer z-10 disabled:cursor-not-allowed rounded-xl"
                 accept={"application/pdf, image/*"}
-                 
                 disabled={uploadingFields["other_documents"] === true}
                 onChange={(e) => {
                   const file = e.target.files?.[0];
@@ -288,8 +316,10 @@ export function AttachmentsSection() {
             {otherArr.length > 0 && (
               <ul className="mt-2 space-y-1">
                 {otherArr.map((url, i) => (
-                  <li key={i} className="flex items-center justify-between gap-2 text-xs">
-
+                  <li
+                    key={i}
+                    className="flex items-center justify-between gap-2 text-xs"
+                  >
                     <button
                       type="button"
                       onClick={(e) => {
