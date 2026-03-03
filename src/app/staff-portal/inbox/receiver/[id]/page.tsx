@@ -44,12 +44,12 @@ import PrintIcon from "@/assets/svg/PrintIcon.jsx";
 
 export type department_status_type =
   | {
-    department_id?: string;
-    department?: { _id?: string; name?: string };
-    status?: "pending" | "active" | "rejected";
-    payment_status?: "paid" | "not_paid";
-    is_paid_by_sender?: number;
-  }
+      department_id?: string;
+      department?: { _id?: string; name?: string };
+      status?: "pending" | "active" | "rejected";
+      payment_status?: "paid" | "not_paid";
+      is_paid_by_sender?: number;
+    }
   | undefined;
 
 const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
@@ -125,7 +125,6 @@ const btn = (
   </Button>
 );
 
-
 function ReceiverDetailContent({
   data,
   chatBodyRef,
@@ -142,19 +141,15 @@ function ReceiverDetailContent({
   const [stripeOpen, setStripeOpen] = useState(false);
   const [stripePmId, setStripePmId] = useState("");
   const { loginUser } = useStaffAuthLoginUser();
-  console.log(loginUser, "loginUser")
   const refId = data._id;
 
-  const receiverDepartmentIds = loginUser?.user_departments?.map((d) => d._id) ?? [];
+  const receiverDepartmentIds =
+    loginUser?.user_departments?.map((d) => d._id) ?? [];
 
-
-
-
-
-
-
-
-  const department_status = data.department_statuses?.find((d: DepartmentStatus) => receiverDepartmentIds.includes(d.department_id ?? "")) as department_status_type;
+  const department_status = data.department_statuses?.find(
+    (d: DepartmentStatus) =>
+      receiverDepartmentIds.includes(d.department_id ?? ""),
+  ) as department_status_type;
 
   const receiverId =
     department_status?.department_id ??
@@ -162,8 +157,6 @@ function ReceiverDetailContent({
     null;
   const senderPaid = department_status?.is_paid_by_sender === 1;
   const isUnlocked = department_status?.payment_status === "paid";
-
-
 
   const { data: methodsList } = useQuery({
     queryKey: defaultQueryKeys.paymentMethodsActive,
@@ -182,8 +175,6 @@ function ReceiverDetailContent({
   });
 
   const methods = Array.isArray(methodsList) ? methodsList : [];
-  const selectedMethod = methods.find((m) => m.id === selectedPaymentMethodId);
-  const isCard = selectedMethod?.key === CARD_KEY;
 
   const closePayModals = () => {
     setPayModalOpen(false);
@@ -208,8 +199,6 @@ function ReceiverDetailContent({
       if (!checkResponse({ res, showSuccess: true })) return;
       const raw = res.data as { data?: PaymentSummaryData };
       setSummary(raw?.data ?? null);
-      setStripePmId(pmId);
-
       setSummaryOpen(true);
     }),
   });
@@ -274,19 +263,15 @@ function ReceiverDetailContent({
       toastError("Please select a payment method.");
       return;
     }
-    if (isCard) {
-      setStripeOpen(true);
-      return;
-    }
+    getSummary(selectedPaymentMethodId);
   };
 
   const onSummaryConfirm = () => {
-    pay({ source: "payment", payment_method_id: stripePmId });
+    setStripeOpen(true);
   };
 
   const onStripeDone = (pmId: string) => {
-    setStripeOpen(false);
-    getSummary(pmId);
+    pay({ source: "payment", payment_method_id: pmId });
   };
   const closeSummary = () => {
     setSummaryOpen(false);
@@ -329,8 +314,6 @@ function ReceiverDetailContent({
     setDepartmentStatus("active");
   };
 
-
-
   const p = data.patient ?? {};
   const ins = data.patient_insurance_information ?? [];
 
@@ -338,13 +321,19 @@ function ReceiverDetailContent({
   const sentAt = data.sent_at
     ? new Date(data.sent_at)
     : new Date(data.createdAt ?? 0);
-  const servicesForDisplay = [...(data.speciality_ids || []), ...(data.additional_speciality || [])];
+  const servicesForDisplay = [
+    ...(data.speciality_ids || []),
+    ...(data.additional_speciality || []),
+  ];
 
   const docList = documentsToList(
     data.documents as Record<string, unknown> | undefined,
   );
 
-  const primaryCare = (data.primary_care ?? {}) as Record<string, string | undefined>;
+  const primaryCare = (data.primary_care ?? {}) as Record<
+    string,
+    string | undefined
+  >;
   const hasPrimaryCare = Boolean(
     primaryCare.name ||
     primaryCare.address ||
@@ -359,10 +348,11 @@ function ReceiverDetailContent({
     { id: "secBasic", label: "Basic Info" },
     { id: "secDocs", label: "Documents" },
     { id: "secAdditional", label: "Additional Info" },
-    ...(hasPrimaryCare ? [{ id: "secPrimaryCare", label: "Primary Care" }] : []),
+    ...(hasPrimaryCare
+      ? [{ id: "secPrimaryCare", label: "Primary Care" }]
+      : []),
     { id: "secChat", label: "Chat" },
   ];
-
 
   const downloadPdfHandler = async (data: ReferralByIdApi) => {
     downloadFile(data?.pdf_export_url ?? "");
@@ -380,9 +370,12 @@ function ReceiverDetailContent({
           </Link>
         </div>
         <div className="flex gap-2 flex-wrap justify-end">
-          <Button variant="primary" size="sm" onClick={() => downloadPdfHandler(data)}>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => downloadPdfHandler(data)}
+          >
             <PrintIcon size={24} />
-
           </Button>
 
           {department_status?.status === "pending" && senderPaid ? (
@@ -425,8 +418,8 @@ function ReceiverDetailContent({
             <div>
               <h3 className="m-0 text-[15px] font-semibold tracking-wide">
                 {isUnlocked &&
-                  p &&
-                  (p.patient_last_name != null || p.patient_first_name != null)
+                p &&
+                (p.patient_last_name != null || p.patient_first_name != null)
                   ? ` ${p.patient_last_name ?? ""}, ${p.patient_first_name ?? ""} • DOB ${p.dob ?? ""} • ${p.gender ?? ""}`
                   : "  Referral (pay to view patient details)"}
               </h3>
@@ -480,7 +473,6 @@ function ReceiverDetailContent({
               }}
             />
             <ReceiverBasicSection
-
               receiverStatus={department_status?.status ?? "pending"}
               patient={p}
               additionalInsurances={ins}

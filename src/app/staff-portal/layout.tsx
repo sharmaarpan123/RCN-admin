@@ -1,8 +1,15 @@
 "use client";
 
-import { authLogoutApi, getAuthProfileApi, getBannersApi } from "@/apis/ApiCalls";
+import {
+  authLogoutApi,
+  getAuthProfileApi,
+  getBannersApi,
+} from "@/apis/ApiCalls";
 import { ConfirmModal, CustomNextLink } from "@/components";
-import { parseBannersResponse, type ApiBannerDisplay } from "@/components/LandingPage/AdBanner";
+import {
+  parseBannersResponse,
+  type ApiBannerDisplay,
+} from "@/components/LandingPage/AdBanner";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -14,6 +21,7 @@ import { checkResponse } from "@/utils/commonFunc";
 import { StaffProfileData } from "@/app/staff-portal/types/profile";
 import { useDispatch } from "react-redux";
 import { logout } from "@/apis/Axios";
+import { useStaffAuthLoginUser } from "@/store/slices/Auth/hooks";
 
 const NAV = [
   { href: "/staff-portal/profile", label: "Profile" },
@@ -53,7 +61,10 @@ function StaffPortalSidebarBanner() {
 
   useEffect(() => {
     if (ads.length <= 1) return;
-    const interval = setInterval(() => setCurrentIndex((prev) => (prev + 1) % ads.length), 10000);
+    const interval = setInterval(
+      () => setCurrentIndex((prev) => (prev + 1) % ads.length),
+      10000,
+    );
     return () => clearInterval(interval);
   }, [ads.length]);
 
@@ -62,15 +73,25 @@ function StaffPortalSidebarBanner() {
   const current: ApiBannerDisplay = ads[currentIndex];
 
   return (
-    <div className="mt-3 pt-3 border-t border-white/10" aria-label="Sponsored banner">
+    <div
+      className="mt-3 pt-3 border-t border-white/10"
+      aria-label="Sponsored banner"
+    >
       <div className="rounded-xl border border-white/15 bg-[rgba(255,255,255,0.08)] overflow-hidden">
         <div className="px-2.5 py-2 border-b border-white/10">
-          <span className="text-[10px] tracking-widest uppercase text-rcn-dark-text/70 font-black">Sponsored</span>
+          <span className="text-[10px] tracking-widest uppercase text-rcn-dark-text/70 font-black">
+            Sponsored
+          </span>
         </div>
         <div className="p-2.5">
           <div className="h-[220px] rounded-lg border border-white/10 bg-white/5 relative overflow-hidden">
             {current.linkUrl ? (
-              <CustomNextLink href={current.linkUrl} className="block w-full h-full" target="_blank" rel="noopener noreferrer">
+              <CustomNextLink
+                href={current.linkUrl}
+                className="block w-full h-full"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <Image
                   src={current.imageUrl}
                   alt={current.altText || current.name}
@@ -92,12 +113,10 @@ function StaffPortalSidebarBanner() {
             )}
           </div>
 
-          <div className="text-center text-xs mt-2 line-clamp-2">{current.altText} </div>
-
-
-
+          <div className="text-center text-xs mt-2 line-clamp-2">
+            {current.altText}{" "}
+          </div>
         </div>
-
       </div>
     </div>
   );
@@ -110,6 +129,8 @@ function StaffPortalSidebar({
   sidebarOpen: boolean;
   setSidebarOpen: (v: boolean) => void;
 }) {
+  const { loginUser } = useStaffAuthLoginUser();
+
   const pathname = usePathname();
   const router = useRouter();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -154,12 +175,20 @@ function StaffPortalSidebar({
             ✕
           </button>
           <div className="w-10 h-10 rounded-xl relative shrink-0 overflow-hidden shadow-[0_8px_18px_rgba(0,0,0,0.25)]">
-            <Image src="/logo.jpeg" alt="RCN Logo" fill className="object-cover" />
+            <Image
+              src="/logo.jpeg"
+              alt="RCN Logo"
+              fill
+              className="object-cover"
+            />
           </div>
           <div>
-            <h1 className="text-sm font-semibold m-0 leading-tight">Referral Coordination Network</h1>
             <p className="text-xs text-rcn-dark-text/80 m-0">Staff Portal</p>
+            <h1 className="text-sm font-semibold m-0 leading-tight">
+              Referral Coordination Network
+            </h1>
           </div>
+         
         </div>
 
         <div className="flex-1 flex flex-col min-h-0">
@@ -172,8 +201,11 @@ function StaffPortalSidebar({
                   onClick={() => {
                     setSidebarOpen(false);
                   }}
-                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl no-underline text-inherit mx-1.5 transition-all ${pathname === href || pathname?.startsWith(href + "/") ? "bg-white/15" : "hover:bg-white/10"
-                    }`}
+                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl no-underline text-inherit mx-1.5 transition-all ${
+                    pathname === href || pathname?.startsWith(href + "/")
+                      ? "bg-white/15"
+                      : "hover:bg-white/10"
+                  }`}
                 >
                   {label}
                 </Link>
@@ -187,7 +219,17 @@ function StaffPortalSidebar({
               onClick={handleLogoutClick}
               className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl w-full text-left mx-1.5 transition-all text-rcn-dark-text hover:bg-white/10"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                 <polyline points="16 17 21 12 16 7" />
                 <line x1="21" y1="12" x2="9" y2="12" />
@@ -197,7 +239,6 @@ function StaffPortalSidebar({
             <StaffPortalSidebarBanner />
           </div>
         </div>
-
       </aside>
       <ConfirmModal
         type="logout"
@@ -215,7 +256,9 @@ function StaffPortalLayoutInner({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (sidebarOpen) document.body.style.overflow = "hidden";
     else document.body.style.overflow = "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [sidebarOpen]);
 
   return (
@@ -234,7 +277,17 @@ function StaffPortalLayoutInner({ children }: { children: React.ReactNode }) {
           aria-label="Open menu"
           className="w-10 h-10 flex items-center justify-center rounded-xl text-rcn-dark-text hover:bg-white/10"
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
             <line x1="3" y1="6" x2="21" y2="6" />
             <line x1="3" y1="12" x2="21" y2="12" />
             <line x1="3" y1="18" x2="21" y2="18" />
@@ -242,13 +295,21 @@ function StaffPortalLayoutInner({ children }: { children: React.ReactNode }) {
         </button>
         <span className="font-semibold text-sm">Staff Portal</span>
       </header>
-      <StaffPortalSidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-      <main className="flex-1  p-4 pt-14 lg:p-6 lg:pt-6 overflow-auto">{children}</main>
+      <StaffPortalSidebar
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+      />
+      <main className="flex-1  p-4 pt-14 lg:p-6 lg:pt-6 overflow-auto">
+        {children}
+      </main>
     </div>
   );
 }
 
-export default function StaffPortalLayout({ children }: { children: React.ReactNode }) {
+export default function StaffPortalLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return <StaffPortalLayoutInner>{children}</StaffPortalLayoutInner>;
 }
-

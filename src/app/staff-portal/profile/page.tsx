@@ -1,6 +1,10 @@
 "use client";
 
-import { changePasswordApi, getAuthProfileApi, putUserProfileApi } from "@/apis/ApiCalls";
+import {
+  changePasswordApi,
+  getAuthProfileApi,
+  putUserProfileApi,
+} from "@/apis/ApiCalls";
 import { Button, PhoneInputField } from "@/components";
 import { catchAsync, checkResponse } from "@/utils/commonFunc";
 import defaultQueryKeys from "@/utils/staffQueryKeys";
@@ -27,6 +31,9 @@ interface ApiProfile {
   role?: string;
   role_id?: number;
   notes?: string;
+  organization?: {
+    name?: string;
+  };
 }
 
 const INPUT_CLASS =
@@ -44,7 +51,11 @@ const profileSchema = yup.object({
     .email("Please enter a valid email address."),
   address: yup.string().trim().optional().default(""),
   dial_code: yup.string().trim().optional().default("+1"),
-  phone_number: yup.string().trim().default("").test("min-length", "Invalid number", (val) => val.length >= 7),
+  phone_number: yup
+    .string()
+    .trim()
+    .default("")
+    .test("min-length", "Invalid number", (val) => val.length >= 7),
   fax: yup
     .string()
     .trim()
@@ -70,7 +81,9 @@ const changePasswordSchema = yup.object({
 
 type ChangePasswordFormValues = yup.InferType<typeof changePasswordSchema>;
 
-function getProfileDefaultValues(p: ApiProfile | null): ProfileFormValues | null {
+function getProfileDefaultValues(
+  p: ApiProfile | null,
+): ProfileFormValues | null {
   if (!p) return null;
   // API returns dial_code + phone_number; normalize dial_code to include "+"
   const rawDial = (p.dial_code ?? "").toString().replace(/\D/g, "");
@@ -94,7 +107,10 @@ function getProfileDefaultValues(p: ApiProfile | null): ProfileFormValues | null
 export default function StaffProfilePage() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<"profile" | "password">("profile");
-  const [showPassword, setShowPassword] = useState({ newPassword: false, confirmPassword: false });
+  const [showPassword, setShowPassword] = useState({
+    newPassword: false,
+    confirmPassword: false,
+  });
 
   const { data: profileData, isLoading: profileLoading } = useQuery({
     queryKey: defaultQueryKeys.profile,
@@ -139,13 +155,18 @@ export default function StaffProfilePage() {
 
   const dial_code = watch("dial_code") ?? "";
   const phone_number = watch("phone_number") ?? "";
-  const phoneValue = (dial_code ?? "") + String(phone_number ?? "").replace(/\D/g, "");
+  const phoneValue =
+    (dial_code ?? "") + String(phone_number ?? "").replace(/\D/g, "");
 
   const handlePhoneChange = (value: string, country: { dialCode: string }) => {
     const codeDigits = String(country?.dialCode ?? "");
     const dial_code = codeDigits ? `+${codeDigits}` : "+1";
     setValue("dial_code", dial_code, { shouldValidate: true });
-    setValue("phone_number", value.slice(codeDigits.length).replace(/\D/g, "") || "", { shouldValidate: true });
+    setValue(
+      "phone_number",
+      value.slice(codeDigits.length).replace(/\D/g, "") || "",
+      { shouldValidate: true },
+    );
   };
 
   const { isPending: isSavePending, mutate: saveProfile } = useMutation({
@@ -154,7 +175,9 @@ export default function StaffProfilePage() {
       const first_name = values.firstName.trim();
       const last_name = values.lastName.trim();
       const email = values.email.trim().toLowerCase();
-      const phone = `${values.dial_code ?? ""}${(values.phone_number ?? "").replace(/\D/g, "")}`.trim() || undefined;
+      const phone =
+        `${values.dial_code ?? ""}${(values.phone_number ?? "").replace(/\D/g, "")}`.trim() ||
+        undefined;
       const body = {
         first_name,
         last_name,
@@ -190,9 +213,6 @@ export default function StaffProfilePage() {
     }),
   });
 
-
-
-
   if (profileLoading) {
     return (
       <div className="max-w-4xl mx-auto p-6">
@@ -202,10 +222,18 @@ export default function StaffProfilePage() {
   }
 
   return (
-    <div className="mx-auto p-6">
+    <div className="mx-auto ">
       <div className="mb-6">
         <h1 className="text-2xl font-semibold m-0 mb-2">Staff Profile</h1>
-        <p className="text-rcn-muted text-sm m-0">Manage your contact information and profile preferences.</p>
+        <p className="text-rcn-muted text-sm m-0">
+          Manage your contact information and profile preferences.
+        </p>
+        <div className="my-2">
+          <p className="text-xs  m-0">My Organization</p>
+          <h1 className="text-sm font-semibold m-0 leading-tight">
+            {profileData?.organization?.name}
+          </h1>
+        </div>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <div className="inline-flex gap-1.5 rounded-xl border border-slate-200 bg-slate-50 p-1">
             <Button
@@ -213,7 +241,11 @@ export default function StaffProfilePage() {
               variant="tab"
               size="md"
               onClick={() => setActiveTab("profile")}
-              className={activeTab === "profile" ? "bg-white shadow border-slate-200" : ""}
+              className={
+                activeTab === "profile"
+                  ? "bg-white shadow border-slate-200"
+                  : ""
+              }
             >
               Profile
             </Button>
@@ -222,12 +254,15 @@ export default function StaffProfilePage() {
               variant="tab"
               size="md"
               onClick={() => setActiveTab("password")}
-              className={activeTab === "password" ? "bg-white shadow border-slate-200" : ""}
+              className={
+                activeTab === "password"
+                  ? "bg-white shadow border-slate-200"
+                  : ""
+              }
             >
               Manage password
             </Button>
           </div>
-
         </div>
       </div>
 
@@ -238,7 +273,10 @@ export default function StaffProfilePage() {
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
-              <label htmlFor="firstName" className="block text-xs font-black text-rcn-muted mb-1.5">
+              <label
+                htmlFor="firstName"
+                className="block text-xs font-black text-rcn-muted mb-1.5"
+              >
                 First Name <span className="text-red-500">*</span>
               </label>
               <input
@@ -249,11 +287,16 @@ export default function StaffProfilePage() {
                 placeholder="Enter first name"
               />
               {errors.firstName && (
-                <p className="text-red-600 text-xs mt-1 m-0" role="alert">{errors.firstName.message}</p>
+                <p className="text-red-600 text-xs mt-1 m-0" role="alert">
+                  {errors.firstName.message}
+                </p>
               )}
             </div>
             <div>
-              <label htmlFor="lastName" className="block text-xs font-black text-rcn-muted mb-1.5">
+              <label
+                htmlFor="lastName"
+                className="block text-xs font-black text-rcn-muted mb-1.5"
+              >
                 Last Name <span className="text-red-500">*</span>
               </label>
               <input
@@ -264,11 +307,16 @@ export default function StaffProfilePage() {
                 placeholder="Enter last name"
               />
               {errors.lastName && (
-                <p className="text-red-600 text-xs mt-1 m-0" role="alert">{errors.lastName.message}</p>
+                <p className="text-red-600 text-xs mt-1 m-0" role="alert">
+                  {errors.lastName.message}
+                </p>
               )}
             </div>
             <div className="md:col-span-2">
-              <label htmlFor="email" className="block text-xs font-black text-rcn-muted mb-1.5">
+              <label
+                htmlFor="email"
+                className="block text-xs font-black text-rcn-muted mb-1.5"
+              >
                 Email <span className="text-red-500">*</span>
               </label>
               <input
@@ -279,11 +327,16 @@ export default function StaffProfilePage() {
                 placeholder="Enter email address"
               />
               {errors.email && (
-                <p className="text-red-600 text-xs mt-1 m-0" role="alert">{errors.email.message}</p>
+                <p className="text-red-600 text-xs mt-1 m-0" role="alert">
+                  {errors.email.message}
+                </p>
               )}
             </div>
             <div className="md:col-span-2">
-              <label htmlFor="address" className="block text-xs font-black text-rcn-muted mb-1.5">
+              <label
+                htmlFor="address"
+                className="block text-xs font-black text-rcn-muted mb-1.5"
+              >
                 Address
               </label>
               <input
@@ -295,7 +348,10 @@ export default function StaffProfilePage() {
               />
             </div>
             <div>
-              <label htmlFor="phone" className="block text-xs font-black text-rcn-muted mb-1.5">
+              <label
+                htmlFor="phone"
+                className="block text-xs font-black text-rcn-muted mb-1.5"
+              >
                 Phone Number
               </label>
               <PhoneInputField
@@ -304,11 +360,16 @@ export default function StaffProfilePage() {
                 placeholder="(312) 555-0100"
               />
               {errors.phone_number && (
-                <p className="text-red-600 text-xs mt-1 m-0" role="alert">{errors.phone_number.message}</p>
+                <p className="text-red-600 text-xs mt-1 m-0" role="alert">
+                  {errors.phone_number.message}
+                </p>
               )}
             </div>
             <div>
-              <label htmlFor="fax" className="block text-xs font-black text-rcn-muted mb-1.5">
+              <label
+                htmlFor="fax"
+                className="block text-xs font-black text-rcn-muted mb-1.5"
+              >
                 Fax Number
               </label>
               <input
@@ -320,11 +381,16 @@ export default function StaffProfilePage() {
                 maxLength={FAX_MAX_LENGTH}
               />
               {errors.fax && (
-                <p className="text-red-600 text-xs mt-1 m-0" role="alert">{errors.fax.message}</p>
+                <p className="text-red-600 text-xs mt-1 m-0" role="alert">
+                  {errors.fax.message}
+                </p>
               )}
             </div>
             <div className="md:col-span-2">
-              <label htmlFor="notes" className="block text-xs font-black text-rcn-muted mb-1.5">
+              <label
+                htmlFor="notes"
+                className="block text-xs font-black text-rcn-muted mb-1.5"
+              >
                 Notes
               </label>
               <textarea
@@ -338,7 +404,6 @@ export default function StaffProfilePage() {
           </div>
 
           <div className="flex gap-3 justify-end pt-4 border-t border-slate-200">
-
             <Button
               type="submit"
               variant="primary"
@@ -354,9 +419,15 @@ export default function StaffProfilePage() {
       {activeTab === "password" && (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-[0_10px_30px_rgba(2,6,23,.07)] p-6">
           <h2 className="text-lg font-semibold m-0 mb-4">Change password</h2>
-          <form onSubmit={handleSubmitPassword((data) => changePassword(data))} className="max-w-md space-y-4">
+          <form
+            onSubmit={handleSubmitPassword((data) => changePassword(data))}
+            className="max-w-md space-y-4"
+          >
             <div>
-              <label htmlFor="password" className="block text-xs font-black text-rcn-muted mb-1.5">
+              <label
+                htmlFor="password"
+                className="block text-xs font-black text-rcn-muted mb-1.5"
+              >
                 New password <span className="text-red-500">*</span>
               </label>
 
@@ -371,7 +442,12 @@ export default function StaffProfilePage() {
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword({ ...showPassword, newPassword: !showPassword.newPassword })}
+                  onClick={() =>
+                    setShowPassword({
+                      ...showPassword,
+                      newPassword: !showPassword.newPassword,
+                    })
+                  }
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-rcn-muted hover:text-rcn-dark-text transition-colors cursor-pointer p-0 border-0 bg-transparent"
                   tabIndex={-1}
                 >
@@ -411,15 +487,19 @@ export default function StaffProfilePage() {
                 </button>
               </div>
               {passwordErrors.password && (
-                <p className="text-red-600 text-xs mt-1 m-0" role="alert">{passwordErrors.password.message}</p>
+                <p className="text-red-600 text-xs mt-1 m-0" role="alert">
+                  {passwordErrors.password.message}
+                </p>
               )}
             </div>
-            <div >
-              <label htmlFor="confirmPassword" className="block text-xs font-black text-rcn-muted mb-1.5">
+            <div>
+              <label
+                htmlFor="confirmPassword"
+                className="block text-xs font-black text-rcn-muted mb-1.5"
+              >
                 Confirm new password <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-
                 <input
                   id="confirmPassword"
                   type={showPassword.confirmPassword ? "text" : "password"}
@@ -430,11 +510,15 @@ export default function StaffProfilePage() {
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword({ ...showPassword, confirmPassword: !showPassword.confirmPassword })}
+                  onClick={() =>
+                    setShowPassword({
+                      ...showPassword,
+                      confirmPassword: !showPassword.confirmPassword,
+                    })
+                  }
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-rcn-muted hover:text-rcn-dark-text transition-colors cursor-pointer p-0 border-0 bg-transparent"
                   tabIndex={-1}
                 >
-
                   {!showPassword.confirmPassword ? (
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -471,11 +555,18 @@ export default function StaffProfilePage() {
                 </button>
               </div>
               {passwordErrors.confirmPassword && (
-                <p className="text-red-600 text-xs mt-1 m-0" role="alert">{passwordErrors.confirmPassword.message}</p>
+                <p className="text-red-600 text-xs mt-1 m-0" role="alert">
+                  {passwordErrors.confirmPassword.message}
+                </p>
               )}
             </div>
             <div className="pt-2">
-              <Button type="submit" variant="primary" size="sm" disabled={isPasswordPending}>
+              <Button
+                type="submit"
+                variant="primary"
+                size="sm"
+                disabled={isPasswordPending}
+              >
                 {isPasswordPending ? "Updating…" : "Update password"}
               </Button>
             </div>

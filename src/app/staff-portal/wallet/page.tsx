@@ -54,20 +54,28 @@ export default function WalletPage() {
   const [creditAmount, setCreditAmount] = useState<string>("");
   const [paymentMethodId, setPaymentMethodId] = useState("");
   const [summaryModalOpen, setSummaryModalOpen] = useState(false);
-  const [purchaseSummary, setPurchaseSummary] = useState<PurchaseSummaryData | null>(null);
+  const [purchaseSummary, setPurchaseSummary] =
+    useState<PurchaseSummaryData | null>(null);
   const [stripeModalOpen, setStripeModalOpen] = useState(false);
   /** When paying with card, we get this from Stripe and use it for summary + purchase */
-  const [stripePaymentMethodId, setStripePaymentMethodId] = useState<string | null>(null);
+  const [stripePaymentMethodId, setStripePaymentMethodId] = useState<
+    string | null
+  >(null);
 
   const { data: creditsData, isLoading: creditsLoading } = useQuery({
     queryKey: defaultQueryKeys.credits,
     queryFn: async () => {
       const res = await getAuthCreditsApi();
-      if (!checkResponse({ res })) return { user_credits: 0, branch_credits: 0 };
-      const raw = res.data as { data?: { user_credits?: number; branch_credits?: number } };
+      if (!checkResponse({ res }))
+        return { user_credits: 0, branch_credits: 0 };
+      const raw = res.data as {
+        data?: { user_credits?: number; branch_credits?: number };
+      };
       const data = raw?.data;
-      const user_credits = typeof data?.user_credits === "number" ? data.user_credits : 0;
-      const branch_credits = typeof data?.branch_credits === "number" ? data.branch_credits : 0;
+      const user_credits =
+        typeof data?.user_credits === "number" ? data.user_credits : 0;
+      const branch_credits =
+        typeof data?.branch_credits === "number" ? data.branch_credits : 0;
       return { user_credits, branch_credits };
     },
   });
@@ -77,39 +85,56 @@ export default function WalletPage() {
     queryFn: async () => {
       const res = await getPaymentMethodsActiveApi();
       if (!checkResponse({ res })) return [];
-      const raw = res.data as { success?: boolean; data?: { id: string; name: string; key: string }[] };
+      const raw = res.data as {
+        success?: boolean;
+        data?: { id: string; name: string; key: string }[];
+      };
       const list = Array.isArray(raw?.data) ? raw.data : [];
       return list
-        .filter((item) => !PAYMENT_METHODS_EXCLUDED_FROM_WEBSITE.includes(item.key))
+        .filter(
+          (item) => !PAYMENT_METHODS_EXCLUDED_FROM_WEBSITE.includes(item.key),
+        )
         .map((item) => ({ id: item.id, name: item.name, key: item.key }));
     },
   });
 
-  const paymentMethodOptions: PaymentMethodOption[] = Array.isArray(paymentMethodsList) ? paymentMethodsList : [];
-  const selectedOption = paymentMethodOptions.find((pm) => pm.id === paymentMethodId);
+  const paymentMethodOptions: PaymentMethodOption[] = Array.isArray(
+    paymentMethodsList,
+  )
+    ? paymentMethodsList
+    : [];
+  const selectedOption = paymentMethodOptions.find(
+    (pm) => pm.id === paymentMethodId,
+  );
   const selectedMethodKey = selectedOption?.key ?? null;
-  const requiresStripeCard = selectedMethodKey != null && CARD_KEYS_REQUIRING_STRIPE.includes(selectedMethodKey);
+  const requiresStripeCard =
+    selectedMethodKey != null &&
+    CARD_KEYS_REQUIRING_STRIPE.includes(selectedMethodKey);
 
-  const { isPending: isSummaryPending, mutate: fetchPurchaseSummary } = useMutation({
-    mutationFn: catchAsync(async (overridePaymentMethodId?: string) => {
-      const credits = parseInt(creditAmount, 10);
-      if (!creditAmount || isNaN(credits) || credits <= 0) {
-        toastError("Please enter a valid number of credits.");
-        return;
-      }
-      const payment_method_id = overridePaymentMethodId ?? stripePaymentMethodId ?? (paymentMethodId.trim() || undefined);
-      if (!payment_method_id) {
-        toastError("Please select a payment method.");
-        return;
-      }
-      const res = await postWalletPurchaseCreditsSummaryApi({ creditAmount: credits, payment_method_id });
-      if (!checkResponse({ res })) return;
-      const raw = res.data as { data?: PurchaseSummaryData };
-      const payload = raw?.data ?? null;
-      setPurchaseSummary(payload && typeof payload === "object" ? payload : null);
-      setSummaryModalOpen(true);
-    }),
-  });
+  const { isPending: isSummaryPending, mutate: fetchPurchaseSummary } =
+    useMutation({
+      mutationFn: catchAsync(
+        async ({
+          creditAmount,
+          payment_method_id,
+        }: {
+          creditAmount: number;
+          payment_method_id: string;
+        }) => {
+          const res = await postWalletPurchaseCreditsSummaryApi({
+            creditAmount,
+            payment_method_id,
+          });
+          if (!checkResponse({ res })) return;
+          const raw = res.data as { data?: PurchaseSummaryData };
+          const payload = raw?.data ?? null;
+          setPurchaseSummary(
+            payload && typeof payload === "object" ? payload : null,
+          );
+          setSummaryModalOpen(true);
+        },
+      ),
+    });
 
   const onCloseSummary = () => {
     setSummaryModalOpen(false);
@@ -118,84 +143,98 @@ export default function WalletPage() {
     setStripePaymentMethodId(null);
   };
 
-  const { isPending: isPurchasePending, mutate: purchaseCredits } = useMutation({
-    mutationFn: catchAsync(async () => {
-      const credits = parseInt(creditAmount, 10);
-      if (!creditAmount || isNaN(credits) || credits <= 0) {
-        toastError("Please enter a valid number of credits.");
-        return;
-      }
-      const payment_method_id = stripePaymentMethodId ?? (paymentMethodId.trim() || undefined);
-      if (!payment_method_id) {
-        toastError("Please select a payment method.");
-        return;
-      }
-      const res = await postWalletPurchaseCreditsApi({ creditAmount: credits, payment_method_id });
-      const data = (res.data as { data?: { clientSecret?: string }; message?: string })?.data;
-      const hasClientSecret = Boolean(data?.clientSecret);
+  const { isPending: isPurchasePending, mutate: purchaseCredits } = useMutation(
+    {
+      mutationFn: catchAsync(
+        async ({
+          creditAmount,
+          payment_method_id,
+        }: {
+          creditAmount: number;
+          payment_method_id: string;
+        }) => {
+          const res = await postWalletPurchaseCreditsApi({
+            creditAmount,
+            payment_method_id: payment_method_id,
+          });
+          const data = (
+            res.data as { data?: { clientSecret?: string }; message?: string }
+          )?.data;
+          const hasClientSecret = Boolean(data?.clientSecret);
 
-      if (!checkResponse({ res, showSuccess: !hasClientSecret })) return;
+          if (!checkResponse({ res, showSuccess: !hasClientSecret })) return;
 
-      if (requiresStripeCard && data?.clientSecret && payment_method_id) {
-        const stripe = await stripePromise;
-        if (!stripe) {
-          toastError("Stripe is not configured.");
-          return;
-        }
-        const { error } = await stripe.confirmCardPayment(data.clientSecret, {
-          payment_method: payment_method_id,
-        });
-        if (error) {
-          toastError(error.message ?? "Payment confirmation failed.");
-          return;
-        }
-      }
+          if (requiresStripeCard && data?.clientSecret && payment_method_id) {
+            const stripe = await stripePromise;
+            if (!stripe) {
+              toastError("Stripe is not configured.");
+              return;
+            }
+            const { error } = await stripe.confirmCardPayment(
+              data.clientSecret,
+              {
+                payment_method: payment_method_id,
+              },
+            );
+            if (error) {
+              toastError(error.message ?? "Payment confirmation failed.");
+              return;
+            }
+          }
 
-      if (hasClientSecret) {
-        toastSuccess((res.data as { message?: string })?.message ?? "Payment confirmed. Credits added. it may take a few minutes to appear in your account.");
-      }
-      onCloseSummary();
-      setCreditAmount("");
-      queryClient.invalidateQueries({ queryKey: defaultQueryKeys.credits });
-      queryClient.invalidateQueries({ queryKey: defaultQueryKeys.creditsTransactions });
-    }),
-  });
+          if (hasClientSecret) {
+            toastSuccess(
+              (res.data as { message?: string })?.message ??
+                "Payment confirmed. Credits added. it may take a few minutes to appear in your account.",
+            );
+          }
+          onCloseSummary();
+          setCreditAmount("");
+          queryClient.invalidateQueries({ queryKey: defaultQueryKeys.credits });
+          queryClient.invalidateQueries({
+            queryKey: defaultQueryKeys.creditsTransactions,
+          });
+        },
+      ),
+    },
+  );
 
-  const handleGetSummaryOrStripe = () => {
+  const handleGetSummary = () => {
     const credits = parseInt(creditAmount, 10);
     if (!creditAmount || isNaN(credits) || credits <= 0) {
       toastError("Please enter a valid number of credits.");
-      return;
-    }
-    if (requiresStripeCard) {
-      setStripeModalOpen(true);
       return;
     }
     if (!paymentMethodId.trim()) {
       toastError("Please select a payment method.");
       return;
     }
-    fetchPurchaseSummary(undefined);
+    fetchPurchaseSummary({
+      creditAmount: credits,
+      payment_method_id: paymentMethodId,
+    });
   };
 
   const onStripeCardSuccess = (paymentMethodIdFromStripe: string) => {
-
-    setStripePaymentMethodId(paymentMethodIdFromStripe);
     setStripeModalOpen(false);
-    fetchPurchaseSummary(paymentMethodIdFromStripe);
+    purchaseCredits({
+      creditAmount: parseInt(creditAmount, 10),
+      payment_method_id: paymentMethodIdFromStripe,
+    });
   };
 
   const handleConfirmPurchase = () => {
-    const credits = parseInt(creditAmount, 10);
-    if (!creditAmount || isNaN(credits) || credits <= 0) return;
-    const payment_method_id = stripePaymentMethodId ?? (paymentMethodId.trim() || undefined);
-    if (!payment_method_id) return;
-    purchaseCredits();
-
+    setStripeModalOpen(true);
   };
 
-  const userCredits = typeof creditsData?.user_credits === "number" ? creditsData.user_credits : 0;
-  const branchCredits = typeof creditsData?.branch_credits === "number" ? creditsData.branch_credits : 0;
+  const userCredits =
+    typeof creditsData?.user_credits === "number"
+      ? creditsData.user_credits
+      : 0;
+  const branchCredits =
+    typeof creditsData?.branch_credits === "number"
+      ? creditsData.branch_credits
+      : 0;
   const totalCredits = userCredits + branchCredits;
 
   if (creditsLoading) {
@@ -210,28 +249,46 @@ export default function WalletPage() {
     <div className="max-w-6xl mx-auto p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-semibold m-0 mb-2">Wallet & Credits</h1>
-        <p className="text-rcn-muted text-sm m-0">Purchase credits to send referrals and manage your account balance.</p>
+        <p className="text-rcn-muted text-sm m-0">
+          Purchase credits to send referrals and manage your account balance.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div className="bg-white rounded-2xl border border-slate-200 shadow-[0_10px_30px_rgba(2,6,23,.07)] p-6">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-black text-rcn-muted uppercase tracking-wide">User Credits</span>
-            <span className="text-2xl font-black text-rcn-accent-dark">{userCredits}</span>
+            <span className="text-xs font-black text-rcn-muted uppercase tracking-wide">
+              User Credits
+            </span>
+            <span className="text-2xl font-black text-rcn-accent-dark">
+              {userCredits}
+            </span>
           </div>
-          <p className="text-xs text-rcn-muted m-0">Credits assigned to your account</p>
+          <p className="text-xs text-rcn-muted m-0">
+            Credits assigned to your account
+          </p>
         </div>
         <div className="bg-white rounded-2xl border border-slate-200 shadow-[0_10px_30px_rgba(2,6,23,.07)] p-6">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-black text-rcn-muted uppercase tracking-wide">Branch Credits</span>
-            <span className="text-2xl font-black text-rcn-accent-dark">{branchCredits}</span>
+            <span className="text-xs font-black text-rcn-muted uppercase tracking-wide">
+              Branch Credits
+            </span>
+            <span className="text-2xl font-black text-rcn-accent-dark">
+              {branchCredits}
+            </span>
           </div>
-          <p className="text-xs text-rcn-muted m-0">Credits available at your branch</p>
+          <p className="text-xs text-rcn-muted m-0">
+            Credits available at your branch
+          </p>
         </div>
       </div>
       <div className="mb-6 p-3 rounded-xl bg-slate-50 border border-slate-200">
-        <span className="text-xs font-black text-rcn-muted uppercase tracking-wide">Total available</span>
-        <p className="m-0 mt-1 text-lg font-black text-rcn-accent-dark">{totalCredits} credits</p>
+        <span className="text-xs font-black text-rcn-muted uppercase tracking-wide">
+          Total available
+        </span>
+        <p className="m-0 mt-1 text-lg font-black text-rcn-accent-dark">
+          {totalCredits} credits
+        </p>
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-200 shadow-[0_10px_30px_rgba(2,6,23,.07)] p-6 mb-6">
@@ -246,7 +303,10 @@ export default function WalletPage() {
               value={creditAmount}
               onChange={(e) => {
                 const value = e.target.value;
-                if (value === "" || (!isNaN(Number(value)) && Number(value) >= 0)) {
+                if (
+                  value === "" ||
+                  (!isNaN(Number(value)) && Number(value) >= 0)
+                ) {
                   setCreditAmount(value);
                 }
               }}
@@ -257,7 +317,9 @@ export default function WalletPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-black text-rcn-muted mb-1.5">Payment Method</label>
+            <label className="block text-xs font-black text-rcn-muted mb-1.5">
+              Payment Method
+            </label>
             <select
               value={paymentMethodId}
               onChange={(e) => {
@@ -280,7 +342,7 @@ export default function WalletPage() {
             type="button"
             variant="primary"
             size="md"
-            onClick={handleGetSummaryOrStripe}
+            onClick={handleGetSummary}
             disabled={
               isSummaryPending ||
               !creditAmount ||
@@ -295,10 +357,13 @@ export default function WalletPage() {
         </div>
       </div>
 
-      
       <TransactionList />
 
-      <Modal isOpen={summaryModalOpen} onClose={onCloseSummary} maxWidth="560px">
+      <Modal
+        isOpen={summaryModalOpen}
+        onClose={onCloseSummary}
+        maxWidth="560px"
+      >
         <div className="p-4">
           <h3 className="m-0 text-base font-semibold mb-3 flex items-center gap-2.5">
             <span className="text-2xl">💳</span>
@@ -309,30 +374,45 @@ export default function WalletPage() {
               <div className="grid grid-cols-2 gap-2">
                 {typeof purchaseSummary.creditAmount === "number" && (
                   <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                    <span className="text-rcn-muted text-xs font-black">Credits</span>
-                    <p className="m-0 mt-0.5 font-semibold">{purchaseSummary.creditAmount}</p>
+                    <span className="text-rcn-muted text-xs font-black">
+                      Credits
+                    </span>
+                    <p className="m-0 mt-0.5 font-semibold">
+                      {purchaseSummary.creditAmount}
+                    </p>
                   </div>
                 )}
                 {purchaseSummary.payment_method_name && (
                   <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                    <span className="text-rcn-muted text-xs font-black">Payment method</span>
-                    <p className="m-0 mt-0.5 font-semibold">{purchaseSummary.payment_method_name}</p>
+                    <span className="text-rcn-muted text-xs font-black">
+                      Payment method
+                    </span>
+                    <p className="m-0 mt-0.5 font-semibold">
+                      {purchaseSummary.payment_method_name}
+                    </p>
                   </div>
                 )}
                 {typeof purchaseSummary.creditPrice === "number" && (
                   <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                    <span className="text-rcn-muted text-xs font-black">Price per credit</span>
+                    <span className="text-rcn-muted text-xs font-black">
+                      Price per credit
+                    </span>
                     <p className="m-0 mt-0.5 font-semibold">
-                      {purchaseSummary.currency ?? "USD"} {purchaseSummary.creditPrice}
+                      {purchaseSummary.currency ?? "USD"}{" "}
+                      {purchaseSummary.creditPrice}
                     </p>
                   </div>
                 )}
-                {(purchaseSummary.processingFee != null) && (
+                {purchaseSummary.processingFee != null && (
                   <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                    <span className="text-rcn-muted text-xs font-black">Processing fee</span>
+                    <span className="text-rcn-muted text-xs font-black">
+                      Processing fee
+                    </span>
                     <p className="m-0 mt-0.5 font-semibold">
-                      {purchaseSummary.currency ?? "USD"} {typeof purchaseSummary.processingFee === "number" ? purchaseSummary.processingFee : "0"}
-
+                      {purchaseSummary.currency ?? "USD"}{" "}
+                      {typeof purchaseSummary.processingFee === "number"
+                        ? purchaseSummary.processingFee
+                        : "0"}
                     </p>
                   </div>
                 )}
@@ -340,13 +420,20 @@ export default function WalletPage() {
 
               <div className="p-3 rounded-xl bg-rcn-brand/5 border border-rcn-brand/20">
                 <div className="flex justify-between items-center">
-                  <span className="text-rcn-muted text-xs font-black">Total</span>
+                  <span className="text-rcn-muted text-xs font-black">
+                    Total
+                  </span>
                   <span className="text-base font-black text-rcn-accent-dark">
-                    {purchaseSummary.currency ?? "USD"} {typeof purchaseSummary.totalAmount === "number" ? purchaseSummary.totalAmount : purchaseSummary.subtotal ?? "—"}
+                    {purchaseSummary.currency ?? "USD"}{" "}
+                    {typeof purchaseSummary.totalAmount === "number"
+                      ? purchaseSummary.totalAmount
+                      : (purchaseSummary.subtotal ?? "—")}
                   </span>
                 </div>
                 {purchaseSummary.breakdown?.message && (
-                  <p className="m-0 mt-1 text-[13px] font-semibold text-rcn-text">{purchaseSummary.breakdown.message}</p>
+                  <p className="m-0 mt-1 text-[13px] font-semibold text-rcn-text">
+                    {purchaseSummary.breakdown.message}
+                  </p>
                 )}
               </div>
             </div>
@@ -354,7 +441,13 @@ export default function WalletPage() {
             <p className="m-0 text-rcn-muted text-sm">No summary data.</p>
           )}
           <div className="flex gap-2.5 justify-end mt-4">
-            <Button type="button" variant="ghost" size="sm" onClick={onCloseSummary} className="border border-slate-200">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onCloseSummary}
+              className="border border-slate-200"
+            >
               Close
             </Button>
             <Button
