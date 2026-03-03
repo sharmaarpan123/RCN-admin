@@ -1,17 +1,11 @@
 "use client";
 
-import { getOrganizationUserApi, getOrganizationBranchesApi, getOrganizationDepartmentsApi } from "@/apis/ApiCalls";
+import { getOrganizationUserApi } from "@/apis/ApiCalls";
 import { CustomNextLink } from "@/components";
 import { checkResponse } from "@/utils/commonFunc";
 import defaultQueryKeys from "@/utils/orgQueryKeys";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
-
-type BranchWithDepts = {
-  _id: string;
-  name: string;
-  departments: { _id: string; name: string }[];
-};
 
 function userDisplayName(u: Record<string, unknown>): string {
   const first = (u.first_name as string) ?? "";
@@ -37,33 +31,25 @@ export default function OrgPortalUserViewPage() {
     enabled: !!userId,
   });
 
-  const { data: branchesWithDepts } = useQuery({
-    queryKey: [...defaultQueryKeys.branchList, "with-departments"],
-    queryFn: async () => {
-      const res = await getOrganizationBranchesApi({ search: "" });
-      if (!checkResponse({ res })) return [];
-      const list = res.data?.data ?? [];
-      const withDepts: BranchWithDepts[] = await Promise.all(
-        list.map(async (b: { _id: string; name: string }) => {
-          const dRes = await getOrganizationDepartmentsApi({ branch_id: b._id });
-          const departments = checkResponse({ res: dRes }) ? (dRes.data?.data ?? []) : [];
-          return {
-            _id: b._id,
-            name: b.name,
-            departments: departments.map((d: { _id: string; name: string }) => ({ _id: d._id, name: d.name })),
-          };
-        })
-      );
-      return withDepts;
-    },
-    enabled: !!userData,
-  });
-
   const user = userData && typeof userData === "object" ? userData : null;
-  const branchIds = (Array.isArray(user?.branch_ids) ? user.branch_ids : []) as string[];
-  const deptIds = (Array.isArray(user?.department_ids) ? user.department_ids : []) as string[];
-  const deptIdSet = new Set(deptIds);
-  const branches: BranchWithDepts[] = branchesWithDepts ?? [];
+  const userBranches = (Array.isArray(user?.branches) ? user.branches : []) as { _id: string; name: string }[];
+  const userDepartments = (Array.isArray(user?.departments) ? user.departments : []) as {
+    _id: string;
+    name: string;
+    branch_id?: string;
+    branch?: { _id: string; name: string };
+  }[];
+
+  // Group departments by branch for display (API returns departments with nested branch)
+  const departmentsByBranch = userDepartments.reduce<Record<string, { branchName: string; depts: { _id: string; name: string }[] }>>(
+    (acc, d) => {
+      const br = d.branch ?? { _id: d.branch_id ?? "", name: "—" };
+      if (!acc[br._id]) acc[br._id] = { branchName: br.name, depts: [] };
+      acc[br._id].depts.push({ _id: d._id, name: d.name });
+      return acc;
+    },
+    {}
+  );
 
   if (!userId) {
     return (
@@ -135,7 +121,11 @@ export default function OrgPortalUserViewPage() {
             </div>
             <div>
               <dt className="text-xs text-rcn-muted mb-0.5">Phone</dt>
-              <dd className="text-sm m-0">{(user.phone_number as string) || "—"}</dd>
+              <dd className="text-sm m-0">
+                {[user.dial_code, user.phone_number].filter(Boolean).length
+                  ? `+${(user.dial_code as string) ?? ""} ${(user.phone_number as string) ?? ""}`.trim()
+                  : "—"}
+              </dd>
             </div>
             <div className="sm:col-span-2">
               <dt className="text-xs text-rcn-muted mb-0.5">Notes</dt>
@@ -150,38 +140,31 @@ export default function OrgPortalUserViewPage() {
               <div>
                 <h3 className="text-xs text-rcn-muted font-medium m-0 mb-2">Branches</h3>
                 <ul className="list-none p-0 m-0 space-y-1.5 max-h-40 overflow-auto">
-                  {branchIds.length === 0 ? (
+                  {userBranches.length === 0 ? (
                     <li className="text-sm text-rcn-muted">No branches assigned.</li>
                   ) : (
-                    branchIds.map((brId) => {
-                      const br = branches.find((b) => b._id === brId);
-                      return br ? <li key={br._id} className="text-sm">{br.name}</li> : null;
-                    })
+                    userBranches.map((br) => (
+                      <li key={br._id} className="text-sm">{br.name}</li>
+                    ))
                   )}
                 </ul>
               </div>
               <div>
                 <h3 className="text-xs text-rcn-muted font-medium m-0 mb-2">Departments</h3>
                 <ul className="list-none p-0 m-0 space-y-2 max-h-40 overflow-auto">
-                  {branchIds.length === 0 ? (
+                  {userDepartments.length === 0 ? (
                     <li className="text-sm text-rcn-muted">No departments assigned.</li>
                   ) : (
-                    branchIds.map((brId) => {
-                      const br = branches.find((b) => b._id === brId);
-                      if (!br) return null;
-                      const assignedDepts = (br.departments ?? []).filter((d) => deptIdSet.has(d._id));
-                      if (assignedDepts.length === 0) return null;
-                      return (
-                        <li key={br._id}>
-                          <span className="text-xs font-bold text-rcn-accent block mb-0.5">{br.name}</span>
-                          <ul className="list-none p-0 m-0 ml-2 space-y-0.5">
-                            {assignedDepts.map((d) => (
-                              <li key={d._id} className="text-sm">{d.name}</li>
-                            ))}
-                          </ul>
-                        </li>
-                      );
-                    })
+                    Object.entries(departmentsByBranch).map(([brId, { branchName, depts }]) => (
+                      <li key={brId}>
+                        <span className="text-xs font-bold text-rcn-accent block mb-0.5">{branchName}</span>
+                        <ul className="list-none p-0 m-0 ml-2 space-y-0.5">
+                          {depts.map((d) => (
+                            <li key={d._id} className="text-sm">{d.name}</li>
+                          ))}
+                        </ul>
+                      </li>
+                    ))
                   )}
                 </ul>
               </div>

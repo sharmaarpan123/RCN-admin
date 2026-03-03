@@ -20,7 +20,7 @@ export default function Header() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { loginUser } = useSelector((state: RootState) => state.auth);
-  console.log(loginUser , "loginUser")
+  console.log(loginUser, "loginUser")
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -73,7 +73,7 @@ export default function Header() {
         confirmDisabled={isLoggingOut}
       />
 
-      
+
 
 
       <header className="sticky top-0 z-50 bg-[rgba(244,251,246,0.76)] backdrop-blur-[10px] ">
@@ -160,7 +160,7 @@ export default function Header() {
                     variant="primary"
                     className="hidden md:inline-flex"
                   >
-                    Register Company
+                    Register Organization
                   </CustomNextLink>
                 </>
               )}

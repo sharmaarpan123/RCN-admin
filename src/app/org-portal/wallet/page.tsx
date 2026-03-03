@@ -69,9 +69,9 @@ export default function OrgPortalWalletPage() {
   const [creditAmount, setCreditAmount] = useState<string>("");
   const [paymentMethodId, setPaymentMethodId] = useState("");
   const [summaryModalOpen, setSummaryModalOpen] = useState(false);
-  const [purchaseSummary, setPurchaseSummary] = useState<PurchaseSummaryData | null>(null);
+  const [purchaseSummary, setPurchaseSummary] =
+    useState<PurchaseSummaryData | null>(null);
   const [stripeModalOpen, setStripeModalOpen] = useState(false);
-  const [stripePaymentMethodId, setStripePaymentMethodId] = useState<string | null>(null);
   const [assignBranchId, setAssignBranchId] = useState("");
   const [assignAmount, setAssignAmount] = useState<string>("");
 
@@ -79,7 +79,8 @@ export default function OrgPortalWalletPage() {
     queryKey: defaultQueryKeys.credits,
     queryFn: async () => {
       const res = await getAuthCreditsApi();
-      if (!checkResponse({ res })) return { organization_credits: 0, branch_credits_summary: [] };
+      if (!checkResponse({ res }))
+        return { organization_credits: 0, branch_credits_summary: [] };
       const raw = res.data as {
         data?: {
           organization_credits?: number;
@@ -94,8 +95,13 @@ export default function OrgPortalWalletPage() {
         };
       };
       const data = raw?.data;
-      const organization_credits = typeof data?.organization_credits === "number" ? data.organization_credits : 0;
-      const branch_credits_summary = Array.isArray(data?.branch_credits_summary) ? data.branch_credits_summary : [];
+      const organization_credits =
+        typeof data?.organization_credits === "number"
+          ? data.organization_credits
+          : 0;
+      const branch_credits_summary = Array.isArray(data?.branch_credits_summary)
+        ? data.branch_credits_summary
+        : [];
       return { organization_credits, branch_credits_summary };
     },
   });
@@ -109,17 +115,24 @@ export default function OrgPortalWalletPage() {
     },
   });
 
-  const branches: BranchOption[] = Array.isArray(branchesRes?.data) ? branchesRes.data : [];
+  const branches: BranchOption[] = Array.isArray(branchesRes?.data)
+    ? branchesRes.data
+    : [];
 
   const { data: paymentMethodsList } = useQuery({
     queryKey: defaultQueryKeys.paymentMethodsActive,
     queryFn: async () => {
       const res = await getPaymentMethodsActiveApi();
       if (!checkResponse({ res })) return [];
-      const raw = res.data as { success?: boolean; data?: { id: string; name: string; key: string }[] };
+      const raw = res.data as {
+        success?: boolean;
+        data?: { id: string; name: string; key: string }[];
+      };
       const list = Array.isArray(raw?.data) ? raw.data : [];
       return list
-        .filter((item) => !PAYMENT_METHODS_EXCLUDED_FROM_WEBSITE.includes(item.key))
+        .filter(
+          (item) => !PAYMENT_METHODS_EXCLUDED_FROM_WEBSITE.includes(item.key),
+        )
         .map((item) => ({ id: item.id, name: item.name, key: item.key }));
     },
   });
@@ -135,7 +148,9 @@ export default function OrgPortalWalletPage() {
         toastError("Please enter a valid amount.");
         return;
       }
-      const res = await postOrganizationBranchCreditsAssignApi(assignBranchId, { amount });
+      const res = await postOrganizationBranchCreditsAssignApi(assignBranchId, {
+        amount,
+      });
       if (!checkResponse({ res, showSuccess: true })) return;
       setAssignBranchId("");
       setAssignAmount("");
@@ -143,125 +158,168 @@ export default function OrgPortalWalletPage() {
     }),
   });
 
-  const paymentMethodOptions: PaymentMethodOption[] = Array.isArray(paymentMethodsList) ? paymentMethodsList : [];
-  const selectedOption = paymentMethodOptions.find((pm) => pm.id === paymentMethodId);
+  const paymentMethodOptions: PaymentMethodOption[] = Array.isArray(
+    paymentMethodsList,
+  )
+    ? paymentMethodsList
+    : [];
+  const selectedOption = paymentMethodOptions.find(
+    (pm) => pm.id === paymentMethodId,
+  );
   const selectedMethodKey = selectedOption?.key ?? null;
-  const requiresStripeCard = selectedMethodKey != null && CARD_KEYS_REQUIRING_STRIPE.includes(selectedMethodKey);
+  const requiresStripeCard =
+    selectedMethodKey != null &&
+    CARD_KEYS_REQUIRING_STRIPE.includes(selectedMethodKey);
 
-  const { isPending: isSummaryPending, mutate: fetchPurchaseSummary } = useMutation({
-    mutationFn: catchAsync(async (overridePaymentMethodId?: string) => {
-      const credits = parseInt(creditAmount, 10);
-      if (!creditAmount || isNaN(credits) || credits <= 0) {
-        toastError("Please enter a valid number of credits.");
-        return;
-      }
-      const payment_method_id = overridePaymentMethodId ?? stripePaymentMethodId ?? (paymentMethodId.trim() || undefined);
-      if (!payment_method_id) {
-        toastError("Please select a payment method.");
-        return;
-      }
-      const res = await postWalletPurchaseCreditsSummaryApi({ creditAmount: credits, payment_method_id });
-      if (!checkResponse({ res })) return;
-      const raw = res.data as { data?: PurchaseSummaryData };
-      const payload = raw?.data ?? null;
-      setPurchaseSummary(payload && typeof payload === "object" ? payload : null);
-      setSummaryModalOpen(true);
-    }),
-  });
+  const { isPending: isSummaryPending, mutate: fetchPurchaseSummary } =
+    useMutation({
+      mutationFn: catchAsync(
+        async ({
+          creditAmount,
+          payment_method_id,
+        }: {
+          creditAmount: number;
+          payment_method_id: string;
+        }) => {
+          const res = await postWalletPurchaseCreditsSummaryApi({
+            creditAmount,
+            payment_method_id,
+          });
+          if (!checkResponse({ res })) return;
+          const raw = res.data as { data?: PurchaseSummaryData };
+          const payload = raw?.data ?? null;
+          setPurchaseSummary(
+            payload && typeof payload === "object" ? payload : null,
+          );
+          setSummaryModalOpen(true);
+        },
+      ),
+    });
 
   const onCloseSummary = () => {
     setSummaryModalOpen(false);
     setPurchaseSummary(null);
     setStripeModalOpen(false);
-    setStripePaymentMethodId(null);
   };
 
-  const { isPending: isPurchasePending, mutate: purchaseCredits } = useMutation({
-    mutationFn: catchAsync(async () => {
-      const credits = parseInt(creditAmount, 10);
-      if (!creditAmount || isNaN(credits) || credits <= 0) {
-        toastError("Please enter a valid number of credits.");
-        return;
-      }
-      const payment_method_id = stripePaymentMethodId ?? (paymentMethodId.trim() || undefined);
-      if (!payment_method_id) {
-        toastError("Please select a payment method.");
-        return;
-      }
-      const res = await postWalletPurchaseCreditsApi({ creditAmount: credits, payment_method_id });
-      const data = (res.data as { data?: { clientSecret?: string }; message?: string })?.data;
-      const hasClientSecret = Boolean(data?.clientSecret);
+  const { isPending: isPurchasePending, mutate: purchaseCredits } = useMutation(
+    {
+      mutationFn: catchAsync(
+        async ({
+          creditAmount,
+          payment_method_id,
+        }: {
+          creditAmount: number;
+          payment_method_id: string;
+        }) => {
+          const res = await postWalletPurchaseCreditsApi({
+            creditAmount,
+            payment_method_id,
+          });
+          const data = (
+            res.data as { data?: { clientSecret?: string }; message?: string }
+          )?.data;
+          const hasClientSecret = Boolean(data?.clientSecret);
 
-      if (!checkResponse({ res, showSuccess: !hasClientSecret })) return;
+          if (!checkResponse({ res, showSuccess: !hasClientSecret })) return;
 
-      if (requiresStripeCard && data?.clientSecret && payment_method_id) {
-        const stripe = await stripePromise;
-        if (!stripe) {
-          toastError("Stripe is not configured.");
-          return;
-        }
-        const { error } = await stripe.confirmCardPayment(data.clientSecret, {
-          payment_method: payment_method_id,
-        });
-        if (error) {
-          toastError(error.message ?? "Payment confirmation failed.");
-          return;
-        }
-      }
+          if (requiresStripeCard && data?.clientSecret && payment_method_id) {
+            const stripe = await stripePromise;
+            if (!stripe) {
+              toastError("Stripe is not configured.");
+              return;
+            }
+            const { error } = await stripe.confirmCardPayment(
+              data.clientSecret,
+              {
+                payment_method: payment_method_id,
+              },
+            );
+            if (error) {
+              toastError(error.message ?? "Payment confirmation failed.");
+              return;
+            }
+          }
 
-      if (hasClientSecret) {
-        toastSuccess(
-          (res.data as { message?: string })?.message ??
-          "Payment confirmed. Credits added. It may take a few minutes to appear in your account."
-        );
-      }
-      onCloseSummary();
-      setCreditAmount("");
-      queryClient.invalidateQueries({ queryKey: defaultQueryKeys.credits });
-      queryClient.invalidateQueries({ queryKey: defaultQueryKeys.creditsTransactions });
-    }),
-  });
+          if (hasClientSecret) {
+            toastSuccess(
+              (res.data as { message?: string })?.message ??
+                "Payment confirmed. Credits added. It may take a few minutes to appear in your account.",
+            );
+          }
+          onCloseSummary();
+          setCreditAmount("");
+          queryClient.invalidateQueries({ queryKey: defaultQueryKeys.credits });
+          queryClient.invalidateQueries({
+            queryKey: defaultQueryKeys.creditsTransactions,
+          });
+        },
+      ),
+    },
+  );
 
   const handleGetSummaryOrStripe = () => {
-    const credits = parseInt(creditAmount, 10);
-    if (!creditAmount || isNaN(credits) || credits <= 0) {
+    if (
+      !creditAmount ||
+      isNaN(parseInt(creditAmount, 10)) ||
+      parseInt(creditAmount, 10) <= 0
+    ) {
       toastError("Please enter a valid number of credits.");
-      return;
-    }
-    if (requiresStripeCard) {
-      setStripeModalOpen(true);
       return;
     }
     if (!paymentMethodId.trim()) {
       toastError("Please select a payment method.");
       return;
     }
-    fetchPurchaseSummary(undefined);
+    fetchPurchaseSummary({
+      creditAmount: parseInt(creditAmount, 10),
+      payment_method_id: paymentMethodId,
+    });
   };
 
   const onStripeCardSuccess = (paymentMethodIdFromStripe: string) => {
-    setStripePaymentMethodId(paymentMethodIdFromStripe);
     setStripeModalOpen(false);
-    fetchPurchaseSummary(paymentMethodIdFromStripe);
+    purchaseCredits({
+      creditAmount: parseInt(creditAmount, 10),
+      payment_method_id: paymentMethodIdFromStripe,
+    });
   };
 
+  //
+
   const handleConfirmPurchase = () => {
-    const credits = parseInt(creditAmount, 10);
-    if (!creditAmount || isNaN(credits) || credits <= 0) return;
-    const payment_method_id = stripePaymentMethodId ?? (paymentMethodId.trim() || undefined);
-    if (!payment_method_id) return;
-    purchaseCredits();
+    setStripeModalOpen(true);
   };
 
   const organizationCredits =
-    typeof creditsData?.organization_credits === "number" ? creditsData.organization_credits : 0;
+    typeof creditsData?.organization_credits === "number"
+      ? creditsData.organization_credits
+      : 0;
   const branchSummary = creditsData?.branch_credits_summary ?? [];
 
   const branchCreditsColumns: TableColumn<BranchCreditsRow>[] = [
-    { head: "Branch", accessor: "branch_name", component: (row) => <span className="font-medium">{row.branch_name ?? "—"}</span> },
-    { head: "Assigned", accessor: "credits_assigned", component: (row) => row.credits_assigned ?? 0 },
-    { head: "Used", accessor: "credits_used", component: (row) => row.credits_used ?? 0 },
-    { head: "Remaining", accessor: "credits_remaining", component: (row) => row.credits_remaining ?? row.remaining_credits ?? 0 },
+    {
+      head: "Branch",
+      accessor: "branch_name",
+      component: (row) => (
+        <span className="font-medium">{row.branch_name ?? "—"}</span>
+      ),
+    },
+    {
+      head: "Assigned",
+      accessor: "credits_assigned",
+      component: (row) => row.credits_assigned ?? 0,
+    },
+    {
+      head: "Used",
+      accessor: "credits_used",
+      component: (row) => row.credits_used ?? 0,
+    },
+    {
+      head: "Remaining",
+      accessor: "credits_remaining",
+      component: (row) => row.credits_remaining ?? row.remaining_credits ?? 0,
+    },
   ];
 
   if (creditsLoading) {
@@ -276,22 +334,32 @@ export default function OrgPortalWalletPage() {
     <div>
       <div className="mb-6">
         <h1 className="text-2xl font-semibold m-0 mb-2">Wallet & Credits</h1>
-        <p className="text-rcn-muted text-sm m-0">Purchase credits for your organization.</p>
+        <p className="text-rcn-muted text-sm m-0">
+          Purchase credits for your organization.
+        </p>
       </div>
 
       <div className="mb-6 max-w-md">
         <div className="bg-white rounded-2xl border border-slate-200 shadow-[0_10px_30px_rgba(2,6,23,.07)] p-6">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-black text-rcn-muted uppercase tracking-wide">Organization Credits</span>
-            <span className="text-2xl font-black text-rcn-accent-dark">{organizationCredits}</span>
+            <span className="text-xs font-black text-rcn-muted uppercase tracking-wide">
+              Organization Credits
+            </span>
+            <span className="text-2xl font-black text-rcn-accent-dark">
+              {organizationCredits}
+            </span>
           </div>
-          <p className="text-xs text-rcn-muted m-0">Credits available for your organization</p>
+          <p className="text-xs text-rcn-muted m-0">
+            Credits available for your organization
+          </p>
         </div>
       </div>
 
       {branchSummary.length > 0 && (
         <div className="mb-6 bg-white rounded-2xl border border-slate-200 shadow-[0_10px_30px_rgba(2,6,23,.07)] overflow-hidden">
-          <h2 className="text-base font-semibold m-0 p-4 border-b border-slate-200">Credits by branch</h2>
+          <h2 className="text-base font-semibold m-0 p-4 border-b border-slate-200">
+            Credits by branch
+          </h2>
           <TableLayout<BranchCreditsRow>
             columns={branchCreditsColumns}
             data={branchSummary}
@@ -304,13 +372,18 @@ export default function OrgPortalWalletPage() {
       )}
 
       <div className="bg-white rounded-2xl border border-slate-200 shadow-[0_10px_30px_rgba(2,6,23,.07)] p-6 mb-6 max-w-2xl">
-        <h2 className="text-lg font-semibold m-0 mb-4">Assign credits to branch</h2>
+        <h2 className="text-lg font-semibold m-0 mb-4">
+          Assign credits to branch
+        </h2>
         <p className="text-sm text-rcn-muted m-0 mb-4">
-          Assign organization credits to a branch. You must have available organization credits.
+          Assign organization credits to a branch. You must have available
+          organization credits.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
           <div>
-            <label className="block text-xs font-black text-rcn-muted mb-1.5">Branch</label>
+            <label className="block text-xs font-black text-rcn-muted mb-1.5">
+              Branch
+            </label>
             <select
               value={assignBranchId}
               onChange={(e) => setAssignBranchId(e.target.value)}
@@ -326,13 +399,19 @@ export default function OrgPortalWalletPage() {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-black text-rcn-muted mb-1.5">Amount</label>
+            <label className="block text-xs font-black text-rcn-muted mb-1.5">
+              Amount
+            </label>
             <input
               type="number"
               value={assignAmount}
               onChange={(e) => {
                 const value = e.target.value;
-                if (value === "" || (!isNaN(Number(value)) && Number(value) >= 0)) setAssignAmount(value);
+                if (
+                  value === "" ||
+                  (!isNaN(Number(value)) && Number(value) >= 0)
+                )
+                  setAssignAmount(value);
               }}
               placeholder="Credits to assign"
               min="1"
@@ -346,7 +425,13 @@ export default function OrgPortalWalletPage() {
           variant="primary"
           size="md"
           onClick={() => assignCredits()}
-          disabled={isAssignPending || !assignBranchId.trim() || !assignAmount || isNaN(Number(assignAmount)) || Number(assignAmount) <= 0}
+          disabled={
+            isAssignPending ||
+            !assignBranchId.trim() ||
+            !assignAmount ||
+            isNaN(Number(assignAmount)) ||
+            Number(assignAmount) <= 0
+          }
         >
           {isAssignPending ? "Assigning…" : "Assign credits"}
         </Button>
@@ -364,7 +449,10 @@ export default function OrgPortalWalletPage() {
               value={creditAmount}
               onChange={(e) => {
                 const value = e.target.value;
-                if (value === "" || (!isNaN(Number(value)) && Number(value) >= 0)) {
+                if (
+                  value === "" ||
+                  (!isNaN(Number(value)) && Number(value) >= 0)
+                ) {
                   setCreditAmount(value);
                 }
               }}
@@ -375,12 +463,13 @@ export default function OrgPortalWalletPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-black text-rcn-muted mb-1.5">Payment Method</label>
+            <label className="block text-xs font-black text-rcn-muted mb-1.5">
+              Payment Method
+            </label>
             <select
               value={paymentMethodId}
               onChange={(e) => {
                 setPaymentMethodId(e.target.value);
-                setStripePaymentMethodId(null);
               }}
               className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-[13px] font-normal text-rcn-text focus:border-rcn-brand/30 focus:ring-2 focus:ring-rcn-brand/10"
               aria-label="Select payment method"
@@ -413,7 +502,11 @@ export default function OrgPortalWalletPage() {
         </div>
       </div>
 
-      <Modal isOpen={summaryModalOpen} onClose={onCloseSummary} maxWidth="560px">
+      <Modal
+        isOpen={summaryModalOpen}
+        onClose={onCloseSummary}
+        maxWidth="560px"
+      >
         <div className="p-4">
           <h3 className="m-0 text-base font-semibold mb-3 flex items-center gap-2.5">
             <span className="text-2xl">💳</span>
@@ -424,30 +517,43 @@ export default function OrgPortalWalletPage() {
               <div className="grid grid-cols-2 gap-2">
                 {typeof purchaseSummary.creditAmount === "number" && (
                   <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                    <span className="text-rcn-muted text-xs font-black">Credits</span>
-                    <p className="m-0 mt-0.5 font-semibold">{purchaseSummary.creditAmount}</p>
+                    <span className="text-rcn-muted text-xs font-black">
+                      Credits
+                    </span>
+                    <p className="m-0 mt-0.5 font-semibold">
+                      {purchaseSummary.creditAmount}
+                    </p>
                   </div>
                 )}
                 {purchaseSummary.payment_method_name && (
                   <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                    <span className="text-rcn-muted text-xs font-black">Payment method</span>
-                    <p className="m-0 mt-0.5 font-semibold">{purchaseSummary.payment_method_name}</p>
+                    <span className="text-rcn-muted text-xs font-black">
+                      Payment method
+                    </span>
+                    <p className="m-0 mt-0.5 font-semibold">
+                      {purchaseSummary.payment_method_name}
+                    </p>
                   </div>
                 )}
                 {typeof purchaseSummary.creditPrice === "number" && (
                   <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                    <span className="text-rcn-muted text-xs font-black">Price per credit</span>
+                    <span className="text-rcn-muted text-xs font-black">
+                      Price per credit
+                    </span>
                     <p className="m-0 mt-0.5 font-semibold">
-                      {purchaseSummary.currency ?? "USD"} {purchaseSummary.creditPrice}
+                      {purchaseSummary.currency ?? "USD"}{" "}
+                      {purchaseSummary.creditPrice}
                     </p>
                   </div>
                 )}
                 {purchaseSummary.processingFee != null && (
                   <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                    <span className="text-rcn-muted text-xs font-black">Processing fee</span>
+                    <span className="text-rcn-muted text-xs font-black">
+                      Processing fee
+                    </span>
                     <p className="m-0 mt-0.5 font-semibold">
-                      {purchaseSummary.currency ?? "USD"} {purchaseSummary.processingFee}
-
+                      {purchaseSummary.currency ?? "USD"}{" "}
+                      {purchaseSummary.processingFee}
                     </p>
                   </div>
                 )}
@@ -455,12 +561,14 @@ export default function OrgPortalWalletPage() {
 
               <div className="p-3 rounded-xl bg-rcn-brand/5 border border-rcn-brand/20">
                 <div className="flex justify-between items-center">
-                  <span className="text-rcn-muted text-xs font-black">Total</span>
+                  <span className="text-rcn-muted text-xs font-black">
+                    Total
+                  </span>
                   <span className="text-base font-black text-rcn-accent-dark">
                     {purchaseSummary.currency ?? "USD"}{" "}
                     {typeof purchaseSummary.totalAmount === "number"
                       ? purchaseSummary.totalAmount
-                      : purchaseSummary.subtotal ?? "—"}
+                      : (purchaseSummary.subtotal ?? "—")}
                   </span>
                 </div>
                 {purchaseSummary.breakdown?.message && (
@@ -474,7 +582,13 @@ export default function OrgPortalWalletPage() {
             <p className="m-0 text-rcn-muted text-sm">No summary data.</p>
           )}
           <div className="flex gap-2.5 justify-end mt-4">
-            <Button type="button" variant="ghost" size="sm" onClick={onCloseSummary} className="border border-slate-200">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onCloseSummary}
+              className="border border-slate-200"
+            >
               Close
             </Button>
             <Button
@@ -494,14 +608,13 @@ export default function OrgPortalWalletPage() {
         isOpen={stripeModalOpen}
         onClose={() => {
           setStripeModalOpen(false);
-          setStripePaymentMethodId(null);
         }}
         onSuccess={onStripeCardSuccess}
         isSubmitting={isSummaryPending}
         description="Enter your card details to purchase credits."
       />
 
-      <TransactionList  />
+      <TransactionList />
     </div>
   );
 }

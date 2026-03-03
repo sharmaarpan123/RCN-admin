@@ -28,7 +28,7 @@ const PhoneInputField: React.FC<PhoneInputFieldProps> = ({
   value,
   onChange,
   hasError = false,
-  country = "us",
+  country = "",
   inputProps,
   containerClass = "",
   inputClass = "",

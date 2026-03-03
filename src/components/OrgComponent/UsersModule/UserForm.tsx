@@ -16,8 +16,6 @@ import { catchAsync, checkResponse } from "@/utils/commonFunc";
 import defaultQueryKeys from "@/utils/orgQueryKeys";
 import { toastError, toastSuccess } from "@/utils/toast";
 
-const DEFAULT_DIAL_CODE = "1";
-
 const inputClass =
   "w-full px-2.5 py-2 text-sm rounded-xl border border-rcn-border bg-white focus:outline-none focus:ring-2 focus:ring-rcn-accent/30";
 
@@ -29,8 +27,8 @@ const userFormSchema = yup.object({
     .trim()
     .required("Email is required.")
     .email("Please enter a valid email."),
-  dialCode: yup.string().trim().optional().default(DEFAULT_DIAL_CODE),
-  phone_number: yup.string().trim().required("Phone number is required.").default("").test("min-length", "Invalid number", (val) =>val.length >= 7),
+  dialCode: yup.string().trim().optional().default(""),
+  phone_number: yup.string().trim().default("").test("min-length", "Invalid number", (val) => !val || val.length >= 7),
   faxNumber: yup.string().trim().default(""),
 
 
@@ -117,7 +115,7 @@ export function UserForm({
       firstName: "",
       lastName: "",
       email: "",
-      dialCode: DEFAULT_DIAL_CODE,
+      dialCode: "",
       phone_number: "",
       faxNumber: "",
       isActive: true,
@@ -130,7 +128,7 @@ export function UserForm({
       firstName: (userData?.first_name as string) ?? "",
       lastName: (userData?.last_name as string) ?? "",
       email: (userData?.email as string) ?? "",
-      dialCode: (userData?.dial_code as string) ?? DEFAULT_DIAL_CODE,
+      dialCode: (userData?.dial_code as string) ?? "",
       phone_number: userData?.phone_number ? ((userData?.phone_number as string) ?? "").replace(/\D/g, "").trim() : "",
       faxNumber: (userData?.fax_number as string) ?? "",
       isActive: typeof userData?.is_active === "boolean" ? userData.is_active : (userData?.status !== undefined ? userData?.status === 1 : true),
@@ -145,9 +143,10 @@ export function UserForm({
   const phoneValue = (dialCode ?? "") + (phoneNumber ?? "").replace(/\D/g, "");
 
   const handlePhoneChange = (value: string, country: { dialCode: string }) => {
-    const code = String(country?.dialCode ?? DEFAULT_DIAL_CODE);
+
+    const code = String(country?.dialCode ?? "");
     setValue("dialCode", code, { shouldValidate: true });
-    setValue("phone_number", value.slice(code.length) || "", { shouldValidate: true });
+    setValue("phone_number", value?.slice(code.length) || "", { shouldValidate: true });
   };
 
   const { isPending, mutate } = useMutation({
@@ -186,10 +185,15 @@ export function UserForm({
     const firstName = values.firstName.trim();
     const lastName = values.lastName.trim();
     const email = values.email.trim().toLowerCase();
-    const dialCode = values.dialCode?.trim() || DEFAULT_DIAL_CODE;
+    let dialCode = values.dialCode?.trim() || "";
     const phone_number = (values.phone_number ?? "").trim().replace(/\D/g, "");
     const faxNumber = (values.faxNumber ?? "").trim();
     const notes = (values.notes ?? "").trim();
+
+    if (!phone_number) {
+      // need to remove dial code if phone number is not provided
+      dialCode = "";
+    }
 
     if (mode === "add") {
       mutate({
