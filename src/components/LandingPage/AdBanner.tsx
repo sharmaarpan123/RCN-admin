@@ -117,7 +117,7 @@ export default function AdBanner({ placement }: { placement?: "right_sidebar" | 
   const currentAd = ads[currentAdIndex];
 
   return (
-    <aside className="block  w-full md:w-[300px] " aria-label="Sponsored banner">
+    <aside className="block  w-full md:w-[400px] " aria-label="Sponsored banner">
       <div className="bg-[rgba(255,255,255,0.86)] border border-rcn-border-light rounded-rcn-lg shadow-[0_10px_30px_rgba(2,44,22,0.08)] overflow-hidden" role="complementary">
         <div className="flex items-center justify-between gap-2.5 px-3.5 py-3 border-b border-rcn-border-light bg-linear-to-br from-[rgba(15,107,58,0.10)] to-[rgba(31,138,76,0.08)]">
           <div className="text-[11px] tracking-[0.14em] uppercase text-rcn-muted font-black">
@@ -126,7 +126,7 @@ export default function AdBanner({ placement }: { placement?: "right_sidebar" | 
         </div>
 
         <div className="p-3.5">
-          <div className="h-[220px] rounded-[18px] border border-[rgba(15,107,58,0.14)] bg-slate-100 relative overflow-hidden">
+          <div className="h-[320px] rounded-[18px] border border-[rgba(15,107,58,0.14)] bg-slate-100 relative overflow-hidden">
             {currentAd.linkUrl ? (
               <CustomNextLink href={currentAd.linkUrl} className="block w-full h-full" target="_blank" rel="noopener noreferrer">
                 <Image

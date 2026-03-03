@@ -485,6 +485,10 @@ function ReceiverDetailContent({
               receiverStatus={department_status?.status ?? "pending"}
               docList={docList}
               onPayUnlock={openPayModal}
+              senderPaid={senderPaid}
+              department_status={department_status}
+              onAccept={receiverAccept}
+              onReject={receiverReject}
             />
             <ReceiverAdditionalSection
               department_status={department_status}
@@ -499,6 +503,10 @@ function ReceiverDetailContent({
               isUnlocked={isUnlocked}
               primaryCare={primaryCare}
               openPayModal={openPayModal}
+              onAccept={receiverAccept}
+              onReject={receiverReject}
+              department_status={department_status}
+              senderPaid={senderPaid}
             />
             <ReceiverChatSection
               referralId={refId}

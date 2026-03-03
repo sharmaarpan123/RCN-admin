@@ -15,10 +15,10 @@ const insuranceItemSchema = yup.object({
 export const guestOrganizationItemSchema = yup.object({
   company_name: yup.string().trim().required("Company name is required"),
   email: yup.string().trim().required("Email is required").email("Valid email is required"),
-  phone_number: yup.string().trim().required("Phone number is required"),
-  dial_code: yup.string().trim().optional().default("+1"),
-  fax_number: yup.string().trim().required("Fax number is required").max(10, "Fax number cannot exceed 10 characters"),
-  address: yup.string().trim().required("Address is required"),
+  phone_number: yup.string().default("").test("phone-number-length", "Invalid phone number", (value) => !value || value.length >= 7),
+  dial_code: yup.string().trim().optional().default(""),
+  fax_number: yup.string().trim().default("").test("fax-number-length", "Fax number cannot exceed 10 characters", (value) => !value || value.length <= 10),
+  address: yup.string().trim().optional().default(""),
   state: yup.string().trim().required("State is required"),
 });
 
@@ -86,7 +86,7 @@ export const referralFormSchema = yup.object({
     .of(yup.string().min(1))
     .default([])
     .when("additional_speciality", ([additional_speciality], schema) => {
-      console.log(additional_speciality ,"additional_speciality")
+      console.log(additional_speciality, "additional_speciality")
       const hasAdditional =
         Array.isArray(additional_speciality) &&
         additional_speciality.some((val) => val && val?.trim() !== "");

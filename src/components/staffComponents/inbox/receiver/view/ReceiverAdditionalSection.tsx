@@ -17,7 +17,6 @@ interface ReceiverAdditionalSectionProps {
   onAccept: () => void;
   onReject: () => void;
   openPayModal: () => void;
-
 }
 
 const ADDITIONAL_ROWS: [string, string][] = [
@@ -39,25 +38,32 @@ export function ReceiverAdditionalSection({
 }: ReceiverAdditionalSectionProps) {
   return (
     <div id="secAdditional" className={SECTION_CLASS}>
-      <div className="-m-3.5 -mt-3.5 mb-3 p-3 border-b border-rcn-border/60 rounded-t-[18px] flex items-center justify-between" style={{ background: BOX_GRAD }}>
+      <div
+        className="-m-3.5 -mt-3.5 mb-3 p-3 border-b border-rcn-border/60 rounded-t-[18px] flex items-center justify-between"
+        style={{ background: BOX_GRAD }}
+      >
         <h4 className="m-0 text-[13px] font-semibold flex items-center gap-2.5">
-          <span className="w-[30px] h-[30px] rounded-xl flex items-center justify-center border border-rcn-brand/25 bg-white/70 shadow">🔒</span>
+          <span className="w-[30px] h-[30px] rounded-xl flex items-center justify-center border border-rcn-brand/25 bg-white/70 shadow">
+            🔒
+          </span>
           Additional Patient Information
         </h4>
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border border-rcn-brand/25 bg-white/70 text-rcn-accent-dark">
-          {isUnlocked ? "Payment Completed — Visible" : "Visible Once Payment Is Completed"}
+          {isUnlocked
+            ? "Payment Completed — Visible"
+            : "Visible Once Payment Is Completed"}
         </span>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
         {ADDITIONAL_ROWS.map(([label, key], i) => (
           <div key={key} className={i === 4 ? "sm:col-span-2" : ""}>
-            <label className="block text-[11px] text-rcn-muted font-black mb-1">{label}</label>
+            <label className="block text-[11px] text-rcn-muted font-black mb-1">
+              {label}
+            </label>
             <div className="text-[13px] font-semibold text-rcn-text leading-tight p-2.5 border border-dashed border-slate-300/75 rounded-xl bg-slate-50/55">
-              {
-                key === "social_security_number" && addPatient[key]
-                  ? `XXX-XX-${addPatient[key]?.slice(-4)}` :
-                  addPatient[key] ?? "—"
-              }
+              {key === "social_security_number" && addPatient[key]
+                ? `XXX-XX-${addPatient[key]?.slice(-4)}`
+                : (addPatient[key] ?? "—")}
             </div>
           </div>
         ))}
@@ -65,19 +71,45 @@ export function ReceiverAdditionalSection({
       {!isUnlocked && (
         <div className="absolute inset-0 rounded-[18px] bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="w-full max-w-[520px] rounded-2xl bg-white/95 border border-slate-200 shadow-[0_20px_50px_rgba(2,6,23,.25)] p-3.5">
-            <h5 className="m-0 text-[13px] font-semibold">Locked: Additional Patient Information</h5>
+            <h5 className="m-0 text-[13px] font-semibold">
+              Locked: Additional Patient Information
+            </h5>
             <p className="m-0 mt-1.5 mb-3 text-rcn-muted text-xs font-semibold">
-              Chat is free. To view phone, SSN, and other sensitive fields, payment is required. Use Pay & Unlock in the header to pay.
+              Chat is free. To view phone, SSN, and other sensitive fields,
+              payment is required. Use Pay & Unlock in the header to pay.
             </p>
-            <div className="flex gap-2.5 flex-wrap justify-end">
-              {!senderPaid && department_status?.status !== "rejected" && <Button type="button" variant="primary" size="sm" onClick={openPayModal}>Pay & Unlock</Button>}
+            <div className="flex gap-2.5 flex-wrap ">
+              {!senderPaid && department_status?.status !== "rejected" && (
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  onClick={openPayModal}
+                >
+                  Pay & Unlock
+                </Button>
+              )}
               {senderPaid && (
-                <Button type="button" variant="primary" size="sm" onClick={onAccept}>
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  onClick={onAccept}
+                >
                   Accept (sender already paid)
                 </Button>
               )}
-              <Button type="button" variant="ghost" size="sm" onClick={onReject} className="border border-red-200 bg-red-50 text-red-700">
-                Reject
+              <Button
+                disabled={department_status?.status == "rejected"}
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={onReject}
+                className="border border-red-200 bg-red-50 text-red-700"
+              >
+                {department_status?.status == "rejected"
+                  ? "Rejected"
+                  : "Reject"}
               </Button>
             </div>
           </div>

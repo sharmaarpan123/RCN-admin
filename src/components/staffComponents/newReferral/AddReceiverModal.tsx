@@ -4,7 +4,12 @@ import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useQuery } from "@tanstack/react-query";
-import { Modal, Button, PhoneInputField, CustomReactSelect } from "@/components";
+import {
+  Modal,
+  Button,
+  PhoneInputField,
+  CustomReactSelect,
+} from "@/components";
 import type { GuestOrganization, OrgBranchDeptOption } from "./types";
 import {
   guestOrganizationItemSchema,
@@ -103,20 +108,25 @@ export function AddReceiverModal({
     setValue(
       "phone_number",
       value.slice(code.length).replace(/\D/g, "") || "",
-      { shouldValidate: true }
+      { shouldValidate: true },
     );
   };
 
   const onSubmit = (values: GuestOrganizationFormValues) => {
-    onAdd({
+    const body = {
       company_name: values.company_name.trim(),
       email: values.email.trim(),
       phone_number: values.phone_number.trim(),
-      dial_code: values.dial_code || "+1",
+      dial_code: values.dial_code || "",
       fax_number: values.fax_number.trim(),
       address: values.address.trim(),
       state: values.state.trim(),
-    });
+    };
+
+    if (!phone_number.length) {
+      delete (body as Record<string, unknown>).dial_code;
+    }
+    onAdd(body);
     handleClose();
   };
 
@@ -193,10 +203,15 @@ export function AddReceiverModal({
           </div>
           <div>
             <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
-              State (business location) <span className="text-rcn-danger font-black">*</span>
+              State (business location){" "}
+              <span className="text-rcn-danger font-black">*</span>
             </label>
 
-            <CustomReactSelect options={stateSelectOptions} value={watch("state")} onChange={(value) => setValue("state", value)} />
+            <CustomReactSelect
+              options={stateSelectOptions}
+              value={watch("state")}
+              onChange={(value) => setValue("state", value)}
+            />
             {errors.state && (
               <p className="text-xs text-red-600 mt-1 m-0" role="alert">
                 {errors.state.message}
@@ -235,14 +250,23 @@ export function AddReceiverModal({
               </p>
             )}
           </div>
-
         </div>
 
         <div className="flex gap-2.5 justify-end mt-4">
-          <Button type="button" variant="secondary" size="md" onClick={handleClose}>
+          <Button
+            type="button"
+            variant="secondary"
+            size="md"
+            onClick={handleClose}
+          >
             Cancel
           </Button>
-          <Button type="button" onClick={handleSubmit(onSubmit)} variant="primary" size="md">
+          <Button
+            type="button"
+            onClick={handleSubmit(onSubmit)}
+            variant="primary"
+            size="md"
+          >
             Add receiver
           </Button>
         </div>
