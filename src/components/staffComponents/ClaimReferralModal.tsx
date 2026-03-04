@@ -76,10 +76,10 @@ export function ClaimReferralModal({
         >
           <div>
             <h3 className="m-0 text-sm font-black tracking-wide">
-              Claim Referral
+              Open With Code
             </h3>
             <p className="m-0 mt-1.5 text-rcn-muted text-xs font-[850]">
-              Enter the referral code to claim it to your receiver inbox.
+              Use an access code received by email/fax to open referral.
             </p>
           </div>
           <button
@@ -97,7 +97,7 @@ export function ClaimReferralModal({
               htmlFor="claim-code"
               className="block text-rcn-muted text-xs font-[850] leading-snug mb-1.5"
             >
-              Referral code
+             Access code
             </label>
             <input
               id="claim-code"
@@ -127,7 +127,7 @@ export function ClaimReferralModal({
               size="sm"
               disabled={isPending || !code.trim()}
             >
-              {isPending ? "Claiming…" : "Claim"}
+              {isPending ? "Opening…" : "Open Referral"}
             </Button>
           </div>
         </form>

@@ -214,7 +214,7 @@ export default function StaffInboxPage() {
             onClick={() => setClaimModalOpen(true)}
             className="whitespace-nowrap"
           >
-            Claim Referral
+            Open With Code
           </Button>
           <Link
             href="/staff-portal/new-referral"

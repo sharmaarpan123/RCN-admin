@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import Select, { type MultiValue } from "react-select";
 import {
   getOrganizationBranchSearchApi,
@@ -263,8 +269,7 @@ export function ForwardModal({
           const list = Array.isArray(data) ? data : [];
           branchSearchResultsRef.current = list as BranchSearchItem[];
           return list.map((item: BranchSearchItem) => {
-            const prefix = item.is_branch ? "b" : "o";
-            const value = `${prefix}-${item._id}`;
+            const value = `${item._id}`;
             const label = item.is_branch
               ? `${item.name} (Branch)`
               : `${item.name} (Organization)`;
@@ -282,28 +287,38 @@ export function ForwardModal({
       const results = branchSearchResultsRef.current;
       const newRows: ForwardRowState[] = [];
       for (const opt of options) {
-        const item = results.find(
-          (r) => `${r.is_branch ? "b" : "o"}-${r._id}` === opt.value,
-        );
+        const item = results.find((r) => `${r._id}` === opt.value);
         if (!item) continue;
+
         if (item.is_organization) {
-          newRows.push({
-            rowId: crypto.randomUUID(),
-            orgId: item._id,
-            orgName: item.name,
-            branchId: "",
-            branchName: "",
-            selectedDepartments: [],
-          });
+          const isOrgAlreadyThere = forwardRows.find(
+            (r) => r.orgId === opt.value,
+          );
+          if (!isOrgAlreadyThere) {
+            newRows.push({
+              rowId: crypto.randomUUID(),
+              orgId: item._id,
+              orgName: item.name,
+              branchId: "",
+              branchName: "",
+              selectedDepartments: [],
+            });
+          }
         } else if (item.is_branch && item.organization) {
-          newRows.push({
-            rowId: crypto.randomUUID(),
-            orgId: item.organization._id,
-            orgName: item.organization.name,
-            branchId: item._id,
-            branchName: item.name,
-            selectedDepartments: [],
-          });
+          const isBranchAlreadyThere = forwardRows.find(
+            (r) => r.branchId === opt.value,
+          );
+
+          if (!isBranchAlreadyThere) {
+            newRows.push({
+              rowId: crypto.randomUUID(),
+              orgId: item.organization._id,
+              orgName: item.organization.name,
+              branchId: item._id,
+              branchName: item.name,
+              selectedDepartments: [],
+            });
+          }
         }
       }
       if (newRows.length > 0) {
@@ -311,7 +326,7 @@ export function ForwardModal({
       }
       setBranchSearchSelected([]);
     },
-    [],
+    [forwardRows],
   );
 
   useEffect(() => {
@@ -330,8 +345,7 @@ export function ForwardModal({
   }, [isOpen]);
 
   const orgSelectValue = useMemo(
-    () =>
-      forwardRows.map((r) => ({ value: r.orgId, label: r.orgName })),
+    () => forwardRows.map((r) => ({ value: r.orgId, label: r.orgName })),
     [forwardRows],
   );
 
@@ -359,6 +373,12 @@ export function ForwardModal({
 
   const updateRowBranch = useCallback(
     (rowId: string, branchId: string, branchName: string) => {
+      const isBranchAlreadyThere = forwardRows.find(
+        (r) => r.branchId === branchId,
+      );
+      if (isBranchAlreadyThere) {
+        return;
+      }
       setForwardRows((prev) =>
         prev.map((r) =>
           r.rowId === rowId
@@ -367,7 +387,7 @@ export function ForwardModal({
         ),
       );
     },
-    [],
+    [forwardRows],
   );
 
   const updateRowDepartments = useCallback(
@@ -388,7 +408,9 @@ export function ForwardModal({
 
   const showValidationError =
     forwardRows.length > 0 && allDepartmentIds.length === 0;
-  const canSubmit = allDepartmentIds.length > 0;
+  const canSubmit =
+    allDepartmentIds.length > 0 &&
+    forwardRows.every((r) => r.selectedDepartments.length > 0);
 
   const handleConfirm = useCallback(() => {
     if (forwardRows.length === 0) {
