@@ -183,8 +183,6 @@ export function SelectReceiverSection({
 
   const removeRow = useCallback(
     (index: number) => {
-      const existingOrgId =
-        receiverRows[index].branchId ?? receiverRows[index].organizationId;
       const restRows = receiverRows.filter((r, i) => i !== index);
 
       setValue("receiver_rows", restRows, {
@@ -277,25 +275,25 @@ export function SelectReceiverSection({
   );
 
   const updateRowBranch = useCallback(
-    (organizationId: string, branchId: string, branchName: string) => {
+    (index: number, branchId: string, branchName: string) => {
+      console.log(branchId, "branchId123");
       const isBranchAlreadyThere = receiverRows.some(
-        (r) => r.branchId === branchId && r.organizationId !== organizationId,
+        (r) => r.branchId === branchId,
       );
+
       if (isBranchAlreadyThere) return;
-      setValue(
-        "receiver_rows",
-        receiverRows.map((r) =>
-          r.branchId === branchId
-            ? {
-                ...r,
-                branchId,
-                branchName,
-                selectedDepartments: [],
-              }
-            : r,
-        ),
-        { shouldValidate: true },
+      const newArr = receiverRows.map((r, index) =>
+        index === index
+          ? {
+              ...r,
+              branchId,
+              branchName,
+              selectedDepartments: [],
+            }
+          : r,
       );
+      console.log(newArr, "newArr123");
+      setValue("receiver_rows", newArr, { shouldValidate: true });
     },
     [receiverRows, setValue],
   );
@@ -503,7 +501,7 @@ function ReceiverRow({
   index: number;
   row: ReceiverRow;
   updateRowBranch: (
-    organizationId: string,
+    index: number,
     branchId: string,
     branchName: string,
   ) => void;
@@ -546,7 +544,8 @@ function ReceiverRow({
             const opt = branchOptions.find(
               (o: OrgBranchDeptOption) => o.value === value,
             );
-            if (opt) updateRowBranch(row.organizationId, opt.value, opt.label);
+            console.log(opt, "opt123");
+            if (opt) updateRowBranch(index, opt.value, opt.label);
           }}
           options={branchOptions}
           placeholder="Select branch..."
@@ -617,7 +616,7 @@ function ReceiverRowsTable({
 }: {
   receiverRows: ReceiverRow[];
   updateRowBranch: (
-    organizationId: string,
+    index: number,
     branchId: string,
     branchName: string,
   ) => void;
