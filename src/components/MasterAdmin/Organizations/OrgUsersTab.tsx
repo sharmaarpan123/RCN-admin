@@ -10,7 +10,7 @@ import { Button, TableLayout, type TableColumn } from "@/components";
 import { DebouncedInput } from "@/components/DebouncedInput";
 import { adminCreateUserSchema } from "@/schemas/adminOrganizationUser";
 import defaultQueryKeys from "@/utils/adminQueryKeys";
-import { checkResponse } from "@/utils/commonFunc";
+import { catchAsync, checkResponse } from "@/utils/commonFunc";
 import { toastError, toastSuccess } from "@/utils/toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
@@ -32,75 +32,78 @@ interface OrgUsersTabProps {
   invalidateUsers: () => void;
 }
 
-
-
 export function OrgUsersTab({
   selectedOrgId,
 
   invalidateUsers,
 }: OrgUsersTabProps) {
   const [body, setbody] = useState<{ search: string }>({ search: "" });
-  const [userModal, setUserModal] = useState<{ isOpen: boolean, userId?: string | null, mode: "edit" | "create" }>({ isOpen: false, userId: null, mode: "create" });
-  const [deleteUserModal, setDeleteUserModal] = useState<{ isOpen: boolean, userId?: string | null }>({ isOpen: false, userId: null });
+  const [userModal, setUserModal] = useState<{
+    isOpen: boolean;
+    userId?: string | null;
+    mode: "edit" | "create";
+  }>({ isOpen: false, userId: null, mode: "create" });
+  const [deleteUserModal, setDeleteUserModal] = useState<{
+    isOpen: boolean;
+    userId?: string | null;
+  }>({ isOpen: false, userId: null });
 
   const saveUserMutation = useMutation({
-    mutationFn: async ({
-      data,
-      userId,
-    }: {
-      data: UserModalFormValues;
-      userId?: string;
-    }) => {
-      const updateBody = {
-        first_name: data.first_name,
-        last_name: data.last_name,
-        email: data.email.trim().toLowerCase(),
-        dial_code: data.dial_code || undefined,
-        phone_number: data.phone_number || undefined,
-        fax_number: data.fax_number || undefined,
-        organization_id: data.organization_id || selectedOrgId || undefined,
-        status: data.status,
-        notes: data.notes || undefined,
-      };
+    mutationFn: catchAsync(
+      async ({
+        data,
+        userId,
+      }: {
+        data: UserModalFormValues;
+        userId?: string;
+      }) => {
+        const updateBody = {
+          first_name: data.first_name,
+          last_name: data.last_name,
+          email: data.email.trim().toLowerCase(),
+          dial_code: data.dial_code || undefined,
+          phone_number: data.phone_number || undefined,
+          fax_number: data.fax_number || undefined,
+          organization_id: data.organization_id || selectedOrgId || undefined,
+          status: data.status,
+          notes: data.notes || undefined,
+        };
 
-      if (userId) {
-        const res = await updateOrganizationUserApi(userId, updateBody);
-        if (!checkResponse({ res, showSuccess: true })) throw new Error("Update failed.");
-        return { mode: "update" as const };
-      }
+        if (userId) {
+          const res = await updateOrganizationUserApi(userId, updateBody);
+          if (!checkResponse({ res, showSuccess: true }))
+            throw new Error("Update failed.");
+          return { mode: "update" as const };
+        }
 
-      const createBody = {
-        first_name: data.first_name,
-        last_name: data.last_name,
-        email: data.email.trim().toLowerCase(),
-        ...(data.dial_code ? { dial_code: data.dial_code } : {}),
-        ...(data.phone_number ? { phone_number: data.phone_number } : {}),
-        ...(data.fax_number ? { fax_number: data.fax_number } : {}),
-        ...(data.notes ? { notes: data.notes } : {}),
-      };
-      const parsed = adminCreateUserSchema.shape.body.safeParse(createBody);
-      if (!parsed.success) {
-        const first = parsed.error.flatten().formErrors[0];
-        throw new Error(first ?? "Invalid form data.");
-      }
-      const res = await createAdminOrganizationUserApi(selectedOrgId, parsed.data);
-      if (!checkResponse({ res, showSuccess: true })) throw new Error("Create failed.");
-      return { mode: "create" as const };
-    },
-    onSuccess: (result) => {
-      toastSuccess(result.mode === "update" ? "User updated." : "User created.");
-      invalidateUsers();
-      setUserModal({ isOpen: false, userId: null, mode: "create" });
-    },
-    onError: (err: Error) => {
-      toastError(err.message ?? "Failed to save user.");
-    },
+        const createBody = {
+          first_name: data.first_name,
+          last_name: data.last_name,
+          email: data.email.trim().toLowerCase(),
+          ...(data.dial_code ? { dial_code: data.dial_code } : {}),
+          ...(data.phone_number ? { phone_number: data.phone_number } : {}),
+          ...(data.fax_number ? { fax_number: data.fax_number } : {}),
+          ...(data.notes ? { notes: data.notes } : {}),
+        };
+        const parsed = adminCreateUserSchema.shape.body.safeParse(createBody);
+        if (!parsed.success) {
+          const first = parsed.error.flatten().formErrors[0];
+          throw new Error(first ?? "Invalid form data.");
+        }
+        const res = await createAdminOrganizationUserApi(
+          selectedOrgId,
+          parsed.data,
+        );
+        if (!checkResponse({ res, showSuccess: true })) return;
+        invalidateUsers();
+        setUserModal({ isOpen: false, userId: null, mode: "create" });
+        return { mode: "create" as const };
+      },
+    ),
   });
-
 
   const deleteUserConfirmation = useCallback(
     async (userId: string) => {
-
       try {
         const res = await deleteOrganizationUserApi(userId);
         if (checkResponse({ res, showSuccess: true })) {
@@ -112,40 +115,49 @@ export function OrgUsersTab({
         toastError("Failed to delete user.");
       }
     },
-    [invalidateUsers]
+    [invalidateUsers],
   );
 
-
-
-
   const { data: usersResponse, isLoading } = useQuery({
-    queryKey: [...defaultQueryKeys.organizationUsersList, selectedOrgId, body.search],
+    queryKey: [
+      ...defaultQueryKeys.organizationUsersList,
+      selectedOrgId,
+      body.search,
+    ],
     queryFn: async () => {
-      const res = await getAdminOrganizationUsersApi(selectedOrgId, { ...body });
-      if (!checkResponse({ res })) return { data: [] } as AdminOrganizationUsersApiResponse;
+      const res = await getAdminOrganizationUsersApi(selectedOrgId, {
+        ...body,
+      });
+      if (!checkResponse({ res }))
+        return { data: [] } as AdminOrganizationUsersApiResponse;
       return res.data as AdminOrganizationUsersApiResponse;
     },
     enabled: !!selectedOrgId,
   });
-
-
-
 
   const columns: TableColumn<AdminOrganizationUserListItem>[] = useMemo(
     () => [
       {
         head: "Name",
         component: (u) => {
-          const name = [u.first_name, u.last_name].filter(Boolean).join(" ").trim() || u.email || "—";
+          const name =
+            [u.first_name, u.last_name].filter(Boolean).join(" ").trim() ||
+            u.email ||
+            "—";
           return (
             <>
               <b>{name}</b>{" "}
-              <span className="text-rcn-muted font-mono text-[11px]">({u._id})</span>
+              <span className="text-rcn-muted font-mono text-[11px]">
+                ({u._id})
+              </span>
             </>
           );
         },
       },
-      { head: "Email", component: (u) => <span className="font-mono">{u.email ?? ""}</span> },
+      {
+        head: "Email",
+        component: (u) => <span className="font-mono">{u.email ?? ""}</span>,
+      },
       {
         head: "Status",
         component: (u) =>
@@ -166,14 +178,18 @@ export function OrgUsersTab({
             <Button
               variant="secondary"
               size="sm"
-              onClick={() => setUserModal({ isOpen: true, userId: u._id, mode: "edit" })}
+              onClick={() =>
+                setUserModal({ isOpen: true, userId: u._id, mode: "edit" })
+              }
             >
               Edit
             </Button>
             <Button
               variant="secondary"
               size="sm"
-              onClick={() => setDeleteUserModal({ isOpen: true, userId: u._id })}
+              onClick={() =>
+                setDeleteUserModal({ isOpen: true, userId: u._id })
+              }
               className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
             >
               Delete
@@ -182,7 +198,7 @@ export function OrgUsersTab({
         ),
       },
     ],
-    []
+    [],
   );
 
   return (
@@ -199,8 +215,15 @@ export function OrgUsersTab({
         targetOrgId={selectedOrgId}
         presetOrgId={selectedOrgId}
         mode={userModal.mode}
-        onClose={() => setUserModal({ isOpen: false, userId: null, mode: "create" })}
-        onSave={(data) => saveUserMutation.mutate({ data, userId: userModal.userId ?? undefined })}
+        onClose={() =>
+          setUserModal({ isOpen: false, userId: null, mode: "create" })
+        }
+        onSave={(data) =>
+          saveUserMutation.mutate({
+            data,
+            userId: userModal.userId ?? undefined,
+          })
+        }
         isPending={saveUserMutation.isPending}
       />
       <div className="flex justify-between items-center mb-3">
@@ -210,7 +233,13 @@ export function OrgUsersTab({
             Create and manage users within the selected organization.
           </p>
         </div>
-        <Button variant="primary" size="sm" onClick={() => setUserModal({ isOpen: true, userId: null, mode: "create" })}>
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={() =>
+            setUserModal({ isOpen: true, userId: null, mode: "create" })
+          }
+        >
           + New User
         </Button>
       </div>
@@ -226,7 +255,10 @@ export function OrgUsersTab({
             debounceMs={500}
           />
         </div>
-        <Button variant="secondary" onClick={() => setbody({ ...body, search: "" })}>
+        <Button
+          variant="secondary"
+          onClick={() => setbody({ ...body, search: "" })}
+        >
           Clear
         </Button>
       </div>

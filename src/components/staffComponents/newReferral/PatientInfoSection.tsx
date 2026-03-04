@@ -80,6 +80,7 @@ export function PatientInfoSection() {
             <option value="">Select</option>
             <option value="male">Male</option>
             <option value="female">Female</option>
+            <option value="other">Other</option>
           </select>
           {errors.gender && (
             <p className="text-xs text-rcn-danger mt-1 m-0">{errors.gender.message}</p>

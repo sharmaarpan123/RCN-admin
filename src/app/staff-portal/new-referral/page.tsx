@@ -79,7 +79,7 @@ function getDefaultValues(): ReferralFormValues {
     primary_care_name: "",
     primary_care_address: "",
     primary_care_phone_number: "",
-    primary_care_dial_code: "",
+    primary_care_dial_code: "+1",
     primary_care_fax: "",
     primary_care_email: "",
     primary_care_npi: "",

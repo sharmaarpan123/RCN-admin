@@ -5,7 +5,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import { INPUT_CLASS } from "./types";
-import { checkResponse } from "@/utils/commonFunc";
+import { catchAsync, checkResponse } from "@/utils/commonFunc";
 import { getOrganizationUserApi } from "@/apis/ApiCalls";
 import { useQuery } from "@tanstack/react-query";
 import defaultQueryKeys from "@/utils/adminQueryKeys";
@@ -88,13 +88,13 @@ export function UserModalContent({
 
   const { data: apiUser, isLoading } = useQuery({
     queryKey: [...defaultQueryKeys.organizationUser, userId],
-    queryFn: async () => {
+    queryFn:catchAsync( async () => {
       if (!userId) return null;
       const res = await getOrganizationUserApi(userId);
       if (!checkResponse({ res })) return null;
       const data = (res.data as { data?: ApiUserDetail[] })?.data;
       return Array.isArray(data) && data[0] ? (data[0] as ApiUserDetail) : null;
-    },
+    }),
     enabled: !!userId,
   });
 
