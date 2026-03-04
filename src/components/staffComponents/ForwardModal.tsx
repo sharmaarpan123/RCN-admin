@@ -402,8 +402,6 @@ export function ForwardModal({
       return;
     }
 
-    
-
     onForward(allDepartmentIds);
     onClose();
   }, [forwardRows.length, canSubmit, allDepartmentIds, onForward, onClose]);
