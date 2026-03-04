@@ -495,7 +495,7 @@ export const postOrganizationReferralClaimApi = (code: string) =>
 /** POST /api/organization/referral/:id/payment-summary — get payment summary for draft referral. source: "free" = sender pays, "payment" = receiver pays (requires payment_method_id). */
 export const postOrganizationReferralPaymentSummaryApi = (
   referralId: string,
-  body: { source: "free" | "payment"; payment_method_id?: string },
+  body: { source: "free" | "payment" | "credit"; payment_method_id?: string },
 ) =>
   AxiosInstance.post(
     `/api/organization/referral/${referralId}/payment-summary`,

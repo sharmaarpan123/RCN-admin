@@ -70,6 +70,8 @@ export function SenderDraftPaymentSection({ refId }: SenderDraftPaymentSectionPr
       const body =
         paymentSource === "free"
           ? { source: "free" as const }
+          : paymentSource === "credit"
+          ? { source: "credit" as const }
           : { source: "payment" as const, payment_method_id: paymentMethodId.trim() || undefined };
       if (paymentSource === "payment" && !paymentMethodId.trim()) {
         throw new Error("Payment method is required when sender pays.");
@@ -181,6 +183,17 @@ export function SenderDraftPaymentSection({ refId }: SenderDraftPaymentSectionPr
           you can pay as sender.
         </p>
         <div className="space-y-3">
+        <label className="flex items-center gap-2.5 cursor-pointer">
+            <input
+              type="radio"
+              name="paymentSource"
+              checked={paymentSource === "credit"}
+              onChange={() => setPaymentSource("credit")}
+              className="rounded-full border-rcn-border"
+            />
+            <span className="text-sm font-semibold">Use credits</span>
+            <span className="text-rcn-muted text-xs">(Use credits to pay for the referral)</span>
+          </label>
           <label className="flex items-center gap-2.5 cursor-pointer">
             <input
               type="radio"
@@ -194,6 +207,7 @@ export function SenderDraftPaymentSection({ refId }: SenderDraftPaymentSectionPr
               (Referral sent for free; receiver pays to unlock patient info)
             </span>
           </label>
+          
           <label className="flex items-center gap-2.5 cursor-pointer">
             <input
               type="radio"
