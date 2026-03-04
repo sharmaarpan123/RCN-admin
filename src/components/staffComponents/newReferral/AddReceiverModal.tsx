@@ -63,6 +63,10 @@ export function AddReceiverModal({
     },
   });
 
+  const state = watch("state") ?? "";
+
+  console.log(state, "state");
+
   const { data: stateOptionsFromApi = [] } = useQuery({
     queryKey: [...defaultAdminQueryKeys.statesList],
     queryFn: async () => {
@@ -83,6 +87,8 @@ export function AddReceiverModal({
   });
 
   const stateSelectOptions = stateOptionsFromApi;
+
+  console.log(stateSelectOptions, "stateSelectOptions");
 
   useEffect(() => {
     if (isOpen) {
@@ -210,7 +216,11 @@ export function AddReceiverModal({
             <CustomReactSelect
               options={stateSelectOptions}
               value={watch("state")}
-              onChange={(value) => setValue("state", value)}
+              onChange={(_, option) =>
+                setValue("state", (option?.label as string) ?? "", {
+                  shouldValidate: true,
+                })
+              }
             />
             {errors.state && (
               <p className="text-xs text-red-600 mt-1 m-0" role="alert">

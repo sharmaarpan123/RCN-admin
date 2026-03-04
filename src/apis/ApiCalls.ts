@@ -455,6 +455,13 @@ export const postStaffDepartmentsByBranchesApi = (body: {
   branch_ids: string[];
 }) => AxiosInstance.post("/api/users/departments/by-branches", body);
 
+/** GET /api/organization/branch/search — search branches and organizations by state and name. Returns mixed list with is_branch / is_organization. */
+export const getOrganizationBranchSearchApi = (params: {
+  state: string;
+  name?: string;
+}) =>
+  AxiosInstance.get("/api/organization/branch/search", { params });
+
 /** GET /api/users/specialities — list specialities/services for staff (e.g. referral form). Params: page, limit. */
 export const getStaffSpecialitiesApi = (params?: {
   page?: number;

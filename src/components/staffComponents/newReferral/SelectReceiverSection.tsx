@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { useFormContext, useFormState, useWatch } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import CustomAsyncSelect from "@/components/CustomAsyncSelect";
@@ -9,6 +9,7 @@ import { SectionHeader } from "./SectionHeader";
 import type { GuestOrganization, OrgBranchDeptOption, ReceiverRow } from "./types";
 import type { ReferralFormValues } from "./referralFormSchema";
 import {
+  getOrganizationBranchSearchApi,
   getStaffOrganizationsApi,
   getStatesApi,
   postStaffBranchesByOrganizationsApi,
@@ -19,6 +20,16 @@ import { Button } from "@/components";
 import defaultAdminQueryKeys from "@/utils/adminQueryKeys";
 import { AddReceiverModal } from "./AddReceiverModal";
 import { toastWarning } from "@/utils/toast";
+
+/** API branch search item: branch (is_branch=1) or organization (is_organization=1). */
+interface BranchSearchItem {
+  _id: string;
+  name: string;
+  organization_id?: string;
+  organization?: { _id: string; name: string };
+  is_branch: 0 | 1;
+  is_organization: 0 | 1;
+}
 
 function toOptions(list: unknown[]): OrgBranchDeptOption[] {
   if (!Array.isArray(list)) return [];
@@ -44,6 +55,8 @@ export function SelectReceiverSection({
 
 }: SelectReceiverSectionProps) {
   const [receiverModalOpen, setReceiverModalOpen] = useState(false);
+  const [branchSearchSelected, setBranchSearchSelected] = useState<OrgBranchDeptOption[]>([]);
+  const branchSearchResultsRef = useRef<BranchSearchItem[]>([]);
   const { control, setValue, getValues } = useFormContext<ReferralFormValues>();
   const watchedReceiverRows = useWatch({ name: "receiver_rows", control });
   const watchedGuestOrganizations = useWatch({ name: "guest_organizations", control });
@@ -167,6 +180,81 @@ export function SelectReceiverSection({
     [receiverRows, setValue]
   );
 
+  const loadBranchSearchOptions = useCallback(
+    (inputValue: string) => {
+      const stateParam =
+        stateFilter && stateFilter !== "ALL"
+          ? stateOptionsFromApi.find((s) => s.value === stateFilter)?.label ?? stateFilter
+          : "";
+      if (!stateParam) {
+        if (inputValue?.trim()) toastWarning("Please select a state first");
+        return Promise.resolve([]);
+      }
+      if (!inputValue?.trim()) return Promise.resolve([]);
+      
+      return getOrganizationBranchSearchApi({
+        state: stateParam,
+        name: inputValue.trim(),
+      })
+        .then((res) => {
+          if (!checkResponse({ res })) return [];
+          const data = res.data?.data ?? res.data;
+          const list = Array.isArray(data) ? data : [];
+          branchSearchResultsRef.current = list as BranchSearchItem[];
+          return list.map((item: BranchSearchItem) => {
+            const prefix = item.is_branch ? "b" : "o";
+            const value = `${prefix}-${item._id}`;
+            const label = item.is_branch
+              ? `${item.name} (Branch)`
+              : `${item.name} (Organization)`;
+            return { value, label };
+          });
+        })
+        .catch(() => []);
+    },
+    [stateFilter, stateOptionsFromApi]
+  );
+
+  const handleBranchSearchChange = useCallback(
+    (options: OrgBranchDeptOption[]) => {
+      if (!options?.length) return;
+      const results = branchSearchResultsRef.current;
+      const newRows: ReceiverRow[] = [];
+      for (const opt of options) {
+        const item = results.find(
+          (r) => `${r.is_branch ? "b" : "o"}-${r._id}` === opt.value
+        );
+        if (!item) continue;
+        if (item.is_organization) {
+          newRows.push({
+            organizationId: item._id,
+            organizationName: item.name,
+            branchId: null,
+            branchName: null,
+            departmentId: null,
+            departmentName: null,
+          });
+        } else if (item.is_branch && item.organization) {
+          newRows.push({
+            organizationId: item.organization._id,
+            organizationName: item.organization.name,
+            branchId: item._id,
+            branchName: item.name,
+            departmentId: null,
+            departmentName: null,
+          });
+        }
+      }
+      if (newRows.length > 0) {
+        setValue("receiver_rows", [...receiverRows, ...newRows], {
+          shouldValidate: true,
+        });
+      }
+      setBranchSearchSelected([]);
+    },
+    [receiverRows, setValue]
+  );
+
   const updateRowBranch = useCallback(
     (organizationId: string, branchId: string, branchName: string) => {
       setValue(
@@ -187,6 +275,8 @@ export function SelectReceiverSection({
     },
     [receiverRows, setValue]
   );
+
+
 
   const updateRowDepartment = useCallback(
     (organizationId: string, departmentId: string, departmentName: string) => {
@@ -247,7 +337,7 @@ export function SelectReceiverSection({
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
           <div>
             <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
               State (business location)
@@ -280,6 +370,23 @@ export function SelectReceiverSection({
             />
             <p className="text-xs text-rcn-muted mt-1.5">
               Select one or more organizations. Then choose branch and department per row below.
+            </p>
+          </div>
+          <div>
+            <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
+              Search by branch or organization
+            </label>
+            <CustomAsyncSelect
+              value={branchSearchSelected}
+              onChange={handleBranchSearchChange}
+              loadOptions={loadBranchSearchOptions}
+              placeholder="Type to search branches or organizations..."
+              aria-label="Search by branch or organization"
+              defaultOptions={false}
+              maxMenuHeight={280}
+            />
+            <p className="text-xs text-rcn-muted mt-1.5">
+              Select a state first, then search. Choosing an organization adds one row; choosing a branch adds a row with that branch preselected.
             </p>
           </div>
         </div>

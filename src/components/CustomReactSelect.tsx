@@ -13,7 +13,7 @@ export interface RcnSelectProps {
   /** Current value (option value string) */
   value: string;
   /** Called with the selected option's value string */
-  onChange: (value: string) => void;
+  onChange: (value: string , option?: SingleValue<RcnSelectOption>) => void;
   /** Options in { value, label } form */
   options: RcnSelectOption[];
   /** Placeholder when nothing selected */
@@ -55,7 +55,7 @@ const CustomReactSelect: React.FC<RcnSelectProps> = ({
     options.find((o) => o.value === value) ?? null;
 
   const handleChange = (opt: SingleValue<RcnSelectOption>) => {
-    onChange(opt?.value ?? "");
+    onChange(opt?.value ?? "" , opt);
   };
 
   return (

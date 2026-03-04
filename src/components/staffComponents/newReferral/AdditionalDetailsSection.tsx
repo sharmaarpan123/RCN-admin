@@ -27,10 +27,15 @@ export function AdditionalDetailsSection() {
   const patientPhoneValue =
     (patientDialCode ?? "") + (patientPhoneNumber ?? "").replace(/\D/g, "");
 
-  const handlePatientPhoneChange = (value: string, country: { dialCode: string }) => {
+  const handlePatientPhoneChange = (
+    value: string,
+    country: { dialCode: string },
+  ) => {
     const code = String(country?.dialCode ?? "+1");
     setValue("patient_dial_code", code, { shouldValidate: true });
-    setValue("patient_phone_number", value.slice(code.length) || "", { shouldValidate: true });
+    setValue("patient_phone_number", value.slice(code.length) || "", {
+      shouldValidate: true,
+    });
   };
 
   return (
@@ -46,19 +51,20 @@ export function AdditionalDetailsSection() {
 
       <div className="border border-rcn-border/60 bg-[#eef8f1] border-[#cfe6d6] rounded-[14px] p-3 mb-3">
         <p className="m-0 text-sm text-rcn-text mb-2">
-          These additional details will be visible to the Referral Receiver after payment/unlock
-          (unless the Referral Sender purchased the referral, in which case the Receiver can view
-          without paying).
+          These additional details will be visible to the Referral Receiver
+          after payment/unlock (unless the Referral Sender purchased the
+          referral, in which case the Receiver can view without paying).
         </p>
         <p className="m-0 text-sm text-rcn-text mb-2">
-          Without unlocking additional details, the receiver can still verify the patient&apos;s
-          insurance and choose to accept or decline the referral. This helps ensure the receiver
-          does not incur costs for services that are not covered or not appropriate.
+          Without unlocking additional details, the receiver can still verify
+          the patient&apos;s insurance and choose to accept or decline the
+          referral. This helps ensure the receiver does not incur costs for
+          services that are not covered or not appropriate.
         </p>
         <p className="m-0 text-sm text-rcn-text">
-          The communication channel (chat/messaging) will remain closed until the receiver pays to
-          unlock the referral, at which point full details become available and the receiver can
-          communicate with the sender.
+          The communication channel (chat/messaging) will remain closed until
+          the receiver pays to unlock the referral, at which point full details
+          become available and the receiver can communicate with the sender.
         </p>
       </div>
 
@@ -68,13 +74,16 @@ export function AdditionalDetailsSection() {
             Phone Number <span className="text-rcn-danger font-black">*</span>
           </label>
           <PhoneInputField
+            country="us"
             value={patientPhoneValue}
             onChange={handlePatientPhoneChange}
             hasError={!!errors.patient_phone_number}
             placeholder="(xxx) xxx-xxxx"
           />
           {errors.patient_phone_number && (
-            <p className="text-xs text-rcn-danger mt-1 m-0">{errors.patient_phone_number.message}</p>
+            <p className="text-xs text-rcn-danger mt-1 m-0">
+              {errors.patient_phone_number.message}
+            </p>
           )}
         </div>
         <div>
@@ -99,14 +108,24 @@ export function AdditionalDetailsSection() {
             {...register("social_security_number")}
             onChange={(e) => {
               const formatted = formatSSN(e.target.value);
-              setValue("social_security_number", formatted, { shouldValidate: true });
+              setValue("social_security_number", formatted, {
+                shouldValidate: true,
+              });
             }}
-            onBlur={() => setValue("social_security_number", formatSSN(watch("social_security_number") ?? ""), { shouldValidate: true })}
+            onBlur={() =>
+              setValue(
+                "social_security_number",
+                formatSSN(watch("social_security_number") ?? ""),
+                { shouldValidate: true },
+              )
+            }
             className={inputClass}
           />
           {errors.social_security_number && (
-            <p className="text-xs text-rcn-danger mt-1 m-0">{errors.social_security_number.message}</p>
-          )}  
+            <p className="text-xs text-rcn-danger mt-1 m-0">
+              {errors.social_security_number.message}
+            </p>
+          )}
         </div>
         <div>
           <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
