@@ -1,49 +1,137 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import type { Company } from "@/app/staff-portal/inbox/types";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  getStaffOrganizationsApi,
+  getStatesApi,
+  postStaffBranchesByOrganizationsApi,
+  postStaffDepartmentsByBranchesApi,
+} from "@/apis/ApiCalls";
+import { checkResponse } from "@/utils/commonFunc";
+import { Button } from "@/components";
+import CustomAsyncSelect from "@/components/CustomAsyncSelect";
+import CustomReactSelect from "@/components/CustomReactSelect";
+import defaultAdminQueryKeys from "@/utils/adminQueryKeys";
+import { useQuery } from "@tanstack/react-query";
+import { toastWarning } from "@/utils/toast";
 
-export type { Company };
+export interface OrgBranchDeptOption {
+  value: string;
+  label: string;
+}
 
-interface ForwardModalProps {
+function toOptions(list: unknown[]): OrgBranchDeptOption[] {
+  if (!Array.isArray(list)) return [];
+  return list
+    .map((item: unknown) => {
+      const rec = item as Record<string, unknown>;
+      const id = (rec._id ?? rec.id) as string | undefined;
+      const name = (rec.name ?? rec.title) as string | undefined;
+      return id && name ? { value: id, label: String(name) } : null;
+    })
+    .filter((x): x is OrgBranchDeptOption => x !== null);
+}
+
+export interface ForwardModalProps {
   isOpen: boolean;
   onClose: () => void;
   refId: string | null;
-  servicesRequested: { name: string; id: string }[];
-  companyDirectory: Company[];
-  selectedCompany: Company | null;
-  onSelectCompany: (c: Company | null) => void;
-  onForward: (company: Company, customServices: string[] | null) => void;
-  onAddCompanyAndSelect: (name: string, email: string) => void;
+  onForward: (departmentIds: string[]) => void;
+  isPending?: boolean;
 }
 
 export function ForwardModal({
   isOpen,
   onClose,
   refId,
-  servicesRequested,
-  companyDirectory,
-  selectedCompany,
-  onSelectCompany,
   onForward,
-  onAddCompanyAndSelect,
+  isPending = false,
 }: ForwardModalProps) {
-  const [fwdSearch, setFwdSearch] = useState("");
-  const [fwdServicesMode, setFwdServicesMode] = useState<"ALL" | "CUSTOM">("ALL");
-  const [fwdAddBoxShow, setFwdAddBoxShow] = useState(false);
-  const [fwdNewName, setFwdNewName] = useState("");
-  const [fwdNewEmail, setFwdNewEmail] = useState("");
+  const [stateFilter, setStateFilter] = useState("");
+  const [selectedOrg, setSelectedOrg] = useState<OrgBranchDeptOption | null>(null);
+  const [selectedBranch, setSelectedBranch] = useState("");
+  const [selectedDepartmentIds, setSelectedDepartmentIds] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    if (isOpen) {
-      setFwdSearch("");
-      setFwdServicesMode("ALL");
-      setFwdAddBoxShow(false);
-      setFwdNewName("");
-      setFwdNewEmail("");
-      onSelectCompany(null);
-    }
-  }, [isOpen, onSelectCompany]);
+  const { data: stateOptionsFromApi = [] } = useQuery({
+    queryKey: [...defaultAdminQueryKeys.statesList],
+    queryFn: async () => {
+      const res = await getStatesApi();
+      if (!checkResponse({ res })) return [];
+      const data = res.data?.data ?? res.data;
+      const list = Array.isArray(data) ? data : [];
+      return list
+        .map((item: { name?: string; abbreviation?: string }) => {
+          const value = item.abbreviation;
+          const label = item.name;
+          return value != null && label != null
+            ? { value: String(value), label: String(label) }
+            : null;
+        })
+        .filter((x): x is OrgBranchDeptOption => x != null);
+    },
+  });
+
+  const stateFilterOptions: OrgBranchDeptOption[] = useMemo(
+    () => [...stateOptionsFromApi],
+    [stateOptionsFromApi]
+  );
+
+  const loadOrganizationOptions = useCallback(
+    (inputValue: string) => {
+      const stateParam =
+        stateFilter && stateFilter !== "ALL"
+          ? stateOptionsFromApi.find((s) => s.value === stateFilter)?.label ?? stateFilter
+          : "";
+
+      if (!stateParam && inputValue?.trim()) {
+        toastWarning("Please select a state");
+        return Promise.resolve([]);
+      }
+      if (!stateParam) return Promise.resolve([]);
+      if (!inputValue?.trim()) return Promise.resolve([]);
+
+      return getStaffOrganizationsApi({
+        ...(stateParam && { state: stateParam }),
+        ...(inputValue.trim() && { search: inputValue.trim() }),
+      })
+        .then((res) => {
+          if (!checkResponse({ res })) return [];
+          const data = res.data?.data ?? res.data;
+          const list = Array.isArray(data) ? data : [];
+          return toOptions(list);
+        })
+        .catch(() => []);
+    },
+    [stateFilter, stateOptionsFromApi]
+  );
+
+  const { data: branchOptions = [] } = useQuery({
+    queryKey: ["staff", "forward-branches", selectedOrg?.value],
+    queryFn: async () => {
+      if (!selectedOrg?.value) return [];
+      const res = await postStaffBranchesByOrganizationsApi({
+        organization_ids: [selectedOrg.value],
+      });
+      if (!checkResponse({ res })) return [];
+      const data = res.data?.data ?? res.data;
+      return toOptions(Array.isArray(data) ? data : []);
+    },
+    enabled: !!selectedOrg?.value,
+  });
+
+  const { data: departmentOptions = [] } = useQuery({
+    queryKey: ["staff", "forward-departments", selectedBranch],
+    queryFn: async () => {
+      if (!selectedBranch) return [];
+      const res = await postStaffDepartmentsByBranchesApi({
+        branch_ids: [selectedBranch],
+      });
+      if (!checkResponse({ res })) return [];
+      const data = res.data?.data ?? res.data;
+      return toOptions(Array.isArray(data) ? data : []);
+    },
+    enabled: !!selectedBranch,
+  });
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -55,47 +143,54 @@ export function ForwardModal({
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [isOpen]);
 
-  const term = (fwdSearch || "").trim().toLowerCase();
-  const results = companyDirectory
-    .filter((c) => !term || c.name.toLowerCase().includes(term))
-    .slice(0, 50);
+  const orgSelectValue = useMemo(
+    () => (selectedOrg ? [selectedOrg] : []),
+    [selectedOrg]
+  );
 
-  const readCustomServices = (): string[] | null => {
-    if (fwdServicesMode !== "CUSTOM") return null;
-    const checks = Array.from(document.querySelectorAll("#fwdServicesChecks input[type='checkbox']")) as HTMLInputElement[];
-    const chosen = checks.filter((x) => x.checked).map((x) => x.getAttribute("data-svc") || "");
-    return chosen.filter(Boolean).length ? chosen : null;
-  };
+  const handleOrgChange = useCallback((opts: OrgBranchDeptOption[]) => {
+    const next = opts?.[0] ?? null;
+    setSelectedOrg(next);
+    if (!next) {
+      setSelectedBranch("");
+      setSelectedDepartmentIds(new Set());
+    }
+  }, []);
 
-  const handleAddAndSelect = () => {
-    const name = fwdNewName.trim();
-    if (!name) {
-      alert("Please enter a company name.");
+  const handleBranchChange = useCallback((value: string) => {
+    setSelectedBranch(value);
+    if (!value) setSelectedDepartmentIds(new Set());
+  }, []);
+
+  const toggleDepartment = useCallback((deptId: string) => {
+    setSelectedDepartmentIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(deptId)) next.delete(deptId);
+      else next.add(deptId);
+      return next;
+    });
+  }, []);
+
+  const handleConfirm = useCallback(() => {
+    const ids = Array.from(selectedDepartmentIds);
+    if (!ids.length) {
+      toastWarning("Please select at least one department.");
       return;
     }
-    onAddCompanyAndSelect(name, fwdNewEmail.trim());
-    setFwdAddBoxShow(false);
-    setFwdNewName("");
-    setFwdNewEmail("");
-  };
-
-  const handleConfirm = () => {
-    if (!selectedCompany?.name) {
-      alert("Please select a company (or add a new one) before forwarding.");
-      return;
-    }
-    onForward(selectedCompany, readCustomServices());
+    onForward(ids);
     onClose();
-  };
+  }, [selectedDepartmentIds, onForward, onClose]);
 
   if (!isOpen) return null;
 
   return (
     <div
-      className="fixed inset-0 bg-slate-900/55 flex items-center justify-center p-4 z-[999]"
+      className="fixed inset-0 bg-slate-900/55 flex items-center justify-center p-4 z-999"
       onClick={(e) => e.target === e.currentTarget && onClose()}
       aria-hidden="false"
     >
@@ -103,15 +198,22 @@ export function ForwardModal({
         className="w-full max-w-[780px] bg-white/98 border border-slate-200 rounded-[18px] shadow-[0_30px_80px_rgba(2,6,23,.35)] overflow-hidden"
         role="dialog"
         aria-modal="true"
-        aria-label="Forward referral modal"
+        aria-label={refId ? `Forward referral ${refId}` : "Forward referral"}
       >
         <div
           className="p-3.5 border-b border-rcn-brand/20 flex items-start justify-between gap-3"
-          style={{ background: "linear-gradient(90deg, rgba(15,107,58,.18), rgba(31,138,76,.12), rgba(31,138,76,.06))" }}
+          style={{
+            background:
+              "linear-gradient(90deg, rgba(15,107,58,.18), rgba(31,138,76,.12), rgba(31,138,76,.06))",
+          }}
         >
           <div>
-            <h3 className="m-0 text-sm font-black tracking-wide">Forward Referral to Another Company</h3>
-            <p className="m-0 mt-1.5 text-rcn-muted text-xs font-[850]">Search and select a company, optionally choose services, then forward.</p>
+            <h3 className="m-0 text-sm font-black tracking-wide">
+              Forward Referral to Departments
+            </h3>
+            <p className="m-0 mt-1.5 text-rcn-muted text-xs font-[850]">
+              Select state, organization, branch, then choose departments to forward to.
+            </p>
           </div>
           <button
             type="button"
@@ -125,142 +227,67 @@ export function ForwardModal({
         <div className="p-3.5 flex flex-col gap-3">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <div className="text-rcn-muted text-xs font-[850] leading-snug mb-1.5">Search Company (type-to-find)</div>
-              <input
-                id="fwdSearch"
-                value={fwdSearch}
-                onChange={(e) => setFwdSearch(e.target.value)}
-                placeholder="Type a company name…"
-                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-sm font-[850] text-rcn-text"
+              <label className="block text-rcn-muted text-xs font-[850] leading-snug mb-1.5">
+                State (business location)
+              </label>
+              <CustomReactSelect
+                value={stateFilter}
+                onChange={setStateFilter}
+                options={stateFilterOptions}
+                placeholder="Select state..."
+                aria-label="State"
+                isClearable={false}
+                maxMenuHeight={280}
               />
             </div>
             <div>
-              <div className="text-rcn-muted text-xs font-[850] leading-snug mb-1.5">Services Requested (optional)</div>
-              <select
-                id="fwdServicesMode"
-                value={fwdServicesMode}
-                onChange={(e) => setFwdServicesMode(e.target.value as "ALL" | "CUSTOM")}
-                className="w-full border border-slate-200 bg-white rounded-xl py-2 px-2.5 text-xs font-[850] text-rcn-text outline-none"
-                aria-label="Services selection mode"
-              >
-                <option value="ALL">All services (default)</option>
-                <option value="CUSTOM">Custom selection</option>
-              </select>
+              <label className="block text-rcn-muted text-xs font-[850] leading-snug mb-1.5">
+                Organization (search and select)
+              </label>
+              <CustomAsyncSelect
+                value={orgSelectValue}
+                onChange={handleOrgChange}
+                loadOptions={loadOrganizationOptions}
+                placeholder="Type to search organizations..."
+                aria-label="Organization"
+                defaultOptions={false}
+                maxMenuHeight={280}
+              />
             </div>
           </div>
 
-          {fwdServicesMode === "CUSTOM" && (
-            <div className="border border-dashed border-rcn-brand/35 rounded-[14px] bg-rcn-brand/5 p-3">
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <strong className="text-xs font-black">Custom Services Selection</strong>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border border-blue-300 bg-blue-100 text-blue-800">Optional</span>
-              </div>
-              <div className="text-rcn-muted text-xs font-[850] mt-1.5">Choose services to send. If none selected, forwarding defaults to all services.</div>
-              <div id="fwdServicesChecks" className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-                {(servicesRequested || []).map((s, i) => (
-                  <div key={i} className="flex items-center gap-2.5 p-2.5 border border-slate-200 rounded-xl bg-white/90">
-                    <input type="checkbox" id={`svc_${i}`} data-svc={s} className="rounded" />
-                    <label htmlFor={`svc_${i}`} className="text-xs font-black text-rcn-text">{s.name}</label>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="border border-slate-200 rounded-[14px] bg-white overflow-hidden">
-            <div className="px-3 py-2.5 bg-rcn-brand/5 border-b border-slate-200 flex items-center justify-between gap-2">
-              <strong className="text-xs font-black">Company Results</strong>
-              <span className="text-[11px] text-rcn-muted font-black">{results.length} found</span>
-            </div>
-            <div className="max-h-[260px] overflow-auto">
-              {!results.length ? (
-                <div className="p-3 text-rcn-muted font-black text-sm">No matches. Use "Add Referral Receiver (if not listed)".</div>
-              ) : (
-                results.map((c, idx) => (
-                  <div
-                    key={idx}
-                    onClick={() => onSelectCompany(c)}
-                    className={`px-3 py-2.5 border-b border-slate-200 flex items-center justify-between gap-3 cursor-pointer last:border-b-0 ${selectedCompany?.name === c.name ? "bg-rcn-brand/10 outline-2 outline-rcn-brand/15 -outline-offset-2" : "hover:bg-rcn-brand/5"
-                      }`}
-                  >
-                    <div className="flex flex-col gap-0.5">
-                      <strong className="text-[13px] font-black">{c.name}</strong>
-                      <small className="text-rcn-muted text-[11px] font-black">{c.email || "No email listed"}</small>
-                    </div>
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border border-blue-300 bg-blue-100 text-blue-800">Select</span>
-                  </div>
-                ))
-              )}
-            </div>
+          <div>
+            <label className="block text-rcn-muted text-xs font-[850] leading-snug mb-1.5">
+              Branch
+            </label>
+            <CustomReactSelect
+              value={selectedBranch}
+              onChange={handleBranchChange}
+              options={branchOptions}
+              placeholder="Select branch..."
+              aria-label="Branch"
+              isClearable
+              maxMenuHeight={220}
+              isDisabled={!selectedOrg?.value}
+            />
           </div>
 
-          <div className="border border-dashed border-rcn-brand/35 rounded-[14px] bg-rcn-brand/5 p-3">
-            <div className="flex items-center justify-between gap-2 flex-wrap">
-              <strong className="text-xs font-black">Selected Company</strong>
-              <span
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border ${selectedCompany ? "border-rcn-brand/30 bg-rcn-brand/10 text-rcn-accent-dark" : "border-slate-300 bg-slate-100 text-slate-600"
-                  }`}
-              >
-                {selectedCompany ? "Selected" : "None selected"}
-              </span>
-            </div>
-            <div className="text-rcn-muted text-xs font-[850] mt-1.5">
-              {selectedCompany ? `${selectedCompany.name}${selectedCompany.email ? " • " + selectedCompany.email : ""}` : "Select a company from the list or add a new one below."}
-            </div>
-          </div>
-
-          <div className="flex gap-2.5 flex-wrap items-center justify-between">
-            <button
-              type="button"
-              onClick={() => setFwdAddBoxShow(true)}
-              className="border border-rcn-brand/30 bg-rcn-brand/10 text-rcn-accent-dark px-2.5 py-2 rounded-xl font-extrabold text-xs shadow-[0_8px_18px_rgba(2,6,23,.06)]"
-            >
-              Add Referral Receiver (if not listed)
-            </button>
-            <div className="text-rcn-muted text-xs font-[850]">This will add the company and select it for forwarding.</div>
-          </div>
-
-          {fwdAddBoxShow && (
-            <div className="border border-dashed border-rcn-brand/35 rounded-[14px] bg-rcn-brand/5 p-3">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                  <div className="text-rcn-muted text-xs font-[850] mb-1.5">New Company Name</div>
-                  <input
-                    value={fwdNewName}
-                    onChange={(e) => setFwdNewName(e.target.value)}
-                    placeholder="Company name"
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-sm font-[850]"
-                  />
-                </div>
-                <div>
-                  <div className="text-rcn-muted text-xs font-[850] mb-1.5">Company Email (optional)</div>
-                  <input
-                    value={fwdNewEmail}
-                    onChange={(e) => setFwdNewEmail(e.target.value)}
-                    placeholder="intake@company.com"
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-sm font-[850]"
-                  />
-                </div>
-              </div>
-              <div className="flex gap-2.5 justify-end mt-2.5">
-                <button type="button" onClick={() => setFwdAddBoxShow(false)} className="border border-slate-200 bg-white px-2.5 py-2 rounded-xl font-extrabold text-xs shadow">
-                  Cancel
-                </button>
-                <button type="button" onClick={handleAddAndSelect} className="border border-rcn-brand/30 bg-rcn-brand/10 text-rcn-accent-dark px-2.5 py-2 rounded-xl font-extrabold text-xs shadow">
-                  Add & Select
-                </button>
-              </div>
-            </div>
-          )}
+           
         </div>
 
         <div className="px-3.5 py-3 border-t border-slate-200 flex items-center justify-end gap-2.5 bg-white/95">
-          <button type="button" onClick={onClose} className="border border-slate-200 bg-white px-2.5 py-2 rounded-xl font-extrabold text-xs shadow">
+          <Button type="button" variant="secondary" size="sm" onClick={onClose}>
             Cancel
-          </button>
-          <button type="button" onClick={handleConfirm} className="border border-rcn-brand/30 bg-rcn-brand/10 text-rcn-accent-dark px-2.5 py-2 rounded-xl font-extrabold text-xs shadow">
-            Forward Referral
-          </button>
+          </Button>
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            onClick={handleConfirm}
+            disabled={isPending || selectedDepartmentIds.size === 0}
+          >
+            {isPending ? "Forwarding…" : "Forward Referral"}
+          </Button>
         </div>
       </div>
     </div>

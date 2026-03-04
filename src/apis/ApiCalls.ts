@@ -481,6 +481,13 @@ export const getOrganizationReferralReceivedApi = (params?: unknown) =>
 export const getOrganizationReferralByIdApi = (id: string) =>
   AxiosInstance.get(`/api/organization/referral/${id}`);
 
+/** POST /api/organization/referral/:id/forward — forward referral to departments (department_ids). */
+export const postOrganizationReferralForwardApi = (
+  referralId: string,
+  body: { department_ids: string[] },
+) =>
+  AxiosInstance.post(`/api/organization/referral/${referralId}/forward`, body);
+
 /** POST /api/organization/referral/:id/payment-summary — get payment summary for draft referral. source: "free" = sender pays, "payment" = receiver pays (requires payment_method_id). */
 export const postOrganizationReferralPaymentSummaryApi = (
   referralId: string,

@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import type { SentReferralApi, Company, ReferralListMeta } from "@/app/staff-portal/inbox/types";
-import { fmtDate, pillClass, pillLabel } from "@/app/staff-portal/inbox/helpers";
-import { ForwardModal } from "../../ForwardModal";
+import type { SentReferralApi, ReferralListMeta } from "@/app/staff-portal/inbox/types";
+import { pillClass, pillLabel } from "@/app/staff-portal/inbox/helpers";
 import { Button, DebouncedInput, TableLayout, type TableColumn } from "@/components";
 import CustomPagination from "@/components/CustomPagination";
 import { SenderInboxBody, SenderInboxType } from "@/app/staff-portal/inbox/page";
@@ -36,12 +35,10 @@ export function SenderInbox({
   body,
   setBody,
   referrals,
-
   meta,
   isLoading = false,
 }: SenderInboxProps) {
   const router = useRouter();
-
   const baseList = referrals
 
   const columns: TableColumn<SentReferralApi>[] = useMemo(
@@ -110,11 +107,10 @@ export function SenderInbox({
               variant="primary"
               size="sm"
               onClick={() => router.push(`/staff-portal/inbox/sender/${ref._id}`)}
-              className="border border-rcn-brand/25  text-rcn-accent-dark px-2 py-1.5 rounded-xl font-extrabold text-xs shadow mr-1"
+              className="border border-rcn-brand/25 text-rcn-accent-dark px-2 py-1.5 rounded-xl font-extrabold text-xs shadow mr-1"
             >
               View
             </Button>
-
           </div>
         ),
       },
@@ -171,18 +167,6 @@ export function SenderInbox({
           />
         </div>
       </section>
-
-      {/* <ForwardModal
-        isOpen={forwardOpen}
-        onClose={() => { setForwardOpen(false); setForwardRefId(null); setForwardSelectedCompany(null); }}
-        refId={forwardRefId}
-        servicesRequested={fullRef?.speciality_ids ?? []}
-        companyDirectory={companyDirectory}
-        selectedCompany={forwardSelectedCompany}
-        onSelectCompany={setForwardSelectedCompany}
-        onForward={(company: Company, customServices: string[] | null) => forwardRefId && forwardReferral(forwardRefId, company, customServices)}
-        onAddCompanyAndSelect={addCompanyAndSelect}
-      /> */}
     </>
   );
 }

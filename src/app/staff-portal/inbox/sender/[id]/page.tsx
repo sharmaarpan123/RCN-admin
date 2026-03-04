@@ -1,16 +1,17 @@
 "use client";
 
-import { getOrganizationReferralByIdApi } from "@/apis/ApiCalls";
+import { getOrganizationReferralByIdApi, postOrganizationReferralForwardApi } from "@/apis/ApiCalls";
 import type { ChatMsg, Comm, ReceiverInstance, ReferralByIdApi } from "@/app/staff-portal/inbox/types";
 import PrintIcon from "@/assets/svg/PrintIcon.jsx";
 import { Button } from "@/components";
+import { ForwardModal } from "@/components/staffComponents/ForwardModal";
 import { SenderDetailSections } from "@/components/staffComponents/inbox/sender/view/SenderDetailSections";
 import { SenderDraftPaymentSection } from "@/components/staffComponents/inbox/sender/view/SenderDraftPaymentSection";
 import type { DocRow } from "@/components/staffComponents/inbox/sender/view/senderViewHelpers";
 import { documentsToList, receiversFromData } from "@/components/staffComponents/inbox/sender/view/senderViewHelpers";
-import { checkResponse, downloadFile } from "@/utils/commonFunc";
+import { catchAsync, checkResponse, downloadFile } from "@/utils/commonFunc";
 import defaultQueryKeys from "@/utils/staffQueryKeys";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -64,7 +65,8 @@ interface LocalOverlay {
 }
 
 function SenderDetailContent({ data }: { data: ReferralByIdApi }) {
-
+  const queryClient = useQueryClient();
+  const [forwardOpen, setForwardOpen] = useState(false);
   const [chatReceiverSelection, setChatReceiverSelection] = useState<Record<string, string>>({});
   const chatBodyRef = useRef<HTMLDivElement>(null);
 
@@ -121,9 +123,19 @@ function SenderDetailContent({ data }: { data: ReferralByIdApi }) {
   ];
 
 
-  const downloadPdfHandler = async (data: ReferralByIdApi) => {
-    await downloadFile(data?.pdf_export_url ?? "");
+  const downloadPdfHandler = async (referralData: ReferralByIdApi) => {
+    await downloadFile(referralData?.pdf_export_url ?? "");
   };
+
+  const { isPending: isForwardPending, mutate: forwardReferral } = useMutation({
+    mutationFn: catchAsync(async ({ refId, departmentIds }: { refId: string; departmentIds: string[] }) => {
+      const res = await postOrganizationReferralForwardApi(refId, { department_ids: departmentIds });
+      if (!checkResponse({ res, showSuccess: true })) return;
+      queryClient.invalidateQueries({ queryKey: [...defaultQueryKeys.referralSentList, "detail", refId] });
+      queryClient.invalidateQueries({ queryKey: defaultQueryKeys.referralSentList });
+      setForwardOpen(false);
+    }),
+  });
 
 
 
@@ -144,10 +156,21 @@ function SenderDetailContent({ data }: { data: ReferralByIdApi }) {
             <p className="m-0 mt-1 text-rcn-muted text-xs font-[650]">Sender view: all receivers + per-receiver chat. Messaging at any status.</p>
           </div>
 
-          <Button variant="primary" size="sm" onClick={() => downloadPdfHandler(data)}>
-            <PrintIcon size={24} />
-          </Button>
-
+          <div className="flex items-center gap-2">
+            {!isDraft && (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => setForwardOpen(true)}
+              >
+                Forward
+              </Button>
+            )}
+            <Button variant="primary" size="sm" onClick={() => downloadPdfHandler(data)}>
+              <PrintIcon size={24} />
+            </Button>
+          </div>
         </div>
         <div className="p-3 overflow-auto">
           <div className="flex flex-col gap-3.5">
@@ -161,7 +184,14 @@ function SenderDetailContent({ data }: { data: ReferralByIdApi }) {
         </div>
       </div>
 
-
+      <ForwardModal
+        key={forwardOpen ? refId : "closed"}
+        isOpen={forwardOpen}
+        onClose={() => setForwardOpen(false)}
+        refId={refId}
+        onForward={(departmentIds) => forwardReferral({ refId, departmentIds })}
+        isPending={isForwardPending}
+      />
     </div>
   );
 }
