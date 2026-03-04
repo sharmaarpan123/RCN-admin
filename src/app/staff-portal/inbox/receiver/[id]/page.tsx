@@ -243,6 +243,7 @@ function ReceiverDetailContent({
         source: "credit" | "payment" | "user" | "branch";
         payment_method_id?: string;
         branch_id?: string;
+        credit_source?: "user" | "branch";
       }) => {
         if (!receiverId) return;
         const sendBody =
@@ -253,7 +254,7 @@ function ReceiverDetailContent({
                   source: "payment" as const,
                   payment_method_id: payload.payment_method_id,
                 }
-              : { source: "credit" as const };
+              : { source: "credit" as const, credit_source: payload.credit_source as "user" | "branch" , branch_id: payload.branch_id };
         const res = await postOrganizationReferralDepartmentPayApi(
           refId,
           receiverId,
@@ -316,7 +317,8 @@ function ReceiverDetailContent({
 
   const onConfirmCredit = (source: CreditBalanceItem) => {
     pay({
-      source: source.source,
+      source: "credit",
+      credit_source: source.source,
       branch_id: source.source === "branch" ? source.id : undefined,
     });
   };
