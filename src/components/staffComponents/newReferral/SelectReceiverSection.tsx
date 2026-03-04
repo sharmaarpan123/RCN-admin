@@ -7,7 +7,11 @@ import Select, { type MultiValue } from "react-select";
 import CustomAsyncSelect from "@/components/CustomAsyncSelect";
 import CustomReactSelect from "@/components/CustomReactSelect";
 import { SectionHeader } from "./SectionHeader";
-import type { GuestOrganization, OrgBranchDeptOption, ReceiverRow } from "./types";
+import type {
+  GuestOrganization,
+  OrgBranchDeptOption,
+  ReceiverRow,
+} from "./types";
 import type { ReferralFormValues } from "./referralFormSchema";
 import {
   getOrganizationBranchSearchApi,
@@ -52,34 +56,37 @@ function toOptions(list: unknown[]): OrgBranchDeptOption[] {
 interface SelectReceiverSectionProps {
   stateFilter: string;
   setStateFilter: (v: string) => void;
-
 }
 
 export function SelectReceiverSection({
   stateFilter,
   setStateFilter,
-
 }: SelectReceiverSectionProps) {
   const [receiverModalOpen, setReceiverModalOpen] = useState(false);
-  const [branchSearchSelected, setBranchSearchSelected] = useState<OrgBranchDeptOption[]>([]);
+  const [branchSearchSelected, setBranchSearchSelected] = useState<
+    OrgBranchDeptOption[]
+  >([]);
   const branchSearchResultsRef = useRef<BranchSearchItem[]>([]);
   const { control, setValue, getValues } = useFormContext<ReferralFormValues>();
   const watchedReceiverRows = useWatch({ name: "receiver_rows", control });
-  const watchedGuestOrganizations = useWatch({ name: "guest_organizations", control });
+  const watchedGuestOrganizations = useWatch({
+    name: "guest_organizations",
+    control,
+  });
   const guestOrganizations = useMemo(
     () => (watchedGuestOrganizations ?? []) as GuestOrganization[],
-    [watchedGuestOrganizations]
+    [watchedGuestOrganizations],
   );
   const { errors } = useFormState<ReferralFormValues>();
   const receiverRows = useMemo(
     () => (watchedReceiverRows ?? []) as ReceiverRow[],
-    [watchedReceiverRows]
+    [watchedReceiverRows],
   );
 
   const receiverRowsRootError =
     errors.receiver_rows &&
-      typeof errors.receiver_rows === "object" &&
-      "message" in errors.receiver_rows
+    typeof errors.receiver_rows === "object" &&
+    "message" in errors.receiver_rows
       ? (errors.receiver_rows as { message?: string }).message
       : undefined;
 
@@ -89,7 +96,7 @@ export function SelectReceiverSection({
         value: r.organizationId,
         label: r.organizationName,
       })),
-    [receiverRows]
+    [receiverRows],
   );
 
   const { data: stateOptionsFromApi = [] } = useQuery({
@@ -103,25 +110,23 @@ export function SelectReceiverSection({
         .map((item: { name?: string; abbreviation?: string }) => {
           const value = item.abbreviation;
           const label = item.name;
-          return value != null && label != null ? { value: String(value), label: String(label) } : null;
+          return value != null && label != null
+            ? { value: String(value), label: String(label) }
+            : null;
         })
         .filter((x): x is OrgBranchDeptOption => x != null);
     },
   });
 
-  const stateFilterOptions: OrgBranchDeptOption[] = [
-
-    ...stateOptionsFromApi,
-  ];
+  const stateFilterOptions: OrgBranchDeptOption[] = [...stateOptionsFromApi];
 
   const loadOrganizationOptions = useCallback(
     (inputValue: string) => {
       const stateParam =
         stateFilter && stateFilter !== "ALL"
-          ? stateOptionsFromApi.find((s) => s.value === stateFilter)?.label ?? stateFilter
+          ? (stateOptionsFromApi.find((s) => s.value === stateFilter)?.label ??
+            stateFilter)
           : "";
-
-
 
       if (!stateParam && inputValue?.trim()) {
         toastWarning("Please select a state");
@@ -148,14 +153,15 @@ export function SelectReceiverSection({
         })
         .catch(() => []);
     },
-    [stateFilter, stateOptionsFromApi]
+    [stateFilter, stateOptionsFromApi],
   );
 
   const handleOrganizationChange = useCallback(
     (options: OrgBranchDeptOption[]) => {
-
       const newReceiverRows = options.map((opt) => {
-        const existing = receiverRows.find((r) => r.organizationId === opt.value);
+        const existing = receiverRows.find(
+          (r) => r.organizationId === opt.value,
+        );
         return {
           organizationId: opt.value,
           organizationName: opt.label,
@@ -163,15 +169,11 @@ export function SelectReceiverSection({
           branchName: existing?.branchName ?? null,
           selectedDepartments: existing?.selectedDepartments ?? [],
         };
-      })
+      });
 
-      setValue(
-        "receiver_rows",
-        newReceiverRows,
-        { shouldValidate: true, }
-      );
+      setValue("receiver_rows", newReceiverRows, { shouldValidate: true });
     },
-    [receiverRows, setValue]
+    [receiverRows, setValue],
   );
 
   const removeRow = useCallback(
@@ -179,24 +181,25 @@ export function SelectReceiverSection({
       setValue(
         "receiver_rows",
         receiverRows.filter((r) => r.organizationId !== organizationId),
-        { shouldValidate: true }
+        { shouldValidate: true },
       );
     },
-    [receiverRows, setValue]
+    [receiverRows, setValue],
   );
 
   const loadBranchSearchOptions = useCallback(
     (inputValue: string) => {
       const stateParam =
         stateFilter && stateFilter !== "ALL"
-          ? stateOptionsFromApi.find((s) => s.value === stateFilter)?.label ?? stateFilter
+          ? (stateOptionsFromApi.find((s) => s.value === stateFilter)?.label ??
+            stateFilter)
           : "";
       if (!stateParam) {
         if (inputValue?.trim()) toastWarning("Please select a state first");
         return Promise.resolve([]);
       }
       if (!inputValue?.trim()) return Promise.resolve([]);
-      
+
       return getOrganizationBranchSearchApi({
         state: stateParam,
         name: inputValue.trim(),
@@ -207,8 +210,7 @@ export function SelectReceiverSection({
           const list = Array.isArray(data) ? data : [];
           branchSearchResultsRef.current = list as BranchSearchItem[];
           return list.map((item: BranchSearchItem) => {
-            const prefix = item.is_branch ? "b" : "o";
-            const value = `${prefix}-${item._id}`;
+            const value = `${item._id}`;
             const label = item.is_branch
               ? `${item.name} (Branch)`
               : `${item.name} (Organization)`;
@@ -217,7 +219,7 @@ export function SelectReceiverSection({
         })
         .catch(() => []);
     },
-    [stateFilter, stateOptionsFromApi]
+    [stateFilter, stateOptionsFromApi],
   );
 
   const handleBranchSearchChange = useCallback(
@@ -226,26 +228,35 @@ export function SelectReceiverSection({
       const results = branchSearchResultsRef.current;
       const newRows: ReceiverRow[] = [];
       for (const opt of options) {
-        const item = results.find(
-          (r) => `${r.is_branch ? "b" : "o"}-${r._id}` === opt.value
-        );
+        const item = results.find((r) => `${r._id}` === opt.value);
         if (!item) continue;
+
         if (item.is_organization) {
-          newRows.push({
-            organizationId: item._id,
-            organizationName: item.name,
-            branchId: null,
-            branchName: null,
-            selectedDepartments: [],
-          });
+          const isOrgAlreadyThere = receiverRows.some(
+            (r) => r.organizationId === item._id,
+          );
+          if (!isOrgAlreadyThere) {
+            newRows.push({
+              organizationId: item._id,
+              organizationName: item.name,
+              branchId: null,
+              branchName: null,
+              selectedDepartments: [],
+            });
+          }
         } else if (item.is_branch && item.organization) {
-          newRows.push({
-            organizationId: item.organization._id,
-            organizationName: item.organization.name,
-            branchId: item._id,
-            branchName: item.name,
-            selectedDepartments: [],
-          });
+          const isBranchAlreadyThere = receiverRows.some(
+            (r) => r.branchId === item._id,
+          );
+          if (!isBranchAlreadyThere) {
+            newRows.push({
+              organizationId: item.organization._id,
+              organizationName: item.organization.name,
+              branchId: item._id,
+              branchName: item.name,
+              selectedDepartments: [],
+            });
+          }
         }
       }
       if (newRows.length > 0) {
@@ -255,58 +266,61 @@ export function SelectReceiverSection({
       }
       setBranchSearchSelected([]);
     },
-    [receiverRows, setValue]
+    [receiverRows, setValue],
   );
 
   const updateRowBranch = useCallback(
     (organizationId: string, branchId: string, branchName: string) => {
+      const isBranchAlreadyThere = receiverRows.some(
+        (r) => r.branchId === branchId && r.organizationId !== organizationId,
+      );
+      if (isBranchAlreadyThere) return;
       setValue(
         "receiver_rows",
         receiverRows.map((r) =>
           r.organizationId === organizationId
             ? {
-              ...r,
-              branchId,
-              branchName,
-              selectedDepartments: [],
-            }
-            : r
+                ...r,
+                branchId,
+                branchName,
+                selectedDepartments: [],
+              }
+            : r,
         ),
-        { shouldValidate: true }
+        { shouldValidate: true },
       );
     },
-    [receiverRows, setValue]
+    [receiverRows, setValue],
   );
 
-
-
   const updateRowDepartments = useCallback(
-    (organizationId: string, selectedDepartments: OrgBranchDeptOption[]) => {
+    (branchId: string, selectedDepartments: OrgBranchDeptOption[]) => {
       setValue(
         "receiver_rows",
         receiverRows.map((r) =>
-          r.organizationId === organizationId
-            ? { ...r, selectedDepartments }
-            : r
+          r.branchId === branchId ? { ...r, selectedDepartments } : r,
         ),
-        { shouldValidate: true }
+        { shouldValidate: true },
       );
     },
-    [receiverRows, setValue]
+    [receiverRows, setValue],
   );
 
   const handleAddReceiver = (guest: GuestOrganization) => {
     const currentGuests = getValues("guest_organizations") ?? [];
-    setValue("guest_organizations", [...currentGuests, guest], { shouldValidate: true });
+    setValue("guest_organizations", [...currentGuests, guest], {
+      shouldValidate: true,
+    });
   };
-
-
-
 
   return (
     <>
       <AddReceiverModal
-        key={receiverModalOpen ? `add-receiver-${stateFilter}` : "add-receiver-closed"}
+        key={
+          receiverModalOpen
+            ? `add-receiver-${stateFilter}`
+            : "add-receiver-closed"
+        }
         isOpen={receiverModalOpen}
         onClose={() => setReceiverModalOpen(false)}
         onAdd={handleAddReceiver}
@@ -324,9 +338,10 @@ export function SelectReceiverSection({
 
         <div className="border border-rcn-border/60 bg-[#eef8f1] border-[#cfe6d6] rounded-[14px] p-3 mb-3">
           <p className="m-0 text-sm text-rcn-text">
-            Bulk referrals are supported. When a referral is sent to multiple receivers, each
-            receiver will only be able to view their own referral and will not be able to see any
-            other receivers or recipient details.
+            Bulk referrals are supported. When a referral is sent to multiple
+            receivers, each receiver will only be able to view their own
+            referral and will not be able to see any other receivers or
+            recipient details.
           </p>
         </div>
 
@@ -371,7 +386,8 @@ export function SelectReceiverSection({
               maxMenuHeight={280}
             />
             <p className="text-xs text-rcn-muted mt-1.5">
-              Select one or more organizations. Then choose branch and department per row below.
+              Select one or more organizations. Then choose branch and
+              department per row below.
             </p>
           </div>
           <div>
@@ -388,7 +404,9 @@ export function SelectReceiverSection({
               maxMenuHeight={280}
             />
             <p className="text-xs text-rcn-muted mt-1.5">
-              Select a state first, then search. Choosing an organization adds one row; choosing a branch adds a row with that branch preselected.
+              Select a state first, then search. Choosing an organization adds
+              one row; choosing a branch adds a row with that branch
+              preselected.
             </p>
           </div>
         </div>
@@ -409,7 +427,7 @@ export function SelectReceiverSection({
             setValue(
               "guest_organizations",
               current.filter((_, i) => i !== index),
-              { shouldValidate: true }
+              { shouldValidate: true },
             );
           }}
         />
@@ -475,8 +493,15 @@ function ReceiverRow({
   departmentError,
 }: {
   row: ReceiverRow;
-  updateRowBranch: (organizationId: string, branchId: string, branchName: string) => void;
-  updateRowDepartments: (organizationId: string, selectedDepartments: OrgBranchDeptOption[]) => void;
+  updateRowBranch: (
+    organizationId: string,
+    branchId: string,
+    branchName: string,
+  ) => void;
+  updateRowDepartments: (
+    branchId: string,
+    selectedDepartments: OrgBranchDeptOption[],
+  ) => void;
   removeRow: (organizationId: string) => void;
   branchError?: string;
   departmentError?: string;
@@ -490,9 +515,10 @@ function ReceiverRow({
 
   const handleDeptChange = useCallback(
     (opts: MultiValue<OrgBranchDeptOption>) => {
-      updateRowDepartments(row.organizationId, opts ? [...opts] : []);
+      if (!row.branchId) return;
+      updateRowDepartments(row.branchId, opts ? [...opts] : []);
     },
-    [row.organizationId, updateRowDepartments],
+    [row.branchId, updateRowDepartments],
   );
 
   return (
@@ -504,9 +530,13 @@ function ReceiverRow({
       </div>
       <div className="min-w-[180px]">
         <CustomReactSelect
-          value={typeof branchValue === "string" ? branchValue : branchValue.value}
+          value={
+            typeof branchValue === "string" ? branchValue : branchValue.value
+          }
           onChange={(value) => {
-            const opt = branchOptions.find((o: OrgBranchDeptOption) => o.value === value);
+            const opt = branchOptions.find(
+              (o: OrgBranchDeptOption) => o.value === value,
+            );
             if (opt) updateRowBranch(row.organizationId, opt.value, opt.label);
           }}
           options={branchOptions}
@@ -526,7 +556,11 @@ function ReceiverRow({
       <div className="min-w-[180px]">
         <Select<OrgBranchDeptOption, true>
           isMulti
-          value={Array.isArray(row.selectedDepartments) ? row.selectedDepartments : []}
+          value={
+            Array.isArray(row.selectedDepartments)
+              ? row.selectedDepartments
+              : []
+          }
           onChange={handleDeptChange}
           options={departmentOptions}
           placeholder="Select departments..."
@@ -534,7 +568,10 @@ function ReceiverRow({
           maxMenuHeight={220}
           isDisabled={!row.branchId}
           classNames={{
-            control: () => (departmentError ? `!border-red-500 ${RCN_SELECT_CLASSES.control}` : RCN_SELECT_CLASSES.control),
+            control: () =>
+              departmentError
+                ? `!border-red-500 ${RCN_SELECT_CLASSES.control}`
+                : RCN_SELECT_CLASSES.control,
             menu: () => RCN_SELECT_CLASSES.menu,
           }}
           aria-label="Departments"
@@ -570,8 +607,15 @@ function ReceiverRowsTable({
   receiverRowsRootError,
 }: {
   receiverRows: ReceiverRow[];
-  updateRowBranch: (organizationId: string, branchId: string, branchName: string) => void;
-  updateRowDepartments: (organizationId: string, selectedDepartments: OrgBranchDeptOption[]) => void;
+  updateRowBranch: (
+    organizationId: string,
+    branchId: string,
+    branchName: string,
+  ) => void;
+  updateRowDepartments: (
+    organizationId: string,
+    selectedDepartments: OrgBranchDeptOption[],
+  ) => void;
   removeRow: (organizationId: string) => void;
   receiverRowsErrors?: unknown;
   receiverRowsRootError?: string;
@@ -579,10 +623,11 @@ function ReceiverRowsTable({
   if (receiverRows.length === 0) {
     return (
       <div
-        className={`py-4 text-center text-sm border rounded-xl ${receiverRowsRootError
-          ? "border-red-300 bg-red-50/80 text-red-800"
-          : "border-rcn-border bg-slate-50/50 text-rcn-muted"
-          }`}
+        className={`py-4 text-center text-sm border rounded-xl ${
+          receiverRowsRootError
+            ? "border-red-300 bg-red-50/80 text-red-800"
+            : "border-rcn-border bg-slate-50/50 text-rcn-muted"
+        }`}
       >
         {receiverRowsRootError ? (
           <p className="m-0 font-medium" role="alert">
@@ -590,8 +635,8 @@ function ReceiverRowsTable({
           </p>
         ) : (
           <p className="m-0">
-            No organizations selected. Use the search above to add organizations, then choose branch
-            and department for each row.
+            No organizations selected. Use the search above to add
+            organizations, then choose branch and department for each row.
           </p>
         )}
       </div>
@@ -614,8 +659,22 @@ function ReceiverRowsTable({
             updateRowBranch={updateRowBranch}
             updateRowDepartments={updateRowDepartments}
             removeRow={removeRow}
-            branchError={(receiverRowsErrors as Array<{ branchId?: { message?: string }; selectedDepartments?: { message?: string } }>)?.[index]?.branchId?.message}
-            departmentError={(receiverRowsErrors as Array<{ branchId?: { message?: string }; selectedDepartments?: { message?: string } }>)?.[index]?.selectedDepartments?.message}
+            branchError={
+              (
+                receiverRowsErrors as Array<{
+                  branchId?: { message?: string };
+                  selectedDepartments?: { message?: string };
+                }>
+              )?.[index]?.branchId?.message
+            }
+            departmentError={
+              (
+                receiverRowsErrors as Array<{
+                  branchId?: { message?: string };
+                  selectedDepartments?: { message?: string };
+                }>
+              )?.[index]?.selectedDepartments?.message
+            }
           />
         ))}
       </div>
@@ -634,7 +693,9 @@ function GuestOrganizationsTable({
 
   return (
     <div className="rounded-xl border border-rcn-border mb-3 my-2">
-      <div className="text-sm font-medium text-rcn-text mb-2 p-2 ">Guest Organizations</div>
+      <div className="text-sm font-medium text-rcn-text mb-2 p-2 ">
+        Guest Organizations
+      </div>
       <div className="min-w-[600px] rounded-xl">
         <div className="grid grid-cols-[1fr_1fr_120px_auto] gap-2 bg-slate-50 border-b border-rcn-border px-2 py-2.5 text-xs font-semibold text-rcn-muted uppercase tracking-wider items-center">
           <div>Company</div>
@@ -648,15 +709,23 @@ function GuestOrganizationsTable({
             className="grid grid-cols-[1fr_1fr_120px_auto] gap-2 border-b border-rcn-border last:border-b-0 py-2.5 px-2 items-center"
           >
             <div className="min-w-0">
-              <p className="m-0 text-sm font-medium text-rcn-text truncate" title={guest.company_name}>
+              <p
+                className="m-0 text-sm font-medium text-rcn-text truncate"
+                title={guest.company_name}
+              >
                 {guest.company_name}
               </p>
-              <p className="m-0 text-xs text-rcn-muted truncate" title={guest.address}>
+              <p
+                className="m-0 text-xs text-rcn-muted truncate"
+                title={guest.address}
+              >
                 {guest.address}
               </p>
             </div>
             <div className="min-w-0">
-              <p className="m-0 text-sm text-rcn-text truncate">{guest.email}</p>
+              <p className="m-0 text-sm text-rcn-text truncate">
+                {guest.email}
+              </p>
               <p className="m-0 text-xs text-rcn-muted truncate">
                 {guest.dial_code} {guest.phone_number}
               </p>
