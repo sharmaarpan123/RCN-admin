@@ -90,14 +90,19 @@ export function SelectReceiverSection({
       ? (errors.receiver_rows as { message?: string }).message
       : undefined;
 
-  const selectedOrgOptions: OrgBranchDeptOption[] = useMemo(
-    () =>
-      receiverRows.map((r) => ({
+  const selectedOrgOptions: OrgBranchDeptOption[] = useMemo(() => {
+    const seen = new Set<string>();
+    return receiverRows
+      .filter((r) => {
+        if (seen.has(r.organizationId)) return false;
+        seen.add(r.organizationId);
+        return true;
+      })
+      .map((r) => ({
         value: r.organizationId,
         label: r.organizationName,
-      })),
-    [receiverRows],
-  );
+      }));
+  }, [receiverRows]);
 
   const { data: stateOptionsFromApi = [] } = useQuery({
     queryKey: [...defaultAdminQueryKeys.statesList],

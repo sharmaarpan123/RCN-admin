@@ -345,7 +345,14 @@ export function ForwardModal({
   }, [isOpen]);
 
   const orgSelectValue = useMemo(
-    () => forwardRows.map((r) => ({ value: r.orgId, label: r.orgName })),
+    () => {
+      const seen = new Set<string>();
+      return forwardRows.filter((r) => {
+        if (seen.has(r.orgId)) return false;
+        seen.add(r.orgId);
+        return true;
+      }).map((r) => ({ value: r.orgId, label: r.orgName }));
+    },
     [forwardRows],
   );
 
