@@ -29,14 +29,11 @@ export function InsuranceInfoSection() {
   const { register, control, setValue, watch } =
     useFormContext<ReferralFormValues>();
   const { errors } = useFormState<ReferralFormValues>();
+
   const { fields, append, remove } = useFieldArray({
     control,
     name: "patient_insurance_information",
   });
-
- 
-
-  
 
   const [uploadingFields, setUploadingFields] = useState<
     Record<string, boolean>
@@ -69,6 +66,12 @@ export function InsuranceInfoSection() {
   const removeDocument = (index: number) => {
     setValue(`patient_insurance_information.${index}.document`, "", {
       shouldValidate: true,
+    });
+
+    // HACK TO RENDER THE COMPONENT AGAIN WILL FIX THIS LATER
+    setUploadingFields((prev) => {
+      const newState = structuredClone({ ...prev });
+      return newState;
     });
   };
 
