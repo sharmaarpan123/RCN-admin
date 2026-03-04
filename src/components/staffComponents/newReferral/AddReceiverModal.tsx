@@ -215,7 +215,11 @@ export function AddReceiverModal({
 
             <CustomReactSelect
               options={stateSelectOptions}
-              value={watch("state")}
+              value={
+                stateSelectOptions?.find(
+                  (option) => option.label === watch("state"),
+                )?.value || ""
+              }
               onChange={(_, option) =>
                 setValue("state", (option?.label as string) ?? "", {
                   shouldValidate: true,
