@@ -83,48 +83,50 @@ export function ReceiverDocsSection({
         </div>
         {docList.length > 0 ? (
           <div className="overflow-hidden relative rounded-[14px] border border-slate-200 bg-white">
-            <div className="absolute inset-0 rounded-[18px] bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4">
-              <div className="w-full max-w-[520px] rounded-2xl bg-white/95 border border-slate-200 shadow-[0_20px_50px_rgba(2,6,23,.25)] p-3.5">
-                <h5 className="m-0 text-[13px] font-semibold">
-                  Locked: Attached Documents
-                </h5>
-                <p className="m-0 mt-1.5 mb-3 text-rcn-muted text-xs font-semibold">
-                  Pay to view or download documents.
-                </p>
-                {!senderPaid && department_status?.status !== "rejected" && (
+            {!isUnlocked && (
+              <div className="absolute inset-0 rounded-[18px] bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4">
+                <div className="w-full max-w-[520px] rounded-2xl bg-white/95 border border-slate-200 shadow-[0_20px_50px_rgba(2,6,23,.25)] p-3.5">
+                  <h5 className="m-0 text-[13px] font-semibold">
+                    Locked: Attached Documents
+                  </h5>
+                  <p className="m-0 mt-1.5 mb-3 text-rcn-muted text-xs font-semibold">
+                    Pay to view or download documents.
+                  </p>
+                  {!senderPaid && department_status?.status !== "rejected" && (
+                    <Button
+                      type="button"
+                      variant="primary"
+                      size="sm"
+                      onClick={onPayUnlock}
+                    >
+                      Pay & Unlock
+                    </Button>
+                  )}
+                  {senderPaid && (
+                    <Button
+                      type="button"
+                      variant="primary"
+                      size="sm"
+                      onClick={onAccept}
+                    >
+                      Accept (sender already paid)
+                    </Button>
+                  )}
                   <Button
                     type="button"
-                    variant="primary"
+                    variant="ghost"
                     size="sm"
-                    onClick={onPayUnlock}
+                    disabled={department_status?.status == "rejected"}
+                    onClick={onReject}
+                    className="border border-red-200 bg-red-50 text-red-700"
                   >
-                    Pay & Unlock
+                    {department_status?.status == "rejected"
+                      ? "Rejected"
+                      : "Reject"}
                   </Button>
-                )}
-                {senderPaid && (
-                  <Button
-                    type="button"
-                    variant="primary"
-                    size="sm"
-                    onClick={onAccept}
-                  >
-                    Accept (sender already paid)
-                  </Button>
-                )}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  disabled={department_status?.status == "rejected"}
-                  onClick={onReject}
-                  className="border border-red-200 bg-red-50 text-red-700"
-                >
-                  {department_status?.status == "rejected"
-                    ? "Rejected"
-                    : "Reject"}
-                </Button>
+                </div>
               </div>
-            </div>
+            )}
 
             <table className="w-full border-collapse text-xs">
               <thead>
