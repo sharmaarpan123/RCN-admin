@@ -1,7 +1,12 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { useFormContext, useFieldArray, useFormState } from "react-hook-form";
+import {
+  useFormContext,
+  useFieldArray,
+  useFormState,
+  useWatch,
+} from "react-hook-form";
 import { SectionHeader } from "./SectionHeader";
 import type { ReferralFormValues } from "./referralFormSchema";
 import { Button, PreviewFile } from "@/components";
@@ -21,14 +26,21 @@ function getUploadResponseUrl(res: unknown): string {
 }
 
 export function InsuranceInfoSection() {
-  const { register, control, setValue, watch } = useFormContext<ReferralFormValues>();
+  const { register, control, setValue, watch } =
+    useFormContext<ReferralFormValues>();
   const { errors } = useFormState<ReferralFormValues>();
-  const { fields, append, remove, } = useFieldArray({
+  const { fields, append, remove } = useFieldArray({
     control,
     name: "patient_insurance_information",
   });
 
-  const [uploadingFields, setUploadingFields] = useState<Record<string, boolean>>({});
+ 
+
+  
+
+  const [uploadingFields, setUploadingFields] = useState<
+    Record<string, boolean>
+  >({});
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const docInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
 
@@ -41,7 +53,7 @@ export function InsuranceInfoSection() {
     setUploading(key, true);
     catchAsync(async () => {
       const res = await uploadFileApi(file);
-      if(!checkResponse({ res })) return;
+      if (!checkResponse({ res })) return;
       const url = getUploadResponseUrl(res?.data);
       if (url) {
         setValue(`patient_insurance_information.${index}.document`, url, {
@@ -54,11 +66,18 @@ export function InsuranceInfoSection() {
     })().finally(() => setUploading(key, false));
   };
 
+  const removeDocument = (index: number) => {
+    setValue(`patient_insurance_information.${index}.document`, "", {
+      shouldValidate: true,
+    });
+  };
+
   const insuranceRootError =
     errors.patient_insurance_information &&
-      typeof errors.patient_insurance_information?.root === "object" &&
-      "message" in errors.patient_insurance_information?.root
-      ? (errors.patient_insurance_information?.root as { message?: string }).message
+    typeof errors.patient_insurance_information?.root === "object" &&
+    "message" in errors.patient_insurance_information?.root
+      ? (errors.patient_insurance_information?.root as { message?: string })
+          .message
       : undefined;
 
   return (
@@ -107,15 +126,19 @@ export function InsuranceInfoSection() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
               <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
-                Payer {index === 0 && <span className="text-rcn-danger font-black">*</span>}
+                Payer{" "}
+                {index === 0 && (
+                  <span className="text-rcn-danger font-black">*</span>
+                )}
               </label>
               <input
                 type="text"
                 {...register(`patient_insurance_information.${index}.payer`)}
-
                 placeholder="e.g., BCBS, Aetna, Medicare"
                 className={`${inputClass} ${errors.patient_insurance_information?.[index]?.payer ? "border-red-400" : ""}`}
-                aria-invalid={!!errors.patient_insurance_information?.[index]?.payer}
+                aria-invalid={
+                  !!errors.patient_insurance_information?.[index]?.payer
+                }
               />
               {errors.patient_insurance_information?.[index]?.payer && (
                 <p className="text-xs text-rcn-danger mt-1 m-0">
@@ -125,14 +148,19 @@ export function InsuranceInfoSection() {
             </div>
             <div>
               <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
-                Policy # {index === 0 && <span className="text-rcn-danger font-black">*</span>}
+                Policy #{" "}
+                {index === 0 && (
+                  <span className="text-rcn-danger font-black">*</span>
+                )}
               </label>
               <input
                 type="text"
                 {...register(`patient_insurance_information.${index}.policy`)}
                 placeholder="Policy / Member ID"
                 className={`${inputClass} ${errors.patient_insurance_information?.[index]?.policy ? "border-red-400" : ""}`}
-                aria-invalid={!!errors.patient_insurance_information?.[index]?.policy}
+                aria-invalid={
+                  !!errors.patient_insurance_information?.[index]?.policy
+                }
               />
               {errors.patient_insurance_information?.[index]?.policy && (
                 <p className="text-xs text-rcn-danger mt-1 m-0">
@@ -142,28 +170,39 @@ export function InsuranceInfoSection() {
             </div>
             <div>
               <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
-                Plan/Group {index === 0 && <span className="text-rcn-danger font-black">*</span>}
+                Plan/Group{" "}
+                {index === 0 && (
+                  <span className="text-rcn-danger font-black">*</span>
+                )}
               </label>
               <input
                 type="text"
-                {...register(`patient_insurance_information.${index}.plan_group`)}
+                {...register(
+                  `patient_insurance_information.${index}.plan_group`,
+                )}
                 placeholder="Plan / Group"
                 className={`${inputClass} ${errors.patient_insurance_information?.[index]?.plan_group ? "border-red-400" : ""}`}
-                aria-invalid={!!errors.patient_insurance_information?.[index]?.plan_group}
+                aria-invalid={
+                  !!errors.patient_insurance_information?.[index]?.plan_group
+                }
               />
               {errors.patient_insurance_information?.[index]?.plan_group && (
                 <p className="text-xs text-rcn-danger mt-1 m-0">
-                  {errors.patient_insurance_information[index]?.plan_group?.message}
+                  {
+                    errors.patient_insurance_information[index]?.plan_group
+                      ?.message
+                  }
                 </p>
               )}
             </div>
           </div>
-          <p className="text-xs text-rcn-muted mt-2.5">Document (optional). Upload or view.</p>
+          <p className="text-xs text-rcn-muted mt-2.5">
+            Document (optional). Upload or view.
+          </p>
           <label className="block text-xs text-rcn-muted font-semibold mb-1.5 mt-2.5">
             Document
           </label>
           <div className="relative">
-
             <label
               htmlFor={`insurance-doc-${index}`}
               className={zoneClass}
@@ -174,8 +213,12 @@ export function InsuranceInfoSection() {
                   <span className="inline-block w-4 h-4 border-2 border-rcn-brand border-t-transparent rounded-full animate-spin" />
                   Uploading…
                 </span>
-              ) : (watch(`patient_insurance_information.${index}.document`) ?? "").trim() ? (
-                <span className="text-rcn-brand truncate max-w-full">Uploaded ✓</span>
+              ) : (
+                  watch(`patient_insurance_information.${index}.document`) ?? ""
+                ).trim() ? (
+                <span className="text-rcn-brand truncate max-w-full">
+                  Uploaded ✓
+                </span>
               ) : (
                 <span className="text-rcn-muted">Choose file to upload</span>
               )}
@@ -196,20 +239,38 @@ export function InsuranceInfoSection() {
                 aria-label={`Upload insurance document ${index + 1}`}
               />
             </label>
-            {(watch(`patient_insurance_information.${index}.document`) ?? "").trim() &&
+            {(
+              watch(`patient_insurance_information.${index}.document`) ?? ""
+            ).trim() &&
               !uploadingFields[`insurance-doc-${index}`] && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setPreviewUrl(
-                      (watch(`patient_insurance_information.${index}.document`) ?? "").trim()
-                    );
-                  }}
-                  className="text-xs text-rcn-brand mt-1 block truncate text-left hover:underline focus:outline-none focus:ring-0"
-                >
-                  View file
-                </button>
+                <div className="flex justify-between w-100 my-1">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPreviewUrl(
+                        (
+                          watch(
+                            `patient_insurance_information.${index}.document`,
+                          ) ?? ""
+                        ).trim(),
+                      );
+                    }}
+                    className="text-xs text-rcn-brand mt-1 block truncate text-left hover:underline focus:outline-none focus:ring-0"
+                  >
+                    View file
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeDocument(index);
+                    }}
+                    className="text-xs text-rcn-brand mt-1 block truncate text-left hover:underline focus:outline-none focus:ring-0"
+                  >
+                    Remove
+                  </button>
+                </div>
               )}
           </div>
         </div>
@@ -225,7 +286,9 @@ export function InsuranceInfoSection() {
         type="button"
         variant="primary"
         size="md"
-        onClick={() => append({ payer: "", policy: "", plan_group: "", document: "" })}
+        onClick={() =>
+          append({ payer: "", policy: "", plan_group: "", document: "" })
+        }
         className="w-full flex items-center justify-center gap-2.5 px-3 py-2.5 rounded-[14px] mt-3"
       >
         <span className="w-6.5 h-6.5 rounded-xl bg-white/18 flex items-center justify-center text-base">

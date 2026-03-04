@@ -25,7 +25,10 @@ import {
   ReceiverPrimaryCareSection,
   ReceiverSenderInfoSection,
 } from "@/components/staffComponents/inbox/receiver/view";
-import type { PaymentSummaryData } from "@/components/staffComponents/inbox/receiver/view/Modals";
+import type {
+  CreditBalanceItem,
+  PaymentSummaryData,
+} from "@/components/staffComponents/inbox/receiver/view/Modals";
 import {
   PayToUnlockModal,
   PaymentSummaryModal,
@@ -138,6 +141,8 @@ function ReceiverDetailContent({
   const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState("");
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [summary, setSummary] = useState<PaymentSummaryData | null>(null);
+  const [selectedCreditSource, setSelectedCreditSource] =
+    useState<CreditBalanceItem | null>(null);
   const [stripeOpen, setStripeOpen] = useState(false);
   const [stripePmId, setStripePmId] = useState("");
   const { loginUser } = useStaffAuthLoginUser();
@@ -183,6 +188,7 @@ function ReceiverDetailContent({
     setSelectedPaymentMethodId("");
     setPaySource("payment");
     setSummary(null);
+    setSelectedCreditSource(null);
   };
 
   const { isPending: summaryLoading, mutate: getSummary } = useMutation({
@@ -199,21 +205,59 @@ function ReceiverDetailContent({
       if (!checkResponse({ res, showSuccess: true })) return;
       const raw = res.data as { data?: PaymentSummaryData };
       setSummary(raw?.data ?? null);
+      setSelectedCreditSource(null);
       setSummaryOpen(true);
     }),
   });
 
+  const { isPending: creditSummaryLoading, mutate: getCreditSummary } =
+    useMutation({
+      mutationFn: catchAsync(async () => {
+        if (!receiverId) return;
+        const res = await postOrganizationReferralDepartmentPaymentSummaryApi(
+          refId,
+          receiverId,
+          { source: "credit" },
+        );
+        if (!checkResponse({ res, showSuccess: true })) return;
+        const raw = res.data as { data?: PaymentSummaryData };
+        const payload = raw?.data ?? null;
+        setSummary(payload);
+        if (
+          payload &&
+          Array.isArray(payload.breakdown?.credit_balance_details) &&
+          payload.breakdown.credit_balance_details.length > 0
+        ) {
+          const first = payload.breakdown.credit_balance_details[0];
+          setSelectedCreditSource(first);
+        } else {
+          setSelectedCreditSource(null);
+        }
+        setSummaryOpen(true);
+      }),
+    });
+
   const { isPending: payLoading, mutate: pay } = useMutation({
     mutationFn: catchAsync(
       async (payload: {
-        source: "credit" | "payment";
+        source: "credit" | "payment" | "user" | "branch";
         payment_method_id?: string;
+        branch_id?: string;
       }) => {
         if (!receiverId) return;
+        const sendBody =
+          payload.source === "user" || payload.source === "branch"
+            ? { source: payload.source, branch_id: payload.branch_id }
+            : payload.source === "payment"
+              ? {
+                  source: "payment" as const,
+                  payment_method_id: payload.payment_method_id,
+                }
+              : { source: "credit" as const };
         const res = await postOrganizationReferralDepartmentPayApi(
           refId,
           receiverId,
-          payload,
+          sendBody,
         );
         const needsStripe =
           payload.source === "payment" && payload.payment_method_id;
@@ -256,7 +300,7 @@ function ReceiverDetailContent({
 
   const onPayModalAction = () => {
     if (paySource === "credit") {
-      pay({ source: "credit" });
+      getCreditSummary();
       return;
     }
     if (!selectedPaymentMethodId.trim()) {
@@ -270,15 +314,25 @@ function ReceiverDetailContent({
     setStripeOpen(true);
   };
 
+  const onConfirmCredit = (source: CreditBalanceItem) => {
+    pay({
+      source: source.source,
+      branch_id: source.source === "branch" ? source.id : undefined,
+    });
+  };
+
   const onStripeDone = (pmId: string) => {
     pay({ source: "payment", payment_method_id: pmId });
   };
+
   const closeSummary = () => {
     setSummaryOpen(false);
     setSummary(null);
     setStripeOpen(false);
+    setSelectedCreditSource(null);
   };
-  const payBusy = summaryLoading || payLoading;
+
+  const payBusy = summaryLoading || creditSummaryLoading || payLoading;
 
   const revalidateReferral = () => {
     queryClient.invalidateQueries({
@@ -525,7 +579,7 @@ function ReceiverDetailContent({
             methods={methods}
             busy={payBusy}
             payLoading={payLoading}
-            summaryLoading={summaryLoading}
+            summaryLoading={summaryLoading || creditSummaryLoading}
             onAction={onPayModalAction}
           />
           <PaymentSummaryModal
@@ -533,6 +587,9 @@ function ReceiverDetailContent({
             onClose={closeSummary}
             summary={summary}
             payLoading={payLoading}
+            selectedCreditSource={selectedCreditSource}
+            onCreditSourceChange={setSelectedCreditSource}
+            onConfirmCredit={onConfirmCredit}
             onConfirm={onSummaryConfirm}
           />
           <StripeCardModal

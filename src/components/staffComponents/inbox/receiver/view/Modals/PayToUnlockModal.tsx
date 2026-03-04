@@ -100,9 +100,11 @@ export function PayToUnlockModal({
             onClick={onAction}
           >
             {paySource === "credit"
-              ? payLoading
-                ? "Processing…"
-                : "Pay with credits"
+              ? summaryLoading
+                ? "Loading…"
+                : payLoading
+                  ? "Processing…"
+                  : "Get payment summary"
               : summaryLoading
                 ? "Loading…"
                 : "Get payment summary"}

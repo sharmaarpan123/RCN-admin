@@ -528,18 +528,24 @@ export const postOrganizationReferralSendApi = (
 export const postOrganizationReferralDepartmentPaymentSummaryApi = (
   referralId: string,
   departmentId: string,
-  body: { source: "payment"; payment_method_id: string },
+  body:
+    | { source: "payment"; payment_method_id: string }
+    | { source: "credit" },
 ) =>
   AxiosInstance.post(
     `/api/organization/referral/${referralId}/departments/${departmentId}/payment-summary`,
     body,
   );
 
-/** POST /api/organization/referral/:referralId/departments/:departmentId/pay — pay to unlock (receiver). source: "credit" | "payment". */
+/** POST /api/organization/referral/:referralId/departments/:departmentId/pay — pay to unlock (receiver). For credits: source "user" or "branch" (requires branch_id). */
 export const postOrganizationReferralDepartmentPayApi = (
   referralId: string,
   departmentId: string,
-  body: { source: "credit" | "payment"; payment_method_id?: string },
+  body: {
+    source: "credit" | "payment" | "user" | "branch";
+    payment_method_id?: string;
+    branch_id?: string;
+  },
 ) =>
   AxiosInstance.post(
     `/api/organization/referral/${referralId}/departments/${departmentId}/pay`,
