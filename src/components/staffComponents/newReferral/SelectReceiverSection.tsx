@@ -3,6 +3,7 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { useFormContext, useFormState, useWatch } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
+import Select, { type MultiValue } from "react-select";
 import CustomAsyncSelect from "@/components/CustomAsyncSelect";
 import CustomReactSelect from "@/components/CustomReactSelect";
 import { SectionHeader } from "./SectionHeader";
@@ -20,6 +21,11 @@ import { Button } from "@/components";
 import defaultAdminQueryKeys from "@/utils/adminQueryKeys";
 import { AddReceiverModal } from "./AddReceiverModal";
 import { toastWarning } from "@/utils/toast";
+
+const RCN_SELECT_CLASSES = {
+  control: "!min-h-[42px] !rounded-xl !border-rcn-border !shadow-none !border",
+  menu: "!rounded-xl !border !border-rcn-border",
+};
 
 /** API branch search item: branch (is_branch=1) or organization (is_organization=1). */
 interface BranchSearchItem {
@@ -155,8 +161,7 @@ export function SelectReceiverSection({
           organizationName: opt.label,
           branchId: existing?.branchId ?? null,
           branchName: existing?.branchName ?? null,
-          departmentId: existing?.departmentId ?? null,
-          departmentName: existing?.departmentName ?? null,
+          selectedDepartments: existing?.selectedDepartments ?? [],
         };
       })
 
@@ -231,8 +236,7 @@ export function SelectReceiverSection({
             organizationName: item.name,
             branchId: null,
             branchName: null,
-            departmentId: null,
-            departmentName: null,
+            selectedDepartments: [],
           });
         } else if (item.is_branch && item.organization) {
           newRows.push({
@@ -240,8 +244,7 @@ export function SelectReceiverSection({
             organizationName: item.organization.name,
             branchId: item._id,
             branchName: item.name,
-            departmentId: null,
-            departmentName: null,
+            selectedDepartments: [],
           });
         }
       }
@@ -265,8 +268,7 @@ export function SelectReceiverSection({
               ...r,
               branchId,
               branchName,
-              departmentId: null,
-              departmentName: null,
+              selectedDepartments: [],
             }
             : r
         ),
@@ -278,13 +280,13 @@ export function SelectReceiverSection({
 
 
 
-  const updateRowDepartment = useCallback(
-    (organizationId: string, departmentId: string, departmentName: string) => {
+  const updateRowDepartments = useCallback(
+    (organizationId: string, selectedDepartments: OrgBranchDeptOption[]) => {
       setValue(
         "receiver_rows",
         receiverRows.map((r) =>
           r.organizationId === organizationId
-            ? { ...r, departmentId, departmentName }
+            ? { ...r, selectedDepartments }
             : r
         ),
         { shouldValidate: true }
@@ -394,7 +396,7 @@ export function SelectReceiverSection({
         <ReceiverRowsTable
           receiverRows={receiverRows}
           updateRowBranch={updateRowBranch}
-          updateRowDepartment={updateRowDepartment}
+          updateRowDepartments={updateRowDepartments}
           removeRow={removeRow}
           receiverRowsErrors={errors.receiver_rows}
           receiverRowsRootError={receiverRowsRootError}
@@ -467,14 +469,14 @@ function useDepartmentOptions(branchId: string | null): OrgBranchDeptOption[] {
 function ReceiverRow({
   row,
   updateRowBranch,
-  updateRowDepartment,
+  updateRowDepartments,
   removeRow,
   branchError,
   departmentError,
 }: {
   row: ReceiverRow;
   updateRowBranch: (organizationId: string, branchId: string, branchName: string) => void;
-  updateRowDepartment: (organizationId: string, departmentId: string, departmentName: string) => void;
+  updateRowDepartments: (organizationId: string, selectedDepartments: OrgBranchDeptOption[]) => void;
   removeRow: (organizationId: string) => void;
   branchError?: string;
   departmentError?: string;
@@ -485,9 +487,13 @@ function ReceiverRow({
   const branchValue = row.branchId
     ? { value: row.branchId, label: row.branchName ?? row.branchId }
     : "";
-  const departmentValue = row.departmentId
-    ? { value: row.departmentId, label: row.departmentName ?? row.departmentId }
-    : "";
+
+  const handleDeptChange = useCallback(
+    (opts: MultiValue<OrgBranchDeptOption>) => {
+      updateRowDepartments(row.organizationId, opts ? [...opts] : []);
+    },
+    [row.organizationId, updateRowDepartments],
+  );
 
   return (
     <div className="grid grid-cols-[1fr_minmax(180px,1fr)_minmax(180px,1fr)_auto] gap-2 border-b border-rcn-border last:border-b-0 py-2.5 px-2 items-start">
@@ -518,20 +524,21 @@ function ReceiverRow({
         )}
       </div>
       <div className="min-w-[180px]">
-        <CustomReactSelect
-          value={typeof departmentValue === "string" ? departmentValue : departmentValue.value}
-          onChange={(value) => {
-            const opt = departmentOptions.find((o: OrgBranchDeptOption) => o.value === value);
-            if (opt) updateRowDepartment(row.organizationId, opt.value, opt.label);
-          }}
+        <Select<OrgBranchDeptOption, true>
+          isMulti
+          value={Array.isArray(row.selectedDepartments) ? row.selectedDepartments : []}
+          onChange={handleDeptChange}
           options={departmentOptions}
-          placeholder="Select department..."
-          aria-label="Department"
-          aria-invalid={!!departmentError}
+          placeholder="Select departments..."
           isClearable
           maxMenuHeight={220}
           isDisabled={!row.branchId}
-          controlClassName={departmentError ? "!border-red-500" : undefined}
+          classNames={{
+            control: () => (departmentError ? `!border-red-500 ${RCN_SELECT_CLASSES.control}` : RCN_SELECT_CLASSES.control),
+            menu: () => RCN_SELECT_CLASSES.menu,
+          }}
+          aria-label="Departments"
+          aria-invalid={!!departmentError}
         />
         {departmentError && (
           <p className="text-xs text-rcn-danger mt-1 m-0" role="alert">
@@ -557,14 +564,14 @@ function ReceiverRow({
 function ReceiverRowsTable({
   receiverRows,
   updateRowBranch,
-  updateRowDepartment,
+  updateRowDepartments,
   removeRow,
   receiverRowsErrors,
   receiverRowsRootError,
 }: {
   receiverRows: ReceiverRow[];
   updateRowBranch: (organizationId: string, branchId: string, branchName: string) => void;
-  updateRowDepartment: (organizationId: string, departmentId: string, departmentName: string) => void;
+  updateRowDepartments: (organizationId: string, selectedDepartments: OrgBranchDeptOption[]) => void;
   removeRow: (organizationId: string) => void;
   receiverRowsErrors?: unknown;
   receiverRowsRootError?: string;
@@ -605,10 +612,10 @@ function ReceiverRowsTable({
             key={row.organizationId}
             row={row}
             updateRowBranch={updateRowBranch}
-            updateRowDepartment={updateRowDepartment}
+            updateRowDepartments={updateRowDepartments}
             removeRow={removeRow}
-            branchError={(receiverRowsErrors as Array<{ branchId?: { message?: string }; departmentId?: { message?: string } }>)?.[index]?.branchId?.message}
-            departmentError={(receiverRowsErrors as Array<{ branchId?: { message?: string }; departmentId?: { message?: string } }>)?.[index]?.departmentId?.message}
+            branchError={(receiverRowsErrors as Array<{ branchId?: { message?: string }; selectedDepartments?: { message?: string } }>)?.[index]?.branchId?.message}
+            departmentError={(receiverRowsErrors as Array<{ branchId?: { message?: string }; selectedDepartments?: { message?: string } }>)?.[index]?.selectedDepartments?.message}
           />
         ))}
       </div>

@@ -472,7 +472,7 @@ export function UserForm({
               </>
             )}
             <div>
-              <label className="block text-xs text-rcn-muted mb-1">Phone number <span className="text-red-500">*</span></label>
+              <label className="block text-xs text-rcn-muted mb-1">Phone number </label>
               <PhoneInputField
                 value={phoneValue}
                 onChange={handlePhoneChange}

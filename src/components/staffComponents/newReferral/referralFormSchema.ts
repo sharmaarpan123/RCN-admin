@@ -53,30 +53,37 @@ export const referralFormSchema = yup.object({
             }
           ),
         branchName: yup.string().nullable().default(null),
-        departmentId: yup
-          .string()
-          .nullable()
-          .default(null)
+        selectedDepartments: yup
+          .array()
+          .of(
+            yup.object({
+              value: yup.string().required(),
+              label: yup.string().required(),
+            })
+          )
+          .default([])
           .test(
-            "department-required",
-            "Department is required for each receiver.",
-            function (v) {
-              const orgId = this.parent?.organizationId as string | undefined;
-              if (orgId?.startsWith("custom-")) return true;
-              return v != null && v !== "";
+            "departments-required",
+            "Select at least one department for this receiver.",
+            function (selectedDepartments) {
+              const parent = this.parent as { organizationId?: string; branchId?: string | null };
+              if (parent?.organizationId?.startsWith("custom-")) return true;
+              if (!parent?.branchId) return true;
+              return Array.isArray(selectedDepartments) && selectedDepartments.length > 0;
             }
           ),
-        departmentName: yup.string().nullable().default(null),
       })
     )
     .default([])
     .test(
       "receiver-departments",
-      "Select at least one receiver with branch and department, or add a receiver from the list above.",
+      "Select at least one receiver with branch and department(s), or add a receiver from the list above.",
       (rows) => {
         if (!rows?.length) return false;
         const hasDepartment = rows.some(
-          (r) => r?.departmentId != null && String(r.departmentId).trim() !== ""
+          (r) =>
+            Array.isArray(r?.selectedDepartments) &&
+            r.selectedDepartments.length > 0
         );
         return hasDepartment;
       }
@@ -164,7 +171,7 @@ export const referralFormSchema = yup.object({
 
 export type ReferralFormValues = yup.InferType<typeof referralFormSchema>;
 
-/** Map ReceiverRow (camelCase) to API department_ids. */
+/** Map ReceiverRow (camelCase) to API department_ids (flattens all selected departments across rows). */
 export function getDepartmentIdsFromReceiverRows(rows: ReceiverRow[]): string[] {
-  return rows.map((r) => r.departmentId).filter((id): id is string => id != null && id !== "");
+  return rows.flatMap((r) => (r.selectedDepartments ?? []).map((d) => d.value)).filter((id): id is string => id != null && id !== "");
 }

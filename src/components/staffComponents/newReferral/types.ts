@@ -14,14 +14,14 @@ export interface GuestOrganization {
   state: string;
 }
 
-/** One selected receiver: organization + branch + department (for staff referral). */
+/** One selected receiver: organization + branch + departments (for staff referral). Multiple departments per branch supported. */
 export interface ReceiverRow {
   organizationId: string;
   organizationName: string;
   branchId: string | null;
   branchName: string | null;
-  departmentId: string | null;
-  departmentName: string | null;
+  /** Multiple departments per branch (same shape as OrgBranchDeptOption). */
+  selectedDepartments: OrgBranchDeptOption[];
 }
 
 /** Option shape for org/branch/department selects. */
