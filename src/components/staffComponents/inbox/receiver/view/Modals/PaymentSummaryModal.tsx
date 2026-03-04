@@ -99,7 +99,7 @@ export function PaymentSummaryModal({
                 </p>
               </div>
             )}
-            {isCreditFlow && (
+            {isCreditFlow && summary?.breakdown?.credit_balance_details?.length && (
               <div>
                 <label className="block text-xs font-black text-rcn-muted mb-1.5">
                   Deduct credits from
@@ -120,7 +120,7 @@ export function PaymentSummaryModal({
                   className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm font-medium text-rcn-text focus:outline-none focus:ring-2 focus:ring-rcn-brand/20"
                   aria-label="Credit source"
                 >
-                  {summary.breakdown.credit_balance_details.map((d) => (
+                  {summary?.breakdown?.credit_balance_details.map((d) => (
                     <option key={`${d.source}:${d.id}`} value={`${d.source}:${d.id}`}>
                       {d.name} ({d.balance} credits)
                     </option>
