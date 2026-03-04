@@ -157,16 +157,16 @@ function SenderDetailContent({ data }: { data: ReferralByIdApi }) {
           </div>
 
           <div className="flex items-center gap-2">
-            {!isDraft && (
+            {/* {!isDraft && ( */}
               <Button
                 type="button"
-                variant="secondary"
+                variant="primary"
                 size="sm"
                 onClick={() => setForwardOpen(true)}
               >
                 Forward
               </Button>
-            )}
+            {/* )} */}
             <Button variant="primary" size="sm" onClick={() => downloadPdfHandler(data)}>
               <PrintIcon size={24} />
             </Button>

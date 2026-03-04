@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import Select, { type MultiValue } from "react-select";
 import {
   getStaffOrganizationsApi,
   getStatesApi,
@@ -15,9 +16,23 @@ import defaultAdminQueryKeys from "@/utils/adminQueryKeys";
 import { useQuery } from "@tanstack/react-query";
 import { toastWarning } from "@/utils/toast";
 
+const RCN_SELECT_CLASSES = {
+  control: "!min-h-[42px] !rounded-xl !border-rcn-border !shadow-none !border",
+  menu: "!rounded-xl !border !border-rcn-border",
+};
+
 export interface OrgBranchDeptOption {
   value: string;
   label: string;
+}
+
+interface ForwardRowState {
+  rowId: string;
+  orgId: string;
+  orgName: string;
+  branchId: string;
+  branchName: string;
+  selectedDepartments: OrgBranchDeptOption[];
 }
 
 function toOptions(list: unknown[]): OrgBranchDeptOption[] {
@@ -30,6 +45,113 @@ function toOptions(list: unknown[]): OrgBranchDeptOption[] {
       return id && name ? { value: id, label: String(name) } : null;
     })
     .filter((x): x is OrgBranchDeptOption => x !== null);
+}
+
+function useBranchOptions(organizationId: string): OrgBranchDeptOption[] {
+  const { data } = useQuery({
+    queryKey: ["staff", "forward-branches", organizationId],
+    queryFn: async () => {
+      if (!organizationId) return [];
+      const res = await postStaffBranchesByOrganizationsApi({
+        organization_ids: [organizationId],
+      });
+      if (!checkResponse({ res })) return [];
+      const data = res.data?.data ?? res.data;
+      return toOptions(Array.isArray(data) ? data : []);
+    },
+    enabled: !!organizationId,
+  });
+  return data ?? [];
+}
+
+function useDepartmentOptions(branchId: string | null): OrgBranchDeptOption[] {
+  const { data } = useQuery({
+    queryKey: ["staff", "forward-departments", branchId],
+    queryFn: async () => {
+      if (!branchId) return [];
+      const res = await postStaffDepartmentsByBranchesApi({
+        branch_ids: [branchId],
+      });
+      if (!checkResponse({ res })) return [];
+      const data = res.data?.data ?? res.data;
+      return toOptions(Array.isArray(data) ? data : []);
+    },
+    enabled: !!branchId,
+  });
+  return data ?? [];
+}
+
+function ForwardRow({
+  row,
+  onBranchChange,
+  onDepartmentsChange,
+  onRemove,
+}: {
+  row: ForwardRowState;
+  onBranchChange: (branchId: string, branchName: string) => void;
+  onDepartmentsChange: (opts: OrgBranchDeptOption[]) => void;
+  onRemove: () => void;
+}) {
+  const branchOptions = useBranchOptions(row.orgId);
+  const departmentOptions = useDepartmentOptions(row.branchId || null);
+
+  const handleBranchChange = useCallback(
+    (value: string) => {
+      const opt = branchOptions.find((o) => o.value === value);
+      onBranchChange(value, opt?.label ?? value);
+    },
+    [branchOptions, onBranchChange],
+  );
+
+  const handleDeptChange = useCallback(
+    (opts: MultiValue<OrgBranchDeptOption>) => {
+      onDepartmentsChange(opts ? [...opts] : []);
+    },
+    [onDepartmentsChange],
+  );
+
+  return (
+    <tr className="border-b border-rcn-border last:border-b-0">
+      <td className="py-2.5 px-2 align-top">
+        <p className="m-0 text-sm font-medium text-rcn-text wrap-break-word">
+          {row.orgName}
+        </p>
+      </td>
+      <td className="py-2.5 px-2 min-w-[180px] align-top">
+        <CustomReactSelect
+          value={row.branchId}
+          onChange={handleBranchChange}
+          options={branchOptions}
+          placeholder="Select branch..."
+          aria-label="Branch"
+          isClearable
+          maxMenuHeight={220}
+        />
+      </td>
+      <td className="py-2.5 px-2 min-w-[200px] align-top">
+        <Select<OrgBranchDeptOption, true>
+          isMulti
+          value={row.selectedDepartments}
+          onChange={handleDeptChange}
+          options={departmentOptions}
+          placeholder="Select departments..."
+          isClearable
+          maxMenuHeight={220}
+          isDisabled={!row.branchId}
+          classNames={{
+            control: () => RCN_SELECT_CLASSES.control,
+            menu: () => RCN_SELECT_CLASSES.menu,
+          }}
+          aria-label="Departments"
+        />
+      </td>
+      <td className="py-2.5 px-2 w-24 align-top">
+        <Button type="button" variant="ghost" size="sm" onClick={onRemove}>
+          Remove
+        </Button>
+      </td>
+    </tr>
+  );
 }
 
 export interface ForwardModalProps {
@@ -48,9 +170,7 @@ export function ForwardModal({
   isPending = false,
 }: ForwardModalProps) {
   const [stateFilter, setStateFilter] = useState("");
-  const [selectedOrg, setSelectedOrg] = useState<OrgBranchDeptOption | null>(null);
-  const [selectedBranch, setSelectedBranch] = useState("");
-  const [selectedDepartmentIds, setSelectedDepartmentIds] = useState<Set<string>>(new Set());
+  const [forwardRows, setForwardRows] = useState<ForwardRowState[]>([]);
 
   const { data: stateOptionsFromApi = [] } = useQuery({
     queryKey: [...defaultAdminQueryKeys.statesList],
@@ -73,14 +193,15 @@ export function ForwardModal({
 
   const stateFilterOptions: OrgBranchDeptOption[] = useMemo(
     () => [...stateOptionsFromApi],
-    [stateOptionsFromApi]
+    [stateOptionsFromApi],
   );
 
   const loadOrganizationOptions = useCallback(
     (inputValue: string) => {
       const stateParam =
         stateFilter && stateFilter !== "ALL"
-          ? stateOptionsFromApi.find((s) => s.value === stateFilter)?.label ?? stateFilter
+          ? (stateOptionsFromApi.find((s) => s.value === stateFilter)?.label ??
+            stateFilter)
           : "";
 
       if (!stateParam && inputValue?.trim()) {
@@ -102,36 +223,8 @@ export function ForwardModal({
         })
         .catch(() => []);
     },
-    [stateFilter, stateOptionsFromApi]
+    [stateFilter, stateOptionsFromApi],
   );
-
-  const { data: branchOptions = [] } = useQuery({
-    queryKey: ["staff", "forward-branches", selectedOrg?.value],
-    queryFn: async () => {
-      if (!selectedOrg?.value) return [];
-      const res = await postStaffBranchesByOrganizationsApi({
-        organization_ids: [selectedOrg.value],
-      });
-      if (!checkResponse({ res })) return [];
-      const data = res.data?.data ?? res.data;
-      return toOptions(Array.isArray(data) ? data : []);
-    },
-    enabled: !!selectedOrg?.value,
-  });
-
-  const { data: departmentOptions = [] } = useQuery({
-    queryKey: ["staff", "forward-departments", selectedBranch],
-    queryFn: async () => {
-      if (!selectedBranch) return [];
-      const res = await postStaffDepartmentsByBranchesApi({
-        branch_ids: [selectedBranch],
-      });
-      if (!checkResponse({ res })) return [];
-      const data = res.data?.data ?? res.data;
-      return toOptions(Array.isArray(data) ? data : []);
-    },
-    enabled: !!selectedBranch,
-  });
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -149,42 +242,80 @@ export function ForwardModal({
   }, [isOpen]);
 
   const orgSelectValue = useMemo(
-    () => (selectedOrg ? [selectedOrg] : []),
-    [selectedOrg]
+    () =>
+      forwardRows.map((r) => ({ value: r.orgId, label: r.orgName })),
+    [forwardRows],
   );
 
   const handleOrgChange = useCallback((opts: OrgBranchDeptOption[]) => {
-    const next = opts?.[0] ?? null;
-    setSelectedOrg(next);
-    if (!next) {
-      setSelectedBranch("");
-      setSelectedDepartmentIds(new Set());
-    }
+    setForwardRows((prev) =>
+      (opts ?? []).map((opt) => {
+        const existing = prev.find((r) => r.orgId === opt.value);
+        return (
+          existing ?? {
+            rowId: crypto.randomUUID(),
+            orgId: opt.value,
+            orgName: opt.label,
+            branchId: "",
+            branchName: "",
+            selectedDepartments: [],
+          }
+        );
+      }),
+    );
   }, []);
 
-  const handleBranchChange = useCallback((value: string) => {
-    setSelectedBranch(value);
-    if (!value) setSelectedDepartmentIds(new Set());
+  const removeRow = useCallback((rowId: string) => {
+    setForwardRows((prev) => prev.filter((r) => r.rowId !== rowId));
   }, []);
 
-  const toggleDepartment = useCallback((deptId: string) => {
-    setSelectedDepartmentIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(deptId)) next.delete(deptId);
-      else next.add(deptId);
-      return next;
-    });
-  }, []);
+  const updateRowBranch = useCallback(
+    (rowId: string, branchId: string, branchName: string) => {
+      setForwardRows((prev) =>
+        prev.map((r) =>
+          r.rowId === rowId
+            ? { ...r, branchId, branchName, selectedDepartments: [] }
+            : r,
+        ),
+      );
+    },
+    [],
+  );
+
+  const updateRowDepartments = useCallback(
+    (rowId: string, selectedDepartments: OrgBranchDeptOption[]) => {
+      setForwardRows((prev) =>
+        prev.map((r) =>
+          r.rowId === rowId ? { ...r, selectedDepartments } : r,
+        ),
+      );
+    },
+    [],
+  );
+
+  const allDepartmentIds = useMemo(
+    () => forwardRows.flatMap((r) => r.selectedDepartments.map((d) => d.value)),
+    [forwardRows],
+  );
+
+  const showValidationError =
+    forwardRows.length > 0 && allDepartmentIds.length === 0;
+  const canSubmit = allDepartmentIds.length > 0;
 
   const handleConfirm = useCallback(() => {
-    const ids = Array.from(selectedDepartmentIds);
-    if (!ids.length) {
-      toastWarning("Please select at least one department.");
+    if (forwardRows.length === 0) {
+      toastWarning("Please select at least one organization.");
       return;
     }
-    onForward(ids);
+    if (!canSubmit) {
+      toastWarning(
+        "Select at least one receiver with branch and department, or add a receiver from the list above.",
+      );
+      return;
+    }
+    onForward(allDepartmentIds);
     onClose();
-  }, [selectedDepartmentIds, onForward, onClose]);
+  }, [forwardRows.length, canSubmit, allDepartmentIds, onForward, onClose]);
 
   if (!isOpen) return null;
 
@@ -195,7 +326,7 @@ export function ForwardModal({
       aria-hidden="false"
     >
       <div
-        className="w-full max-w-[780px] bg-white/98 border border-slate-200 rounded-[18px] shadow-[0_30px_80px_rgba(2,6,23,.35)] overflow-hidden"
+        className="w-full max-w-[780px] min-h-[calc(100vh-2rem)] bg-white/98 border border-slate-200 rounded-[18px] shadow-[0_30px_80px_rgba(2,6,23,.35)] overflow-hidden"
         role="dialog"
         aria-modal="true"
         aria-label={refId ? `Forward referral ${refId}` : "Forward referral"}
@@ -212,7 +343,8 @@ export function ForwardModal({
               Forward Referral to Departments
             </h3>
             <p className="m-0 mt-1.5 text-rcn-muted text-xs font-[850]">
-              Select state, organization, branch, then choose departments to forward to.
+              Select state, then search and select one or more organizations.
+              Choose branch and departments (multiple) per row.
             </p>
           </div>
           <button
@@ -225,9 +357,28 @@ export function ForwardModal({
         </div>
 
         <div className="p-3.5 flex flex-col gap-3">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="border border-[#cfe6d6] bg-[#eef8f1] rounded-[14px] p-3 mb-2">
+            <p className="m-0 text-sm text-rcn-text">
+              Bulk referrals are supported. When a referral is sent to multiple
+              receivers, each receiver will only be able to view their own
+              referral and will not be able to see any other receivers or
+              recipient details.
+            </p>
+          </div>
+
+          {showValidationError && (
+            <div
+              className="border border-red-300 bg-red-50 rounded-[14px] p-3 mb-2 text-sm text-red-800"
+              role="alert"
+            >
+              Select at least one receiver with branch and department, or add a
+              receiver from the list above.
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
             <div>
-              <label className="block text-rcn-muted text-xs font-[850] leading-snug mb-1.5">
+              <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
                 State (business location)
               </label>
               <CustomReactSelect
@@ -235,13 +386,16 @@ export function ForwardModal({
                 onChange={setStateFilter}
                 options={stateFilterOptions}
                 placeholder="Select state..."
-                aria-label="State"
+                aria-label="State (business location)"
                 isClearable={false}
                 maxMenuHeight={280}
               />
+              <p className="text-xs text-rcn-muted mt-1.5">
+                Select a state to narrow down organizations.
+              </p>
             </div>
             <div>
-              <label className="block text-rcn-muted text-xs font-[850] leading-snug mb-1.5">
+              <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
                 Organization (search and select)
               </label>
               <CustomAsyncSelect
@@ -250,29 +404,62 @@ export function ForwardModal({
                 loadOptions={loadOrganizationOptions}
                 placeholder="Type to search organizations..."
                 aria-label="Organization"
-                defaultOptions={false}
+                defaultOptions={true}
                 maxMenuHeight={280}
               />
+              <p className="text-xs text-rcn-muted mt-1.5">
+                Select one or more organizations. Then choose branch and
+                department per row below.
+              </p>
             </div>
           </div>
 
-          <div>
-            <label className="block text-rcn-muted text-xs font-[850] leading-snug mb-1.5">
-              Branch
-            </label>
-            <CustomReactSelect
-              value={selectedBranch}
-              onChange={handleBranchChange}
-              options={branchOptions}
-              placeholder="Select branch..."
-              aria-label="Branch"
-              isClearable
-              maxMenuHeight={220}
-              isDisabled={!selectedOrg?.value}
-            />
-          </div>
-
-           
+          {forwardRows.length === 0 ? (
+            <div className="py-4 text-center text-sm border rounded-xl border-rcn-border bg-slate-50/50 text-rcn-muted">
+              <p className="m-0">
+                No organizations selected. Use the search above to add
+                organizations, then choose branch and departments for each row.
+              </p>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-rcn-border">
+              <div className="min-w-[600px] ">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-rcn-border">
+                      <th className="text-left px-2 py-2.5 text-xs font-semibold text-rcn-muted uppercase tracking-wider">
+                        Organization
+                      </th>
+                      <th className="text-left px-2 py-2.5 text-xs font-semibold text-rcn-muted uppercase tracking-wider">
+                        Branch
+                      </th>
+                      <th className="text-left px-2 py-2.5 text-xs font-semibold text-rcn-muted uppercase tracking-wider">
+                        Department
+                      </th>
+                      <th className="text-left px-2 py-2.5 text-xs font-semibold text-rcn-muted uppercase tracking-wider w-24">
+                        Action
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {forwardRows.map((row) => (
+                      <ForwardRow
+                        key={row.rowId}
+                        row={row}
+                        onBranchChange={(branchId, branchName) =>
+                          updateRowBranch(row.rowId, branchId, branchName)
+                        }
+                        onDepartmentsChange={(opts) =>
+                          updateRowDepartments(row.rowId, opts)
+                        }
+                        onRemove={() => removeRow(row.rowId)}
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="px-3.5 py-3 border-t border-slate-200 flex items-center justify-end gap-2.5 bg-white/95">
@@ -284,7 +471,7 @@ export function ForwardModal({
             variant="primary"
             size="sm"
             onClick={handleConfirm}
-            disabled={isPending || selectedDepartmentIds.size === 0}
+            disabled={isPending || !canSubmit}
           >
             {isPending ? "Forwarding…" : "Forward Referral"}
           </Button>
