@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Select, { type MultiValue } from "react-select";
 import {
+  getOrganizationBranchSearchApi,
   getStaffOrganizationsApi,
   getStatesApi,
   postStaffBranchesByOrganizationsApi,
@@ -24,6 +25,16 @@ const RCN_SELECT_CLASSES = {
 export interface OrgBranchDeptOption {
   value: string;
   label: string;
+}
+
+/** API branch search item: branch (is_branch=1) or organization (is_organization=1). */
+interface BranchSearchItem {
+  _id: string;
+  name: string;
+  organization_id?: string;
+  organization?: { _id: string; name: string };
+  is_branch: 0 | 1;
+  is_organization: 0 | 1;
 }
 
 interface ForwardRowState {
@@ -171,6 +182,10 @@ export function ForwardModal({
 }: ForwardModalProps) {
   const [stateFilter, setStateFilter] = useState("");
   const [forwardRows, setForwardRows] = useState<ForwardRowState[]>([]);
+  const [branchSearchSelected, setBranchSearchSelected] = useState<
+    OrgBranchDeptOption[]
+  >([]);
+  const branchSearchResultsRef = useRef<BranchSearchItem[]>([]);
 
   const { data: stateOptionsFromApi = [] } = useQuery({
     queryKey: [...defaultAdminQueryKeys.statesList],
@@ -224,6 +239,79 @@ export function ForwardModal({
         .catch(() => []);
     },
     [stateFilter, stateOptionsFromApi],
+  );
+
+  const loadBranchSearchOptions = useCallback(
+    (inputValue: string) => {
+      const stateParam =
+        stateFilter && stateFilter !== "ALL"
+          ? (stateOptionsFromApi.find((s) => s.value === stateFilter)?.label ??
+            stateFilter)
+          : "";
+      if (!stateParam) {
+        if (inputValue?.trim()) toastWarning("Please select a state first");
+        return Promise.resolve([]);
+      }
+      if (!inputValue?.trim()) return Promise.resolve([]);
+      return getOrganizationBranchSearchApi({
+        state: stateParam,
+        name: inputValue.trim(),
+      })
+        .then((res) => {
+          if (!checkResponse({ res })) return [];
+          const data = res.data?.data ?? res.data;
+          const list = Array.isArray(data) ? data : [];
+          branchSearchResultsRef.current = list as BranchSearchItem[];
+          return list.map((item: BranchSearchItem) => {
+            const prefix = item.is_branch ? "b" : "o";
+            const value = `${prefix}-${item._id}`;
+            const label = item.is_branch
+              ? `${item.name} (Branch)`
+              : `${item.name} (Organization)`;
+            return { value, label };
+          });
+        })
+        .catch(() => []);
+    },
+    [stateFilter, stateOptionsFromApi],
+  );
+
+  const handleBranchSearchChange = useCallback(
+    (options: OrgBranchDeptOption[]) => {
+      if (!options?.length) return;
+      const results = branchSearchResultsRef.current;
+      const newRows: ForwardRowState[] = [];
+      for (const opt of options) {
+        const item = results.find(
+          (r) => `${r.is_branch ? "b" : "o"}-${r._id}` === opt.value,
+        );
+        if (!item) continue;
+        if (item.is_organization) {
+          newRows.push({
+            rowId: crypto.randomUUID(),
+            orgId: item._id,
+            orgName: item.name,
+            branchId: "",
+            branchName: "",
+            selectedDepartments: [],
+          });
+        } else if (item.is_branch && item.organization) {
+          newRows.push({
+            rowId: crypto.randomUUID(),
+            orgId: item.organization._id,
+            orgName: item.organization.name,
+            branchId: item._id,
+            branchName: item.name,
+            selectedDepartments: [],
+          });
+        }
+      }
+      if (newRows.length > 0) {
+        setForwardRows((prev) => [...prev, ...newRows]);
+      }
+      setBranchSearchSelected([]);
+    },
+    [],
   );
 
   useEffect(() => {
@@ -313,6 +401,9 @@ export function ForwardModal({
       );
       return;
     }
+
+    
+
     onForward(allDepartmentIds);
     onClose();
   }, [forwardRows.length, canSubmit, allDepartmentIds, onForward, onClose]);
@@ -326,7 +417,7 @@ export function ForwardModal({
       aria-hidden="false"
     >
       <div
-        className="w-full max-w-[780px] min-h-[calc(100vh-2rem)] bg-white/98 border border-slate-200 rounded-[18px] shadow-[0_30px_80px_rgba(2,6,23,.35)] overflow-hidden"
+        className="w-[95vw] md:w-[85vw] min-h-[calc(100vh-2rem)] bg-white/98 border border-slate-200 rounded-[18px] shadow-[0_30px_80px_rgba(2,6,23,.35)] overflow-hidden"
         role="dialog"
         aria-modal="true"
         aria-label={refId ? `Forward referral ${refId}` : "Forward referral"}
@@ -376,7 +467,7 @@ export function ForwardModal({
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
             <div>
               <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
                 State (business location)
@@ -410,6 +501,25 @@ export function ForwardModal({
               <p className="text-xs text-rcn-muted mt-1.5">
                 Select one or more organizations. Then choose branch and
                 department per row below.
+              </p>
+            </div>
+            <div>
+              <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
+                Search by branch or organization
+              </label>
+              <CustomAsyncSelect
+                value={branchSearchSelected}
+                onChange={handleBranchSearchChange}
+                loadOptions={loadBranchSearchOptions}
+                placeholder="Type to search branches or organizations..."
+                aria-label="Search by branch or organization"
+                defaultOptions={false}
+                maxMenuHeight={280}
+              />
+              <p className="text-xs text-rcn-muted mt-1.5">
+                Select a state first, then search. Choosing an organization adds
+                one row; choosing a branch adds a row with that branch
+                preselected.
               </p>
             </div>
           </div>
