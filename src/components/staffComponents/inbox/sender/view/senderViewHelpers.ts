@@ -20,6 +20,8 @@ export interface PaymentSummaryData {
     processing_fee_percent?: number;
     total_per_referral?: number;
     payment_method_name?: string;
+    /** When source is credit: user and branch balances to choose from. */
+    credit_balance_details?: { source: "user" | "branch"; id: string; name: string; balance: number }[];
     [key: string]: unknown;
   };
 }

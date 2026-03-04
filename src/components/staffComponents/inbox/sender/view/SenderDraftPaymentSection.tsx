@@ -29,16 +29,32 @@ export interface PaymentMethodOption {
 const PAYMENT_METHODS_EXCLUDED_FROM_WEBSITE = ["apple", "google"];
 const CARD_KEYS_REQUIRING_STRIPE = ["card"];
 
+/** Selected credit source when paying with credits (user balance or a branch). */
+type CreditBalanceItem = {
+  source: "user" | "branch";
+  id: string;
+  name: string;
+  balance: number;
+};
+
 interface SenderDraftPaymentSectionProps {
   refId: string;
 }
 
-export function SenderDraftPaymentSection({ refId }: SenderDraftPaymentSectionProps) {
-  const [paymentSource, setPaymentSource] = useState<"free" | "payment" | "credit">("free");
+export function SenderDraftPaymentSection({
+  refId,
+}: SenderDraftPaymentSectionProps) {
+  const [paymentSource, setPaymentSource] = useState<
+    "free" | "payment" | "credit"
+  >("free");
   const [paymentMethodId, setPaymentMethodId] = useState("");
   const [summaryModalOpen, setSummaryModalOpen] = useState(false);
-  const [paymentSummary, setPaymentSummary] = useState<PaymentSummaryData | null>(null);
+  const [paymentSummary, setPaymentSummary] =
+    useState<PaymentSummaryData | null>(null);
   const [stripeModalOpen, setStripeModalOpen] = useState(false);
+  /** When source is credit: which balance to use (user or branch). Set from credit_balance_details when summary loads. */
+  const [selectedCreditSource, setSelectedCreditSource] =
+    useState<CreditBalanceItem | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -47,10 +63,15 @@ export function SenderDraftPaymentSection({ refId }: SenderDraftPaymentSectionPr
     queryFn: async () => {
       const res = await getPaymentMethodsActiveApi();
       if (!checkResponse({ res })) return [];
-      const raw = res.data as { success?: boolean; data?: { id: string; name: string; key: string }[] };
+      const raw = res.data as {
+        success?: boolean;
+        data?: { id: string; name: string; key: string }[];
+      };
       const list = Array.isArray(raw?.data) ? raw.data : [];
       return list
-        .filter((item) => !PAYMENT_METHODS_EXCLUDED_FROM_WEBSITE.includes(item.key))
+        .filter(
+          (item) => !PAYMENT_METHODS_EXCLUDED_FROM_WEBSITE.includes(item.key),
+        )
         .map((item) => ({
           id: item.id,
           name: item.name,
@@ -60,82 +81,153 @@ export function SenderDraftPaymentSection({ refId }: SenderDraftPaymentSectionPr
     enabled: paymentSource === "payment",
   });
 
-  const paymentMethodOptions = Array.isArray(paymentMethodsList) ? paymentMethodsList : [];
-  const selectedOption = paymentMethodOptions.find((pm) => pm.id === paymentMethodId);
+  const paymentMethodOptions = Array.isArray(paymentMethodsList)
+    ? paymentMethodsList
+    : [];
+  const selectedOption = paymentMethodOptions.find(
+    (pm) => pm.id === paymentMethodId,
+  );
   const selectedMethodKey = selectedOption?.key ?? null;
-  const requiresStripeCard = selectedMethodKey != null && CARD_KEYS_REQUIRING_STRIPE.includes(selectedMethodKey);
+  const requiresStripeCard =
+    selectedMethodKey != null &&
+    CARD_KEYS_REQUIRING_STRIPE.includes(selectedMethodKey);
 
-  const { isPending: isPaymentSummaryPending, mutate: fetchPaymentSummary } = useMutation({
-    mutationFn: catchAsync(async () => {
-      const body =
-        paymentSource === "free"
-          ? { source: "free" as const }
-          : paymentSource === "credit"
-          ? { source: "credit" as const }
-          : { source: "payment" as const, payment_method_id: paymentMethodId.trim() || undefined };
-      if (paymentSource === "payment" && !paymentMethodId.trim()) {
-        throw new Error("Payment method is required when sender pays.");
-      }
-      const res = await postOrganizationReferralPaymentSummaryApi(refId, body);
-      if (!checkResponse({ res, showSuccess: true })) return;
-      const raw = res.data as { data?: PaymentSummaryData };
-      const payload = raw?.data ?? null;
-      setPaymentSummary(
-        payload && typeof payload === "object" ? (payload as PaymentSummaryData) : null
-      );
-      setSummaryModalOpen(true);
-      queryClient.invalidateQueries({
-        queryKey: [...defaultQueryKeys.referralSentList, "detail", refId],
-      });
-    }),
-  });
+  const { isPending: isPaymentSummaryPending, mutate: fetchPaymentSummary } =
+    useMutation({
+      mutationFn: catchAsync(async () => {
+        const body =
+          paymentSource === "free"
+            ? { source: "free" as const }
+            : paymentSource === "credit"
+              ? { source: "credit" as const }
+              : {
+                  source: "payment" as const,
+                  payment_method_id: paymentMethodId.trim() || undefined,
+                };
+        if (paymentSource === "payment" && !paymentMethodId.trim()) {
+          throw new Error("Payment method is required when sender pays.");
+        }
+        const res = await postOrganizationReferralPaymentSummaryApi(
+          refId,
+          body,
+        );
+        if (!checkResponse({ res, showSuccess: true })) return;
+        const raw = res.data as { data?: PaymentSummaryData };
+        const payload = raw?.data ?? null;
+        setPaymentSummary(
+          payload && typeof payload === "object"
+            ? (payload as PaymentSummaryData)
+            : null,
+        );
+        if (
+          payload &&
+          typeof payload === "object" &&
+          payload.source === "credit" &&
+          Array.isArray(payload.breakdown?.credit_balance_details) &&
+          payload.breakdown.credit_balance_details.length > 0
+        ) {
+          const first = payload.breakdown.credit_balance_details[0];
+          setSelectedCreditSource({
+            source: first.source,
+            id: first.id,
+            name: first.name,
+            balance: first.balance,
+          });
+        } else {
+          setSelectedCreditSource(null);
+        }
+        setSummaryModalOpen(true);
+        queryClient.invalidateQueries({
+          queryKey: [...defaultQueryKeys.referralSentList, "detail", refId],
+        });
+      }),
+    });
 
   const onCloseSummary = () => {
     setSummaryModalOpen(false);
     setPaymentSummary(null);
     setStripeModalOpen(false);
+    setSelectedCreditSource(null);
   };
 
   const { isPending: isSendPending, mutate: sendReferral } = useMutation({
-    mutationFn: catchAsync(async (payload: { source: "free" | "payment"; payment_method_id?: string }) => {
-      const res = await postOrganizationReferralSendApi(refId, payload);
-      const resBody = res.data as {
-        data?: { client_secret?: string; message?: string };
-        message?: string;
-      };
-      const data = resBody?.data;
-      const needsStripeConfirm = requiresStripeCard && data?.client_secret && payload.payment_method_id;
-      if (!checkResponse({ res, showSuccess: !needsStripeConfirm })) return;
-      const payment_method_id = payload.payment_method_id;
-      if (needsStripeConfirm && payment_method_id) {
-        const stripe = await stripePromise;
-        if (!stripe) {
-          toastError("Stripe is not configured.");
-          return;
+    mutationFn: catchAsync(
+      async (payload: {
+        source: "free" | "payment" | "credit";
+        payment_method_id?: string;
+        branch_id?: string;
+        credit_source?: "user" | "branch";
+      }) => {
+        const sendBody =
+          payload.source === "credit"
+            ? {
+                source: payload.source as "credit",
+                credit_source: payload.credit_source,
+                ...(payload.branch_id && { branch_id: payload.branch_id }),
+              }
+            : payload.source === "payment"
+              ? {
+                  source: "payment" as const,
+                  payment_method_id: payload.payment_method_id,
+                }
+              : { source: "free" as const };
+        const res = await postOrganizationReferralSendApi(refId, sendBody);
+        const resBody = res.data as {
+          data?: { client_secret?: string; message?: string };
+          message?: string;
+        };
+        const data = resBody?.data;
+        const needsStripeConfirm =
+          payload.source === "payment" &&
+          requiresStripeCard &&
+          data?.client_secret &&
+          payload.payment_method_id;
+        if (!checkResponse({ res, showSuccess: !needsStripeConfirm })) return;
+        const payment_method_id = payload.payment_method_id;
+        if (needsStripeConfirm && payment_method_id) {
+          const stripe = await stripePromise;
+          if (!stripe) {
+            toastError("Stripe is not configured.");
+            return;
+          }
+          const { error } = await stripe.confirmCardPayment(
+            data!.client_secret!,
+            {
+              payment_method: payment_method_id,
+            },
+          );
+          if (error) {
+            toastError(error.message ?? "Payment confirmation failed.");
+            return;
+          }
+          const successMessage = data?.message ?? resBody?.message;
+          if (successMessage) toastSuccess(successMessage);
         }
-        const { error } = await stripe.confirmCardPayment(data!.client_secret!, {
-          payment_method: payment_method_id,
+        onCloseSummary();
+        queryClient.invalidateQueries({
+          queryKey: [...defaultQueryKeys.referralSentList, "detail", refId],
         });
-        if (error) {
-          toastError(error.message ?? "Payment confirmation failed.");
-          return;
-        }
-        const successMessage = data?.message ?? resBody?.message;
-        if (successMessage) toastSuccess(successMessage);
-      }
-      onCloseSummary();
-      queryClient.invalidateQueries({
-        queryKey: [...defaultQueryKeys.referralSentList, "detail", refId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: defaultQueryKeys.referralSentList,
-      });
-    }),
+        queryClient.invalidateQueries({
+          queryKey: defaultQueryKeys.referralSentList,
+        });
+      },
+    ),
   });
 
   const onConfirmAndSend = () => {
     if (paymentSource === "free") {
       sendReferral({ source: "free" });
+      return;
+    }
+    if (paymentSource === "credit" && selectedCreditSource) {
+      sendReferral({
+        source: "credit",
+        credit_source: selectedCreditSource.source,
+        branch_id:
+          selectedCreditSource.source === "branch"
+            ? selectedCreditSource.id
+            : undefined,
+      });
       return;
     }
     if (paymentSource === "payment") {
@@ -179,11 +271,11 @@ export function SenderDraftPaymentSection({ refId }: SenderDraftPaymentSectionPr
           </span>
         </div>
         <p className="text-rcn-muted text-xs font-semibold mb-3">
-          Choose who pays for this referral. Receiver can pay to unlock (referral sent for free) or
-          you can pay as sender.
+          Choose who pays for this referral. Receiver can pay to unlock
+          (referral sent for free) or you can pay as sender.
         </p>
         <div className="space-y-3">
-        <label className="flex items-center gap-2.5 cursor-pointer">
+          <label className="flex items-center gap-2.5 cursor-pointer">
             <input
               type="radio"
               name="paymentSource"
@@ -192,7 +284,9 @@ export function SenderDraftPaymentSection({ refId }: SenderDraftPaymentSectionPr
               className="rounded-full border-rcn-border"
             />
             <span className="text-sm font-semibold">Use credits</span>
-            <span className="text-rcn-muted text-xs">(Use credits to pay for the referral)</span>
+            <span className="text-rcn-muted text-xs">
+              (Use credits to pay for the referral)
+            </span>
           </label>
           <label className="flex items-center gap-2.5 cursor-pointer">
             <input
@@ -207,7 +301,7 @@ export function SenderDraftPaymentSection({ refId }: SenderDraftPaymentSectionPr
               (Referral sent for free; receiver pays to unlock patient info)
             </span>
           </label>
-          
+
           <label className="flex items-center gap-2.5 cursor-pointer">
             <input
               type="radio"
@@ -217,11 +311,15 @@ export function SenderDraftPaymentSection({ refId }: SenderDraftPaymentSectionPr
               className="rounded-full border-rcn-border"
             />
             <span className="text-sm font-semibold">Sender pays</span>
-            <span className="text-rcn-muted text-xs">(You pay for the referral)</span>
+            <span className="text-rcn-muted text-xs">
+              (You pay for the referral)
+            </span>
           </label>
           {paymentSource === "payment" && (
             <div className="pl-6">
-              <label className="block text-xs text-rcn-muted mb-1">Payment method</label>
+              <label className="block text-xs text-rcn-muted mb-1">
+                Payment method
+              </label>
               <select
                 value={paymentMethodId}
                 onChange={(e) => setPaymentMethodId(e.target.value)}
@@ -247,13 +345,19 @@ export function SenderDraftPaymentSection({ refId }: SenderDraftPaymentSectionPr
               }
               className="border border-rcn-brand/30 bg-rcn-brand/10 text-rcn-accent-dark px-4 py-2.5 rounded-xl font-extrabold text-sm shadow hover:bg-rcn-brand/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isPaymentSummaryPending ? "Loading…" : "Get payment summary & send referral"}
+              {isPaymentSummaryPending
+                ? "Loading…"
+                : "Get payment summary & send referral"}
             </button>
           </div>
         </div>
       </div>
 
-      <Modal isOpen={summaryModalOpen} onClose={onCloseSummary} maxWidth="560px">
+      <Modal
+        isOpen={summaryModalOpen}
+        onClose={onCloseSummary}
+        maxWidth="560px"
+      >
         <div className="p-4">
           <h3 className="m-0 text-base font-semibold mb-3 flex items-center gap-2.5">
             <span className="text-2xl">💳</span>
@@ -264,27 +368,37 @@ export function SenderDraftPaymentSection({ refId }: SenderDraftPaymentSectionPr
               {paymentSummary.referral_id && (
                 <div>
                   <span className="text-xs font-black">Referral ID</span>
-                  <p className="m-0 mt-0.5 font-semibold">{paymentSummary.referral_id}</p>
+                  <p className="m-0 mt-0.5 font-semibold">
+                    {paymentSummary.referral_id}
+                  </p>
                 </div>
               )}
               <div className="grid grid-cols-2 gap-2">
                 {typeof paymentSummary.total_recipients === "number" && (
                   <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
                     <span className=" text-xs font-black">Recipients</span>
-                    <p className="m-0 mt-0.5 font-semibold">{paymentSummary.total_recipients}</p>
+                    <p className="m-0 mt-0.5 font-semibold">
+                      {paymentSummary.total_recipients}
+                    </p>
                   </div>
                 )}
                 {typeof paymentSummary.total_departments === "number" && (
                   <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
                     <span className=" text-xs font-black">Departments</span>
-                    <p className="m-0 mt-0.5 font-semibold">{paymentSummary.total_departments}</p>
+                    <p className="m-0 mt-0.5 font-semibold">
+                      {paymentSummary.total_departments}
+                    </p>
                   </div>
                 )}
                 {paymentSummary.source != null && (
                   <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
                     <span className=" text-xs font-black">Payment by</span>
                     <p className="m-0 mt-0.5 font-semibold">
-                      {paymentSummary.source === "free" ? "Receiver pays" : "Sender pays"}
+                      {paymentSummary.source === "free"
+                        ? "Receiver pays"
+                        : paymentSummary.source === "credit"
+                          ? "Use credits"
+                          : "Sender pays"}
                     </p>
                   </div>
                 )}
@@ -292,7 +406,9 @@ export function SenderDraftPaymentSection({ refId }: SenderDraftPaymentSectionPr
                   <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
                     <span className=" text-xs font-black">Amount</span>
                     <p className="m-0 mt-0.5 font-semibold">
-                      {paymentSummary.currency ? `${paymentSummary.currency} ` : ""}
+                      {paymentSummary.currency
+                        ? `${paymentSummary.currency} `
+                        : ""}
                       {typeof paymentSummary.amount === "number"
                         ? paymentSummary.amount
                         : "—"}
@@ -300,19 +416,61 @@ export function SenderDraftPaymentSection({ refId }: SenderDraftPaymentSectionPr
                   </div>
                 )}
               </div>
-              {(paymentSummary.breakdown?.processing_fee_per_referral != null) && (
+              {paymentSource === "credit" &&
+                Array.isArray(
+                  paymentSummary.breakdown?.credit_balance_details,
+                ) &&
+                paymentSummary.breakdown.credit_balance_details.length > 0 && (
+                  <div>
+                    <label className="block text-xs font-black text-rcn-muted mb-1.5">
+                      Deduct credits from
+                    </label>
+                    <select
+                      value={
+                        selectedCreditSource
+                          ? `${selectedCreditSource.source}:${selectedCreditSource.id}`
+                          : ""
+                      }
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const item =
+                          paymentSummary.breakdown!.credit_balance_details!.find(
+                            (d) => `${d.source}:${d.id}` === val,
+                          );
+                        if (item) setSelectedCreditSource(item);
+                      }}
+                      className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm font-medium text-rcn-text focus:outline-none focus:ring-2 focus:ring-rcn-brand/20"
+                      aria-label="Credit source"
+                    >
+                      {paymentSummary.breakdown.credit_balance_details.map(
+                        (d) => (
+                          <option
+                            key={`${d.source}:${d.id}`}
+                            value={`${d.source}:${d.id}`}
+                          >
+                            {d.name} ({d.balance} credits)
+                          </option>
+                        ),
+                      )}
+                    </select>
+                  </div>
+                )}
+              {paymentSummary.breakdown?.processing_fee_per_referral !=
+                null && (
                 <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                  <span className="text-xs font-black text-rcn-muted">Processing fee</span>
+                  <span className="text-xs font-black text-rcn-muted">
+                    Processing fee
+                  </span>
                   <p className="m-0 mt-0.5 font-semibold">
                     {paymentSummary.currency ?? "$"}{" "}
-                    {typeof paymentSummary.breakdown.processing_fee_per_referral === "number"
+                    {typeof paymentSummary.breakdown
+                      .processing_fee_per_referral === "number"
                       ? paymentSummary.breakdown.processing_fee_per_referral
                       : "0"}
-
                   </p>
                 </div>
               )}
-             
+
               {paymentSummary.breakdown?.message && (
                 <div className="p-3 rounded-xl bg-rcn-brand/5 border border-rcn-brand/20">
                   <p className="m-0 text-[13px] font-semibold text-rcn-text">
@@ -339,7 +497,11 @@ export function SenderDraftPaymentSection({ refId }: SenderDraftPaymentSectionPr
               variant="primary"
               size="sm"
               onClick={onConfirmAndSend}
-              disabled={isSendPending || !paymentSummary}
+              disabled={
+                isSendPending ||
+                !paymentSummary ||
+                (paymentSource === "credit" && !selectedCreditSource)
+              }
             >
               {isSendPending ? "Sending…" : "Confirm & send referral"}
             </Button>

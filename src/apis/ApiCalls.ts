@@ -518,10 +518,10 @@ export const postWalletPurchaseCreditsApi = (body: {
   payment_method_id?: string;
 }) => AxiosInstance.post("/api/wallet/purchase-credits", body);
 
-/** POST /api/organization/referral/:id/send — confirm payment and send referral to receiver. */
+/** POST /api/organization/referral/:id/send — confirm payment and send referral to receiver. For credits: source "user" (my balance) or "branch" (requires branch_id). */
 export const postOrganizationReferralSendApi = (
   referralId: string,
-  body: { source: "free" | "payment"; payment_method_id?: string },
+  body: unknown,
 ) => AxiosInstance.post(`/api/organization/referral/${referralId}/send`, body);
 
 /** POST /api/organization/referral/:referralId/departments/:departmentId/payment-summary — get payment summary for receiver department (pay to unlock). */
