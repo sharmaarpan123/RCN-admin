@@ -36,7 +36,7 @@ const defaultFormValues: GuestOrganizationFormValues = {
   company_name: "",
   email: "",
   phone_number: "",
-  dial_code: "+1",
+  dial_code: "",
   fax_number: "",
   address: "",
   state: "",
@@ -188,7 +188,7 @@ export function AddReceiverModal({
           </div>
           <div>
             <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
-              Phone Number <span className="text-rcn-danger font-black">*</span>
+              Phone Number
             </label>
             <PhoneInputField
               value={phoneValue}
@@ -220,7 +220,7 @@ export function AddReceiverModal({
           </div>
           <div>
             <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
-              Fax Number <span className="text-rcn-danger font-black">*</span>
+              Fax Number
             </label>
             <input
               type="tel"
@@ -236,7 +236,7 @@ export function AddReceiverModal({
           </div>
           <div className="">
             <label className="block text-xs text-rcn-muted font-[850] mb-1.5">
-              Address <span className="text-rcn-danger font-black">*</span>
+              Address
             </label>
             <input
               type="text"

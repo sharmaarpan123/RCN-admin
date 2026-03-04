@@ -150,7 +150,7 @@ export default function OrgPortalUserViewPage() {
                 </ul>
               </div>
               <div>
-                <h3 className="text-xs text-rcn-muted font-medium m-0 mb-2">Departments</h3>
+                <h3 className="text-xs text-rcn-muted font-medium m-0 mb-2">Departments by user</h3>
                 <ul className="list-none p-0 m-0 space-y-2 max-h-40 overflow-auto">
                   {userDepartments.length === 0 ? (
                     <li className="text-sm text-rcn-muted">No departments assigned.</li>

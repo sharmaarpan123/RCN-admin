@@ -488,6 +488,10 @@ export const postOrganizationReferralForwardApi = (
 ) =>
   AxiosInstance.post(`/api/organization/referral/${referralId}/forward`, body);
 
+/** POST /api/organization/referral/claim/:code — claim a referral by code (receiver). */
+export const postOrganizationReferralClaimApi = (code: string) =>
+  AxiosInstance.post(`/api/organization/referral/claim/${encodeURIComponent(code)}`);
+
 /** POST /api/organization/referral/:id/payment-summary — get payment summary for draft referral. source: "free" = sender pays, "payment" = receiver pays (requires payment_method_id). */
 export const postOrganizationReferralPaymentSummaryApi = (
   referralId: string,

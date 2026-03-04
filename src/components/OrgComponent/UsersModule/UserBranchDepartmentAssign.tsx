@@ -136,7 +136,7 @@ export function UserBranchDepartmentAssign({
           </div>
         </div>
         <div>
-          <label className="block text-xs text-rcn-muted mb-1.5">Departments (by branch)</label>
+          <label className="block text-xs text-rcn-muted mb-1.5">Departments by user</label>
           <div className="border border-rcn-border rounded-xl p-3 max-h-40 overflow-auto space-y-2">
             {localBranchIds.map((brId) => {
               const br = branches.find((b) => b._id === brId);
