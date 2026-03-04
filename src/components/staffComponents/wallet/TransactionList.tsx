@@ -117,20 +117,7 @@ export function TransactionList() {
           <span className="text-[13px] text-rcn-text">{row.description ?? "—"}</span>
         ),
       },
-      {
-        head: "Direction",
-        component: (row) => (
-          <span
-            className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${
-              row.direction === "in"
-                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                : "bg-slate-100 text-slate-600 border border-slate-200"
-            }`}
-          >
-            {row.direction === "in" ? "In" : row.direction === "out" ? "Out" : "—"}
-          </span>
-        ),
-      },
+     
       {
         head: "Amount",
         component: (row) => (
