@@ -182,10 +182,19 @@ export function SelectReceiverSection({
   );
 
   const removeRow = useCallback(
-    (organizationId: string) => {
+    (
+      branchOrOrganizationId: string,
+      action: "delete branch" | "delete organization",
+    ) => {
       setValue(
         "receiver_rows",
-        receiverRows.filter((r) => r.organizationId !== organizationId),
+        receiverRows.filter(
+          (r) =>
+            (action === "delete branch" &&
+              r.branchId !== branchOrOrganizationId) ||
+            (action === "delete organization" &&
+              r.organizationId !== branchOrOrganizationId),
+        ),
         { shouldValidate: true },
       );
     },
@@ -507,7 +516,10 @@ function ReceiverRow({
     branchId: string,
     selectedDepartments: OrgBranchDeptOption[],
   ) => void;
-  removeRow: (organizationId: string) => void;
+  removeRow: (
+    branchId: string,
+    action: "delete branch" | "delete organization",
+  ) => void;
   branchError?: string;
   departmentError?: string;
 }) {
@@ -593,7 +605,12 @@ function ReceiverRow({
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() => removeRow(row.organizationId)}
+          onClick={() =>
+            removeRow(
+              row.branchId ?? row.organizationId,
+              row.branchId ? "delete branch" : "delete organization",
+            )
+          }
           aria-label="Remove receiver"
         >
           Remove
@@ -621,7 +638,10 @@ function ReceiverRowsTable({
     organizationId: string,
     selectedDepartments: OrgBranchDeptOption[],
   ) => void;
-  removeRow: (organizationId: string) => void;
+  removeRow: (
+    branchOrOrganizationId: string,
+    action: "delete branch" | "delete organization",
+  ) => void;
   receiverRowsErrors?: unknown;
   receiverRowsRootError?: string;
 }) {
