@@ -10,7 +10,15 @@ import { postContactApi } from "@/apis/ApiCalls";
 import { checkResponse, catchAsync } from "@/utils/commonFunc";
 
 const CONTACT_EMAIL = "jenny.wilson@rcn.com";
-const CONTACT_PHONE = "+91 7986709965";
+const CONTACT_PHONE = "630 547 3566";
+const CONTACT_ADDRESS = "715 W. Lake Street, Suite 201, Addison, IL, 60101";
+const CONTACT_FAX = "630 366 6650";
+
+// /Address: 715 W. Lake Street
+// Suite: 201
+// Addison, IL, 60101
+// Tel: 
+// Fax: 630 366 6650
 
 const inputClass =
   "w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white outline-none text-sm font-normal focus:border-rcn-brand/75 focus:ring-2 focus:ring-rcn-brand/12";

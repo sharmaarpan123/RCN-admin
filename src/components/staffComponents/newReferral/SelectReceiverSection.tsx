@@ -182,21 +182,14 @@ export function SelectReceiverSection({
   );
 
   const removeRow = useCallback(
-    (
-      branchOrOrganizationId: string,
-      action: "delete branch" | "delete organization",
-    ) => {
-      setValue(
-        "receiver_rows",
-        receiverRows.filter(
-          (r) =>
-            (action === "delete branch" &&
-              r.branchId !== branchOrOrganizationId) ||
-            (action === "delete organization" &&
-              r.organizationId !== branchOrOrganizationId),
-        ),
-        { shouldValidate: true },
-      );
+    (index: number) => {
+      const existingOrgId =
+        receiverRows[index].branchId ?? receiverRows[index].organizationId;
+      const restRows = receiverRows.filter((r, i) => i !== index);
+
+      setValue("receiver_rows", restRows, {
+        shouldValidate: true,
+      });
     },
     [receiverRows, setValue],
   );
@@ -292,7 +285,7 @@ export function SelectReceiverSection({
       setValue(
         "receiver_rows",
         receiverRows.map((r) =>
-          r.organizationId === organizationId
+          r.branchId === branchId
             ? {
                 ...r,
                 branchId,
@@ -499,6 +492,7 @@ function useDepartmentOptions(branchId: string | null): OrgBranchDeptOption[] {
 }
 
 function ReceiverRow({
+  index,
   row,
   updateRowBranch,
   updateRowDepartments,
@@ -506,6 +500,7 @@ function ReceiverRow({
   branchError,
   departmentError,
 }: {
+  index: number;
   row: ReceiverRow;
   updateRowBranch: (
     organizationId: string,
@@ -516,10 +511,7 @@ function ReceiverRow({
     branchId: string,
     selectedDepartments: OrgBranchDeptOption[],
   ) => void;
-  removeRow: (
-    branchId: string,
-    action: "delete branch" | "delete organization",
-  ) => void;
+  removeRow: (index: number) => void;
   branchError?: string;
   departmentError?: string;
 }) {
@@ -605,12 +597,7 @@ function ReceiverRow({
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() =>
-            removeRow(
-              row.branchId ?? row.organizationId,
-              row.branchId ? "delete branch" : "delete organization",
-            )
-          }
+          onClick={() => removeRow(index)}
           aria-label="Remove receiver"
         >
           Remove
@@ -638,10 +625,7 @@ function ReceiverRowsTable({
     organizationId: string,
     selectedDepartments: OrgBranchDeptOption[],
   ) => void;
-  removeRow: (
-    branchOrOrganizationId: string,
-    action: "delete branch" | "delete organization",
-  ) => void;
+  removeRow: (index: number) => void;
   receiverRowsErrors?: unknown;
   receiverRowsRootError?: string;
 }) {
@@ -692,6 +676,7 @@ function ReceiverRowsTable({
                 }>
               )?.[index]?.branchId?.message
             }
+            index={index}
             departmentError={
               (
                 receiverRowsErrors as Array<{
