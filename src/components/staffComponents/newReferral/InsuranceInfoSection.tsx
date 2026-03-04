@@ -246,7 +246,7 @@ export function InsuranceInfoSection() {
               watch(`patient_insurance_information.${index}.document`) ?? ""
             ).trim() &&
               !uploadingFields[`insurance-doc-${index}`] && (
-                <div className="flex justify-between w-100 my-1">
+                <div className="flex justify-between w-full my-1">
                   <button
                     type="button"
                     onClick={(e) => {
@@ -259,7 +259,7 @@ export function InsuranceInfoSection() {
                         ).trim(),
                       );
                     }}
-                    className="text-xs text-rcn-brand mt-1 block truncate text-left hover:underline focus:outline-none focus:ring-0"
+                    className="text-xs text-rcn-brand mt-1 block truncate text-left hover:underline focus:outline-none focus:ring-0 cursor-pointer"
                   >
                     View file
                   </button>
@@ -269,7 +269,7 @@ export function InsuranceInfoSection() {
                       e.stopPropagation();
                       removeDocument(index);
                     }}
-                    className="text-xs text-rcn-brand mt-1 block truncate text-left hover:underline focus:outline-none focus:ring-0"
+                    className="text-red-600 hover:underline shrink-0  text-xs cursor-pointer"
                   >
                     Remove
                   </button>
