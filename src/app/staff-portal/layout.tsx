@@ -24,13 +24,13 @@ import { logout } from "@/apis/Axios";
 import { useStaffAuthLoginUser } from "@/store/slices/Auth/hooks";
 
 const NAV = [
-  { href: "/staff-portal/profile", label: "Profile" },
   { href: "/staff-portal/new-referral", label: "New Referral" },
-  { href: "/staff-portal/branches", label: "Branches" },
-  { href: "/staff-portal/departments", label: "Departments" },
   { href: "/staff-portal/inbox", label: "Inbox" },
   { href: "/staff-portal/chat", label: "Chat" },
+  { href: "/staff-portal/branches", label: "Branches" },
+  { href: "/staff-portal/departments", label: "Departments" },
   { href: "/staff-portal/wallet", label: "Wallet" },
+  { href: "/staff-portal/profile", label: "Profile" },
 ] as const;
 
 /** Fetches same banners API as AdBanner, renders one card at bottom of sidebar (not fixed). */
