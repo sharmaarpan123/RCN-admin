@@ -183,7 +183,7 @@ export default function OrgPortalDepartmentsPage() {
                 id="dept-search"
                 value={body.search}
                 onChange={(value) => setBody((prev) => ({ ...prev, search: value }))}
-                placeholder="Search by name, ID, or branch"
+                placeholder="Search by name, or branch"
                 debounceMs={300}
               />
             </div>

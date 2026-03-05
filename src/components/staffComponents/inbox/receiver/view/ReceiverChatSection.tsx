@@ -45,8 +45,10 @@ export function ReceiverChatSection({
   const { data: chatData, isLoading } = useQuery({
     queryKey: [...defaultQueryKeys.referralChat, referralId],
     queryFn: async () => {
-      const res = await postReferralStartChatApi(referralId , { department_id: receiverId });
-      if (!checkResponse({ res , showError: false })) return null;
+      const res = await postReferralStartChatApi(referralId, {
+        department_id: receiverId,
+      });
+      if (!checkResponse({ res, showError: false })) return null;
       const body = res.data as { data?: { messages?: ApiChatMessage[] } };
       return body?.data ?? null;
     },
@@ -57,55 +59,85 @@ export function ReceiverChatSection({
     const messages: ApiChatMessage[] = chatData?.messages ?? [];
     return [...messages, ...localMessages].sort(
       (a, b) =>
-        new Date(a.created_at ?? 0).getTime() - new Date(b.created_at ?? 0).getTime()
+        new Date(a.created_at ?? 0).getTime() -
+        new Date(b.created_at ?? 0).getTime(),
     );
   }, [chatData?.messages, localMessages]);
 
   useEffect(() => {
-    if (chatBodyRef.current) chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
+    if (chatBodyRef.current)
+      chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
   }, [thread.length, chatBodyRef]);
 
   const doSend = () => {
-    router.push(`/staff-portal/chat?RedirectedReferralId=${referralId}`);
+    router.push(
+      `/staff-portal/chat?RedirectedReferralId=${referralId}&department_id=${receiverId}`,
+    );
   };
 
   return (
     <div id="secChat" className={SECTION_CLASS}>
-      <div className="-m-3.5 -mt-3.5 mb-3 p-3 border-b border-rcn-border/60 rounded-t-[18px] flex items-center justify-between" style={{ background: BOX_GRAD }}>
+      <div
+        className="-m-3.5 -mt-3.5 mb-3 p-3 border-b border-rcn-border/60 rounded-t-[18px] flex items-center justify-between"
+        style={{ background: BOX_GRAD }}
+      >
         <h4 className="m-0 text-[13px] font-semibold flex items-center gap-2.5">
-          <span className="w-[30px] h-[30px] rounded-xl flex items-center justify-center border border-rcn-brand/25 bg-white/70 shadow">💬</span>
+          <span className="w-[30px] h-[30px] rounded-xl flex items-center justify-center border border-rcn-brand/25 bg-white/70 shadow">
+            💬
+          </span>
           Chat with Sender
         </h4>
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border border-rcn-brand/25 bg-white/70 text-rcn-accent-dark">Messaging Enabled</span>
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border border-rcn-brand/25 bg-white/70 text-rcn-accent-dark">
+          Messaging Enabled
+        </span>
       </div>
       <div className="border border-rcn-brand/20 rounded-[14px] bg-rcn-brand/5 overflow-hidden">
         <div className="flex gap-2.5 items-center justify-between p-2.5 bg-rcn-brand/10 border-b border-rcn-brand/20">
           <span className="text-rcn-muted text-xs font-black">Thread</span>
           <span className="text-rcn-muted text-xs">Sender</span>
         </div>
-        <div ref={chatBodyRef} className="max-h-[280px] overflow-auto p-2.5 flex flex-col gap-2.5">
+        <div
+          ref={chatBodyRef}
+          className="max-h-[280px] overflow-auto p-2.5 flex flex-col gap-2.5"
+        >
           {isLoading ? (
-            <div className="p-2 text-rcn-muted font-black text-sm">Loading conversation…</div>
+            <div className="p-2 text-rcn-muted font-black text-sm">
+              Loading conversation…
+            </div>
           ) : thread.length ? (
             thread.map((m, i) => {
               const mine = m.sender_id === loginUser?._id;
               return (
-                <div key={m.id ?? i} className={`flex gap-2.5 items-end ${mine ? "justify-end" : ""}`}>
-                  <div className={`max-w-[78%] border rounded-[14px] p-2.5 shadow-[0_8px_18px_rgba(2,6,23,.06)] ${mine ? "bg-rcn-brand/10 border-rcn-brand/20" : "border-slate-200 bg-white"}`}>
+                <div
+                  key={m.id ?? i}
+                  className={`flex gap-2.5 items-end ${mine ? "justify-end" : ""}`}
+                >
+                  <div
+                    className={`max-w-[78%] border rounded-[14px] p-2.5 shadow-[0_8px_18px_rgba(2,6,23,.06)] ${mine ? "bg-rcn-brand/10 border-rcn-brand/20" : "border-slate-200 bg-white"}`}
+                  >
                     <div className="text-[11px] text-rcn-muted font-black mb-1 flex gap-2 flex-wrap justify-between">
-                      {m.sender_name ?? "—"} <span>{fmtDate(new Date(m.created_at ?? 0))}</span>
+                      {m.sender_name ?? "—"}{" "}
+                      <span>{fmtDate(new Date(m.created_at ?? 0))}</span>
                     </div>
-                    <div className="text-[13px] font-semibold text-rcn-text leading-snug whitespace-pre-wrap">{m.message}</div>
+                    <div className="text-[13px] font-semibold text-rcn-text leading-snug whitespace-pre-wrap">
+                      {m.message}
+                    </div>
                   </div>
                 </div>
               );
             })
           ) : (
-            <div className="p-2 text-rcn-muted font-black text-sm">No messages yet. Start the chat below.</div>
+            <div className="p-2 text-rcn-muted font-black text-sm">
+              No messages yet. Start the chat below.
+            </div>
           )}
         </div>
         <div className="flex gap-2.5 p-2.5 border-t border-rcn-brand/20 bg-white/85">
-          <button type="button" onClick={doSend} className="border border-rcn-brand/25 bg-rcn-brand/10 text-rcn-accent-dark px-2.5 py-2 rounded-xl font-extrabold text-xs shadow">
+          <button
+            type="button"
+            onClick={doSend}
+            className="border border-rcn-brand/25 bg-rcn-brand/10 text-rcn-accent-dark px-2.5 py-2 rounded-xl font-extrabold text-xs shadow"
+          >
             {thread.length ? "Continue Chat" : "Start Chat"}
           </button>
         </div>
