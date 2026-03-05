@@ -276,14 +276,14 @@ export function SelectReceiverSection({
 
   const updateRowBranch = useCallback(
     (index: number, branchId: string, branchName: string) => {
-      console.log(branchId, "branchId123");
+    
       const isBranchAlreadyThere = receiverRows.some(
         (r) => r.branchId === branchId,
       );
 
       if (isBranchAlreadyThere) return;
-      const newArr = receiverRows.map((r, index) =>
-        index === index
+      const newArr = receiverRows.map((r, ind) =>
+        index === ind
           ? {
               ...r,
               branchId,
@@ -551,7 +551,7 @@ function ReceiverRow({
           placeholder="Select branch..."
           aria-label="Branch"
           aria-invalid={!!branchError}
-          isClearable
+          
           maxMenuHeight={220}
           controlClassName={branchError ? "!border-red-500" : undefined}
         />
