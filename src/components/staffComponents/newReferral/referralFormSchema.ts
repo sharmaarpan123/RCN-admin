@@ -112,7 +112,22 @@ export const referralFormSchema = yup.object({
   additional_notes: yup.string().trim().optional().default(""),
   patient_first_name: yup.string().trim().required("First name is required"),
   patient_last_name: yup.string().trim().required("Last name is required"),
-  dob: yup.string().trim().required("DOB is required"),
+  dob: yup
+    .string()
+    .trim()
+    .required("DOB is required")
+    .test(
+      "dob-not-future",
+      "Date of birth cannot be greater than today",
+      (value) => {
+        if (!value) return true;
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return true;
+        const today = new Date();
+        today.setHours(23, 59, 59, 999);
+        return date.getTime() <= today.getTime();
+      }
+    ),
   gender: yup.string().trim().required("Gender is required"),
   address_of_care: yup.string().trim().required("Address of care is required"),
   patient_insurance_information: yup
