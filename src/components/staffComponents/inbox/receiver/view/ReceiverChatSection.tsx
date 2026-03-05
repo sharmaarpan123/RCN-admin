@@ -30,12 +30,14 @@ interface ReceiverChatSectionProps {
   /** Extra messages to show (e.g. sent locally); same shape as API (message, sender_id, sender_name, created_at). */
   localMessages?: ApiChatMessage[];
   chatBodyRef: RefObject<HTMLDivElement | null>;
+  receiverId: string;
 }
 
 export function ReceiverChatSection({
   referralId,
   localMessages = [],
   chatBodyRef,
+  receiverId,
 }: ReceiverChatSectionProps) {
   const router = useRouter();
   const { loginUser } = useStaffAuthLoginUser();
@@ -43,7 +45,7 @@ export function ReceiverChatSection({
   const { data: chatData, isLoading } = useQuery({
     queryKey: [...defaultQueryKeys.referralChat, referralId],
     queryFn: async () => {
-      const res = await postReferralStartChatApi(referralId);
+      const res = await postReferralStartChatApi(referralId , { department_id: receiverId });
       if (!checkResponse({ res , showError: false })) return null;
       const body = res.data as { data?: { messages?: ApiChatMessage[] } };
       return body?.data ?? null;

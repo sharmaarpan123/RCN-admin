@@ -567,6 +567,7 @@ function ReceiverDetailContent({
             />
             <ReceiverChatSection
               referralId={refId}
+              receiverId={receiverId ?? ""}
               localMessages={[]}
               chatBodyRef={chatBodyRef}
             />

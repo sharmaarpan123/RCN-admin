@@ -125,41 +125,24 @@ export function SelectReceiverSection({
 
   const stateFilterOptions: OrgBranchDeptOption[] = [...stateOptionsFromApi];
 
-  const loadOrganizationOptions = useCallback(
-    (inputValue: string) => {
-      const stateParam =
-        stateFilter && stateFilter !== "ALL"
-          ? (stateOptionsFromApi.find((s) => s.value === stateFilter)?.label ??
-            stateFilter)
-          : "";
+  const stateParam =
+    stateFilter && stateFilter !== "ALL"
+      ? (stateOptionsFromApi.find((s) => s.value === stateFilter)?.label ??
+        stateFilter)
+      : "";
 
-      if (!stateParam && inputValue?.trim()) {
-        toastWarning("Please select a state");
-        return Promise.resolve([]);
-      }
-
-      if (!stateParam) {
-        return Promise.resolve([]);
-      }
-
-      if (!inputValue?.trim()) {
-        return Promise.resolve([]);
-      }
-
-      return getStaffOrganizationsApi({
-        ...(stateParam && { state: stateParam }),
-        ...(inputValue.trim() && { search: inputValue.trim() }),
-      })
-        .then((res) => {
-          if (!checkResponse({ res })) return [];
-          const data = res.data?.data ?? res.data;
-          const list = Array.isArray(data) ? data : [];
-          return toOptions(list);
-        })
-        .catch(() => []);
+  const { data: organizationOptions = [] } = useQuery({
+    queryKey: ["staff", "organizations", stateParam],
+    queryFn: async () => {
+      if (!stateParam) return [];
+      const res = await getStaffOrganizationsApi({ state: stateParam });
+      if (!checkResponse({ res })) return [];
+      const data = res.data?.data ?? res.data;
+      const list = Array.isArray(data) ? data : [];
+      return toOptions(list);
     },
-    [stateFilter, stateOptionsFromApi],
-  );
+    enabled: !!stateParam,
+  });
 
   const handleOrganizationChange = useCallback(
     (options: OrgBranchDeptOption[]) => {
@@ -379,20 +362,32 @@ export function SelectReceiverSection({
           </div>
           <div>
             <label className="block text-xs text-rcn-muted font-semibold mb-1.5">
-              Organization (search and select)
+              Organization (select)
             </label>
-            <CustomAsyncSelect
+            <Select<OrgBranchDeptOption, true>
+              isMulti
               value={selectedOrgOptions}
-              onChange={handleOrganizationChange}
-              loadOptions={loadOrganizationOptions}
-              placeholder="Type to search organizations..."
-              aria-label="Organization"
-              defaultOptions={true}
+              onChange={(opts) =>
+                handleOrganizationChange(opts ? [...opts] : [])
+              }
+              options={organizationOptions}
+              placeholder={
+                stateParam
+                  ? "Select one or more organizations..."
+                  : "Select a state first"
+              }
+              isClearable
+              isDisabled={!stateParam}
               maxMenuHeight={280}
+              classNames={{
+                control: () => RCN_SELECT_CLASSES.control,
+                menu: () => RCN_SELECT_CLASSES.menu,
+              }}
+              aria-label="Organization"
             />
             <p className="text-xs text-rcn-muted mt-1.5">
-              Select one or more organizations. Then choose branch and
-              department per row below.
+              Select a state first, then choose one or more organizations.
+              Then select branch and department per row below.
             </p>
           </div>
           <div>
