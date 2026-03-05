@@ -154,6 +154,7 @@ function SenderDetailContent({ data }: { data: ReferralByIdApi }) {
           <div className="border-b border-slate-200 bg-white/90">
             <h2 className="m-0 text-sm font-semibold tracking-wide">Referral Detail</h2>
             <p className="m-0 mt-1 text-rcn-muted text-xs font-[650]">Sender view: all receivers + per-receiver chat. Messaging at any status.</p>
+            <p className="m-0 mt-1 text-rcn-muted text-xs font-[650]">Referral Code: {data.referral_code}</p>
           </div>
 
           <div className="flex items-center gap-2">

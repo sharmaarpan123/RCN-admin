@@ -468,6 +468,7 @@ function ReceiverDetailContent({
             Receiver view: chat is free. Patient information requires payment —
             payment flow will be added soon.
           </p>
+          <p className="m-0 mt-1 text-rcn-muted text-xs font-[650]">Referral Code: {data.referral_code}</p>
         </div>
         <div className="p-3 overflow-auto">
           <div className="flex flex-wrap gap-3 items-start justify-between p-3.5 rounded-2xl border border-rcn-brand/20 bg-white/95 shadow-[0_12px_26px_rgba(2,6,23,.07)] mb-3">

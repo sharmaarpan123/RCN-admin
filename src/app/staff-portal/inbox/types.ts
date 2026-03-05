@@ -62,6 +62,7 @@ export interface Referral {
 
 /** Raw shape from GET /api/organization/referral/sent — use API data directly in SenderInbox. */
 export interface SentReferralApi {
+  referral_code?: string;
   _id: string;
   is_draft?: boolean;
   sent_at: string | null;

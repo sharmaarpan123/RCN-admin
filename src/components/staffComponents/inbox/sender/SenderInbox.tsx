@@ -46,7 +46,7 @@ export function SenderInbox({
       {
         head: "Referral ID",
         component: (ref) => {
-          return <span className="text-rcn-muted text-xs font-semibold">{ref._id}</span>;
+          return <span className="text-rcn-muted text-xs font-semibold">{ref.referral_code}</span>;
         },
       },
       {
