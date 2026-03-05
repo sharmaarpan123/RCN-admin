@@ -1,23 +1,21 @@
 "use client";
 
-import React, { useMemo, useRef, useEffect } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useSelector } from "react-redux";
-import { fmtDate } from "@/app/staff-portal/inbox/helpers";
 import {
-  getReferralChatsApi,
   getReferralChatMessagesApi,
+  getReferralChatsApi,
   postReferralChatReadApi,
   postReferralStartChatApi,
 } from "@/apis/ApiCalls";
-import { checkResponse } from "@/utils/commonFunc";
-import defaultQueryKeys from "@/utils/staffQueryKeys";
+import { ChatInput } from "@/components/staffComponents/ChatInput";
 import { useSocket } from "@/contexts/SocketContext";
 import type { RootState } from "@/store";
-import { ChatInput } from "@/components/staffComponents/ChatInput";
-import { useRouter, useSearchParams } from "next/navigation";
+import { checkResponse } from "@/utils/commonFunc";
+import defaultQueryKeys from "@/utils/staffQueryKeys";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import moment from "moment";
-import { useStaffAuthLoginUser } from "@/store/slices/Auth/hooks";
+import { useRouter, useSearchParams } from "next/navigation";
+import React, { useEffect, useMemo, useRef } from "react";
+import { useSelector } from "react-redux";
 export const dynamic = "force-dynamic";
 
 const CHAT_LIST_PAGE = 1;
@@ -27,6 +25,8 @@ const MESSAGES_LIMIT = 50;
 
 /** Chat list item from GET /api/referral/chats response (data[]). */
 export interface ApiChatListItem {
+  _id: string;
+  referral_code: string;
   referral_id: string;
   referral_sender_name?: string;
   referral_facility_name?: string;
@@ -233,8 +233,6 @@ export default function ChatPage() {
     };
   }, [displayChat]);
 
-  console.log(displayChat, "displayChat");
-
   const getRedirectedChat = async (
     ReferredReferralId: string,
     departmentId: string,
@@ -312,11 +310,11 @@ export default function ChatPage() {
             ) : chatList.length > 0 ? (
               <div className="p-2">
                 {chatList.map((chat) => {
-                  const isSelected =
-                    selectedChat?.referral_id === chat.referral_id ||
-                    (selectedChat?.referral_id === chat.referral_id &&
-                      (chat.receiver_id ?? "") ===
-                        (selectedChat?.receiver_id ?? ""));
+                  const isSelected = selectedChat?._id === chat._id;
+                  // ||
+                  // (selectedChat?.referral_id === chat.referral_id &&
+                  //   (chat.receiver_id ?? "") ===
+                  //     (selectedChat?.receiver_id ?? ""));
                   return (
                     <button
                       key={`${chat.referral_id}_${chat.receiver_id ?? ""}`}
@@ -334,11 +332,11 @@ export default function ChatPage() {
                       <div className="flex items-start justify-between gap-2 mb-1">
                         <div className="flex-1 min-w-0">
                           <div className="text-[11px] text-rcn-muted font-bold truncate">
-                            {chat.is_sender
+                            {chat.referral_code
                               ? (chat.receiver_name ?? "—")
                               : (chat.referral_sender_name ?? "—")}
                           </div>
-                          {chat.referral_id?.slice(-8) ?? "—"}
+                          {chat.referral_code}
                           {chat.last_message && (
                             <div className="text-[11px] text-rcn-muted truncate mt-1">
                               {(chat.last_message.message ?? "").toString()}
@@ -418,10 +416,10 @@ export default function ChatPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="m-0 mt-0.5 text-xs text-rcn-muted font-semibold">
-                        {displayChat.referral_facility_name && (
+                        {/* {displayChat.referral_facility_name && (
                           <p>{displayChat.referral_facility_name ?? "—"}</p>
-                        )}
-                        <p>{displayChat.referral_id ?? "—"}</p>
+                        )} */}
+                        <p>{displayChat.referral_code ?? "—"}</p>
                       </p>
                     </div>
                   </div>
