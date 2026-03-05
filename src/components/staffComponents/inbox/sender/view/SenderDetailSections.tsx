@@ -1,7 +1,14 @@
 "use client";
 
-import { fmtDate, pillClass, pillLabel } from "@/app/staff-portal/inbox/helpers";
-import type { ReceiverInstance, ReferralByIdApi } from "@/app/staff-portal/inbox/types";
+import {
+  fmtDate,
+  pillClass,
+  pillLabel,
+} from "@/app/staff-portal/inbox/helpers";
+import type {
+  ReceiverInstance,
+  ReferralByIdApi,
+} from "@/app/staff-portal/inbox/types";
 import { Button, PreviewFile } from "@/components";
 import { toastError } from "@/utils/toast";
 import { useRouter } from "next/navigation";
@@ -17,39 +24,52 @@ interface SenderDetailSectionsProps {
   allReceivers: ReceiverInstance[];
 
   displayDocRows: DocRow[];
-
 }
 
 export function SenderDetailSections({
   data,
 
-
   allReceivers,
 
   displayDocRows,
-
-
 }: SenderDetailSectionsProps) {
   const p = data.patient ?? {};
   const ins = data.patient_insurance_information ?? [];
   const primary = ins[0];
   const addPatient = (data.additional_patient ?? {}) as Record<string, string>;
-  const primaryCare = (data.primary_care ?? {}) as Record<string, string | undefined>;
+  const primaryCare = (data.primary_care ?? {}) as Record<
+    string,
+    string | undefined
+  >;
   const hasPrimaryCare = Boolean(
-    primaryCare.name || primaryCare.address || primaryCare.phone_number || primaryCare.email || primaryCare.fax || primaryCare.npi
+    primaryCare.name ||
+    primaryCare.address ||
+    primaryCare.phone_number ||
+    primaryCare.email ||
+    primaryCare.fax ||
+    primaryCare.npi,
   );
   const router = useRouter();
   const [previewDocUrl, setPreviewDocUrl] = useState<string | null>(null);
-  const [downloadingDoc, setDownloadingDoc] = useState<Record<string, boolean>>({});
+  const [downloadingDoc, setDownloadingDoc] = useState<Record<string, boolean>>(
+    {},
+  );
 
-  const startChatWithReceiver = async (referralId: string, departmentId: string) => {
-    const res = await postReferralStartChatApi(referralId, { department_id: departmentId });
+  const startChatWithReceiver = async (
+    referralId: string,
+    departmentId: string,
+  ) => {
+    const res = await postReferralStartChatApi(referralId, {
+      department_id: departmentId,
+    });
     if (!checkResponse({ res })) return;
-    router.push(`/staff-portal/chat?RedirectedReferralId=${referralId}&department_id=${departmentId}`);
+    router.push(
+      `/staff-portal/chat?RedirectedReferralId=${referralId}&department_id=${departmentId}`,
+    );
   };
 
   const downloadDoc = async (url: string, key: string) => {
-    setDownloadingDoc(p => ({ ...p, [key]: true }));
+    setDownloadingDoc((p) => ({ ...p, [key]: true }));
     const res = await fetch("/api/download?url=" + url);
     if (res.ok) {
       const blob = await res.blob();
@@ -58,31 +78,41 @@ export function SenderDetailSections({
       a.href = url;
       a.download = url.split("/").pop() ?? "downloaded-file";
       a.click();
-      setDownloadingDoc(p => ({ ...p, [key]: false }));
+      setDownloadingDoc((p) => ({ ...p, [key]: false }));
     } else {
-      setDownloadingDoc(p => ({ ...p, [key]: false }));
+      setDownloadingDoc((p) => ({ ...p, [key]: false }));
 
       toastError("Failed to download document");
     }
   };
 
-
   const senderPhoneDisplay =
     data.sender_dial_code && data.sender_phone_number
       ? `${data.sender_dial_code} ${data.sender_phone_number}`.trim()
-      : data.sender_phone_number ?? "";
+      : (data.sender_phone_number ?? "");
 
-  const hasValue = (v: string | null | undefined) => (v ?? "").toString().trim() !== "";
+  const hasValue = (v: string | null | undefined) =>
+    (v ?? "").toString().trim() !== "";
 
   return (
     <div className="flex flex-col gap-3.5">
-      <div id="secSenderInfo" className="border border-rcn-border/60 bg-white/95 rounded-[18px] p-3.5 shadow-[0_12px_26px_rgba(2,6,23,.07)] relative overflow-hidden border-l-4 border-l-rcn-brand scroll-mt-[120px]">
-        <div className="-m-3.5 -mt-3.5 mb-3 p-3 border-b border-rcn-border/60 rounded-t-[18px] flex items-center justify-between gap-2.5" style={{ background: BOX_GRAD }}>
+      <div
+        id="secSenderInfo"
+        className="border border-rcn-border/60 bg-white/95 rounded-[18px] p-3.5 shadow-[0_12px_26px_rgba(2,6,23,.07)] relative overflow-hidden border-l-4 border-l-rcn-brand scroll-mt-[120px]"
+      >
+        <div
+          className="-m-3.5 -mt-3.5 mb-3 p-3 border-b border-rcn-border/60 rounded-t-[18px] flex items-center justify-between gap-2.5"
+          style={{ background: BOX_GRAD }}
+        >
           <h4 className="m-0 text-[13px] font-semibold tracking-wide flex items-center gap-2.5">
-            <span className="w-[30px] h-[30px] rounded-xl flex items-center justify-center border border-rcn-brand/25 bg-white/70 shadow">🏢</span>
+            <span className="w-[30px] h-[30px] rounded-xl flex items-center justify-center border border-rcn-brand/25 bg-white/70 shadow">
+              🏢
+            </span>
             Person/Facility Sending Referral
           </h4>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border border-rcn-brand/25 bg-white/70 text-rcn-accent-dark">Sender</span>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border border-rcn-brand/25 bg-white/70 text-rcn-accent-dark">
+            Sender
+          </span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           {[
@@ -93,21 +123,38 @@ export function SenderDetailSections({
             ["Phone Number", senderPhoneDisplay],
             ["Fax Number", data.sender_fax_number],
           ].map(([label, val]) => (
-            <div key={String(label)} className={label === "Facility Address" ? "sm:col-span-2" : ""}>
-              <label className="block text-[11px] text-rcn-muted font-black mb-1">{label}</label>
-              <div className="text-[13px] font-semibold text-rcn-text leading-tight p-2.5  border border-dashed border-slate-300/75 rounded-xl bg-slate-50/55 " >{val || "—"}</div>
+            <div
+              key={String(label)}
+              className={label === "Facility Address" ? "sm:col-span-2" : ""}
+            >
+              <label className="block text-[11px] text-rcn-muted font-black mb-1">
+                {label}
+              </label>
+              <div className="text-[13px] font-semibold text-rcn-text leading-tight p-2.5  border border-dashed border-slate-300/75 rounded-xl bg-slate-50/55 ">
+                {val || "—"}
+              </div>
             </div>
           ))}
         </div>
       </div>
 
-      <div id="secBasic" className="border border-rcn-border/60 bg-white/95 rounded-[18px] p-3.5 shadow-[0_12px_26px_rgba(2,6,23,.07)] relative overflow-hidden border-l-4 border-l-rcn-brand scroll-mt-[120px]">
-        <div className="-m-3.5 -mt-3.5 mb-3 p-3 border-b border-rcn-border/60 rounded-t-[18px] flex items-center justify-between gap-2.5" style={{ background: BOX_GRAD }}>
+      <div
+        id="secBasic"
+        className="border border-rcn-border/60 bg-white/95 rounded-[18px] p-3.5 shadow-[0_12px_26px_rgba(2,6,23,.07)] relative overflow-hidden border-l-4 border-l-rcn-brand scroll-mt-[120px]"
+      >
+        <div
+          className="-m-3.5 -mt-3.5 mb-3 p-3 border-b border-rcn-border/60 rounded-t-[18px] flex items-center justify-between gap-2.5"
+          style={{ background: BOX_GRAD }}
+        >
           <h4 className="m-0 text-[13px] font-semibold tracking-wide flex items-center gap-2.5">
-            <span className="w-[30px] h-[30px] rounded-xl flex items-center justify-center border border-rcn-brand/25 bg-white/70 shadow">👤</span>
+            <span className="w-[30px] h-[30px] rounded-xl flex items-center justify-center border border-rcn-brand/25 bg-white/70 shadow">
+              👤
+            </span>
             Basic Information
           </h4>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border border-rcn-brand/25 bg-white/70 text-rcn-accent-dark">Always Visible</span>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border border-rcn-brand/25 bg-white/70 text-rcn-accent-dark">
+            Always Visible
+          </span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           {[
@@ -116,27 +163,45 @@ export function SenderDetailSections({
             ["Date of Birth (DOB)", p.dob],
             ["Gender", p.gender],
             ["Address of Care", p.address_of_care],
-            ["Services Requested", ([...(data.speciality_ids || []), ...(data.additional_speciality || [])]?.map((x) => x.name) ?? []).join(", ")],
+            [
+              "Services Requested",
+              (
+                [
+                  ...(data.speciality_ids || []),
+                  ...(data.additional_speciality || []),
+                ]?.map((x) => x.name) ?? []
+              ).join(", "),
+            ],
           ].map(([label, val]) => (
             <div key={String(label)}>
-              <label className="block text-[11px] text-rcn-muted font-black mb-1">{label}</label>
-              <div className="text-[13px] font-semibold text-rcn-text leading-tight p-2.5 border border-dashed border-slate-300/75 rounded-xl bg-slate-50/55">{val ?? "—"}</div>
+              <label className="block text-[11px] text-rcn-muted font-black mb-1">
+                {label}
+              </label>
+              <div className="text-[13px] font-semibold text-rcn-text leading-tight p-2.5 border border-dashed border-slate-300/75 rounded-xl bg-slate-50/55">
+                {val ?? "—"}
+              </div>
             </div>
           ))}
         </div>
         {ins?.length ? (
           <div className="mt-3.5 space-y-3">
-            <h5 className="text-[11px] text-rcn-muted font-black uppercase tracking-wide mb-2">Primary  Insurances</h5>
+            <h5 className="text-[11px] text-rcn-muted font-black uppercase tracking-wide mb-2">
+              Primary Insurances
+            </h5>
             {ins.map((x, index) => {
               const { payer, policy, plan_group, document } = x;
-              const docUrl = hasValue(document) ? (document ?? "").trim() : null;
+              const docUrl = hasValue(document)
+                ? (document ?? "").trim()
+                : null;
               return (
                 <div
                   key={x._id ?? `ins-${index}`}
                   className="rounded-xl border border-slate-200/90 bg-slate-50/40 p-3 shadow-sm"
                 >
                   <div className="flex items-center justify-between gap-2 mb-2.5">
-                    <span className="text-[11px] font-black text-rcn-muted">Insurance #{index + 1}</span>
+                    <span className="text-[11px] font-black text-rcn-muted">
+                      Insurance #{index + 1}
+                    </span>
                     {docUrl && (
                       <Button
                         type="button"
@@ -156,7 +221,9 @@ export function SenderDetailSections({
                       ["Plan Group", plan_group],
                     ].map(([label, val]) => (
                       <div key={String(label)}>
-                        <label className="block text-[11px] text-rcn-muted font-black mb-1">{label}</label>
+                        <label className="block text-[11px] text-rcn-muted font-black mb-1">
+                          {label}
+                        </label>
                         <div className="text-[13px] font-semibold text-rcn-text leading-tight p-2 border border-dashed border-slate-300/75 rounded-lg bg-white/80">
                           {hasValue(val) ? val : "—"}
                         </div>
@@ -164,7 +231,9 @@ export function SenderDetailSections({
                     ))}
                   </div>
                   {!docUrl && (
-                    <p className="text-[11px] text-rcn-muted mt-2 italic">No document attached</p>
+                    <p className="text-[11px] text-rcn-muted mt-2 italic">
+                      No document attached
+                    </p>
                   )}
                 </div>
               );
@@ -173,11 +242,18 @@ export function SenderDetailSections({
         ) : null}
       </div>
 
-
-      <div id="secReceivers" className="border border-rcn-border/60 bg-white/95 rounded-[18px] p-3.5 shadow relative overflow-hidden border-l-4 border-l-rcn-brand scroll-mt-[120px]">
-        <div className="-m-3.5 -mt-3.5 mb-3 p-3 border-b border-rcn-border/60 rounded-t-[18px] flex items-center justify-between" style={{ background: BOX_GRAD }}>
+      <div
+        id="secReceivers"
+        className="border border-rcn-border/60 bg-white/95 rounded-[18px] p-3.5 shadow relative overflow-hidden border-l-4 border-l-rcn-brand scroll-mt-[120px]"
+      >
+        <div
+          className="-m-3.5 -mt-3.5 mb-3 p-3 border-b border-rcn-border/60 rounded-t-[18px] flex items-center justify-between"
+          style={{ background: BOX_GRAD }}
+        >
           <h4 className="m-0 text-[13px] font-semibold flex items-center gap-2.5">
-            <span className="w-[30px] h-[30px] rounded-xl flex items-center justify-center border border-rcn-brand/25 bg-white/70 shadow">📬</span>
+            <span className="w-[30px] h-[30px] rounded-xl flex items-center justify-center border border-rcn-brand/25 bg-white/70 shadow">
+              📬
+            </span>
             Receivers List
           </h4>
         </div>
@@ -185,7 +261,9 @@ export function SenderDetailSections({
           <table className="w-full border-collapse text-xs">
             <thead>
               <tr>
-                <th className="text-left p-2.5 bg-rcn-brand/10 text-rcn-text font-black text-[11px] uppercase tracking-wide">Receiver</th>
+                <th className="text-left p-2.5 bg-rcn-brand/10 text-rcn-text font-black text-[11px] uppercase tracking-wide">
+                  Receiver
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -196,43 +274,10 @@ export function SenderDetailSections({
                   </td>
                 </tr>
               ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div id="secReceivers" className="border border-rcn-border/60 bg-white/95 rounded-[18px] p-3.5 shadow relative overflow-hidden border-l-4 border-l-rcn-brand scroll-mt-[120px]">
-        <div className="-m-3.5 -mt-3.5 mb-3 p-3 border-b border-rcn-border/60 rounded-t-[18px] flex items-center justify-between" style={{ background: BOX_GRAD }}>
-          <h4 className="m-0 text-[13px] font-semibold flex items-center gap-2.5">
-            <span className="w-[30px] h-[30px] rounded-xl flex items-center justify-center border border-rcn-brand/25 bg-white/70 shadow">📬</span>
-            Receivers & Status
-          </h4>
-        </div>
-        <div className="overflow-hidden rounded-[14px] border border-slate-200 bg-white">
-          <table className="w-full border-collapse text-xs">
-            <thead>
-              <tr>
-                <th className="text-left p-2.5 bg-rcn-brand/10 text-rcn-text font-black text-[11px] uppercase tracking-wide">Receiver</th>
-                <th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">Status</th>
-                <th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">Last Update</th>
-                <th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">Payment</th>
-                <th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {allReceivers.map((rx) => (
-                <tr key={rx.receiverId} className="border-t border-slate-200">
+              {data?.guest_organizations?.map((rx, index) => (
+                <tr key={index} className="border-t border-slate-200">
                   <td className="p-2.5 align-top">
-                    <strong>{rx.name}</strong>
-                    {rx.email && <div className="text-rcn-muted text-xs">{rx.email}</div>}
-                    {rx.status === "REJECTED" && rx.rejectReason && <div className="text-rcn-muted text-xs">Reason: {rx.rejectReason}</div>}
-                    {rx.servicesRequestedOverride?.length && <div className="text-rcn-muted text-xs">Services override: {rx.servicesRequestedOverride.join(", ")}</div>}
-                  </td>
-                  <td className="p-2.5"><span className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border ${pillClass(rx.status)}`}>{pillLabel(rx.status)}</span></td>
-                  <td className="p-2.5">{fmtDate(rx.updatedAt)}</td>
-                  <td className="p-2.5">{rx.paidUnlocked ? <span className={`inline-flex px-2.5 py-1.5 rounded-full text-[11px] font-black border ${pillClass("PAID")}`}>Paid</span> : <span className={`inline-flex px-2.5 py-1.5 rounded-full text-[11px] font-black border ${pillClass("PENDING")}`}>Not paid</span>}</td>
-                  <td className="p-2.5">
-                    <button type="button" onClick={() => startChatWithReceiver(data?._id, rx.departmentId)} className="border border-rcn-brand/25 bg-rcn-brand/10 text-rcn-accent-dark px-2 py-1.5 rounded-xl font-extrabold text-xs shadow mr-1">Chat</button>
+                    {(rx as { company_name: string }).company_name}
                   </td>
                 </tr>
               ))}
@@ -241,10 +286,115 @@ export function SenderDetailSections({
         </div>
       </div>
 
-      <div id="secDocs" className="border border-rcn-border/60 bg-white/95 rounded-[18px] p-3.5 shadow relative overflow-hidden border-l-4 border-l-rcn-brand scroll-mt-[120px]">
-        <div className="-m-3.5 -mt-3.5 mb-3 p-3 border-b border-rcn-border/60 rounded-t-[18px] flex items-center justify-between" style={{ background: BOX_GRAD }}>
+      <div
+        id="secReceivers"
+        className="border border-rcn-border/60 bg-white/95 rounded-[18px] p-3.5 shadow relative overflow-hidden border-l-4 border-l-rcn-brand scroll-mt-[120px]"
+      >
+        <div
+          className="-m-3.5 -mt-3.5 mb-3 p-3 border-b border-rcn-border/60 rounded-t-[18px] flex items-center justify-between"
+          style={{ background: BOX_GRAD }}
+        >
           <h4 className="m-0 text-[13px] font-semibold flex items-center gap-2.5">
-            <span className="w-[30px] h-[30px] rounded-xl flex items-center justify-center border border-rcn-brand/25 bg-white/70 shadow">📎</span>
+            <span className="w-[30px] h-[30px] rounded-xl flex items-center justify-center border border-rcn-brand/25 bg-white/70 shadow">
+              📬
+            </span>
+            Receivers & Status
+          </h4>
+        </div>
+        <div className="overflow-hidden rounded-[14px] border border-slate-200 bg-white">
+          <table className="w-full border-collapse text-xs">
+            <thead>
+              <tr>
+                <th className="text-left p-2.5 bg-rcn-brand/10 text-rcn-text font-black text-[11px] uppercase tracking-wide">
+                  Receiver
+                </th>
+                <th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">
+                  Status
+                </th>
+                <th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">
+                  Last Update
+                </th>
+                <th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">
+                  Payment
+                </th>
+                <th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {allReceivers.map((rx) => (
+                <tr key={rx.receiverId} className="border-t border-slate-200">
+                  <td className="p-2.5 align-top">
+                    <strong>{rx.name}</strong>
+                    {rx.email && (
+                      <div className="text-rcn-muted text-xs">{rx.email}</div>
+                    )}
+                    {rx.status === "REJECTED" && rx.rejectReason && (
+                      <div className="text-rcn-muted text-xs">
+                        Reason: {rx.rejectReason}
+                      </div>
+                    )}
+                    {rx.servicesRequestedOverride?.length && (
+                      <div className="text-rcn-muted text-xs">
+                        Services override:{" "}
+                        {rx.servicesRequestedOverride.join(", ")}
+                      </div>
+                    )}
+                  </td>
+                  <td className="p-2.5">
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border ${pillClass(rx.status)}`}
+                    >
+                      {pillLabel(rx.status)}
+                    </span>
+                  </td>
+                  <td className="p-2.5">{fmtDate(rx.updatedAt)}</td>
+                  <td className="p-2.5">
+                    {rx.paidUnlocked ? (
+                      <span
+                        className={`inline-flex px-2.5 py-1.5 rounded-full text-[11px] font-black border ${pillClass("PAID")}`}
+                      >
+                        Paid
+                      </span>
+                    ) : (
+                      <span
+                        className={`inline-flex px-2.5 py-1.5 rounded-full text-[11px] font-black border ${pillClass("PENDING")}`}
+                      >
+                        Not paid
+                      </span>
+                    )}
+                  </td>
+                  <td className="p-2.5">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        startChatWithReceiver(data?._id, rx.departmentId)
+                      }
+                      className="border border-rcn-brand/25 bg-rcn-brand/10 text-rcn-accent-dark px-2 py-1.5 rounded-xl font-extrabold text-xs shadow mr-1"
+                    >
+                      Chat
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div
+        id="secDocs"
+        className="border border-rcn-border/60 bg-white/95 rounded-[18px] p-3.5 shadow relative overflow-hidden border-l-4 border-l-rcn-brand scroll-mt-[120px]"
+      >
+        <div
+          className="-m-3.5 -mt-3.5 mb-3 p-3 border-b border-rcn-border/60 rounded-t-[18px] flex items-center justify-between"
+          style={{ background: BOX_GRAD }}
+        >
+          <h4 className="m-0 text-[13px] font-semibold flex items-center gap-2.5">
+            <span className="w-[30px] h-[30px] rounded-xl flex items-center justify-center border border-rcn-brand/25 bg-white/70 shadow">
+              📎
+            </span>
             Attached Documents
           </h4>
         </div>
@@ -254,19 +404,24 @@ export function SenderDetailSections({
               <table className="w-full border-collapse text-xs">
                 <thead>
                   <tr>
-                    <th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">Document</th>
+                    <th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">
+                      Document
+                    </th>
 
-                    <th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">View</th>
+                    <th className="text-left p-2.5 bg-rcn-brand/10 font-black text-[11px] uppercase">
+                      View
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {displayDocRows.map((d, idx) => (
                     <tr key={idx} className="border-t border-slate-200">
-                      <td className="p-2.5"><strong>{d.label}</strong></td>
+                      <td className="p-2.5">
+                        <strong>{d.label}</strong>
+                      </td>
                       <td className="p-2.5">
                         {d.url ? (
                           <div className="flex gap-2">
-
                             <Button
                               type="button"
                               onClick={() => setPreviewDocUrl(d.url)}
@@ -279,7 +434,11 @@ export function SenderDetailSections({
                               onClick={() => downloadDoc(d.url, d.label)}
                               className="border border-rcn-brand/25 bg-rcn-brand/10 text-rcn-accent-dark px-2 py-1.5 rounded-xl text-xs font-extrabold shadow"
                             >
-                              {downloadingDoc[d.label] ? <span className="animate-spin">🔄</span> : "Download"}
+                              {downloadingDoc[d.label] ? (
+                                <span className="animate-spin">🔄</span>
+                              ) : (
+                                "Download"
+                              )}
                             </Button>
                           </div>
                         ) : (
@@ -291,57 +450,100 @@ export function SenderDetailSections({
                 </tbody>
               </table>
             ) : (
-              <div className="p-3 text-rcn-muted text-sm">No documents attached.</div>
+              <div className="p-3 text-rcn-muted text-sm">
+                No documents attached.
+              </div>
             )}
           </div>
-
         </div>
       </div>
 
-      <div id="secAdditional" className="border border-rcn-border/60 bg-white/95 rounded-[18px] p-3.5 shadow relative overflow-hidden border-l-4 border-l-rcn-brand scroll-mt-[120px]">
-        <div className="-m-3.5 -mt-3.5 mb-3 p-3 border-b border-rcn-border/60 rounded-t-[18px] flex items-center justify-between" style={{ background: BOX_GRAD }}>
+      <div
+        id="secAdditional"
+        className="border border-rcn-border/60 bg-white/95 rounded-[18px] p-3.5 shadow relative overflow-hidden border-l-4 border-l-rcn-brand scroll-mt-[120px]"
+      >
+        <div
+          className="-m-3.5 -mt-3.5 mb-3 p-3 border-b border-rcn-border/60 rounded-t-[18px] flex items-center justify-between"
+          style={{ background: BOX_GRAD }}
+        >
           <h4 className="m-0 text-[13px] font-semibold flex items-center gap-2.5">
-            <span className="w-[30px] h-[30px] rounded-xl flex items-center justify-center border border-rcn-brand/25 bg-white/70 shadow">🔒</span>
+            <span className="w-[30px] h-[30px] rounded-xl flex items-center justify-center border border-rcn-brand/25 bg-white/70 shadow">
+              🔒
+            </span>
             Additional Patient Information
           </h4>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border border-rcn-brand/25 bg-white/70 text-rcn-accent-dark">Visible Once Payment Is Completed</span>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border border-rcn-brand/25 bg-white/70 text-rcn-accent-dark">
+            Visible Once Payment Is Completed
+          </span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           {[
             ["Phone Number (Must)", addPatient.phone_number],
             ["Primary Language", addPatient.primary_language],
-            ["Representative / Power of Attorney", addPatient.power_of_attorney],
-            ["Social Security Number", addPatient.social_security_number ? `XXX-XX-${addPatient.social_security_number?.slice(-4)}` : "—"],
+            [
+              "Representative / Power of Attorney",
+              addPatient.power_of_attorney,
+            ],
+            [
+              "Social Security Number",
+              addPatient.social_security_number
+                ? `XXX-XX-${addPatient.social_security_number?.slice(-4)}`
+                : "—",
+            ],
             ["Other Information", addPatient.other_information ?? "—"],
           ].map(([label, val], i) => (
             <div key={i} className={i === 4 ? "sm:col-span-2" : ""}>
-              <label className="block text-[11px] text-rcn-muted font-black mb-1">{label}</label>
-              <div className="text-[13px] font-semibold text-rcn-text leading-tight p-2.5 border border-dashed border-slate-300/75 rounded-xl bg-slate-50/55">{val ?? "—"}</div>
+              <label className="block text-[11px] text-rcn-muted font-black mb-1">
+                {label}
+              </label>
+              <div className="text-[13px] font-semibold text-rcn-text leading-tight p-2.5 border border-dashed border-slate-300/75 rounded-xl bg-slate-50/55">
+                {val ?? "—"}
+              </div>
             </div>
           ))}
         </div>
       </div>
 
       {hasPrimaryCare && (
-        <div id="secPrimaryCare" className="border border-rcn-border/60 bg-white/95 rounded-[18px] p-3.5 shadow relative overflow-hidden border-l-4 border-l-rcn-brand scroll-mt-[120px]">
-          <div className="-m-3.5 -mt-3.5 mb-3 p-3 border-b border-rcn-border/60 rounded-t-[18px] flex items-center justify-between" style={{ background: BOX_GRAD }}>
+        <div
+          id="secPrimaryCare"
+          className="border border-rcn-border/60 bg-white/95 rounded-[18px] p-3.5 shadow relative overflow-hidden border-l-4 border-l-rcn-brand scroll-mt-[120px]"
+        >
+          <div
+            className="-m-3.5 -mt-3.5 mb-3 p-3 border-b border-rcn-border/60 rounded-t-[18px] flex items-center justify-between"
+            style={{ background: BOX_GRAD }}
+          >
             <h4 className="m-0 text-[13px] font-semibold flex items-center gap-2.5">
-              <span className="w-[30px] h-[30px] rounded-xl flex items-center justify-center border border-rcn-brand/25 bg-white/70 shadow">🏥</span>
-              Primary Care <span className="text-[11px] font-normal text-rcn-muted">(optional)</span>
+              <span className="w-[30px] h-[30px] rounded-xl flex items-center justify-center border border-rcn-brand/25 bg-white/70 shadow">
+                🏥
+              </span>
+              Primary Care{" "}
+              <span className="text-[11px] font-normal text-rcn-muted">
+                (optional)
+              </span>
             </h4>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {[
               ["Name", primaryCare.name],
               ["Address", primaryCare.address],
-              ["Phone", primaryCare.dial_code && primaryCare.phone_number ? `${primaryCare.dial_code} ${primaryCare.phone_number}` : primaryCare.phone_number],
+              [
+                "Phone",
+                primaryCare.dial_code && primaryCare.phone_number
+                  ? `${primaryCare.dial_code} ${primaryCare.phone_number}`
+                  : primaryCare.phone_number,
+              ],
               ["Fax", primaryCare.fax],
               ["Email", primaryCare.email],
               ["NPI", primaryCare.npi],
             ].map(([label, val]) => (
               <div key={String(label)}>
-                <label className="block text-[11px] text-rcn-muted font-black mb-1">{label}</label>
-                <div className="text-[13px] font-semibold text-rcn-text leading-tight p-2.5 border border-dashed border-slate-300/75 rounded-xl bg-slate-50/55">{val ?? "—"}</div>
+                <label className="block text-[11px] text-rcn-muted font-black mb-1">
+                  {label}
+                </label>
+                <div className="text-[13px] font-semibold text-rcn-text leading-tight p-2.5 border border-dashed border-slate-300/75 rounded-xl bg-slate-50/55">
+                  {val ?? "—"}
+                </div>
               </div>
             ))}
           </div>

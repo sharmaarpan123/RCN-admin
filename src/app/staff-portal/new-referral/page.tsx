@@ -126,12 +126,12 @@ export default function NewReferralPage() {
     const department_ids = getDepartmentIdsFromReceiverRows(
       values.receiver_rows as ReceiverRow[]
     );
-    if (!department_ids.length) {
-      toastError(
-        "Select at least one receiver with branch and department before submitting."
-      );
-      return;
-    }
+    // if (!department_ids.length) {
+    //   toastError(
+    //     "Select at least one receiver with branch and department before submitting."
+    //   );
+    //   return;
+    // }
     const payload = {
       sender_name: values.sender_name,
       facility_name: values.facility_name,

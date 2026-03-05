@@ -78,7 +78,10 @@ export const referralFormSchema = yup.object({
     .test(
       "receiver-departments",
       "Select at least one receiver with branch and department(s), or add a receiver from the list above.",
-      (rows) => {
+      function (rows) {
+        const root = this.parent as { guest_organizations?: unknown[] };
+        const hasGuestOrgs = Array.isArray(root?.guest_organizations) && root.guest_organizations.length > 0;
+        if (hasGuestOrgs) return true;
         if (!rows?.length) return false;
         const hasDepartment = rows.some(
           (r) =>
