@@ -8,8 +8,7 @@ import defaultQueryKeys from "@/utils/orgQueryKeys";
 import { TableLayout } from "@/components";
 import type { TableColumn } from "@/components";
 import CustomPagination from "@/components/CustomPagination";
-
-
+import moment from "moment";
 
 /** Transaction item from GET /api/auth/credits with include_transactions */
 export interface CreditTransaction {
@@ -45,50 +44,54 @@ export function TransactionList() {
   const [transactionPage, setTransactionPage] = useState(1);
   const creditsTransactionsKey = defaultQueryKeys.creditsTransactions;
 
-  const { data: transactionData, isLoading: transactionListLoading } = useQuery({
-    queryKey: [...creditsTransactionsKey, transactionPage, PAGE_SIZE],
-    queryFn: async () => {
-      const res = await getAuthCreditsApi({
-        include_transactions: true,
-        page: transactionPage,
-        limit: PAGE_SIZE,
-      });
-      if (!checkResponse({ res })) {
-        return {
-          transactions: [] as CreditTransaction[],
-          transactions_meta: {
-            page: 1,
-            limit: PAGE_SIZE,
-            total: 0,
-            totalPages: 0,
-            hasNextPage: false,
-            hasPrevPage: false,
-          } as TransactionsMeta,
+  const { data: transactionData, isLoading: transactionListLoading } = useQuery(
+    {
+      queryKey: [...creditsTransactionsKey, transactionPage, PAGE_SIZE],
+      queryFn: async () => {
+        const res = await getAuthCreditsApi({
+          include_transactions: true,
+          page: transactionPage,
+          limit: PAGE_SIZE,
+        });
+        if (!checkResponse({ res })) {
+          return {
+            transactions: [] as CreditTransaction[],
+            transactions_meta: {
+              page: 1,
+              limit: PAGE_SIZE,
+              total: 0,
+              totalPages: 0,
+              hasNextPage: false,
+              hasPrevPage: false,
+            } as TransactionsMeta,
+          };
+        }
+        const raw = res.data as {
+          data?: {
+            user_credits?: number;
+            branch_credits?: number;
+            organization_credits?: number;
+            branch_credits_summary?: unknown[];
+            transactions?: CreditTransaction[];
+            transactions_meta?: TransactionsMeta;
+          };
         };
-      }
-      const raw = res.data as {
-        data?: {
-          user_credits?: number;
-          branch_credits?: number;
-          organization_credits?: number;
-          branch_credits_summary?: unknown[];
-          transactions?: CreditTransaction[];
-          transactions_meta?: TransactionsMeta;
+        const data = raw?.data;
+        const transactions = Array.isArray(data?.transactions)
+          ? data.transactions
+          : [];
+        const transactions_meta: TransactionsMeta = data?.transactions_meta ?? {
+          page: 1,
+          limit: PAGE_SIZE,
+          total: 0,
+          totalPages: 0,
+          hasNextPage: false,
+          hasPrevPage: false,
         };
-      };
-      const data = raw?.data;
-      const transactions = Array.isArray(data?.transactions) ? data.transactions : [];
-      const transactions_meta: TransactionsMeta = data?.transactions_meta ?? {
-        page: 1,
-        limit: PAGE_SIZE,
-        total: 0,
-        totalPages: 0,
-        hasNextPage: false,
-        hasPrevPage: false,
-      };
-      return { transactions, transactions_meta };
+        return { transactions, transactions_meta };
+      },
     },
-  });
+  );
 
   const transactionColumns: TableColumn<CreditTransaction>[] = useMemo(
     () => [
@@ -97,13 +100,7 @@ export function TransactionList() {
         component: (row) => (
           <span className="text-[13px] text-rcn-text">
             {row.createdAt
-              ? new Date(row.createdAt).toLocaleDateString(undefined, {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })
+              ? moment(row.createdAt).format("MM/DD/YYYY HH:mm A")
               : "—"}
           </span>
         ),
@@ -111,16 +108,21 @@ export function TransactionList() {
       {
         head: "Description",
         component: (row) => (
-          <span className="text-[13px] text-rcn-text">{row.description ?? "—"}</span>
+          <span className="text-[13px] text-rcn-text">
+            {row.description ?? "—"}
+          </span>
         ),
       },
-     
+
       {
         head: "Amount",
         component: (row) => (
           <span className="text-[13px] font-semibold text-rcn-text">
             {row.direction === "in" ? "+" : row.direction === "out" ? "−" : ""}
-            {typeof row.metadata?.amount_paid === "number" ? row.metadata?.amount_paid : (row?.amount || "—")} {row.currency ?? "USD"}
+            {typeof row.metadata?.amount_paid === "number"
+              ? row.metadata?.amount_paid
+              : row?.amount || "—"}{" "}
+            {row.currency ?? "USD"}
           </span>
         ),
       },
