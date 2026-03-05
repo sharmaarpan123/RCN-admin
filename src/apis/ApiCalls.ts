@@ -581,10 +581,10 @@ export const getReferralChatsApi = (params?: { page?: number; limit?: number }) 
 /** GET /api/referral/chats/:chatId/messages — get messages for a chat. Params: page, limit. */
 export const getReferralChatMessagesApi = (
   chatId: string,
-  params?: { page?: number; limit?: number },
+  params?: { page?: number; limit?: number; department_id?: string   },
 ) =>
   AxiosInstance.get(`/api/referral/chats/${chatId}/messages`, {
-    params: { page: params?.page ?? 1, limit: params?.limit ?? 50 },
+    params: { page: params?.page ?? 1, limit: params?.limit ?? 50 , department_id : params?.department_id ?? "" },
   });
 
 /** POST /api/referral/chats/:chatId/read — mark chat as read. */

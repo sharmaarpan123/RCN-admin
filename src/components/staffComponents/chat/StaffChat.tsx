@@ -87,8 +87,7 @@ export default function ChatPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const ReferredReferralId = searchParams.get("RedirectedReferralId");
-
-
+  const departmentId = searchParams.get("department_id");
 
   // Close mobile sidebar when body scroll is locked
   useEffect(() => {
@@ -145,9 +144,7 @@ export default function ChatPage() {
   );
 
   // Effective selected chat: use first in list when none selected
-  const displayChat = selectedChat
-
-
+  const displayChat = selectedChat;
 
   // Messages for selected chat
   const { data: messagesResponse, isLoading: isLoadingMessages } = useQuery({
@@ -158,6 +155,7 @@ export default function ChatPage() {
     queryFn: async () => {
       if (!displayChat?.referral_id) return { data: [] };
       const res = await getReferralChatMessagesApi(displayChat.referral_id, {
+        department_id: displayChat.department_id ?? "",
         page: MESSAGES_PAGE,
         limit: MESSAGES_LIMIT,
       });
@@ -181,7 +179,10 @@ export default function ChatPage() {
   // Mark chat as read when selecting
   useEffect(() => {
     if (!displayChat?.referral_id) return;
-    postReferralChatReadApi(displayChat.referral_id , displayChat.department_id ?? "").then((res) => {
+    postReferralChatReadApi(
+      displayChat.referral_id,
+      displayChat.department_id ?? "",
+    ).then((res) => {
       checkResponse({ res });
       queryClient.invalidateQueries({
         queryKey: defaultQueryKeys.referralChatList,
@@ -213,9 +214,7 @@ export default function ChatPage() {
       });
     });
     // Optimistic refetch after a short delay so backend/socket can persist
-
   };
-
 
   const selectedForInput = useMemo(() => {
     if (!displayChat) return null;
@@ -234,20 +233,23 @@ export default function ChatPage() {
     };
   }, [displayChat]);
 
-  const getRedirectedChat = async (ReferredReferralId: string) => {
-    const res = await postReferralStartChatApi(ReferredReferralId);
+  console.log(displayChat, "displayChat");
+
+  const getRedirectedChat = async (
+    ReferredReferralId: string,
+    departmentId: string,
+  ) => {
+    const res = await postReferralStartChatApi(ReferredReferralId, {
+      department_id: departmentId,
+    });
     if (!checkResponse({ res })) return;
 
     const findItemFromTheCurrentList =
-      chatList.find((c) => c.referral_id ===
-        ReferredReferralId) ?? null;
+      chatList.find((c) => c.referral_id === ReferredReferralId) ?? null;
 
-    setSelectedChat(
-      findItemFromTheCurrentList ?? res?.data?.data
-    );
+    setSelectedChat(findItemFromTheCurrentList ?? res?.data?.data);
 
     router.replace(`/staff-portal/chat`);
-
   };
 
   useEffect(() => {
@@ -257,10 +259,10 @@ export default function ChatPage() {
       typeof ReferredReferralId === "string"
     ) {
       queueMicrotask(() => {
-        getRedirectedChat(ReferredReferralId);
+        getRedirectedChat(ReferredReferralId, departmentId ?? "");
       });
     }
-  }, [ReferredReferralId, chatList, router]);
+  }, [ReferredReferralId, chatList, router, departmentId]);
 
   return (
     <div className="max-w-[1600px] mx-auto p-[18px]">
@@ -314,7 +316,7 @@ export default function ChatPage() {
                     selectedChat?.referral_id === chat.referral_id ||
                     (selectedChat?.referral_id === chat.referral_id &&
                       (chat.receiver_id ?? "") ===
-                      (selectedChat?.receiver_id ?? ""));
+                        (selectedChat?.receiver_id ?? ""));
                   return (
                     <button
                       key={`${chat.referral_id}_${chat.receiver_id ?? ""}`}
@@ -323,15 +325,18 @@ export default function ChatPage() {
                         setSelectedChat(chat);
                         setMobileSidebarOpen(false);
                       }}
-                      className={`w-full text-left p-3 rounded-xl mb-2 transition-all ${isSelected
-                        ? "bg-rcn-brand/10 border-2 border-rcn-brand/30"
-                        : "bg-white/80 border border-slate-200 hover:bg-slate-50"
-                        }`}
+                      className={`w-full text-left p-3 rounded-xl mb-2 transition-all ${
+                        isSelected
+                          ? "bg-rcn-brand/10 border-2 border-rcn-brand/30"
+                          : "bg-white/80 border border-slate-200 hover:bg-slate-50"
+                      }`}
                     >
                       <div className="flex items-start justify-between gap-2 mb-1">
                         <div className="flex-1 min-w-0">
                           <div className="text-[11px] text-rcn-muted font-bold truncate">
-                            {chat.is_sender ? chat.receiver_name ?? "—" : chat.referral_sender_name ?? "—"}
+                            {chat.is_sender
+                              ? (chat.receiver_name ?? "—")
+                              : (chat.referral_sender_name ?? "—")}
                           </div>
                           {chat.referral_id?.slice(-8) ?? "—"}
                           {chat.last_message && (
@@ -341,7 +346,6 @@ export default function ChatPage() {
                           )}
                         </div>
                         <div>
-
                           {chat.last_message?.created_at && (
                             <span className="text-[10px] text-rcn-muted font-black shrink-0">
                               {new Date(
@@ -354,12 +358,13 @@ export default function ChatPage() {
                           )}
                           {!!chat.unread_count && (
                             <div className="bg-rcn-brand text-center  p-1 rounded-full text-white text-xs font-semibold  truncate">
-                              {chat.unread_count > 99 ? "99+" : chat.unread_count}
+                              {chat.unread_count > 99
+                                ? "99+"
+                                : chat.unread_count}
                             </div>
                           )}
                         </div>
                       </div>
-
                     </button>
                   );
                 })}
@@ -413,19 +418,10 @@ export default function ChatPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="m-0 mt-0.5 text-xs text-rcn-muted font-semibold">
-                        {
-                          displayChat.referral_facility_name &&
-                          <p>
-
-                            {displayChat.referral_facility_name ??
-                              "—"}
-                          </p>}
-                        <p>
-
-                          {
-                            displayChat.referral_id ??
-                            "—"}
-                        </p>
+                        {displayChat.referral_facility_name && (
+                          <p>{displayChat.referral_facility_name ?? "—"}</p>
+                        )}
+                        <p>{displayChat.referral_id ?? "—"}</p>
                       </p>
                     </div>
                   </div>
@@ -455,10 +451,11 @@ export default function ChatPage() {
                               className={`flex gap-2.5 items-end ${mine ? "justify-end" : ""}`}
                             >
                               <div
-                                className={`max-w-[78%] border rounded-[14px] p-2.5 shadow-[0_8px_18px_rgba(2,6,23,.06)] ${mine
-                                  ? "bg-rcn-brand/10 border-rcn-brand/20"
-                                  : "border-slate-200 bg-white"
-                                  }`}
+                                className={`max-w-[78%] border rounded-[14px] p-2.5 shadow-[0_8px_18px_rgba(2,6,23,.06)] ${
+                                  mine
+                                    ? "bg-rcn-brand/10 border-rcn-brand/20"
+                                    : "border-slate-200 bg-white"
+                                }`}
                               >
                                 <div className="text-[11px] text-rcn-muted font-black mb-1 flex gap-2 flex-wrap justify-between">
                                   {m.sender_name ?? "—"}
@@ -468,7 +465,9 @@ export default function ChatPage() {
                                 </div>
                                 <div className="text-[11px] text-rcn-muted  mb-1 flex gap-2 flex-wrap justify-end">
                                   <span>
-                                    {moment(m.created_at ?? 0).format("DD/MM/YYYY , hh:mm a")}
+                                    {moment(m.created_at ?? 0).format(
+                                      "DD/MM/YYYY , hh:mm a",
+                                    )}
                                   </span>
                                 </div>
                               </div>
@@ -482,10 +481,14 @@ export default function ChatPage() {
                       )}
                     </div>
                     <ChatInput
-
                       chatReceiverId={displayChat?.referral_id ?? ""}
                       onSend={(rid, t) =>
-                        sendChatMessage(displayChat?.referral_id ?? "", rid, t, displayChat?.department_id ?? "")
+                        sendChatMessage(
+                          displayChat?.referral_id ?? "",
+                          rid,
+                          t,
+                          displayChat?.department_id ?? "",
+                        )
                       }
                       role="SENDER"
                     />
