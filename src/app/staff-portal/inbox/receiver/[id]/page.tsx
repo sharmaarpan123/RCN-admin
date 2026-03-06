@@ -443,16 +443,17 @@ function ReceiverDetailContent({
               {btn(receiverAccept, "Accept", true, statusLoading)}
               {btn(receiverReject, "Reject", false, statusLoading)}
             </>
-          ) : department_status?.payment_status === "paid" &&
-            department_status?.status === "active" ? (
-            <span
-              key="paid"
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5
-                      rounded-full text-[11px] font-black border ${pillClass("PAID")}`}
-            >
-              Paid/Unlocked
-            </span>
-          ) : department_status?.status === "rejected" ? (
+          ) : // : department_status?.payment_status === "paid" &&
+          //   department_status?.status === "active" ? (
+          //   <span
+          //     key="paid"
+          //     className={`inline-flex items-center gap-1.5 px-2.5 py-1.5
+          //             rounded-full text-[11px] font-black border ${pillClass("PAID")}`}
+          //   >
+          //     Paid/Unlocked
+          //   </span>
+          // )
+          department_status?.status === "rejected" ? (
             <span
               key="rej"
               className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border ${pillClass("REJECTED")}`}
