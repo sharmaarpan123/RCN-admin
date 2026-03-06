@@ -3,7 +3,12 @@
 import type { AxiosResponse } from "axios";
 import React, { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Button, ConfirmModal, TableLayout, type TableColumn } from "@/components";
+import {
+  Button,
+  ConfirmModal,
+  TableLayout,
+  type TableColumn,
+} from "@/components";
 import {
   getAdminPaymentSettingsApi,
   updateAdminPaymentSettingsApi,
@@ -70,11 +75,17 @@ const PaymentSettings: React.FC = () => {
     "w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white text-sm outline-none focus:border-[#b9d7c5] focus:shadow-[0_0_0_3px_rgba(31,122,75,0.12)]";
 
   const [methodsById, setMethodsById] = useState<Record<string, boolean>>({});
-  const [directFeeById, setDirectFeeById] = useState<Record<string, number>>({});
-  const [creditFeeById, setCreditFeeById] = useState<Record<string, number>>({});
+  const [directFeeById, setDirectFeeById] = useState<Record<string, number>>(
+    {},
+  );
+  const [creditFeeById, setCreditFeeById] = useState<Record<string, number>>(
+    {},
+  );
   const [creditPrice, setCreditPrice] = useState(5);
-  const [creditThresholdAmount, setCreditThresholdAmount] = useState<number>(10);
-  const [creditThresholdPercentOff, setCreditThresholdPercentOff] = useState(10);
+  const [creditThresholdAmount, setCreditThresholdAmount] =
+    useState<number>(10);
+  const [creditThresholdPercentOff, setCreditThresholdPercentOff] =
+    useState(10);
   const [autoSendInvoice, setAutoSendInvoice] = useState(true);
   const [previewMethodId, setPreviewMethodId] = useState<string>("");
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -83,15 +94,25 @@ const PaymentSettings: React.FC = () => {
     queryKey: defaultQueryKeys.paymentSettings,
     queryFn: async () => {
       const res = await getAdminPaymentSettingsApi();
-      if (!checkResponse({ res })) return { data: DEFAULT_SETTINGS } as PaymentSettingsApiResponse;
+      if (!checkResponse({ res }))
+        return { data: DEFAULT_SETTINGS } as PaymentSettingsApiResponse;
       return res.data as PaymentSettingsApiResponse;
     },
   });
 
   const settings = queryData?.data ?? DEFAULT_SETTINGS;
-  const allMethods = useMemo(() => settings.all_methods ?? [], [settings.all_methods]);
-  const directMethods = useMemo(() => settings.direct_methods ?? [], [settings.direct_methods]);
-  const creditMethods = useMemo(() => settings.credit_methods ?? [], [settings.credit_methods]);
+  const allMethods = useMemo(
+    () => settings.all_methods ?? [],
+    [settings.all_methods],
+  );
+  const directMethods = useMemo(
+    () => settings.direct_methods ?? [],
+    [settings.direct_methods],
+  );
+  const creditMethods = useMemo(
+    () => settings.credit_methods ?? [],
+    [settings.credit_methods],
+  );
 
   // Sync server data into form state when settings load/update (e.g. after refetch on reset).
   useEffect(() => {
@@ -125,12 +146,14 @@ const PaymentSettings: React.FC = () => {
   }, [queryData]);
 
   const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: defaultQueryKeys.paymentSettings });
+    queryClient.invalidateQueries({
+      queryKey: defaultQueryKeys.paymentSettings,
+    });
 
   const saveMutation = useMutation<AxiosResponse | void, Error, void>({
     mutationFn: catchAsync(async () => {
       const current = queryClient.getQueryData<PaymentSettingsApiResponse>(
-        defaultQueryKeys.paymentSettings
+        defaultQueryKeys.paymentSettings,
       );
       const data = current?.data ?? settings;
       const all = data.all_methods ?? [];
@@ -149,14 +172,16 @@ const PaymentSettings: React.FC = () => {
           base_amount: 5,
           methods: direct.map((m) => ({
             payment_method_id: m.id,
-            processing_fee_percent: directFeeById[m.id] ?? m.processing_fee_percent ?? 0,
+            processing_fee_percent:
+              directFeeById[m.id] ?? m.processing_fee_percent ?? 0,
           })),
         },
         credit: {
           credit_price: creditPrice,
           methods: credit.map((m) => ({
             payment_method_id: m.id,
-            processing_fee_percent: creditFeeById[m.id] ?? m.processing_fee_percent ?? 0,
+            processing_fee_percent:
+              creditFeeById[m.id] ?? m.processing_fee_percent ?? 0,
           })),
         },
       };
@@ -180,8 +205,9 @@ const PaymentSettings: React.FC = () => {
   };
 
   const enabledMethodIds = useMemo(
-    () => allMethods.filter((m) => methodsById[m.id] !== false).map((m) => m.id),
-    [allMethods, methodsById]
+    () =>
+      allMethods.filter((m) => methodsById[m.id] !== false).map((m) => m.id),
+    [allMethods, methodsById],
   );
 
   const calculateCreditProcessingFee = (methodId: string) => {
@@ -233,15 +259,21 @@ const PaymentSettings: React.FC = () => {
     },
     {
       head: "Processing Fee (%)",
-      component: (row) => <span className="font-mono">{row.feePct.toFixed(2)}</span>,
+      component: (row) => (
+        <span className="font-mono">{row.feePct.toFixed(2)}</span>
+      ),
     },
     {
       head: "Processing Fee ($)",
-      component: (row) => <span className="font-mono">{row.feeDollar.toFixed(2)}</span>,
+      component: (row) => (
+        <span className="font-mono">{row.feeDollar.toFixed(2)}</span>
+      ),
     },
     {
       head: "Total ($)",
-      component: (row) => <span className="font-mono">{row.total.toFixed(2)}</span>,
+      component: (row) => (
+        <span className="font-mono">{row.total.toFixed(2)}</span>
+      ),
     },
   ];
 
@@ -258,9 +290,12 @@ const PaymentSettings: React.FC = () => {
       <div className="bg-white border border-rcn-border rounded-rcn-lg shadow-rcn p-4">
         <div className="flex justify-between items-start flex-wrap gap-3">
           <div>
-            <h3 className="m-0 text-sm font-semibold">Payment Adjustment Settings</h3>
+            <h3 className="m-0 text-sm font-semibold">
+              Payment Adjustment Settings
+            </h3>
             <p className="text-xs text-rcn-muted mt-1 mb-0">
-              Toggle payment methods, configure fees, and set referral bonus rules.
+              Toggle payment methods, configure fees, and set referral bonus
+              rules.
             </p>
           </div>
           <div className="flex gap-2.5">
@@ -283,7 +318,9 @@ const PaymentSettings: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
           {/* Payment Methods */}
           <div className="bg-white border border-rcn-border rounded-2xl shadow-none p-4">
-            <h3 className="text-sm font-semibold m-0 mb-2.5">Referral Payment Methods</h3>
+            <h3 className="text-sm font-semibold m-0 mb-2.5">
+              Referral Payment Methods
+            </h3>
             <p className="text-xs text-rcn-muted m-0 mb-2.5">
               Enable/disable the payment methods available in the network.
             </p>
@@ -298,7 +335,10 @@ const PaymentSettings: React.FC = () => {
                     type="checkbox"
                     checked={methodsById[m.id] !== false}
                     onChange={(e) =>
-                      setMethodsById((prev) => ({ ...prev, [m.id]: e.target.checked }))
+                      setMethodsById((prev) => ({
+                        ...prev,
+                        [m.id]: e.target.checked,
+                      }))
                     }
                   />
                   {m.name}
@@ -320,11 +360,11 @@ const PaymentSettings: React.FC = () => {
                     step="0.01"
                     min="0"
                     max="100"
-                    value={directFeeById[m.id] ?? 0}
+                    value={directFeeById[m.id]}
                     onChange={(e) =>
                       setDirectFeeById((prev) => ({
                         ...prev,
-                        [m.id]: parseFloat(e.target.value) || 0,
+                        [m.id]: parseFloat(e.target.value),
                       }))
                     }
                     className={inputClass}
@@ -338,34 +378,41 @@ const PaymentSettings: React.FC = () => {
               Enabled:{" "}
               {enabledMethodIds.length
                 ? allMethods
-                  .filter((m) => enabledMethodIds.includes(m.id))
-                  .map((m) => m.name)
-                  .join(", ")
+                    .filter((m) => enabledMethodIds.includes(m.id))
+                    .map((m) => m.name)
+                    .join(", ")
                 : "—"}
             </p>
           </div>
 
           {/* Credit Methods Charges */}
           <div className="bg-white border border-rcn-border rounded-2xl shadow-none p-4">
-            <h3 className="text-sm font-semibold m-0 mb-2.5">Credit Methods Charges</h3>
+            <h3 className="text-sm font-semibold m-0 mb-2.5">
+              Credit Methods Charges
+            </h3>
             <p className="text-xs text-rcn-muted m-0 mb-2.5">
-              Total = Credit price + (Credit price × Processing Fee %) — varies by payment method.
+              Total = Credit price + (Credit price × Processing Fee %) — varies
+              by payment method.
             </p>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs text-rcn-muted">Credit price ($)</label>
+                <label className="text-xs text-rcn-muted">
+                  Credit price ($)
+                </label>
                 <input
                   type="number"
                   step="0.01"
                   min="0"
-                  value={creditPrice}
-                  onChange={(e) => setCreditPrice(parseFloat(e.target.value) || 0)}
+                  value={creditPrice }
+                  onChange={(e) => setCreditPrice(parseFloat(e.target.value))}
                   className={inputClass}
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs text-rcn-muted">Preview Payment Method</label>
+                <label className="text-xs text-rcn-muted">
+                  Preview Payment Method
+                </label>
                 <select
                   value={previewMethodId}
                   onChange={(e) => setPreviewMethodId(e.target.value)}
@@ -389,10 +436,14 @@ const PaymentSettings: React.FC = () => {
                 </label>
                 <input
                   type="text"
-                  
-                  value={`${(creditFeeById[previewMethodId])}`}
+                  value={`${creditFeeById[previewMethodId] || 0}`}
                   className={inputClass}
-                  onChange={(e) => setCreditFeeById((prev) => ({ ...prev, [previewMethodId]: parseFloat(e.target.value) || 0 }))}
+                  onChange={(e) =>
+                    setCreditFeeById((prev) => ({
+                      ...prev,
+                      [previewMethodId]: parseFloat(e.target.value),
+                    }))
+                  }
                 />
               </div>
               <div className="flex flex-col gap-1.5">
@@ -401,7 +452,9 @@ const PaymentSettings: React.FC = () => {
                 </label>
                 <input
                   type="text"
-                  onChange={(e) => setCreditPrice(parseFloat(e.target.value) || 0)}
+                  onChange={(e) =>
+                    setCreditPrice(parseFloat(e.target.value) || 0)
+                  }
                   value={calculateCreditTotal(previewMethodId).toFixed(2)}
                   className={inputClass}
                 />
@@ -431,11 +484,15 @@ const PaymentSettings: React.FC = () => {
         {/* Referral & Purchase Bonus */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
           <div className="bg-white border border-rcn-border rounded-2xl shadow-none p-4">
-            <h3 className="text-sm font-semibold m-0 mb-2.5">Referral &amp; Purchase Bonus</h3>
+            <h3 className="text-sm font-semibold m-0 mb-2.5">
+              Referral &amp; Purchase Bonus
+            </h3>
             <p className="text-xs text-rcn-muted m-0 mb-3">
-              Bulk purchase: A <strong>{creditThresholdPercentOff}% discount</strong> applies
-              automatically when purchasing <strong>more than {creditThresholdAmount}</strong>{" "}
-              referral credits.
+              Bulk purchase: A{" "}
+              <strong>{creditThresholdPercentOff}% discount</strong> applies
+              automatically when purchasing{" "}
+              <strong>more than {creditThresholdAmount}</strong> referral
+              credits.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
@@ -458,7 +515,9 @@ const PaymentSettings: React.FC = () => {
                 </p>
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs text-rcn-muted font-semibold">Bulk Discount (%)</label>
+                <label className="text-xs text-rcn-muted font-semibold">
+                  Bulk Discount (%)
+                </label>
                 <input
                   type="number"
                   step="0.1"
@@ -466,7 +525,9 @@ const PaymentSettings: React.FC = () => {
                   max="100"
                   value={creditThresholdPercentOff}
                   onChange={(e) =>
-                    setCreditThresholdPercentOff(parseFloat(e.target.value) || 0)
+                    setCreditThresholdPercentOff(
+                      parseFloat(e.target.value) || 0,
+                    )
                   }
                   className={inputClass}
                 />
@@ -486,8 +547,9 @@ const PaymentSettings: React.FC = () => {
             <div>
               <strong className="text-sm">Invoice Automation</strong>
               <div className="text-xs text-rcn-muted mt-1">
-                Invoices are created automatically when an organization purchases credits. Option
-                to open an email draft (mailto) after invoice creation.
+                Invoices are created automatically when an organization
+                purchases credits. Option to open an email draft (mailto) after
+                invoice creation.
               </div>
             </div>
             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] border border-rcn-border bg-[#f8fcf9]">
@@ -503,9 +565,12 @@ const PaymentSettings: React.FC = () => {
               className="mt-0.5"
             />
             <div>
-              <div className="text-sm font-bold">Auto-open email draft after invoice creation</div>
+              <div className="text-sm font-bold">
+                Auto-open email draft after invoice creation
+              </div>
               <div className="text-xs text-rcn-muted mt-0.5">
-                If your browser blocks popups, you can send later from Financials → Invoices.
+                If your browser blocks popups, you can send later from
+                Financials → Invoices.
               </div>
             </div>
           </label>
