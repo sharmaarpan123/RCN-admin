@@ -48,6 +48,9 @@ interface PurchaseSummaryData {
     calculation?: string;
     message?: string;
   };
+
+  threshold_percent_off?: number;
+  threshold_min_credits?: number;
 }
 
 interface BranchOption {
@@ -557,6 +560,7 @@ export default function OrgPortalWalletPage() {
                     </p>
                   </div>
                 )}
+               
               </div>
 
               <div className="p-3 rounded-xl bg-rcn-brand/5 border border-rcn-brand/20">
@@ -577,6 +581,17 @@ export default function OrgPortalWalletPage() {
                   </p>
                 )}
               </div>
+              {purchaseSummary.threshold_applied &&
+                  (purchaseSummary.threshold_percent_off ?? 0) > 0 &&
+                  (purchaseSummary.threshold_min_credits ?? 0) > 0 && (
+                    <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 mt-2">
+                      <p className="m-0 text-[13px] font-semibold text-rcn-text">
+                        Threshold offer applied:{" "}
+                        {purchaseSummary.threshold_percent_off}% off for{" "}
+                        {purchaseSummary.threshold_min_credits}+ credits
+                      </p>
+                    </div>
+                  )}
             </div>
           ) : (
             <p className="m-0 text-rcn-muted text-sm">No summary data.</p>

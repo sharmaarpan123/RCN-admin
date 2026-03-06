@@ -43,6 +43,8 @@ interface PurchaseSummaryData {
   payment_method_id?: string;
   payment_method_name?: string;
   threshold_applied?: boolean;
+  threshold_percent_off?: number;
+  threshold_min_credits?: number;
   breakdown?: {
     calculation?: string;
     message?: string;
@@ -436,6 +438,19 @@ export default function WalletPage() {
                   </p>
                 )}
               </div>
+
+              
+              {purchaseSummary.threshold_applied &&
+                (purchaseSummary.threshold_percent_off ?? 0) > 0 &&
+                (purchaseSummary.threshold_min_credits ?? 0) > 0 && (
+                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 mt-2">
+                    <p className="m-0 text-[13px] font-semibold text-rcn-text">
+                      Threshold offer applied:{" "}
+                      {purchaseSummary.threshold_percent_off}% off for{" "}
+                      {purchaseSummary.threshold_min_credits}+ credits
+                    </p>
+                  </div>
+                )}
             </div>
           ) : (
             <p className="m-0 text-rcn-muted text-sm">No summary data.</p>
