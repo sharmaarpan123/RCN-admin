@@ -22,6 +22,8 @@ import CustomReactSelect from "@/components/CustomReactSelect";
 import defaultAdminQueryKeys from "@/utils/adminQueryKeys";
 import { useQuery } from "@tanstack/react-query";
 import { toastWarning } from "@/utils/toast";
+import type { GuestOrganization } from "@/components/staffComponents/newReferral/types";
+import { AddReceiverModal } from "@/components/staffComponents/newReferral/AddReceiverModal";
 
 const RCN_SELECT_CLASSES = {
   control: "!min-h-[42px] !rounded-xl !border-rcn-border !shadow-none !border",
@@ -175,7 +177,10 @@ export interface ForwardModalProps {
   isOpen: boolean;
   onClose: () => void;
   refId: string | null;
-  onForward: (departmentIds: string[]) => void;
+  onForward: (
+    departmentIds: string[],
+    guestOrganizations?: GuestOrganization[],
+  ) => void;
   isPending?: boolean;
 }
 
@@ -188,6 +193,10 @@ export function ForwardModal({
 }: ForwardModalProps) {
   const [stateFilter, setStateFilter] = useState("");
   const [forwardRows, setForwardRows] = useState<ForwardRowState[]>([]);
+  const [guestOrganizations, setGuestOrganizations] = useState<
+    GuestOrganization[]
+  >([]);
+  const [receiverModalOpen, setReceiverModalOpen] = useState(false);
   const [branchSearchSelected, setBranchSearchSelected] = useState<
     OrgBranchDeptOption[]
   >([]);
@@ -402,15 +411,21 @@ export function ForwardModal({
     [forwardRows],
   );
 
+  const hasGuestOrgs = guestOrganizations.length > 0;
   const showValidationError =
-    forwardRows.length > 0 && allDepartmentIds.length === 0;
+    forwardRows.length > 0 &&
+    allDepartmentIds.length === 0 &&
+    !hasGuestOrgs;
   const canSubmit =
-    allDepartmentIds.length > 0 &&
-    forwardRows.every((r) => r.selectedDepartments.length > 0);
+    (allDepartmentIds.length > 0 &&
+      forwardRows.every((r) => r.selectedDepartments.length > 0)) ||
+    hasGuestOrgs;
 
   const handleConfirm = useCallback(() => {
-    if (forwardRows.length === 0) {
-      toastWarning("Please select at least one organization.");
+    if (forwardRows.length === 0 && !hasGuestOrgs) {
+      toastWarning(
+        "Please select at least one organization or add a guest receiver.",
+      );
       return;
     }
     if (!canSubmit) {
@@ -420,15 +435,46 @@ export function ForwardModal({
       return;
     }
 
-    onForward(allDepartmentIds);
+    onForward(
+      allDepartmentIds,
+      hasGuestOrgs ? guestOrganizations : undefined,
+    );
     onClose();
-  }, [forwardRows.length, canSubmit, allDepartmentIds, onForward, onClose]);
+  }, [
+    forwardRows.length,
+    hasGuestOrgs,
+    canSubmit,
+    allDepartmentIds,
+    guestOrganizations,
+    onForward,
+    onClose,
+  ]);
+
+  const handleAddGuestReceiver = useCallback((guest: GuestOrganization) => {
+    setGuestOrganizations((prev) => [...prev, guest]);
+  }, []);
+
+  const removeGuestOrganization = useCallback((index: number) => {
+    setGuestOrganizations((prev) => prev.filter((_, i) => i !== index));
+  }, []);
 
   if (!isOpen) return null;
 
   return (
+    <>
+      <AddReceiverModal
+        key={
+          receiverModalOpen
+            ? `forward-add-receiver-${stateFilter}`
+            : "forward-add-receiver-closed"
+        }
+        isOpen={receiverModalOpen}
+        onClose={() => setReceiverModalOpen(false)}
+        onAdd={handleAddGuestReceiver}
+        defaultState={stateFilter}
+      />
     <div
-      className="fixed inset-0 bg-slate-900/55 flex items-center justify-center p-4 z-999"
+      className="fixed inset-0 bg-slate-900/55 flex items-center justify-center p-4 z-[49]"
       onClick={(e) => e.target === e.currentTarget && onClose()}
       aria-hidden="false"
     >
@@ -550,11 +596,12 @@ export function ForwardModal({
             </div>
           </div>
 
-          {forwardRows.length === 0 ? (
+          {forwardRows.length === 0 && !hasGuestOrgs ? (
             <div className="py-4 text-center text-sm border rounded-xl border-rcn-border bg-slate-50/50 text-rcn-muted">
               <p className="m-0">
                 No organizations selected. Use the search above to add
-                organizations, then choose branch and departments for each row.
+                organizations, then choose branch and departments for each row,
+                or add a guest receiver below.
               </p>
             </div>
           ) : (
@@ -596,6 +643,24 @@ export function ForwardModal({
               </div>
             </div>
           )}
+
+          <ForwardGuestOrganizationsTable
+            guestOrganizations={guestOrganizations}
+            removeGuestOrganization={removeGuestOrganization}
+          />
+
+          <Button
+            type="button"
+            variant="primary"
+            size="md"
+            onClick={() => setReceiverModalOpen(true)}
+            className="w-full mt-2.5 flex items-center justify-center gap-2.5 rounded-[14px] bg-gradient-to-b from-rcn-brand to-rcn-brand-light border border-black/6 shadow-[0_10px_18px_rgba(47,125,79,.22)] font-black text-xs"
+          >
+            <span className="w-6.5 h-6.5 rounded-xl bg-white/18 flex items-center justify-center text-base">
+              ＋
+            </span>
+            <span>Add Referral Receiver (if not listed)</span>
+          </Button>
         </div>
 
         <div className="px-3.5 py-3 border-t border-slate-200 flex items-center justify-end gap-2.5 bg-white/95">
@@ -612,6 +677,74 @@ export function ForwardModal({
             {isPending ? "Forwarding…" : "Forward Referral"}
           </Button>
         </div>
+      </div>
+    </div>
+    </>
+  );
+}
+
+function ForwardGuestOrganizationsTable({
+  guestOrganizations,
+  removeGuestOrganization,
+}: {
+  guestOrganizations: GuestOrganization[];
+  removeGuestOrganization: (index: number) => void;
+}) {
+  if (guestOrganizations.length === 0) return null;
+
+  return (
+    <div className="rounded-xl border border-rcn-border mb-3 my-2">
+      <div className="text-sm font-medium text-rcn-text mb-2 p-2 ">
+        Guest Organizations
+      </div>
+      <div className="min-w-[600px] rounded-xl">
+        <div className="grid grid-cols-[1fr_1fr_120px_auto] gap-2 bg-slate-50 border-b border-rcn-border px-2 py-2.5 text-xs font-semibold text-rcn-muted uppercase tracking-wider items-center">
+          <div>Company</div>
+          <div>Email / Phone</div>
+          <div>State</div>
+          <div className="w-20 shrink-0">Action</div>
+        </div>
+        {guestOrganizations.map((guest, index) => (
+          <div
+            key={`${guest.company_name}-${index}`}
+            className="grid grid-cols-[1fr_1fr_120px_auto] gap-2 border-b border-rcn-border last:border-b-0 py-2.5 px-2 items-center"
+          >
+            <div className="min-w-0">
+              <p
+                className="m-0 text-sm font-medium text-rcn-text truncate"
+                title={guest.company_name}
+              >
+                {guest.company_name}
+              </p>
+              <p
+                className="m-0 text-xs text-rcn-muted truncate"
+                title={guest.address}
+              >
+                {guest.address}
+              </p>
+            </div>
+            <div className="min-w-0">
+              <p className="m-0 text-sm text-rcn-text truncate">
+                {guest.email}
+              </p>
+              <p className="m-0 text-xs text-rcn-muted truncate">
+                {guest.dial_code} {guest.phone_number}
+              </p>
+            </div>
+            <div className="text-sm text-rcn-text">{guest.state}</div>
+            <div className="w-20 shrink-0">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => removeGuestOrganization(index)}
+                aria-label="Remove guest organization"
+              >
+                Remove
+              </Button>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

@@ -1,21 +1,20 @@
 "use client";
 
-import React, { useMemo } from "react";
-import { useRouter } from "next/navigation";
-import type {
-  DepartmentStatus,
-  ReceivedReferralApi,
-  ReferralListMeta,
-} from "@/app/staff-portal/inbox/types";
 import {
-  fmtDate,
   pillClass,
-  pillLabel,
+  pillLabel
 } from "@/app/staff-portal/inbox/helpers";
 import {
   ReceiverInboxBody,
   ReceiverInboxType,
 } from "@/app/staff-portal/inbox/page";
+import { department_status_type } from "@/app/staff-portal/inbox/receiver/[id]/page";
+import type {
+  DepartmentStatus,
+  ReceivedReferralApi,
+  ReferralListMeta,
+} from "@/app/staff-portal/inbox/types";
+import { StaffProfileData } from "@/app/staff-portal/types/profile";
 import {
   Button,
   DebouncedInput,
@@ -23,10 +22,10 @@ import {
   type TableColumn,
 } from "@/components";
 import CustomPagination from "@/components/CustomPagination";
-import moment from "moment";
-import { StaffProfileData } from "@/app/staff-portal/types/profile";
-import { department_status_type } from "@/app/staff-portal/inbox/receiver/[id]/page";
 import { useStaffAuthLoginUser } from "@/store/slices/Auth/hooks";
+import moment from "moment";
+import { useRouter } from "next/navigation";
+import React, { useMemo } from "react";
 
 function receivedReferralStatus(
   ref: ReceivedReferralApi,

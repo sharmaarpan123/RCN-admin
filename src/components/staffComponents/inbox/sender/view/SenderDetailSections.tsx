@@ -17,6 +17,7 @@ import type { DocRow } from "./senderViewHelpers";
 import { BOX_GRAD } from "./senderViewHelpers";
 import { postReferralStartChatApi } from "@/apis/ApiCalls";
 import { catchAsync, checkResponse } from "@/utils/commonFunc";
+import moment from "moment";
 
 interface SenderDetailSectionsProps {
   data: ReferralByIdApi;
@@ -158,9 +159,9 @@ export function SenderDetailSections({
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           {[
-            ["Last Name", p.patient_last_name],
             ["First Name", p.patient_first_name],
-            ["Date of Birth (DOB)", p.dob],
+            ["Last Name", p.patient_last_name],
+            ["Date of Birth (DOB)", moment(p.dob).format("MM/DD/YYYY")],
             ["Gender", p.gender],
             ["Address of Care", p.address_of_care],
             [

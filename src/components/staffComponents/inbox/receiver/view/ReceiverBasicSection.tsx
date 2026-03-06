@@ -5,6 +5,7 @@ import { pillClass } from "@/app/staff-portal/inbox/helpers";
 import { BOX_GRAD } from "@/components/staffComponents/inbox/sender/view/senderViewHelpers";
 import Button from "@/components/Button";
 import { PreviewFile } from "@/components/PreviewFile";
+import moment from "moment";
 
 const SECTION_CLASS =
   "border border-rcn-border/60 bg-white/95 rounded-[18px] p-3.5 shadow-[0_12px_26px_rgba(2,6,23,.07)] relative overflow-hidden border-l-4 border-l-rcn-brand scroll-mt-[120px] min-h-[300px]";
@@ -52,9 +53,9 @@ export function ReceiverBasicSection({
       <>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           {[
-            ["Last Name", p.patient_last_name],
             ["First Name", p.patient_first_name],
-            ["Date of Birth (DOB)", p.dob],
+            ["Last Name", p.patient_last_name],
+            ["Date of Birth (DOB)", moment(p.dob).format("MM/DD/YYYY")],
             ["Gender", p.gender],
             ["Address of Care", p.address_of_care],
             ["Services Requested", servicesForDisplay?.map((x) => x.name).join(", ")],
