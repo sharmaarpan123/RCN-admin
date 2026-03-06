@@ -477,6 +477,7 @@ export function OrgModalContent({
   });
 
   const onSubmit = (data: OrgFormValues) => {
+    console.log(buildUpdatePayload(data), "buildUpdatePayload(data)")
     if (isEdit && orgId) {
       updateMutation.mutate({
         organizationId: orgResponse?._id ?? "",
