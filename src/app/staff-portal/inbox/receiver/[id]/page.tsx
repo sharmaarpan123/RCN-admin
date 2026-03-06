@@ -461,12 +461,14 @@ function ReceiverDetailContent({
             </span>
           ) : null}
           {!senderPaid && department_status?.status !== "rejected" ? (
-            <span
-              key="pending"
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border ${pillClass("PENDING")}`}
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={openPayModal}
             >
-              Pending
-            </span>
+              Pay & Unlock
+            </Button>
           ) : null}
         </div>
       </div>
