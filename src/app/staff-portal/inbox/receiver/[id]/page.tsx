@@ -144,7 +144,6 @@ function ReceiverDetailContent({
   const [selectedCreditSource, setSelectedCreditSource] =
     useState<CreditBalanceItem | null>(null);
   const [stripeOpen, setStripeOpen] = useState(false);
-  const [stripePmId, setStripePmId] = useState("");
   const { loginUser } = useStaffAuthLoginUser();
   const refId = data._id;
 
@@ -430,30 +429,21 @@ function ReceiverDetailContent({
           </Link>
         </div>
         <div className="flex gap-2 flex-wrap justify-end">
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => downloadPdfHandler(data)}
-          >
-            <PrintIcon size={24} />
-          </Button>
-
+          {department_status?.status === "active" && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => downloadPdfHandler(data)}
+            >
+              <PrintIcon size={24} />
+            </Button>
+          )}
           {department_status?.status === "pending" && senderPaid ? (
             <>
               {btn(receiverAccept, "Accept", true, statusLoading)}
               {btn(receiverReject, "Reject", false, statusLoading)}
             </>
-          ) : // : department_status?.payment_status === "paid" &&
-          //   department_status?.status === "active" ? (
-          //   <span
-          //     key="paid"
-          //     className={`inline-flex items-center gap-1.5 px-2.5 py-1.5
-          //             rounded-full text-[11px] font-black border ${pillClass("PAID")}`}
-          //   >
-          //     Paid/Unlocked
-          //   </span>
-          // )
-          department_status?.status === "rejected" ? (
+          ) : department_status?.status === "rejected" ? (
             <span
               key="rej"
               className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border ${pillClass("REJECTED")}`}
@@ -462,14 +452,17 @@ function ReceiverDetailContent({
             </span>
           ) : null}
           {!senderPaid && department_status?.status == "pending" ? (
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              onClick={openPayModal}
-            >
-              Pay & Unlock
-            </Button>
+            <>
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                onClick={openPayModal}
+              >
+                Pay & Unlock
+              </Button>
+              {btn(receiverReject, "Reject", false, statusLoading)}
+            </>
           ) : null}
         </div>
       </div>

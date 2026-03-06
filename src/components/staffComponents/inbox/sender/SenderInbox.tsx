@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type {
   SentReferralApi,
   ReferralListMeta,
+  DepartmentStatus,
 } from "@/app/staff-portal/inbox/types";
 import { pillClass, pillLabel } from "@/app/staff-portal/inbox/helpers";
 import {
@@ -19,15 +20,23 @@ import {
   SenderInboxType,
 } from "@/app/staff-portal/inbox/page";
 import moment from "moment";
+import { useStaffAuthLoginUser } from "@/store/slices/Auth/hooks";
+import { StaffProfileData } from "@/app/staff-portal/types/profile";
+import { department_status_type } from "@/app/staff-portal/inbox/receiver/[id]/page";
 
-function sentReferralStatus(ref: SentReferralApi): string {
+function sentReferralStatus(
+  ref: SentReferralApi,
+  loginUser: StaffProfileData,
+): string {
   if (ref.is_draft) return "DRAFT";
-  const statuses = ref.department_statuses as { status?: string }[] | undefined;
-  if (Array.isArray(statuses) && statuses.length > 0) {
-    const first = statuses[0]?.status;
-    if (first) return first;
-  }
-  return "SENT";
+  const receiverDepartmentIds =
+    loginUser?.user_departments?.map((d) => d._id) ?? [];
+
+  const department_status = ref.department_statuses?.find(
+    (d: DepartmentStatus) =>
+      receiverDepartmentIds.includes(d.department_id ?? ""),
+  ) as department_status_type;
+  return department_status?.status ?? "SENT";
 }
 
 interface SenderInboxProps {
@@ -48,6 +57,7 @@ export function SenderInbox({
 }: SenderInboxProps) {
   const router = useRouter();
   const baseList = referrals;
+  const { loginUser } = useStaffAuthLoginUser();
 
   const columns: TableColumn<SentReferralApi>[] = useMemo(
     () => [
@@ -109,7 +119,7 @@ export function SenderInbox({
       {
         head: "Status",
         component: (ref) => {
-          const st = sentReferralStatus(ref);
+          const st = sentReferralStatus(ref, loginUser);
           return (
             <span
               className={`inline-flex capitalize items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border ${pillClass(st)}`}
@@ -153,7 +163,7 @@ export function SenderInbox({
         ),
       },
     ],
-    [router],
+    [router, loginUser],
   );
 
   return (

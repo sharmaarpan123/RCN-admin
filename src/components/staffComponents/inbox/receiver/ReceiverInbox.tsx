@@ -2,20 +2,44 @@
 
 import React, { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import type { ReceivedReferralApi, ReferralListMeta } from "@/app/staff-portal/inbox/types";
-import { fmtDate, pillClass, pillLabel } from "@/app/staff-portal/inbox/helpers";
-import { ReceiverInboxBody, ReceiverInboxType } from "@/app/staff-portal/inbox/page";
-import { Button, DebouncedInput, TableLayout, type TableColumn } from "@/components";
+import type {
+  DepartmentStatus,
+  ReceivedReferralApi,
+  ReferralListMeta,
+} from "@/app/staff-portal/inbox/types";
+import {
+  fmtDate,
+  pillClass,
+  pillLabel,
+} from "@/app/staff-portal/inbox/helpers";
+import {
+  ReceiverInboxBody,
+  ReceiverInboxType,
+} from "@/app/staff-portal/inbox/page";
+import {
+  Button,
+  DebouncedInput,
+  TableLayout,
+  type TableColumn,
+} from "@/components";
 import CustomPagination from "@/components/CustomPagination";
 import moment from "moment";
+import { StaffProfileData } from "@/app/staff-portal/types/profile";
+import { department_status_type } from "@/app/staff-portal/inbox/receiver/[id]/page";
+import { useStaffAuthLoginUser } from "@/store/slices/Auth/hooks";
 
-function receivedReferralStatus(ref: ReceivedReferralApi): string {
-  const statuses = ref.department_statuses as { status?: string }[] | undefined;
-  if (Array.isArray(statuses) && statuses.length > 0) {
-    const first = statuses[0]?.status;
-    if (first) return first;
-  }
-  return "PENDING";
+function receivedReferralStatus(
+  ref: ReceivedReferralApi,
+  loginUser: StaffProfileData,
+): string {
+  const receiverDepartmentIds =
+    loginUser?.user_departments?.map((d) => d._id) ?? [];
+
+  const department_status = ref.department_statuses?.find(
+    (d: DepartmentStatus) =>
+      receiverDepartmentIds.includes(d.department_id ?? ""),
+  ) as department_status_type;
+  return department_status?.status ?? "PENDING";
 }
 
 interface ReceiverInboxProps {
@@ -34,8 +58,8 @@ export function ReceiverInbox({
   isLoading = false,
 }: ReceiverInboxProps) {
   const router = useRouter();
-
-  const baseList = referrals
+  const { loginUser } = useStaffAuthLoginUser();
+  const baseList = referrals;
 
   const receiverBodyList = useMemo(() => {
     const q = (body.search ?? "").trim().toLowerCase();
@@ -56,7 +80,11 @@ export function ReceiverInbox({
       {
         head: "Referral ID",
         component: (ref) => {
-          return <span className="text-rcn-muted text-xs font-semibold">{ref.referral_code}</span>;
+          return (
+            <span className="text-rcn-muted text-xs font-semibold">
+              {ref.referral_code}
+            </span>
+          );
         },
       },
       {
@@ -67,7 +95,9 @@ export function ReceiverInbox({
           const first = p?.patient_first_name ?? "";
           const name = `${last} ${first}`.trim() || "N/A";
           const dob = p?.dob ? moment(p.dob).format("DD/MM/YYYY") : "";
-          return <span className="font-semibold text-[13px]">{`${name} ${dob ? `• DOB ${dob || "N/A"}` : ""}`}</span>;
+          return (
+            <span className="font-semibold text-[13px]">{`${name} ${dob ? `• DOB ${dob || "N/A"}` : ""}`}</span>
+          );
         },
       },
       {
@@ -76,15 +106,21 @@ export function ReceiverInbox({
           const ids = ref.speciality_ids ?? [];
           const extra = ref.additional_speciality ?? [];
           const label = (ids?.length || 0) + (extra?.length || 0);
-          return <span className="text-rcn-muted text-xs font-semibold">{label} services</span>;
+          return (
+            <span className="text-rcn-muted text-xs font-semibold">
+              {label} services
+            </span>
+          );
         },
       },
       {
         head: "Status",
         component: (ref) => {
-          const st = receivedReferralStatus(ref);
+          const st = receivedReferralStatus(ref, loginUser);
           return (
-            <span className={`inline-flex capitalize items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border ${pillClass(st)}`}>
+            <span
+              className={`inline-flex capitalize items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-black border ${pillClass(st)}`}
+            >
               {pillLabel(st)}
             </span>
           );
@@ -93,8 +129,16 @@ export function ReceiverInbox({
       {
         head: "Sent Date",
         component: (ref) => {
-          const d = ref.sent_at ? new Date(ref.sent_at) : ref.createdAt ? new Date(ref.createdAt) : null;
-          return <span className="text-rcn-muted text-xs font-semibold">{d ? moment(d).format("DD/MM/YYYY , hh:mm a") : "—"}</span>;
+          const d = ref.sent_at
+            ? new Date(ref.sent_at)
+            : ref.createdAt
+              ? new Date(ref.createdAt)
+              : null;
+          return (
+            <span className="text-rcn-muted text-xs font-semibold">
+              {d ? moment(d).format("DD/MM/YYYY , hh:mm a") : "—"}
+            </span>
+          );
         },
       },
       {
@@ -105,7 +149,9 @@ export function ReceiverInbox({
               type="button"
               variant="primary"
               size="sm"
-              onClick={() => router.push(`/staff-portal/inbox/receiver/${ref._id}`)}
+              onClick={() =>
+                router.push(`/staff-portal/inbox/receiver/${ref._id}`)
+              }
               className="border border-rcn-brand/25 text-rcn-accent-dark px-2 py-1.5 rounded-xl font-extrabold text-xs shadow"
             >
               View
@@ -114,13 +160,18 @@ export function ReceiverInbox({
         ),
       },
     ],
-    [router]
+    [router, loginUser],
   );
 
   return (
-    <section className="mt-3.5 border border-slate-200 bg-white/65 rounded-2xl shadow-[0_10px_30px_rgba(2,6,23,.07)] overflow-hidden" aria-label="Receiver inbox list">
+    <section
+      className="mt-3.5 border border-slate-200 bg-white/65 rounded-2xl shadow-[0_10px_30px_rgba(2,6,23,.07)] overflow-hidden"
+      aria-label="Receiver inbox list"
+    >
       <div className="p-3.5 pt-3 pb-2.5 border-b border-slate-200 bg-white/90">
-        <h2 className="m-0 text-sm font-semibold tracking-wide">Receiver Inbox</h2>
+        <h2 className="m-0 text-sm font-semibold tracking-wide">
+          Receiver Inbox
+        </h2>
       </div>
       <div className="flex flex-col gap-2.5 p-3 border-b border-slate-200 bg-white/90">
         <DebouncedInput
@@ -139,12 +190,21 @@ export function ReceiverInbox({
               onClick={() => setBody({ ...body, type: f as ReceiverInboxType })}
               className={`inline-flex  items-center gap-1.5 px-2.5 py-2 rounded-full border cursor-pointer text-xs font-semibold select-none ${body.type === f ? "bg-rcn-brand/10 border-rcn-brand/20 text-rcn-accent-dark" : "border-slate-200 bg-white text-rcn-muted"}`}
             >
-              {f === "all" ? "All" : f === "paid" ? "Paid/Unlocked" : f.charAt(0) + f.slice(1).toLowerCase()}
+              {f === "all"
+                ? "All"
+                : f === "paid"
+                  ? "Paid/Unlocked"
+                  : f.charAt(0) + f.slice(1).toLowerCase()}
             </button>
           ))}
         </div>
         <div className="flex gap-2 flex-wrap" aria-label="Date filters">
-          {[[30, "Last 30 days"], [7, "Last 7 days"], [90, "Last 90 days"], [0, "All time"]].map(([days, label]) => (
+          {[
+            [30, "Last 30 days"],
+            [7, "Last 7 days"],
+            [90, "Last 90 days"],
+            [0, "All time"],
+          ].map(([days, label]) => (
             <button
               key={String(days)}
               type="button"
