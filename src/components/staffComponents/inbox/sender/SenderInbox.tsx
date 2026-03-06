@@ -77,8 +77,8 @@ export function SenderInbox({
           const p = ref.patient;
           const last = p?.patient_last_name ?? "";
           const first = p?.patient_first_name ?? "";
-          const name = `${last} ${first}`.trim() || "N/A";
-          const dob = p?.dob ? moment(p.dob).format("DD/MM/YYYY") : "";
+          const name = `${first} ${last}`.trim() || "N/A";
+          const dob = p?.dob ? moment(p.dob).format("MM/DD/YYYY") : "";
           return (
             <span className="font-semibold text-[13px]">
               {name} {dob ? `• DOB ${dob || "N/A"}` : ""}

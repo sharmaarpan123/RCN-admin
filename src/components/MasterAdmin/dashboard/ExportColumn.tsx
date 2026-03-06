@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useState } from "react";
-import { Button, CustomAsyncSelect } from "@/components";
+import { Button, CustomAsyncSelect, CustomReactSelect } from "@/components";
 import type { RcnSelectOption } from "@/components/CustomAsyncSelect";
 import {
   getAdminReferralsExportExcelApi,
@@ -11,13 +11,13 @@ import {
 } from "@/apis/ApiCalls";
 import { catchAsync, checkResponse } from "@/utils/commonFunc";
 import { toastSuccess, toastError } from "@/utils/toast";
-import type { AxiosError, AxiosResponse } from "axios";
 import type {
   AdminOrganizationListItem,
   AdminBranchListItem,
   AdminDepartmentListItem,
 } from "@/components/MasterAdmin/Organizations/types";
 import PrintIcon from "@/assets/svg/PrintIcon";
+import { useQuery } from "@tanstack/react-query";
 
 export function ExportColumn() {
   const [exporting, setExporting] = useState(false);
@@ -46,11 +46,12 @@ export function ExportColumn() {
       .filter((x): x is RcnSelectOption => x != null);
   }, []);
 
-  const loadBranchOptions = useCallback(
-    async (inputValue: string): Promise<RcnSelectOption[]> => {
+  const { data: branchOptions = [] } = useQuery({
+    queryKey: ["admin", "export-branches", selectedOrgId],
+    queryFn: async () => {
       if (!selectedOrgId) return [];
       const res = await getAdminOrganizationBranchesApi(selectedOrgId, {
-        search: inputValue.trim() || undefined,
+        search: undefined,
         limit: 50,
         page: 1,
       });
@@ -65,27 +66,26 @@ export function ExportColumn() {
         })
         .filter((x): x is RcnSelectOption => x != null);
     },
-    [selectedOrgId]
-  );
+    enabled: !!selectedOrgId,
+  });
 
-  const loadDeptOptions = useCallback(
-    async (inputValue: string): Promise<RcnSelectOption[]> => {
+  const { data: departmentOptions = [] } = useQuery({
+    queryKey: ["admin", "export-departments", selectedOrgId],
+    queryFn: async () => {
       if (!selectedOrgId) return [];
       const res = await getAdminOrganizationDepartmentsApi(selectedOrgId);
       if (!checkResponse({ res })) return [];
       const list = (res.data as { data?: AdminDepartmentListItem[] })?.data ?? [];
-      const term = (inputValue ?? "").trim().toLowerCase();
       return list
         .map((d) => {
           const id = (d as { _id?: string })._id ?? "";
           const label = (d as { name?: string }).name ?? "";
           return id && label ? { value: id, label } : null;
         })
-        .filter((x): x is RcnSelectOption => x != null)
-        .filter((o) => !term || o.label.toLowerCase().includes(term));
+        .filter((x): x is RcnSelectOption => x != null);
     },
-    [selectedOrgId]
-  );
+    enabled: !!selectedOrgId,
+  });
 
   const handleOrgChange = useCallback((options: RcnSelectOption[]) => {
     setSelectedOrg(options.length ? [options[options.length - 1]] : []);
@@ -93,13 +93,23 @@ export function ExportColumn() {
     setSelectedDept([]);
   }, []);
 
-  const handleBranchChange = useCallback((options: RcnSelectOption[]) => {
-    setSelectedBranch(options.length ? [options[options.length - 1]] : []);
-  }, []);
+  const selectedBranchId = selectedBranch[0]?.value ?? "";
+  const selectedDeptId = selectedDept[0]?.value ?? "";
 
-  const handleDeptChange = useCallback((options: RcnSelectOption[]) => {
-    setSelectedDept(options.length ? [options[options.length - 1]] : []);
-  }, []);
+  const handleBranchChange = useCallback(
+    (_value: string, option?: RcnSelectOption | null) => {
+      setSelectedBranch(option ? [option] : []);
+      setSelectedDept([]);
+    },
+    [],
+  );
+
+  const handleDeptChange = useCallback(
+    (value: string, option?: RcnSelectOption | null) => {
+      setSelectedDept(option ? [option] : []);
+    },
+    [],
+  );
 
   const handleExportExcel = catchAsync(async () => {
     setExporting(true);
@@ -168,7 +178,7 @@ export function ExportColumn() {
     "min-h-[42px] w-full min-w-0 rounded-xl border border-rcn-border bg-white pl-3 pr-8 py-2 text-sm text-rcn-text outline-none focus:ring-2 focus:ring-rcn-accent/30 focus:border-rcn-accent appearance-none bg-[length:12px] bg-[right_0.5rem_center] bg-no-repeat";
 
   return (
-    <div className="border border-rcn-border rounded-2xl bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] my-2 overflow-hidden">
+    <div className="border border-rcn-border rounded-2xl bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] my-2">
       <div className="px-4 py-3 border-b border-rcn-border bg-slate-50/80">
         <h3 className="text-sm font-semibold text-rcn-dark-bg m-0">Export referrals</h3>
         <p className="text-xs text-rcn-muted mt-0.5 m-0">
@@ -193,28 +203,30 @@ export function ExportColumn() {
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium text-rcn-muted">Branch</label>
             <div className="min-w-0">
-              <CustomAsyncSelect
-                value={selectedBranch}
+              <CustomReactSelect
+                value={selectedBranchId}
                 onChange={handleBranchChange}
-                loadOptions={loadBranchOptions}
+                options={branchOptions}
                 placeholder="All branches"
                 aria-label="Filter by branch"
                 isDisabled={!selectedOrgId}
-                defaultOptions={true}
+                isClearable
+                maxMenuHeight={220}
               />
             </div>
           </div>
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium text-rcn-muted">Department</label>
             <div className="min-w-0">
-              <CustomAsyncSelect
-                value={selectedDept}
+              <CustomReactSelect
+                value={selectedDeptId}
                 onChange={handleDeptChange}
-                loadOptions={loadDeptOptions}
+                options={departmentOptions}
                 placeholder="All departments"
                 aria-label="Filter by department"
-                isDisabled={!selectedOrgId}
-                defaultOptions={true}
+                isDisabled={!selectedBranchId}
+                isClearable
+                maxMenuHeight={220}
               />
             </div>
           </div>

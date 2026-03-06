@@ -10,6 +10,7 @@ import { checkResponse } from "@/utils/commonFunc";
 import defaultQueryKeys from "@/utils/adminQueryKeys";
 import { fmtDate } from "@/utils/database";
 import type { AdminOrganizationListItem } from "@/components/MasterAdmin/Organizations/types";
+import moment from "moment";
 
 export type DashboardOrg = {
   id: string;
@@ -145,8 +146,8 @@ export function SenderSection({  onViewReferral }: SenderSectionProps) {
           const p = row.patient;
           const last = p?.patient_last_name ?? "";
           const first = p?.patient_first_name ?? "";
-          const name = `${last}, ${first}`.trim() || "—";
-          const sub = [p?.dob, p?.gender].filter(Boolean).join(" • ") || "";
+          const name = `${first} ${last}`.trim() || "—";
+          const sub = [moment(p?.dob).format("MM/DD/YYYY"), p?.gender].filter(Boolean).join(" • ") || "";
           return (
             <div className="text-xs">
               <div>{name}</div>

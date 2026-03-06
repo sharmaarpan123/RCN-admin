@@ -2,14 +2,23 @@
 
 import React, { useCallback, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Button, CustomAsyncSelect, TableLayout, type TableColumn } from "@/components";
+import {
+  Button,
+  CustomAsyncSelect,
+  TableLayout,
+  type TableColumn,
+} from "@/components";
 import CustomPagination from "@/components/CustomPagination";
 import type { RcnSelectOption } from "@/components/CustomAsyncSelect";
-import { getAdminOrganizationsApi, getOrganizationReferralByOrganizationApi } from "@/apis/ApiCalls";
+import {
+  getAdminOrganizationsApi,
+  getOrganizationReferralByOrganizationApi,
+} from "@/apis/ApiCalls";
 import { checkResponse } from "@/utils/commonFunc";
 import defaultQueryKeys from "@/utils/adminQueryKeys";
 import { fmtDate } from "@/utils/database";
 import type { AdminOrganizationListItem } from "@/components/MasterAdmin/Organizations/types";
+import moment from "moment";
 
 export type DashboardOrg = {
   id: string;
@@ -49,7 +58,8 @@ type ReferralListMeta = {
 
 function getStatusClass(status: string) {
   const s = (status ?? "").toLowerCase();
-  if (s === "accepted" || s === "active") return "border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]";
+  if (s === "accepted" || s === "active")
+    return "border-[#b9e2c8] bg-[#f1fbf5] text-[#0b5d36]";
   if (s === "rejected") return "border-[#f3b8b8] bg-[#fff1f2] text-[#991b1b]";
   if (s === "pending") return "border-[#f3d9a1] bg-[#fff8e6] text-[#7a4a00]";
   return "border-rcn-border bg-[#f8fcf9] text-rcn-muted";
@@ -67,13 +77,12 @@ export interface ReceiverSectionProps {
 
 const PAGE_SIZE = 10;
 
-type StatusFilter = "all" | "pending" | "accepted" | "rejected"
+type StatusFilter = "all" | "pending" | "accepted" | "rejected";
 const STATUS_TABS: { value: StatusFilter; label: string }[] = [
   { value: "all", label: "All" },
   { value: "pending", label: "Pending" },
   { value: "accepted", label: "Accepted" },
   { value: "rejected", label: "Rejected" },
-
 ];
 
 export function ReceiverSection({ onViewReferral }: ReceiverSectionProps) {
@@ -83,22 +92,25 @@ export function ReceiverSection({ onViewReferral }: ReceiverSectionProps) {
   const selectedOrgId = selectedOption[0]?.value ?? "";
   const selectedOrgName = selectedOption[0]?.label ?? "";
 
-  const loadOptions = useCallback(async (inputValue: string): Promise<RcnSelectOption[]> => {
-    const res = await getAdminOrganizationsApi({
-      search: inputValue.trim() || undefined,
-      limit: 50,
-    });
-    if (!checkResponse({ res })) return [];
-    const raw = res.data as { data?: AdminOrganizationListItem[] };
-    const list = raw?.data ?? [];
-    return list
-      .map((o) => {
-        const id = o.organization_id ?? o._id ?? "";
-        const label = o.organization?.name ?? "";
-        return id && label ? { value: id, label } : null;
-      })
-      .filter((x): x is RcnSelectOption => x != null);
-  }, []);
+  const loadOptions = useCallback(
+    async (inputValue: string): Promise<RcnSelectOption[]> => {
+      const res = await getAdminOrganizationsApi({
+        search: inputValue.trim() || undefined,
+        limit: 50,
+      });
+      if (!checkResponse({ res })) return [];
+      const raw = res.data as { data?: AdminOrganizationListItem[] };
+      const list = raw?.data ?? [];
+      return list
+        .map((o) => {
+          const id = o.organization_id ?? o._id ?? "";
+          const label = o.organization?.name ?? "";
+          return id && label ? { value: id, label } : null;
+        })
+        .filter((x): x is RcnSelectOption => x != null);
+    },
+    [],
+  );
 
   const handleChange = useCallback((options: RcnSelectOption[]) => {
     setSelectedOption(options.length ? [options[0]] : []);
@@ -111,7 +123,13 @@ export function ReceiverSection({ onViewReferral }: ReceiverSectionProps) {
   }, []);
 
   const { data: referralsRes, isLoading } = useQuery({
-    queryKey: [...defaultQueryKeys.referralByOrganization, "receiver", selectedOrgId, page, statusFilter],
+    queryKey: [
+      ...defaultQueryKeys.referralByOrganization,
+      "receiver",
+      selectedOrgId,
+      page,
+      statusFilter,
+    ],
     queryFn: async () => {
       if (!selectedOrgId) return { data: [], meta: null };
       const res = await getOrganizationReferralByOrganizationApi({
@@ -123,7 +141,10 @@ export function ReceiverSection({ onViewReferral }: ReceiverSectionProps) {
         limit: PAGE_SIZE,
       });
       if (!checkResponse({ res })) return { data: [], meta: null };
-      return res.data as { data?: ReceiverReferralRow[]; meta?: ReferralListMeta };
+      return res.data as {
+        data?: ReceiverReferralRow[];
+        meta?: ReferralListMeta;
+      };
     },
     enabled: !!selectedOrgId,
   });
@@ -134,7 +155,6 @@ export function ReceiverSection({ onViewReferral }: ReceiverSectionProps) {
 
   const columns: TableColumn<ReceiverReferralRow>[] = useMemo(
     () => [
-
       {
         head: "Date",
         component: (row) => (
@@ -149,8 +169,11 @@ export function ReceiverSection({ onViewReferral }: ReceiverSectionProps) {
           const p = row.patient;
           const last = p?.patient_last_name ?? "";
           const first = p?.patient_first_name ?? "";
-          const name = `${last}, ${first}`.trim() || "—";
-          const sub = [p?.dob, p?.gender].filter(Boolean).join(" • ") || "";
+          const name = `${first} ${last}`.trim() || "—";
+          const sub =
+            [moment(p?.dob).format("MM/DD/YYYY"), p?.gender]
+              .filter(Boolean)
+              .join(" • ") || "";
           return (
             <div className="text-xs">
               <div>{name}</div>
@@ -166,7 +189,6 @@ export function ReceiverSection({ onViewReferral }: ReceiverSectionProps) {
           return (
             <div className="text-xs">
               <div>{label}</div>
-
             </div>
           );
         },
@@ -189,10 +211,7 @@ export function ReceiverSection({ onViewReferral }: ReceiverSectionProps) {
       {
         head: "Actions",
         component: (row) => {
-
-
           return (
-
             <button
               type="button"
               onClick={(e) => {
@@ -207,7 +226,7 @@ export function ReceiverSection({ onViewReferral }: ReceiverSectionProps) {
         },
       },
     ],
-    [onViewReferral]
+    [onViewReferral],
   );
 
   return (
@@ -222,7 +241,9 @@ export function ReceiverSection({ onViewReferral }: ReceiverSectionProps) {
       </div>
 
       <div className="flex flex-col gap-1.5 mb-3">
-        <label className="text-xs text-rcn-muted font-semibold">Organization</label>
+        <label className="text-xs text-rcn-muted font-semibold">
+          Organization
+        </label>
         <CustomAsyncSelect
           value={selectedOption}
           onChange={handleChange}
