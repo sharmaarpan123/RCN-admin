@@ -82,18 +82,7 @@ export function ReceiverPrimaryCareSection({
           </span>
         )}
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-        {rows.map(([label, val]) => (
-          <div key={label}>
-            <label className="block text-[11px] text-rcn-muted font-black mb-1">
-              {label}
-            </label>
-            <div className="text-[13px] font-semibold text-rcn-text leading-tight p-2.5 border border-dashed border-slate-300/75 rounded-xl bg-slate-50/55">
-              {val ?? "—"}
-            </div>
-          </div>
-        ))}
-      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 relative p-2">
       {!isUnlocked && (
         <div className="absolute inset-0 rounded-[18px] backdrop-blur-md  bg-slate-900/80 flex items-center justify-center p-4">
           <div className="w-full max-w-[400px] rounded-2xl bg-white/95 border border-slate-200 shadow-[0_20px_50px_rgba(2,6,23,.25)] p-3.5">
@@ -103,7 +92,7 @@ export function ReceiverPrimaryCareSection({
             <p className="m-0 mt-1.5 mb-3 text-rcn-muted text-xs font-semibold">
               Pay & Unlock to view primary care contact details.
             </p>
-            {!senderPaid && department_status?.status !== "rejected" && (
+            {/* {!senderPaid && department_status?.status !== "rejected" && (
               <Button
                 type="button"
                 variant="primary"
@@ -132,10 +121,22 @@ export function ReceiverPrimaryCareSection({
               className="border border-red-200 bg-red-50 text-red-700"
             >
               {department_status?.status == "rejected" ? "Rejected" : "Reject"}
-            </Button>
+            </Button> */}
           </div>
         </div>
       )}
+        {rows.map(([label, val]) => (
+          <div key={label}>
+            <label className="block text-[11px] text-rcn-muted font-black mb-1">
+              {label}
+            </label>
+            <div className="text-[13px] font-semibold text-rcn-text leading-tight p-2.5 border border-dashed border-slate-300/75 rounded-xl bg-slate-50/55">
+              {val ?? "—"}
+            </div>
+          </div>
+        ))}
+      </div>
+     
     </div>
   );
 }

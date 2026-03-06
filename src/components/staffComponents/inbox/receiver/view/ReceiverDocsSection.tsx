@@ -92,7 +92,7 @@ export function ReceiverDocsSection({
                   <p className="m-0 mt-1.5 mb-3 text-rcn-muted text-xs font-semibold">
                     Pay to view or download documents.
                   </p>
-                  {!senderPaid && department_status?.status !== "rejected" && (
+                  {/* {!senderPaid && department_status?.status !== "rejected" && (
                     <Button
                       type="button"
                       variant="primary"
@@ -123,7 +123,7 @@ export function ReceiverDocsSection({
                     {department_status?.status == "rejected"
                       ? "Rejected"
                       : "Reject"}
-                  </Button>
+                  </Button> */}
                 </div>
               </div>
             )}

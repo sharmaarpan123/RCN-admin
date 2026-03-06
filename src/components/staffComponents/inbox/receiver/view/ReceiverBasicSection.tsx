@@ -68,7 +68,7 @@ export function ReceiverBasicSection({
         
         {additionalInsurances?.length ? (
           <div className="mt-3.5 space-y-3">
-            <h5 className="text-[11px] text-rcn-muted font-black uppercase tracking-wide mb-2">Additional Insurances</h5>
+            <h5 className="text-[11px] text-rcn-muted font-black uppercase tracking-wide mb-2">Primary Insurance</h5>
             {additionalInsurances.map((x, index) => {
               const { payer, policy, plan_group, document } = x;
               const docUrl = hasValue(document) ? (document ?? "").trim() : null;

@@ -91,7 +91,7 @@ export const useFirebaseMessaging = () => {
 
           setNotification(payload);
 
-
+          new Notification(payload.notification?.title || 'New Message');
           
 
         })
