@@ -461,7 +461,7 @@ function ReceiverDetailContent({
               Rejected
             </span>
           ) : null}
-          {!senderPaid && department_status?.status !== "rejected" ? (
+          {!senderPaid && department_status?.status == "pending" ? (
             <Button
               type="button"
               variant="primary"

@@ -62,7 +62,7 @@ export function ReceiverAdditionalSection({
                 Locked: Additional Patient Information
               </h5>
               <p className="m-0 mt-1.5 mb-3 text-rcn-muted text-xs font-semibold">
-                Chat is free. To view phone, SSN, and other sensitive fields,
+               To view phone, SSN, and other sensitive fields,
                 payment is required. Use Pay & Unlock in the header to pay.
               </p>
               {/* <div className="flex gap-2.5 flex-wrap ">
