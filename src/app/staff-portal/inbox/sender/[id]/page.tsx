@@ -4,6 +4,7 @@ import { getOrganizationReferralByIdApi, postOrganizationReferralForwardApi } fr
 import type { ChatMsg, Comm, ReceiverInstance, ReferralByIdApi } from "@/app/staff-portal/inbox/types";
 import PrintIcon from "@/assets/svg/PrintIcon.jsx";
 import { Button } from "@/components";
+import { GuestOrganization } from "@/components/staffComponents";
 import { ForwardModal } from "@/components/staffComponents/ForwardModal";
 import { SenderDetailSections } from "@/components/staffComponents/inbox/sender/view/SenderDetailSections";
 import { SenderDraftPaymentSection } from "@/components/staffComponents/inbox/sender/view/SenderDraftPaymentSection";
@@ -128,8 +129,8 @@ function SenderDetailContent({ data }: { data: ReferralByIdApi }) {
   };
 
   const { isPending: isForwardPending, mutate: forwardReferral } = useMutation({
-    mutationFn: catchAsync(async ({ refId, departmentIds }: { refId: string; departmentIds: string[] }) => {
-      const res = await postOrganizationReferralForwardApi(refId, { department_ids: departmentIds });
+    mutationFn: catchAsync(async ({ refId, departmentIds, guestOrganizations }: { refId: string; departmentIds: string[]; guestOrganizations?: GuestOrganization[] }) => {
+      const res = await postOrganizationReferralForwardApi(refId, { department_ids: departmentIds, guest_organizations: guestOrganizations });
       if (!checkResponse({ res, showSuccess: true })) return;
       queryClient.invalidateQueries({ queryKey: [...defaultQueryKeys.referralSentList, "detail", refId] });
       queryClient.invalidateQueries({ queryKey: defaultQueryKeys.referralSentList });
@@ -190,7 +191,7 @@ function SenderDetailContent({ data }: { data: ReferralByIdApi }) {
         isOpen={forwardOpen}
         onClose={() => setForwardOpen(false)}
         refId={refId}
-        onForward={(departmentIds) => forwardReferral({ refId, departmentIds })}
+        onForward={(departmentIds, guestOrganizations) => forwardReferral({ refId, departmentIds, guestOrganizations })}
         isPending={isForwardPending}
       />
     </div>

@@ -107,7 +107,7 @@ export const getAdminReferralDashboardApi = () =>
 
 /** GET /api/admin/referrals/export-excel — export referrals as .xlsx. Auth: Admin. Query (all optional): organization_id, branch_id, department_id, referral_type ("sent"|"received"), days (0=all, 1=today, >1=last N days). Returns blob. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const getAdminReferralsExportExcelApi = (params?: unknown) : any =>
+export const getAdminReferralsExportExcelApi = (params?: unknown): any =>
   AxiosInstance.get("/api/admin/referrals/export-excel", {
     params,
     responseType: "blob",
@@ -491,7 +491,7 @@ export const getOrganizationReferralByIdApi = (id: string) =>
 /** POST /api/organization/referral/:id/forward — forward referral to departments (department_ids). */
 export const postOrganizationReferralForwardApi = (
   referralId: string,
-  body: { department_ids: string[] },
+  body: unknown,
 ) =>
   AxiosInstance.post(`/api/organization/referral/${referralId}/forward`, body);
 
@@ -581,10 +581,10 @@ export const getReferralChatsApi = (params?: { page?: number; limit?: number }) 
 /** GET /api/referral/chats/:chatId/messages — get messages for a chat. Params: page, limit. */
 export const getReferralChatMessagesApi = (
   chatId: string,
-  params?: { page?: number; limit?: number; department_id?: string   },
+  params?: { page?: number; limit?: number; department_id?: string },
 ) =>
   AxiosInstance.get(`/api/referral/chats/${chatId}/messages`, {
-    params: { page: params?.page ?? 1, limit: params?.limit ?? 50 , department_id : params?.department_id ?? "" },
+    params: { page: params?.page ?? 1, limit: params?.limit ?? 50, department_id: params?.department_id ?? "" },
   });
 
 /** POST /api/referral/chats/:chatId/read — mark chat as read. */
