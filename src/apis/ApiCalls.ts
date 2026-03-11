@@ -60,6 +60,12 @@ export const postAuthResetPasswordApi = (body: {
   password: string;
 }) => AxiosInstance.post("/api/auth/reset-password", body);
 
+/** POST /api/guest/set-password — set password for guest user (token from email link). Backend to implement. */
+export const postGuestSetPasswordApi = (body: {
+  token: string;
+  password: string;
+}) => AxiosInstance.post("/api/guest/set-password", body);
+
 /** PUT /api/organization/profile — update organization and contact (org portal). */
 export const updateOrganizationProfileApi = (body: unknown) =>
   AxiosInstance.put("/api/organization/profile", body);
