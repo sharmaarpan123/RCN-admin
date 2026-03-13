@@ -20,6 +20,7 @@ interface AuthSliceState {
   error: string | null;
   token: string | null;
   role: string | null;
+  isGuestUser :boolean;
   status: "idle" | "loading" | "success" | "error";
 }
 
@@ -27,6 +28,7 @@ const initialState: AuthSliceState = {
   loginUser: null,
   token: null,
   role: null,
+  isGuestUser :false,
   error: "",
   status: "idle",
 };
