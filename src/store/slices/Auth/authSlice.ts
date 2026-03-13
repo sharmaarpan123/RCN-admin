@@ -13,6 +13,8 @@ export interface LoginSuccessPayload {
   token: string | null;
   role: string | null;
   loginUser: LoggedInUser | null;
+  /** When true, user is a guest (skipped org/branch/department); hide branches/departments in staff portal. */
+  isGuestUser?: boolean;
 }
 
 interface AuthSliceState {
@@ -41,6 +43,7 @@ const authSlice = createSlice({
       state.token = action.payload.token;
       state.role = action.payload.role;
       state.loginUser = action.payload.loginUser;
+      state.isGuestUser = action.payload.isGuestUser ?? false;
     },
     logoutSuccess(state) {
       localStorage.removeItem("authToken");
@@ -54,6 +57,7 @@ const authSlice = createSlice({
       state.loginUser = null;
       state.token = null;
       state.role = null;
+      state.isGuestUser = false;
     },
     updateLoginUser(state, action: { payload: LoggedInUser }) {
       state.loginUser = action.payload;

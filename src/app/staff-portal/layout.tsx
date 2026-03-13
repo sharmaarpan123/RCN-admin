@@ -23,7 +23,7 @@ import { useDispatch } from "react-redux";
 import { logout } from "@/apis/Axios";
 import { useStaffAuthLoginUser } from "@/store/slices/Auth/hooks";
 
-const NAV = [
+const NAV_ALL = [
   { href: "/staff-portal/new-referral", label: "New Referral" },
   { href: "/staff-portal/inbox", label: "Inbox" },
   { href: "/staff-portal/chat", label: "Chat" },
@@ -32,6 +32,15 @@ const NAV = [
   { href: "/staff-portal/wallet", label: "Wallet" },
   { href: "/staff-portal/profile", label: "Profile" },
 ] as const;
+
+/** Guest users do not see Branches or Departments. */
+function getNavItems(isGuestUser: boolean) {
+  if (!isGuestUser) return [...NAV_ALL];
+  return NAV_ALL.filter(
+    (n) =>
+      n.href !== "/staff-portal/branches" && n.href !== "/staff-portal/departments"
+  );
+}
 
 /** Fetches same banners API as AdBanner, renders one card at bottom of sidebar (not fixed). */
 function StaffPortalSidebarBanner() {
@@ -129,7 +138,8 @@ function StaffPortalSidebar({
   sidebarOpen: boolean;
   setSidebarOpen: (v: boolean) => void;
 }) {
-  const { loginUser } = useStaffAuthLoginUser();
+  const { isGuestUser } = useStaffAuthLoginUser();
+  const navItems = getNavItems(!!isGuestUser);
 
   const pathname = usePathname();
   const router = useRouter();
@@ -194,7 +204,7 @@ function StaffPortalSidebar({
         <div className="flex-1 flex flex-col min-h-0">
           <div className="bg-[rgba(255,255,255,.10)] rounded-xl p-2.5 border border-white/10 flex-1">
             <nav className="space-y-1">
-              {NAV.map(({ href, label }) => (
+              {navItems.map(({ href, label }) => (
                 <Link
                   key={href}
                   href={href}
