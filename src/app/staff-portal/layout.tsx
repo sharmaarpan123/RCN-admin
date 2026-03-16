@@ -30,12 +30,13 @@ const NAV_ALL = [
   { href: "/staff-portal/branches", label: "Branches" },
   { href: "/staff-portal/departments", label: "Departments" },
   { href: "/staff-portal/wallet", label: "Wallet" },
+  { href: "/staff-portal/link-organization", label: "Link Organization" },
   { href: "/staff-portal/profile", label: "Profile" },
 ] as const;
 
 /** Guest users do not see Branches or Departments. */
-function getNavItems(isGuestUser: boolean) {
-  if (!isGuestUser) return [...NAV_ALL];
+function getNavItems(isGuest: boolean) {
+  if (!isGuest) return NAV_ALL.filter(n => n.href !== "/staff-portal/link-organization");
   return NAV_ALL.filter(
     (n) =>
       n.href !== "/staff-portal/branches" && n.href !== "/staff-portal/departments"
@@ -138,8 +139,8 @@ function StaffPortalSidebar({
   sidebarOpen: boolean;
   setSidebarOpen: (v: boolean) => void;
 }) {
-  const { isGuestUser } = useStaffAuthLoginUser();
-  const navItems = getNavItems(!!isGuestUser);
+  const { loginUser } = useStaffAuthLoginUser();
+  const navItems = getNavItems(loginUser?.is_guest);
 
   const pathname = usePathname();
   const router = useRouter();

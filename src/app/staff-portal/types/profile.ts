@@ -51,6 +51,7 @@ export interface StaffProfileDepartment {
 
 /** Logged-in staff user (payload under response.data.user) */
 export interface StaffProfileData {
+  is_guest: boolean;
   _id: string;
   first_name: string;
   last_name: string;
