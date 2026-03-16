@@ -60,10 +60,12 @@ export const postAuthResetPasswordApi = (body: {
   password: string;
 }) => AxiosInstance.post("/api/auth/reset-password", body);
 
-/** POST /api/guest/set-password — set password for guest user (token from email link). Backend to implement. */
+/** POST /api/guest/set-password — set password for guest user (token from email link). */
 export const postGuestSetPasswordApi = (body: {
   token: string;
   password: string;
+  first_name?: string;
+  last_name?: string;
 }) => AxiosInstance.post("/api/guest/set-password", body);
 
 /** PUT /api/organization/profile — update organization and contact (org portal). */
@@ -564,7 +566,6 @@ export const postOrganizationReferralDepartmentPayApi = (
     `/api/organization/referral/${referralId}/departments/${departmentId}/pay`,
     body,
   );
-
 /** PATCH /api/organization/referral/:referralId/departments/:departmentId/status — accept or reject (receiver). status: "active" | "rejected". */
 export const patchOrganizationReferralDepartmentStatusApi = (
   referralId: string,
@@ -573,6 +574,30 @@ export const patchOrganizationReferralDepartmentStatusApi = (
 ) =>
   AxiosInstance.patch(
     `/api/organization/referral/${referralId}/departments/${departmentId}/status`,
+    body,
+  );
+
+/** GET /api/organization/join-requests — list pending join approvals for organization (org portal). */
+export const getOrganizationJoinRequestsApi = () =>
+  AxiosInstance.get("/api/organization/join-requests");
+
+/** PUT /api/organization/join-requests/:id/approve — approve join request. */
+export const putOrganizationJoinRequestApproveApi = (
+  requestId: string,
+  body: { name: string; branch_id: string },
+) =>
+  AxiosInstance.put(
+    `/api/organization/join-requests/${requestId}/approve`,
+    body,
+  );
+
+/** PUT /api/organization/join-requests/:id/reject — reject join request. */
+export const putOrganizationJoinRequestRejectApi = (
+  requestId: string,
+  body: { name: string; branch_id: string },
+) =>
+  AxiosInstance.put(
+    `/api/organization/join-requests/${requestId}/reject`,
     body,
   );
 

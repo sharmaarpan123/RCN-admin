@@ -15,6 +15,7 @@ const NAV = [
   { href: "/org-portal/branches", label: "Branch" },
   { href: "/org-portal/departments", label: "Department" },
   { href: "/org-portal/organization-settings", label: "Organization Settings" },
+  { href: "/org-portal/joining-approvals", label: "Joining Approvals" },
   { href: "/org-portal/referral-dashboard", label: "Referral Dashboard" },
   { href: "/org-portal/wallet", label: "Wallet & Credits" },
 ] as const;

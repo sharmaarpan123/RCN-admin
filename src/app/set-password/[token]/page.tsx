@@ -13,7 +13,24 @@ import { Button, CustomNextLink } from "@/components";
 import { catchAsync, checkResponse } from "@/utils/commonFunc";
 import { toastSuccess } from "@/utils/toast";
 
-const setPasswordSchema = yup.object({
+type SetPasswordFormValues = {
+  first_name: string;
+  last_name?: string;
+  password: string;
+  confirmPassword: string;
+};
+
+const setPasswordSchema: yup.ObjectSchema<SetPasswordFormValues> = yup.object({
+  first_name: yup
+    .string()
+    .trim()
+    .required("First name is required.")
+    .max(100, "First name must be at most 100 characters."),
+  last_name: yup
+    .string()
+    .trim()
+    .required("Last name is required.")
+    .max(100, "Last name must be at most 100 characters."),
   password: yup
     .string()
     .trim()
@@ -25,8 +42,6 @@ const setPasswordSchema = yup.object({
     .required("Please confirm your password.")
     .oneOf([yup.ref("password")], "Passwords must match."),
 });
-
-type SetPasswordFormValues = yup.InferType<typeof setPasswordSchema>;
 
 const inputBaseClass =
   "w-full px-3 py-2.5 rounded-xl border border-rcn-border bg-white text-sm outline-none transition-all focus:border-[#b9d7c5] focus:shadow-[0_0_0_3px_rgba(31,122,75,0.12)]";
@@ -47,7 +62,7 @@ export default function SetPasswordPage() {
     formState: { errors },
   } = useForm<SetPasswordFormValues>({
     resolver: yupResolver(setPasswordSchema),
-    defaultValues: { password: "", confirmPassword: "" },
+    defaultValues: { first_name: "", last_name: "", password: "", confirmPassword: "" },
   });
 
   const setPasswordMutation = useMutation({
@@ -55,9 +70,15 @@ export default function SetPasswordPage() {
       const res = await postGuestSetPasswordApi({
         token,
         password: values.password.trim(),
+        first_name: values.first_name.trim(),
+        last_name: values.last_name?.trim() || undefined,
       });
-      checkResponse({ res, showSuccess: true });
-      return res;
+      const ok = checkResponse({ res, showSuccess: true });
+      if (!ok) {
+        // Throw to route into onError instead of onSuccess
+        throw new Error("Failed to set password");
+      }
+      return res.data;
     }),
     onSuccess: () => {
       toastSuccess("Password set successfully. You can now sign in.");
@@ -115,6 +136,52 @@ export default function SetPasswordPage() {
             className="space-y-4"
             noValidate
           >
+            <div className="flex flex-col gap-1.5">
+              <label
+                htmlFor="set-password-first-name"
+                className="text-xs font-medium text-rcn-muted"
+              >
+                First name
+              </label>
+              <input
+                id="set-password-first-name"
+                type="text"
+                autoComplete="given-name"
+                placeholder="Enter your first name"
+                {...register("first_name")}
+                className={errors.first_name ? inputErrorClass : inputBaseClass}
+                aria-invalid={!!errors.first_name}
+              />
+              {errors.first_name && (
+                <p className="text-xs text-rcn-danger mt-1 m-0" role="alert">
+                  {errors.first_name.message}
+                </p>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label
+                htmlFor="set-password-last-name"
+                className="text-xs font-medium text-rcn-muted"
+              >
+                Last name
+              </label>
+              <input
+                id="set-password-last-name"
+                type="text"
+                autoComplete="family-name"
+                placeholder="Enter your last name"
+                {...register("last_name")}
+                className={errors.last_name ? inputErrorClass : inputBaseClass}
+                aria-invalid={!!errors.last_name}
+              />
+              {errors.last_name && (
+                <p className="text-xs text-rcn-danger mt-1 m-0" role="alert">
+                  {errors.last_name.message}
+                </p>
+              )}
+            </div>
+
             <div className="flex flex-col gap-1.5">
               <label
                 htmlFor="set-password-password"
