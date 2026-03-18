@@ -248,7 +248,7 @@ export default function OrgPortalJoiningApprovalsPage() {
                 ? "Reject join request"
                 : "Confirm"}
           </h3>
-          <p className="text-sm text-rcn-muted m-0 mt-2">
+          {/* <p className="text-sm text-rcn-muted m-0 mt-2">
             {selected
               ? `${actionType === "approve" ? "Approve" : "Reject"} "${getDisplayName(
                   selected,
@@ -256,15 +256,15 @@ export default function OrgPortalJoiningApprovalsPage() {
                   selected.branch_name ?? ""
                 }".`
               : ""}
-          </p>
+          </p> */}
           <div className="space-y-2 mt-4 text-sm text-rcn-muted">
             <p className="m-0">
-              Branch ID:{" "}
-              <span className="font-mono">{selected?.branch_id ?? "—"}</span>
+              Requested Branch:{" "}
+              <span className="font-bold">{selected?.branch_name ?? "—"}</span>
             </p>
             <p className="m-0">
-              Department ID:{" "}
-              <span className="font-mono">{selected?.department_id ?? "—"}</span>
+              Requested Department:{" "}
+              <span className="font-bold">{selected?.department_name ?? "—"}</span>
             </p>
           </div>
           <div className="flex gap-2 mt-5 justify-end">

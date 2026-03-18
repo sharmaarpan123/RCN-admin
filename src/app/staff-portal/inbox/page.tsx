@@ -195,7 +195,7 @@ export default function StaffInboxPage() {
             role="tab"
             aria-selected={role === "RECEIVER"}
             onClick={() => setRole("RECEIVER")}
-            className={`border-0 bg-transparent px-3 py-2 rounded-full cursor-pointer font-semibold text-xs
+            className={`border-0 bg-transparent px-3 py-2 rounded-full cursor-pointer font-semibold text-sm
                ${
                  role === "RECEIVER"
                    ? "bg-rcn-brand/10 text-rcn-text border border-rcn-brand/20"
